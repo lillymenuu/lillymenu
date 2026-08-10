@@ -10,6 +10,7 @@ function obterLojaIdDaRequisicao(PDO $conn): int {
   }
 
   $slug = trim((string) ($_GET['loja'] ?? $_POST['loja'] ?? ''));
+  $slug = preg_replace('/\.php$/i', '', $slug);
   if ($slug !== '') {
     if (ctype_digit($slug)) {
       return (int) $slug;

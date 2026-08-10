@@ -55,20 +55,23 @@ $loja_estado = config($conn, 'loja_estado', '');
 $loja_complemento = config($conn, 'loja_complemento', '');
 $loja_capa = config($conn, 'loja_capa', '');
 $loja_perfil = config($conn, 'loja_perfil', '');
-/* Base URL do sistema para o cardápio — formato limpo: /lilly/nomedaloja */
+/* Base URL do sistema para o cardápio — formato limpo: dominio.com/nomedaloja */
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
 $host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$loja_link_base = $protocol . $host . '/lilly/';
+$loja_link_base = $protocol . $host . '/';
+$loja_link_base_antigo = $protocol . $host . '/lilly/';
 
-/* Extrai o slug do link salvo (suporta todos os formatos anteriores) */
+/* Extrai o slug do link salvo (suporta o formato antigo /lilly/slug e os anteriores) */
 $loja_link_slug = $loja_link;
-if (strpos($loja_link, $loja_link_base) === 0) {
-  $loja_link_slug = urldecode(substr($loja_link, strlen($loja_link_base)));
+if (strpos($loja_link, $loja_link_base_antigo) === 0) {
+  $loja_link_slug = urldecode(substr($loja_link, strlen($loja_link_base_antigo)));
 } elseif (preg_match('#[?&]loja=([^&]+)#', $loja_link, $m)) {
   $loja_link_slug = urldecode($m[1]);
 } elseif (preg_match('#/([^/?]+)/?$#', $loja_link, $m)) {
   $loja_link_slug = $m[1];
 }
+/* Remove sufixo ".php" que pode ter sido digitado/copiado por engano */
+$loja_link_slug = preg_replace('/\.php$/i', '', $loja_link_slug);
 $horarios_semana_raw = config($conn, 'horarios_semana', '');
 $horarios_semana = json_decode((string) $horarios_semana_raw, true);
 $horarios_semana = is_array($horarios_semana) ? $horarios_semana : [];

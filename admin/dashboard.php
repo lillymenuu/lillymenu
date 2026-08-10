@@ -108,10 +108,11 @@ try {
 $_linkLojaRaw  = config($conn, 'link_loja', '');
 $_protocol     = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
 $_host         = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$_linkLojaBase = $_protocol . $_host . '/lilly/';
-// Extrai o slug do valor salvo (suporta todos os formatos)
-if (strpos($_linkLojaRaw, $_linkLojaBase) === 0) {
-  $_slug = urldecode(substr($_linkLojaRaw, strlen($_linkLojaBase)));
+$_linkLojaBase = $_protocol . $_host . '/';
+$_linkLojaBaseAntigo = $_protocol . $_host . '/lilly/';
+// Extrai o slug do valor salvo (suporta o formato antigo /lilly/slug e os anteriores)
+if (strpos($_linkLojaRaw, $_linkLojaBaseAntigo) === 0) {
+  $_slug = urldecode(substr($_linkLojaRaw, strlen($_linkLojaBaseAntigo)));
 } elseif (preg_match('#[?&]loja=([^&]+)#', $_linkLojaRaw, $_m)) {
   $_slug = urldecode($_m[1]);
 } elseif (preg_match('#/([^/?]+)/?$#', $_linkLojaRaw, $_m)) {
@@ -119,6 +120,7 @@ if (strpos($_linkLojaRaw, $_linkLojaBase) === 0) {
 } else {
   $_slug = $_linkLojaRaw;
 }
+$_slug = preg_replace('/\.php$/i', '', $_slug);
 $linkLoja = $_slug !== '' ? $_linkLojaBase . $_slug : '';
 $versiculoCache = config($conn, 'versiculo_dia_texto', '');
 $versiculoRefCache = config($conn, 'versiculo_dia_ref', '');

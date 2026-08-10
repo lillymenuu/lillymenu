@@ -3,4 +3,11 @@
 </FilesMatch>
 
 RewriteEngine On
+
+# Formato antigo, mantido por compatibilidade com links ja compartilhados
 RewriteRule ^lilly/([^/]+)/?$ public/loja.php?loja=$1 [L,QSA]
+
+# Formato curto: dominio.com/nomedaloja -> so entra se nao for um arquivo/pasta real do projeto
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9_.-]+)/?$ public/loja.php?loja=$1 [L,QSA]
