@@ -1,3 +1,6 @@
 <FilesMatch "^\.">
   Require all denied
 </FilesMatch>
+
+RewriteEngine On
+RewriteRule ^lilly/([^/]+)/?$ public/loja.php?loja=$1 [L,QSA]
