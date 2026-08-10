@@ -1,0 +1,121 @@
+    .motoboy-filter-card{padding:18px 20px;margin-bottom:18px}
+    .motoboy-filter-grid{display:grid;grid-template-columns:240px repeat(2,minmax(0,220px));gap:14px;align-items:end}
+    .motoboy-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}
+    .motoboy-hero-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}
+    .motoboy-stat-card{display:flex;align-items:center;gap:14px;padding:18px 20px;border:1px solid #e4ebf5;border-radius:24px;background:#fff}
+    .motoboy-stat-icon{width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff3b7c,#ff5b85);color:#fff;font-size:1.25rem}
+    .motoboy-stat-meta small{display:block;font-size:.76rem;color:#8ea0bd;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+    .motoboy-stat-meta strong{display:block;font-size:1.5rem;color:#122033;line-height:1.1}
+    .motoboy-stat-meta span{display:block;font-size:.84rem;color:#6e7f98;margin-top:4px}
+    .motoboy-pill-card{padding:18px 20px;border:1px solid #e4ebf5;border-radius:24px;background:#fff}
+    .motoboy-pill-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .motoboy-pill-head strong{font-size:1rem;color:#152338}
+    .motoboy-pill-value{font-size:1.35rem;font-weight:800;color:#ff3b7c;line-height:1.1}
+    .motoboy-pill-meta{display:flex;align-items:center;gap:8px;color:#6f8099;font-size:.82rem;flex-wrap:wrap}
+    .motoboy-pill-note{display:block;margin-top:8px;font-size:.73rem;color:#8ea0bd;line-height:1.35}
+    .motoboy-table th,.motoboy-table td{padding:6px 5px;font-size:.71rem;vertical-align:middle}
+    .motoboy-table td small{display:block;font-size:.64rem;color:#8ea0bd;margin-top:1px;line-height:1.2}
+    .motoboy-table .fin-table-actions{justify-content:flex-end}
+    .motoboy-address{font-size:.67rem;color:#4e607d;line-height:1.18}
+    .motoboy-modal .fin-card-head{padding-bottom:10px}
+    .motoboy-modal .fin-card-body{padding-top:0}
+    .motoboy-delete-copy{color:#617391;font-size:.92rem;line-height:1.6;margin-bottom:16px}
+    .motoboy-table .col-motoboy{min-width:230px}
+    .motoboy-table .col-data{min-width:126px}
+    .motoboy-table .col-entregas{width:120px}
+    .motoboy-table .col-taxas{width:130px}
+    .motoboy-table .col-acoes{width:104px;text-align:right}
+    .motoboy-wide-table{min-width:820px}
+    .motoboy-wide-table .col-pedido{min-width:76px}
+    .motoboy-wide-table .col-cliente{min-width:132px}
+    .motoboy-wide-table .col-endereco{min-width:210px}
+    .motoboy-wide-table .col-taxa{width:72px}
+    .motoboy-wide-table .col-entregador{min-width:122px}
+    .motoboy-wide-table .col-detalhes{width:46px;text-align:center}
+    .motoboy-wide-table td.col-detalhes,
+    .motoboy-wide-table th.col-detalhes{padding-left:2px;padding-right:2px}
+    .motoboy-wide-table strong{font-size:.71rem;line-height:1.16}
+    .motoboy-detail-btn{
+      width:28px;
+      height:28px;
+      border-radius:10px;
+      border-color:transparent !important;
+      box-shadow:none !important;
+      background:#f4f7fb;
+    }
+    .motoboy-detail-btn:hover{
+      background:#eef3f9;
+      border-color:transparent !important;
+    }
+    .motoboy-detail-btn i{
+      font-size:.86rem;
+    }
+    .motoboy-table .js-motoboy-edit{
+      border-color:transparent !important;
+      box-shadow:none !important;
+      background:#f4f7fb;
+    }
+    .motoboy-table .js-motoboy-edit:hover{
+      background:#eef3f9;
+      border-color:transparent !important;
+    }
+    .motoboy-pagination-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap}
+    .motoboy-page-info{font-size:.74rem;color:#7b8ca8}
+    .motoboy-pagination{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+    .motoboy-detail-btn{width:34px;height:34px;border-radius:12px}
+    #motoboyPedidoModal .modal-dialog{max-width:526px;width:526px}
+    #motoboyPedidoModal .modal-content{height:auto;max-height:calc(100vh - 24px)}
+    #motoboyPedidoModal .modal-body{overflow-y:auto}
+    .pedido-detalhe-modal{border-radius:22px;overflow:hidden;background:#fff;box-shadow:none;border:1px solid #e7edf5}
+    .pedido-detalhe-modal .modal-header{border:0;padding:14px 18px 8px}
+    .pedido-detalhe-modal .modal-body{padding:0 18px 12px}
+    .pedido-detalhe-modal .modal-footer{padding:10px 18px 18px}
+    .pedido-detalhe-header{display:flex;align-items:center;justify-content:flex-start;gap:12px}
+    .pedido-detalhe-header h5{font-size:.98rem;font-weight:700;margin:0;color:#0f172a}
+    .pedido-detalhe-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
+    .pedido-detalhe-actions .btn{font-size:.78rem;border-radius:12px;padding:8px 12px}
+    .pedido-detalhe-tempo{font-size:.78rem;font-weight:700;color:#ff4d4f;text-align:center;padding:6px 0 14px}
+    .pedido-detalhe-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;padding-bottom:14px;border-bottom:1px solid #edf1f6}
+    .pedido-detalhe-item{display:flex;flex-direction:column;gap:4px;min-width:0}
+    .pedido-detalhe-item span{font-size:.75rem;color:#8796ae}
+    .pedido-detalhe-item strong{font-size:.9rem;font-weight:500;color:#0f172a}
+    .pedido-detalhe-status{font-weight:600}
+    .pedido-detalhe-section{padding:14px 0;border-bottom:1px solid #edf1f6}
+    .pedido-detalhe-section-title{font-size:.78rem;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.02em;margin-bottom:10px}
+    .pedido-detalhe-pagamentos{font-size:.9rem;color:#1f2937;line-height:1.75}
+    .pedido-detalhe-itens{display:flex;flex-direction:column}
+    .pedido-detalhe-item-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #f1f4f8;font-size:.88rem;color:#1f2937}
+    .pedido-detalhe-item-row:last-child{border-bottom:0}
+    .pedido-detalhe-total{display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:.88rem;color:#1f2937;padding-top:8px}
+    .pedido-detalhe-total strong{font-size:.9rem;font-weight:600;color:#111827}
+    .pedido-detalhe-footer{display:flex;justify-content:flex-end}
+    .pedido-detalhe-footer .btn{font-size:.8rem;border-radius:14px;padding:9px 18px}
+    @media (max-width: 600px){
+      #motoboyPedidoModal .modal-dialog{width:calc(100% - 20px);max-width:calc(100% - 20px)}
+      .pedido-detalhe-grid{grid-template-columns:1fr}
+    }
+    .motoboy-pagination .fin-page-btn{min-width:34px;height:34px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center}
+    @media (max-width: 1199px){
+      .motoboy-filter-grid{grid-template-columns:1fr 1fr}
+      .motoboy-hero-grid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 767px){
+      .motoboy-stats{grid-template-columns:1fr}
+      .motoboy-hero-grid,.motoboy-filter-grid{grid-template-columns:1fr}
+    }
+    .rc-table-wrap{overflow-x:auto}
+    .rc-table{width:100%;border-collapse:collapse}
+    .rc-table th{font-size:.66rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;padding:8px 14px;border-bottom:1px solid #f0f0f0;white-space:nowrap;background:#fff}
+    .rc-table td{font-size:.78rem;color:#374151;padding:9px 14px;border-bottom:1px solid #f5f6f8;line-height:1.35;vertical-align:middle}
+    .rc-table tbody tr:last-child td{border-bottom:0}
+    .rc-table tbody tr:hover td{background:#fafafa}
+    .rc-table td small{display:block;font-size:.71rem;color:#9ca3af;margin-top:1px;line-height:1.2}
+    .rc-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid #f0f0f0;flex-wrap:wrap;gap:8px}
+    .rc-per-page{display:flex;align-items:center;gap:6px;font-size:.76rem;color:#6b7280}
+    .rc-per-page select{border:1.5px solid #e5e7eb;border-radius:7px;padding:3px 7px;font-size:.76rem;font-family:inherit;cursor:pointer;outline:none}
+    .rc-info{font-size:.76rem;color:#6b7280;text-align:center}
+    .rc-pagination{display:flex;align-items:center;gap:3px}
+    .rc-page-btn{border:1.5px solid #e5e7eb;background:#fff;border-radius:7px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:600;cursor:pointer;color:#374151;transition:all .15s;text-decoration:none;font-family:inherit;line-height:1}
+    .rc-page-btn:hover{border-color:#6366f1;color:#4f46e5}
+    .rc-page-btn.disabled{opacity:.4;pointer-events:none}
+    .rc-page-label{font-size:.76rem;color:#6b7280;padding:0 7px;white-space:nowrap}

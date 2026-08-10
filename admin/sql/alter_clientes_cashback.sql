@@ -1,0 +1,2 @@
+ALTER TABLE clientes
+  ADD COLUMN cashback_saldo DECIMAL(10,2) NOT NULL DEFAULT 0;

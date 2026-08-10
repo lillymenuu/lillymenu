@@ -1,0 +1,44 @@
+    body{font-family:'Manrope',sans-serif}
+    .fin-category-modal-dialog{max-width:720px}
+    .fin-category-modal .fin-card-head{padding:16px 18px 6px}
+    .fin-category-modal .fin-card-body{padding:12px 18px 18px}
+    .fin-category-modal .fin-card-title{font-size:1rem}
+    .fin-category-modal .fin-card-subtitle{font-size:.76rem}
+    .fin-category-modal .fin-grid,
+    .fin-category-modal .fin-mini-grid{gap:12px}
+    .fin-category-modal .field{gap:5px}
+    .fin-category-modal{overflow:visible !important}
+    .fin-category-modal .fin-card-body{overflow:visible}
+    .fin-category-modal .field label{font-size:.7rem}
+    .fin-category-modal .fin-input,
+    .fin-category-modal .fin-select{min-height:40px;font-size:.86rem;border-radius:13px}
+    .fin-category-modal .fin-btn{min-height:40px;font-size:.84rem}
+    .fin-parent-modal-dialog{max-width:680px}
+    .fin-parent-modal .fin-card-head{padding:16px 18px 6px}
+    .fin-parent-modal .fin-card-body{padding:12px 18px 18px}
+    .fin-parent-modal .fin-card-title{font-size:1rem}
+    .fin-parent-modal .fin-card-subtitle{font-size:.76rem}
+    .fin-parent-modal .fin-grid,
+    .fin-parent-modal .fin-mini-grid{gap:12px}
+    .fin-parent-modal .field{gap:5px}
+    .fin-parent-modal .field label{font-size:.7rem}
+    .fin-parent-modal .fin-input,
+    .fin-parent-modal .fin-select{min-height:40px;font-size:.86rem;border-radius:13px}
+    .fin-parent-modal .fin-table thead th{font-size:.67rem;padding:10px 12px}
+    .fin-parent-modal .fin-table tbody td{font-size:.82rem;padding:10px 12px}
+    .fin-parent-pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:12px}
+    .fin-parent-pagination .fin-page-link{min-width:34px;height:34px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #dbe7f5;background:#fff;color:#516179;text-decoration:none;font-size:.8rem;font-weight:700}
+    .fin-parent-pagination .fin-page-link.is-active{background:linear-gradient(135deg,#c97240,#9C5523);border-color:#9C5523;color:#fff;box-shadow:0 10px 22px rgba(156,85,35,.18)}
+    .fin-parent-pagination .fin-page-link.is-disabled{opacity:.45;pointer-events:none}
+    .fin-category-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .fin-category-toolbar .field{min-width:180px}
+    .fin-category-toolbar .fin-card-subtitle{font-size:.78rem}
+    .fin-category-toolbar .fin-select{min-height:42px;font-size:.86rem}
+    .fin-category-pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:16px}
+    .fin-category-pagination .fin-page-link{min-width:36px;height:36px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #dbe7f5;background:#fff;color:#516179;text-decoration:none;font-size:.82rem;font-weight:700}
+    .fin-category-pagination .fin-page-link.is-active{background:linear-gradient(135deg,#c97240,#9C5523);border-color:#9C5523;color:#fff;box-shadow:0 10px 22px rgba(156,85,35,.18)}
+    .fin-category-pagination .fin-page-link.is-disabled{opacity:.45;pointer-events:none}
+    #financial-category-table .fin-table thead th{font-size:.64rem;padding:8px 10px}
+    #financial-category-table .fin-table tbody td{font-size:.78rem;padding:8px 10px;line-height:1.2}
+    #financial-category-table .fin-table-actions{gap:6px}
+    #financial-category-table .fin-table-icon-btn{width:30px;height:30px}

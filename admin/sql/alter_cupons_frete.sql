@@ -1,0 +1,5 @@
+ALTER TABLE cupons
+  MODIFY COLUMN codigo VARCHAR(15) NOT NULL,
+  MODIFY COLUMN tipo ENUM('percent','valor','frete') NOT NULL DEFAULT 'percent',
+  ADD COLUMN primeira_compra TINYINT(1) NOT NULL DEFAULT 0,
+  ADD COLUMN publico TINYINT(1) NOT NULL DEFAULT 0;

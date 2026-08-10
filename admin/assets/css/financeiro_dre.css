@@ -1,0 +1,64 @@
+    /* ── DRE table modern layout ── */
+    .fin-dre-wrap{ overflow-x:auto; border-radius:14px; border:1px solid #e5e7eb; }
+    .fin-dre-table{ width:auto; min-width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
+
+    /* Widths */
+    .fin-dre-th-label,.fin-dre-td-label{ width:118px; min-width:108px; }
+    .fin-dre-table thead th:not(.fin-dre-th-label):not(.fin-dre-th-total),
+    .fin-dre-table tbody td.fin-dre-td-val{ width:52px; min-width:46px; }
+    .fin-dre-th-total,.fin-dre-td-total{ width:68px; min-width:60px; }
+
+    /* Header */
+    .fin-dre-table thead th{
+      background:#f8fafd; color:#64748b; font-size:.62rem; font-weight:600;
+      text-transform:uppercase; letter-spacing:.04em;
+      padding:8px 4px; border-bottom:2px solid #e5e7eb;
+      white-space:nowrap; text-align:center;
+    }
+    .fin-dre-th-label{ text-align:left; padding-left:10px; border-radius:14px 0 0 0; }
+    .fin-dre-th-total{ background:#f0f4ff; color:#4f46e5; border-radius:0 14px 0 0; }
+
+    /* Sticky label column */
+    .fin-dre-td-label,.fin-dre-th-label{
+      position:sticky; left:0; z-index:2;
+      background:#fff;
+    }
+    .fin-dre-table thead .fin-dre-th-label{ background:#f8fafd; z-index:3; }
+
+    /* Rows */
+    .fin-dre-table tbody td{
+      padding:7px 4px; font-size:.75rem; font-weight:400; text-align:center;
+      border-bottom:1px solid #f1f5f9; color:#1e293b;
+      vertical-align:middle;
+    }
+    .fin-dre-td-label{
+      text-align:left; padding-left:10px; font-weight:500;
+      display:flex; align-items:center; gap:6px; font-size:.75rem;
+    }
+    .fin-dre-td-total{ background:#f8faff; font-size:.75rem; }
+    .fin-dre-table tbody tr:hover td{ background:#f9fafb; }
+    .fin-dre-table tbody tr:hover .fin-dre-td-label{ background:#f9fafb; }
+    .fin-dre-table tbody tr:hover .fin-dre-td-total{ background:#eef2ff; }
+    .fin-dre-table tbody tr:last-child td{ border-bottom:0; }
+
+    /* Row accent left border */
+    .fin-dre-row.dre-income .fin-dre-td-label{ border-left:3px solid #10b981; }
+    .fin-dre-row.dre-expense .fin-dre-td-label{ border-left:3px solid #9C5523; }
+    .fin-dre-row.dre-profit .fin-dre-td-label{ border-left:3px solid #6366f1; }
+    .fin-dre-row.dre-margin .fin-dre-td-label{ border-left:3px solid #f59e0b; }
+
+    /* Badges */
+    .fin-dre-badge{
+      width:18px; height:18px; border-radius:5px; flex-shrink:0;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:.62rem;
+    }
+    .fin-dre-badge.dre-income { background:#d1fae5; color:#065f46; }
+    .fin-dre-badge.dre-expense{ background:#fee2e2; color:#991b1b; }
+    .fin-dre-badge.dre-profit { background:#ede9fe; color:#4c1d95; }
+    .fin-dre-badge.dre-margin { background:#fef3c7; color:#92400e; }
+
+    /* Value colours */
+    .dre-pos{ color:#059669; font-weight:600; }
+    .dre-neg{ color:#e11d48; font-weight:600; }
+    .dre-zero{ color:#94a3b8; }

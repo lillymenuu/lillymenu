@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS taxas_bairro (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  bairro VARCHAR(120) NOT NULL,
+  taxa DECIMAL(10,2) NOT NULL DEFAULT 0,
+  tempo_min INT NULL,
+  tempo_max INT NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em DATETIME NULL,
+  UNIQUE KEY uniq_bairro (bairro)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS taxas_dinamicas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  distancia_km DECIMAL(10,2) NOT NULL DEFAULT 0,
+  valor DECIMAL(10,2) NOT NULL DEFAULT 0,
+  tipo ENUM('fixa','por_km') NOT NULL DEFAULT 'fixa',
+  tempo_min INT NULL,
+  tempo_max INT NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em DATETIME NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

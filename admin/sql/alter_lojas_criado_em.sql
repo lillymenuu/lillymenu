@@ -1,0 +1,6 @@
+ALTER TABLE lojas
+  ADD COLUMN criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+UPDATE lojas
+SET criado_em = NOW()
+WHERE criado_em IS NULL;

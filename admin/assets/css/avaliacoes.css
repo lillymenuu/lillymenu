@@ -1,0 +1,45 @@
+    body{font-family:'Manrope',sans-serif}
+
+    /* ── Stat cards compactos ── */
+    .av-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+    .av-stat{flex:1;min-width:80px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 10px;text-align:center}
+    .av-stat-val{font-size:1.4rem;font-weight:800;color:#0f172a;line-height:1}
+    .av-stat-stars{display:flex;justify-content:center;gap:2px;margin:4px 0 2px}
+    .av-stat-lbl{font-size:.62rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .av-stat.is-link{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+    .av-stat.is-link:hover{border-color:#7b5c3e;box-shadow:0 2px 10px rgba(123,92,62,.14)}
+    .av-stat.is-active{border-color:#7b5c3e;background:#fdfaf7}
+
+    /* ── Distribuição ── */
+    .av-dist{display:flex;flex-direction:column;gap:5px}
+    .av-dist-row{display:flex;align-items:center;gap:8px;font-size:.74rem}
+    .av-dist-bar-wrap{flex:1;background:#f3f4f6;border-radius:999px;height:7px;overflow:hidden}
+    .av-dist-bar{height:7px;border-radius:999px;transition:width .5s}
+    .av-dist-cnt{width:22px;text-align:right;color:#6b7280;font-weight:700;font-size:.7rem}
+
+    /* ── Lista de avaliações (grid) ── */
+    .av-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    @media(max-width:900px){.av-list{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:580px){.av-list{grid-template-columns:1fr}}
+    .av-item{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;transition:border-color .15s;display:flex;flex-direction:column}
+    .av-item:hover{border-color:#d1d5db}
+    .av-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+    .av-item-cliente{font-size:.84rem;font-weight:700;color:#111;line-height:1.2}
+    .av-item-tel{font-size:.7rem;color:#9ca3af;margin-top:2px}
+    .av-item-nota{display:flex;align-items:center;gap:6px;flex-shrink:0}
+    .av-nota-pill{font-size:.68rem;font-weight:700;border-radius:6px;padding:2px 8px;color:#fff}
+    .av-item-meta{display:flex;align-items:center;gap:10px;font-size:.72rem;color:#6b7280;flex-wrap:wrap;margin-bottom:5px}
+    .av-item-pedido{font-weight:700;color:#374151}
+    .av-item-desc{font-size:.79rem;color:#374151;background:#f9fafb;border-radius:8px;padding:7px 10px;line-height:1.5;border:1px solid #f0f0f0}
+    .av-item-date{font-size:.67rem;color:#bbb;margin-top:auto;padding-top:6px;display:flex;align-items:center;gap:4px}
+
+    /* ── Barra de busca/filtro ── */
+    .av-filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .av-search{border:1.5px solid #e5e7eb;border-radius:10px;padding:7px 12px;font-size:.8rem;font-family:inherit;outline:none;flex:1;min-width:120px}
+    .av-search:focus{border-color:#7b5c3e}
+    .av-btn-limpar{font-size:.76rem;color:#7b5c3e;border:0;background:transparent;font-family:inherit;cursor:pointer;font-weight:700;padding:0;white-space:nowrap}
+
+    /* ── Empty state ── */
+    .av-empty{text-align:center;padding:40px 20px;color:#aaa}
+    .av-empty i{font-size:2.2rem;display:block;margin-bottom:8px;opacity:.25}
+    .av-empty p{font-size:.84rem}

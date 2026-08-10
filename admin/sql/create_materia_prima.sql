@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS materia_prima_cadastros (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  loja_id INT NOT NULL DEFAULT 1,
+  nome_produto VARCHAR(180) NOT NULL,
+  data_compra DATE NOT NULL,
+  valor_unitario DECIMAL(10,2) NOT NULL DEFAULT 0,
+  quantidade DECIMAL(10,3) NOT NULL DEFAULT 1,
+  unidade VARCHAR(40) NOT NULL DEFAULT 'unidade',
+  desconto DECIMAL(10,2) NOT NULL DEFAULT 0,
+  categoria_id INT NULL,
+  subcategoria_id INT NULL,
+  fornecedor VARCHAR(160) NULL,
+  observacao TEXT NULL,
+  valor_total DECIMAL(10,2) NOT NULL DEFAULT 0,
+  criado_por INT NULL,
+  criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em DATETIME NULL,
+  INDEX idx_materia_prima_loja (loja_id),
+  INDEX idx_materia_prima_data (data_compra),
+  INDEX idx_materia_prima_categoria (categoria_id),
+  INDEX idx_materia_prima_subcategoria (subcategoria_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

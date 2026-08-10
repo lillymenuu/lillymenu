@@ -1,0 +1,33 @@
+/* STATUS */
+.badge{
+  padding:6px 12px;
+  border-radius:12px;
+  font-weight:500;
+}
+.status-recebido{ background:#e0f2fe; color:#0369a1; }
+.status-producao{ background:#fef3c7; color:#92400e; }
+.status-entrega{ background:#ede9fe; color:#6b21a8; }
+.status-finalizado{ background:#dcfce7; color:#166534; }
+.status-cancelado{ background:#fee2e2; color:#991b1b; }
+
+/* PRINT */
+@media print{
+  .sidebar, .topbar, .btn, select{ display:none !important; }
+  body{ background:#fff; }
+  .card{ box-shadow:none; border:1px solid #ddd; }
+}
+
+/* Linha por status */
+tr.status-producao{
+  background:#fffbeb;
+}
+tr.status-entrega{
+  background:#f5f3ff;
+}
+tr.status-finalizado{
+  opacity:.65;
+}
+tr.status-cancelado{
+  background:#fef2f2;
+  text-decoration:line-through;
+}

@@ -1,0 +1,53 @@
+body{font-family:"Manrope",sans-serif;background:#f8fafc;color:#0f172a}
+.pay-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.pay-card{max-width:640px;width:100%;background:#fff;border-radius:18px;box-shadow:0 20px 40px rgba(15,23,42,.12);padding:28px}
+.pay-title{font-size:1.3rem;font-weight:700;margin-bottom:6px}
+.pay-sub{color:#64748b;margin-bottom:18px}
+.pay-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #e5e7eb;font-size:.95rem}
+.pay-row:last-child{border-bottom:0}
+.pay-status{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#fff7ed;color:#c2410c;font-weight:600;font-size:.8rem}
+.pay-note{margin-top:16px;color:#64748b;font-size:.9rem}
+.pay-btn{margin-top:18px;display:inline-flex;align-items:center;justify-content:center;width:100%;padding:12px;border-radius:12px;background:#e11d48;color:#fff;text-decoration:none;font-weight:700;border:none;cursor:pointer;font-size:.95rem;font-family:inherit}
+.pay-btn-outline{margin-top:10px;background:#fff;color:#e11d48;border:1.5px solid #e11d48}
+
+.pay-pix-box{margin-top:18px;background:#f5ede5;border:1px solid #e7d4bf;border-radius:12px;padding:14px 16px}
+.pay-pix-label{font-size:.8rem;color:#7A3F10;font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+.pay-pix-row{display:flex;align-items:center;gap:10px}
+.pay-pix-chave{flex:1;font-family:monospace;font-size:.95rem;color:#0f172a;word-break:break-all}
+.pay-pix-copy{flex-shrink:0;padding:6px 12px;border-radius:8px;border:1px solid #9C5523;background:#fff;color:#9C5523;font-weight:700;font-size:.8rem;cursor:pointer}
+.pay-pix-copy:hover{background:#9C5523;color:#fff}
+.pay-pix-nome{margin-top:6px;font-size:.82rem;color:#64748b}
+
+.pay-alert{margin-top:16px;padding:10px 14px;border-radius:10px;font-size:.88rem}
+.pay-alert-ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.pay-alert-erro{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+
+.pay-comprovante-status{margin-top:16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 14px;font-size:.88rem;color:#c2410c}
+.pay-comprovante-motivo{margin-top:6px;color:#b91c1c;font-size:.82rem}
+
+.pay-upload-form{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.pay-upload-label{font-size:.85rem;font-weight:600;color:#374151}
+.pay-upload-input{padding:8px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.85rem;font-family:inherit}
+
+.pay-pix-auto-box{margin-top:4px}
+.pay-pix-auto-loading{margin-top:14px;text-align:center;color:#64748b;font-size:.88rem}
+.pay-pix-auto-erro{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:.88rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.pay-pix-auto-resultado{margin-top:16px;background:#f5ede5;border:1px solid #e7d4bf;border-radius:12px;padding:16px;text-align:center}
+.pay-pix-qr{width:200px;height:200px;max-width:100%;border-radius:10px;background:#fff;padding:8px;box-shadow:0 4px 12px rgba(15,23,42,.08)}
+.pay-pix-auto-resultado .pay-pix-row{margin-top:14px;text-align:left}
+.pay-pix-auto-status{margin-top:12px;color:#7A3F10;font-size:.82rem;font-weight:600}
+.pay-pix-auto-sucesso{margin-top:16px;padding:14px;border-radius:10px;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;text-align:center;font-weight:700}
+
+.pay-toggle-manual{margin-top:20px;width:100%;text-align:center;background:none;border:none;color:#64748b;font-size:.85rem;text-decoration:underline;cursor:pointer;font-family:inherit}
+.pay-manual-section{margin-top:8px}
+
+.pay-historico{margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb}
+.pay-historico-titulo{font-size:.9rem;font-weight:700;color:#0f172a;margin-bottom:12px}
+.pay-historico-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.pay-historico-item:last-child{border-bottom:0}
+.pay-historico-valor{font-size:.88rem;font-weight:700;color:#0f172a}
+.pay-historico-meta{font-size:.76rem;color:#94a3b8;margin-top:2px}
+.pay-historico-badge{padding:3px 10px;border-radius:999px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;flex-shrink:0}
+.pay-historico-badge--pago{background:#ecfdf5;color:#047857}
+.pay-historico-badge--pendente{background:#fff7ed;color:#c2410c}
+.pay-historico-badge--atrasado{background:#fef2f2;color:#b91c1c}

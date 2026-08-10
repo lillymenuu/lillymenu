@@ -1,0 +1,525 @@
+    body.dash-diggy{
+      font-family:"Manrope",sans-serif;
+    }
+    .orcamento-page{
+      padding:16px 20px 16px;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .orcamento-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:20px;
+    }
+    .orcamento-title{
+      font-size:1.4rem;
+      font-weight:700;
+      margin:0 0 4px;
+      color:#0f172a;
+    }
+    .orcamento-subtitle{
+      margin:0;
+      color:#64748b;
+      font-size:.95rem;
+    }
+    .orcamento-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
+      gap:20px;
+      flex:1;
+      min-height:0;
+    }
+    @media (max-width: 1200px){
+      .orcamento-grid{
+        grid-template-columns:1fr;
+      }
+    }
+    @media (max-width: 768px){
+      .orc-doc-grid{
+        grid-template-columns:1fr;
+      }
+    }
+    .orc-card{
+      background:#fff;
+      border:1px solid #e2e8f0;
+      border-radius:18px;
+      box-shadow:0 10px 24px rgba(15,23,42,.06);
+    }
+    .orc-card.fill{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+    .orc-card-header{
+      padding:16px 18px 0;
+    }
+    .orc-card-title{
+      font-size:1rem;
+      font-weight:700;
+      margin:0;
+      color:#0f172a;
+    }
+    .orc-card-body{
+      padding:16px 18px 18px;
+    }
+    .orc-card-body.fill{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+    }
+    .orc-products-tools{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:50px;
+    }
+    .orc-search{
+      position:relative;
+      flex:1;
+    }
+    .orc-search input{
+      width:100%;
+      border:1px solid #e2e8f0;
+      border-radius:999px;
+      padding:10px 40px 10px 42px;
+      font-size:.9rem;
+      background:#fff;
+      box-shadow:0 6px 16px rgba(15,23,42,.06);
+    }
+    .orc-search i{
+      position:absolute;
+      left:14px;
+      top:50%;
+      transform:translateY(-50%);
+      color:#94a3b8;
+      font-size:1rem;
+    }
+    .orc-search input:focus{
+      outline:none;
+      border-color:#9C5523;
+      box-shadow:0 0 0 3px rgba(156,85,35,.15);
+    }
+    .orc-products-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+      gap:8px;
+      flex:1;
+      min-height:0;
+      overflow:auto;
+      padding-right:4px;
+      align-items:start;
+      align-content:start;
+    }
+    .orc-product-card{
+      border:1px solid #e2e8f0;
+      border-radius:14px;
+      padding:8px;
+      background:#f8fafc;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      transition:.15s ease;
+    }
+    .orc-product-card.avulso{
+      background:#fff;
+      border:1px solid #e2e8f0;
+      display:flex;
+      flex-direction:row;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      cursor:pointer;
+    }
+    .orc-avulso-label{
+      font-weight:600;
+      font-size:.85rem;
+      color:#0f172a;
+    }
+    .orc-avulso-btn{
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      border:none;
+      background:#9C5523;
+      color:#fff;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.1rem;
+      box-shadow:0 10px 18px rgba(156,85,35,.3);
+    }
+    .orc-modal .modal-content{
+      border-radius:18px;
+      border:1px solid #e2e8f0;
+      height:348px;
+      max-height:348px;
+    }
+    .orc-modal-address .modal-content{
+      height:auto;
+      max-height:80vh;
+    }
+    .orc-modal-address .modal-body{
+      overflow-y:auto;
+    }
+    .orc-modal .modal-header{
+      padding:18px 20px 10px;
+    }
+    .orc-modal .modal-title{
+      font-size:1.05rem;
+      font-weight:700;
+      color:#0f172a;
+    }
+    .orc-modal .btn-close{
+      box-shadow:none;
+      opacity:.6;
+    }
+    .orc-modal .modal-body{
+      flex:1 1 auto;
+      min-height:0;
+      overflow:hidden;
+    }
+    .orc-modal .modal-body{
+      padding:10px 20px 0;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .orc-modal .form-control{
+      background:#f8fafc;
+      border-radius:14px;
+      border:1px solid #e2e8f0;
+      padding:12px 12px;
+      font-size:.9rem;
+      color:#0f172a;
+    }
+    .orc-modal .form-control::placeholder{
+      color:#94a3b8;
+    }
+    .orc-float{
+      position:relative;
+    }
+    .orc-float label{
+      position:absolute;
+      top:8px;
+      left:12px;
+      font-size:.7rem;
+      color:#94a3b8;
+      font-weight:600;
+      pointer-events:none;
+    }
+    .orc-float .form-control{
+      padding-top:24px;
+      padding-bottom:10px;
+    }
+    .orc-modal-footer{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 20px 16px;
+    }
+    .orc-modal-qty{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:#fff;
+      border:1px solid #e2e8f0;
+      border-radius:999px;
+      padding:8px 12px;
+    }
+    .orc-modal-qty button{
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      border:none;
+      background:#f1f5f9;
+      font-weight:700;
+    }
+    .orc-modal-qty span{
+      min-width:24px;
+      text-align:center;
+      font-weight:700;
+      color:#0f172a;
+    }
+    .orc-modal .btn-orc{
+      border-radius:14px;
+      padding:.7rem 1.2rem;
+      font-size:.9rem;
+    }
+    .orc-product-card:hover{
+      border-color:#9C5523;
+      box-shadow:0 8px 18px rgba(156,85,35,.18);
+      transform:translateY(-2px);
+    }
+    .orc-product-thumb{
+      width:100%;
+      height:72px;
+      border-radius:10px;
+      background:#e5e7eb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#9ca3af;
+      overflow:hidden;
+      flex-shrink:0;
+    }
+    .orc-product-thumb img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .orc-product-name{
+      font-weight:600;
+      font-size:.8rem;
+      color:#0f172a;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .orc-product-price{
+      color:#e11d48;
+      font-weight:700;
+      font-size:.8rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .orc-qty{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      background:#fff;
+      border:1px solid #e2e8f0;
+      border-radius:999px;
+      padding:4px 8px;
+    }
+    .orc-qty-btn{
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      border:none;
+      background:#f1f5f9;
+      color:#0f172a;
+      font-weight:700;
+      font-size:.78rem;
+    }
+    .orc-qty-value{
+      font-weight:600;
+      width:36px;
+      font-size:.85rem;
+      text-align:center;
+      color:#0f172a;
+      border:none;
+      outline:none;
+      background:transparent;
+      padding:0;
+      -moz-appearance:textfield;
+      appearance:textfield;
+    }
+    .orc-qty-value::-webkit-outer-spin-button,
+    .orc-qty-value::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .orc-side{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-height:0;
+    }
+    .orc-field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .orc-doc-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .orc-whatsapp-row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .orc-copy-btn{
+      border:1px solid #e2e8f0;
+      background:#fff;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:.85rem;
+      color:#475569;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:.2s ease;
+      white-space:nowrap;
+    }
+    .orc-copy-btn:hover{
+      border-color:#9C5523;
+      color:#9C5523;
+    }
+    .orc-copy-btn.is-copied{
+      background:#dcfce7;
+      border-color:#22c55e;
+      color:#15803d;
+    }
+    .orc-field label{
+      font-size:.82rem;
+      font-weight:600;
+      color:#64748b;
+    }
+    .orc-address-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:10px;
+    }
+    .orc-address-grid .orc-field{
+      margin:0;
+    }
+    .orc-address-grid .orc-field.full{
+      grid-column:1 / -1;
+    }
+    .orc-field input,
+    .orc-field textarea,
+    .orc-field select{
+      border:1px solid #e2e8f0;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:.9rem;
+      background:#f8fafc;
+      width:100%;
+    }
+    .orc-field select{
+      appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.75' d='m3.5 6 4.5 4 4.5-4'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:right 12px center;
+      padding-right:34px;
+    }
+    .orc-field.is-hidden{
+      display:none;
+    }
+    .orc-resumo{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      flex:1;
+      min-height:0;
+    }
+    .orc-resumo-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      flex:1;
+      min-height:0;
+      overflow:auto;
+    }
+    .orc-resumo-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:.88rem;
+      color:#0f172a;
+    }
+    .orc-resumo-item span{
+      color:#64748b;
+    }
+    .orc-total{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-size:1rem;
+      font-weight:700;
+      color:#0f172a;
+      padding-top:8px;
+      border-top:1px solid #e2e8f0;
+    }
+    .orc-discount{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-size:.9rem;
+      color:#475569;
+      gap:10px;
+      padding:8px 0;
+      border-top:1px solid #eef2f7;
+      border-bottom:1px solid #eef2f7;
+    }
+    .orc-discount-controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:nowrap;
+    }
+    .orc-discount-controls select,
+    .orc-discount-controls input{
+      border:1px solid #e2e8f0;
+      border-radius:10px;
+      padding:5px 6px;
+      font-size:.8rem;
+      background:#fff;
+    }
+    .orc-discount-controls select{
+      min-width:110px;
+    }
+    .orc-discount-controls input{
+      width:90px;
+    }
+    .orc-discount-error{
+      margin-top:6px;
+      font-size:.78rem;
+      color:#b91c1c;
+      display:none;
+    }
+    .orc-discount-error.is-visible{
+      display:block;
+    }
+    .orc-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+    }
+    .orc-address-btn{
+      border:1px dashed #e2e8f0;
+      background:#f8fafc;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:.85rem;
+      color:#475569;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .orc-address-summary{
+      margin-top:10px;
+      font-size:.82rem;
+      color:#475569;
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      border-radius:12px;
+      padding:8px 10px;
+    }
+    .btn-orc{
+      background:#9C5523;
+      border-color:#9C5523;
+      color:#fff;
+      padding:.6rem 1.1rem;
+      border-radius:999px;
+      font-weight:600;
+      font-size:.9rem;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .btn-orc:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }

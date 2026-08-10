@@ -1,0 +1,2 @@
+ALTER TABLE clientes
+  ADD COLUMN pontos_saldo INT NOT NULL DEFAULT 0;

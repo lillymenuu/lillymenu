@@ -1,0 +1,20 @@
+.env
+vendor/
+
+# Conteudo enviado em runtime (produtos, logos, comprovantes, imagens de notificacao/landing) -
+# as pastas sao recriadas sozinhas pelo codigo (mkdir sob demanda), nao precisa versionar.
+admin/assets/uploads/
+
+# Sessoes PHP salvas em arquivo
+tmp_sessions/
+
+# Configuracao local do Claude Code (caminhos da sua maquina, nao e do projeto)
+.claude/settings.local.json
+
+# Arquivos soltos que nao fazem parte do codigo-fonte
+_tmp_froms.txt
+FINANCEIROFÁCIL 4.51.xlsx
+
+# Lixo de SO/editor
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1 @@
+$(Get-Content -Path admin\lojas.php | Select-Object -Skip 220 -First 20)

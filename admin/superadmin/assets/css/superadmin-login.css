@@ -1,0 +1,179 @@
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Plus Jakarta Sans', sans-serif;
+  min-height:100vh;
+  background-color:#2b2f3a;
+  background-image:url('../img/lock-bg.jpg');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 16px;
+}
+.login-page{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:100%;
+  max-width:420px;
+}
+.login-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:24px;
+}
+.login-brand-dot{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.login-brand-dot svg{width:19px;height:19px;stroke:#2b2f3a;stroke-width:1.6;fill:none}
+.login-brand span{font-size:19px;font-weight:700;color:#fff}
+.login-card{
+  width:354px;
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 14px 32px rgba(15,23,42,.08);
+  border:1px solid #eef0f7;
+  padding:24px 24px 22px;
+  text-align:center;
+}
+.login-title{font-size:16px;font-weight:700;color:#1e293b;margin:0 0 4px}
+.login-sub{font-size:11px;color:#94a3b8;margin:0 0 18px}
+.login-form{text-align:left}
+.login-field{margin-bottom:12px}
+.login-label-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:5px;
+}
+.login-label{font-size:11.5px;font-weight:600;color:#334155}
+.login-forgot{font-size:10.5px;font-weight:600;color:#64748b;text-decoration:underline}
+.login-forgot:hover{color:#2f4bde}
+.login-input-wrap{display:grid;align-items:center}
+.login-input-wrap > svg{
+  grid-area:1/1;
+  justify-self:start;
+  margin-left:12px;
+  width:13px;
+  height:13px;
+  stroke:#94a3b8;
+  stroke-width:1.8;
+  fill:none;
+  pointer-events:none;
+  z-index:1;
+}
+.login-input-wrap > input{
+  grid-area:1/1;
+  width:100%;
+  height:38px;
+  border-radius:8px;
+  border:1px solid #e2e8f0;
+  padding:0 36px 0 34px;
+  font-size:11.5px;
+  font-family:inherit;
+  outline:none;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.login-input-wrap > input:focus{border-color:#2f4bde;box-shadow:0 0 0 3px rgba(47,75,222,.12)}
+.login-eye{
+  grid-area:1/1;
+  justify-self:end;
+  margin-right:10px;
+  width:22px;
+  height:22px;
+  border:0;
+  background:none;
+  padding:0;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1;
+}
+.login-eye svg{display:block;width:14px;height:14px;stroke:#94a3b8;stroke-width:1.8;fill:none;pointer-events:none}
+.login-erro{color:#e11d48;font-size:11px;font-weight:600;margin-bottom:10px}
+.login-alert{
+  font-size:10.5px;
+  font-weight:600;
+  color:#166534;
+  background:#dcfce7;
+  border-radius:8px;
+  padding:8px 10px;
+  margin-bottom:12px;
+  text-align:left;
+  line-height:1.5;
+}
+.login-alert--danger{color:#991b1b;background:#fee2e2}
+.login-remember{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11.5px;
+  font-weight:600;
+  color:#334155;
+  margin:2px 0 14px;
+}
+.login-remember input{width:14px;height:14px;accent-color:#2f4bde;cursor:pointer}
+.login-btn{
+  width:100%;
+  height:36px;
+  border:0;
+  border-radius:999px;
+  background:#2f4bde;
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+  font-family:inherit;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.login-btn:hover{background:#2540c4}
+.login-divider{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:18px 0 14px;
+  font-size:10.5px;
+  font-weight:600;
+  color:#94a3b8;
+}
+.login-divider::before,.login-divider::after{content:'';flex:1 1 auto;height:1px;background:#eef0f7}
+.login-social{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:16px;
+}
+.login-social-btn{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+}
+.login-social-btn--fb{background:#3a5ca8}
+.login-social-btn--li{background:#3ab4e0}
+.login-social-btn--go{background:#e6483f}
+.login-footer-link{font-size:11px;color:#64748b;text-align:center}
+.login-footer-link a{color:#2f4bde;font-weight:600;text-decoration:none}
+.login-footer-link a:hover{text-decoration:underline}
+.login-copyright{margin-top:22px;font-size:11px;color:#a3a8b8}
