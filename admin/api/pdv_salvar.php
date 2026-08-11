@@ -948,8 +948,11 @@ try {
   }
 
   $camposPedido[] = 'criado_em';
-  $placeholders = array_fill(0, count($camposPedido) - 1, '?');
-  $placeholders[] = 'NOW()';
+  // Data calculada em PHP (fuso America/Fortaleza, ja setado no topo deste arquivo) —
+  // nao usar NOW() do MySQL, que segue o fuso do servidor do banco (pode ser UTC) e
+  // registrava pedidos feitos a noite com a data do dia seguinte.
+  $valoresPedido[] = date('Y-m-d H:i:s');
+  $placeholders = array_fill(0, count($camposPedido), '?');
 
   $stmt = $conn->prepare("
     INSERT INTO pedidos
