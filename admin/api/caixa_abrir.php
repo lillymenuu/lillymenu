@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Fortaleza');
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/operacao.php';
@@ -33,14 +34,18 @@ if (!$stmt->fetchColumn()) {
 $saldoInicial = (float) ($_POST['saldo_inicial'] ?? 0);
 $observacoes = trim($_POST['observacoes'] ?? '');
 
+// "Hoje" calculado em PHP (fuso America/Fortaleza) — nao usar CURDATE() do MySQL, que segue
+// o fuso do servidor do banco e pode divergir nas ultimas horas do dia local.
+$hoje = date('Y-m-d');
+
 $stmt = $conn->prepare("
   SELECT id, status, saldo_inicial, aberto_em
   FROM caixa_turnos
-  WHERE status = 'aberto' AND loja_id = ? AND DATE(aberto_em) = CURDATE()
+  WHERE status = 'aberto' AND loja_id = ? AND DATE(aberto_em) = ?
   ORDER BY id DESC
   LIMIT 1
 ");
-$stmt->execute([$lojaId]);
+$stmt->execute([$lojaId, $hoje]);
 $caixaAberto = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($caixaAberto) {
