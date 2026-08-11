@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Fortaleza');
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -299,26 +300,30 @@ if ($tipo === 'entrega' && !$endereco) {
   exit;
 }
 
+// "Hoje" calculado em PHP (fuso America/Fortaleza) — nao usar CURDATE() do MySQL, que segue
+// o fuso do servidor do banco e pode divergir nas ultimas horas do dia local.
+$hojeCaixa = date('Y-m-d');
+
 $caixaId = null;
 if ($operadorId) {
   if ($caixaIdPost) {
     $stmtCaixa = $conn->prepare("
       SELECT id FROM caixa_turnos
-      WHERE id = ? AND operador_id = ? AND status = 'aberto' AND loja_id = ? AND DATE(aberto_em) = CURDATE()
+      WHERE id = ? AND operador_id = ? AND status = 'aberto' AND loja_id = ? AND DATE(aberto_em) = ?
       LIMIT 1
     ");
-    $stmtCaixa->execute([$caixaIdPost, $operadorId, $lojaId]);
+    $stmtCaixa->execute([$caixaIdPost, $operadorId, $lojaId, $hojeCaixa]);
     $caixaId = $stmtCaixa->fetchColumn() ?: null;
   }
 
   if (!$caixaId) {
     $stmtCaixa = $conn->prepare("
       SELECT id FROM caixa_turnos
-      WHERE operador_id = ? AND status = 'aberto' AND loja_id = ? AND DATE(aberto_em) = CURDATE()
+      WHERE operador_id = ? AND status = 'aberto' AND loja_id = ? AND DATE(aberto_em) = ?
       ORDER BY id DESC
       LIMIT 1
     ");
-    $stmtCaixa->execute([$operadorId, $lojaId]);
+    $stmtCaixa->execute([$operadorId, $lojaId, $hojeCaixa]);
     $caixaId = $stmtCaixa->fetchColumn() ?: null;
   }
 }

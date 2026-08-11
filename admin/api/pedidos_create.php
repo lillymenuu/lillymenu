@@ -1,4 +1,5 @@
 ﻿<?php
+date_default_timezone_set('America/Fortaleza');
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 
@@ -19,14 +20,17 @@ if ($nome === '' || $telefone === '') {
 }
 
 try {
+  // "Hoje" calculado em PHP (fuso America/Fortaleza) — nao usar CURDATE() do MySQL, que segue
+  // o fuso do servidor do banco e pode divergir nas ultimas horas do dia local.
+  $hojeCaixa = date('Y-m-d');
   $stmtCaixa = $conn->prepare("
     SELECT id, aberto_em
     FROM caixa_turnos
-    WHERE status = 'aberto' AND loja_id = ? AND DATE(aberto_em) = CURDATE()
+    WHERE status = 'aberto' AND loja_id = ? AND DATE(aberto_em) = ?
     ORDER BY id DESC
     LIMIT 1
   ");
-  $stmtCaixa->execute([$lojaId]);
+  $stmtCaixa->execute([$lojaId, $hojeCaixa]);
   $caixa = $stmtCaixa->fetch(PDO::FETCH_ASSOC) ?: [];
   if (empty($caixa['id'])) {
     $stmtCaixaAnterior = $conn->prepare("
