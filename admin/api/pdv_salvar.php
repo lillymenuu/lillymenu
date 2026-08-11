@@ -747,6 +747,113 @@ if ($fiadoValorTotal > 0.009) {
 try {
   $conn->beginTransaction();
 
+  // Edicao de pedido existente: se os itens (produto_id + quantidade) sao exatamente os
+  // mesmos ja salvos, nao ha por que cancelar o pedido e criar outro — so o pagamento,
+  // tipo, endereco etc podem ter mudado. Atualiza o mesmo pedido no lugar, preservando o
+  // status atual (ex: "finalizado") e sem tocar em estoque/cupom/cashback/pontos/fiado,
+  // que so fazem sentido recalcular quando os itens realmente mudam.
+  $itensIguais = false;
+  if ($pedidoEdicaoId) {
+    // Usa produto_id quando a coluna existe (mais confiavel); senao, cai pra
+    // produto_nome — mesma logica de fallback ja usada no resto do arquivo.
+    $selectChaveItem = $temProdutoId ? 'produto_id AS chave_item, quantidade' : 'produto_nome AS chave_item, quantidade';
+    $stmtItensAtuais = $conn->prepare("
+      SELECT {$selectChaveItem}
+      FROM pedido_itens
+      WHERE pedido_id = ? AND loja_id = ?
+    ");
+    $stmtItensAtuais->execute([$pedidoEdicaoId, $lojaId]);
+    $itensAtuaisDb = $stmtItensAtuais->fetchAll(PDO::FETCH_ASSOC);
+
+    $assinaturaAntiga = [];
+    foreach ($itensAtuaisDb as $old) {
+      $chaveOld = $temProdutoId ? (int) ($old['chave_item'] ?? 0) : trim((string) ($old['chave_item'] ?? ''));
+      $qtdOld = (int) ($old['quantidade'] ?? 0);
+      if ($chaveOld !== '' && $chaveOld !== 0 && $qtdOld > 0) {
+        $assinaturaAntiga[] = $chaveOld . ':' . $qtdOld;
+      }
+    }
+    sort($assinaturaAntiga);
+
+    $assinaturaNova = [];
+    foreach ($itens as $i) {
+      if ($temProdutoId) {
+        $chaveNovo = isset($i['id']) ? (int) $i['id'] : 0;
+      } else {
+        $chaveNovo = trim((string) ($i['nome'] ?? ''));
+      }
+      $qtdNovo = (int) ($i['qtd'] ?? 0);
+      if ($chaveNovo !== '' && $chaveNovo !== 0 && $qtdNovo > 0) {
+        $assinaturaNova[] = $chaveNovo . ':' . $qtdNovo;
+      }
+    }
+    sort($assinaturaNova);
+
+    $itensIguais = !empty($assinaturaAntiga) && $assinaturaAntiga === $assinaturaNova;
+  }
+
+  if ($pedidoEdicaoId && $itensIguais) {
+    $stmtUpdatePedido = $conn->prepare("
+      UPDATE pedidos
+      SET tipo = ?, endereco_entrega = ?, subtotal = ?, taxa_entrega = ?, desconto = ?,
+          taxa_maquininha = ?, total = ?, forma_pagamento = ?, valor_pago = ?, troco = ?,
+          cupom = ?, updated_at = NOW()
+      WHERE id = ? AND loja_id = ?
+    ");
+    $stmtUpdatePedido->execute([
+      $tipo,
+      $tipo === 'entrega' ? $endereco : null,
+      $subtotal,
+      $taxa,
+      $desconto,
+      $taxaMaquininhaTotal,
+      $total,
+      $pagamentoPrincipal,
+      $dinheiroRecebido > 0 ? $dinheiroRecebido : null,
+      $troco,
+      $cupom !== '' ? $cupom : null,
+      $pedidoEdicaoId,
+      $lojaId
+    ]);
+
+    $conn->prepare("DELETE FROM pedido_pagamentos WHERE pedido_id = ? AND loja_id = ?")
+      ->execute([$pedidoEdicaoId, $lojaId]);
+
+    $stmtPagamentoEdicao = $conn->prepare("
+      INSERT INTO pedido_pagamentos
+        (pedido_id, forma, valor, taxa_maquininha, loja_id)
+      VALUES (?,?,?,?,?)
+    ");
+    foreach ($pagamentosValidos as $p) {
+      $taxaPagamento = 0.0;
+      if (in_array($p['forma'], ['credito','debito'], true)) {
+        $taxaPagamento = $p['valor'] * ($taxaMaquininhaPercent / 100);
+      }
+      $stmtPagamentoEdicao->execute([$pedidoEdicaoId, $p['forma'], $p['valor'], $taxaPagamento, $lojaId]);
+    }
+
+    $conn->commit();
+
+    try {
+      financialEnsureModule($conn);
+      $financialIntegration = new SaleFinancialIntegrationService();
+      $financialIntegration->syncOrderRevenue($conn, $lojaId, (int) $pedidoEdicaoId);
+    } catch (Throwable $financeiroErro) {
+      error_log('Erro ao sincronizar pedido editado no financeiro: ' . $financeiroErro->getMessage());
+    }
+
+    registrarOperacao($conn, 'pedido_editado', 'pedido:' . $pedidoEdicaoId, [
+      'apenas_pagamento' => true
+    ]);
+
+    echo json_encode([
+      'ok' => true,
+      'pedido_id' => (int) $pedidoEdicaoId,
+      'tipo' => $tipo
+    ]);
+    exit;
+  }
+
   $camposPedido = [
     'cliente_id',
     'operador_id',
