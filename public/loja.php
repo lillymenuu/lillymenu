@@ -152,6 +152,8 @@ $categorias=$stmtCat->fetchAll(PDO::FETCH_ASSOC);
 $cols=$conn->query("SHOW COLUMNS FROM produtos")->fetchAll(PDO::FETCH_COLUMN,0);
 $temImg     = in_array('imagem',$cols);
 $temProm    = in_array('preco_promocional',$cols)&&in_array('promo_desativado',$cols);
+$temPromoDur= in_array('promo_dias',$cols)&&in_array('promo_inicio',$cols);
+$temPromoExtra= in_array('promo_imagem',$cols)&&in_array('promo_descricao',$cols);
 $temQtdMin  = in_array('quantidade_minima',$cols);
 $temPtGanho = in_array('pontos_ganho',$cols);
 $temDiasCol = in_array('dias_semana',$cols);
@@ -160,6 +162,8 @@ $temHFimCol = in_array('horario_fim',$cols);
 $temVariacoesCol = in_array('tem_variacoes',$cols);
 $si =$temImg    ?', p.imagem':'';
 $sp =$temProm   ?', p.preco_promocional, p.promo_desativado':'';
+$spd=$temPromoDur?', p.promo_dias, p.promo_inicio':'';
+$spe=$temPromoExtra?', p.promo_imagem, p.promo_descricao':'';
 $sqm=$temQtdMin ?', p.quantidade_minima':'';
 $spg=$temPtGanho?', p.pontos_ganho':'';
 $sds=$temDiasCol?', p.dias_semana':'';
@@ -186,15 +190,21 @@ $_categoriaDisponivelAgora=function($cat) use ($_diaHoje,$_horaAgora){
 $produtosPorCat=[];
 foreach($categorias as $cat){
   if(!$_categoriaDisponivelAgora($cat)) continue;
-  $s=$conn->prepare("SELECT p.id,p.nome,p.descricao,p.preco{$si}{$sp}{$sqm}{$spg}{$sds}{$shi}{$shf}{$svr},IFNULL(e.quantidade,0) AS estoque FROM produtos p LEFT JOIN estoque e ON e.produto_id=p.id AND e.loja_id=p.loja_id WHERE p.categoria_id=? AND p.ativo=1 AND p.loja_id=? AND IFNULL(e.quantidade,0)>0 ORDER BY p.ordem IS NULL,p.ordem,p.nome");
+  $s=$conn->prepare("SELECT p.id,p.nome,p.descricao,p.preco{$si}{$sp}{$spd}{$spe}{$sqm}{$spg}{$sds}{$shi}{$shf}{$svr},IFNULL(e.quantidade,0) AS estoque FROM produtos p LEFT JOIN estoque e ON e.produto_id=p.id AND e.loja_id=p.loja_id WHERE p.categoria_id=? AND p.ativo=1 AND p.loja_id=? AND IFNULL(e.quantidade,0)>0 ORDER BY p.ordem IS NULL,p.ordem,p.nome");
   $s->execute([$cat['id'],$lojaId]);
   $prods=$s->fetchAll(PDO::FETCH_ASSOC);
   if($prods){
     foreach($prods as &$pr){
       $pr['imagem']=fixImgPath($pr['imagem']??'');
+      $pr['promo_imagem']=!empty($pr['promo_imagem'])?fixImgPath($pr['promo_imagem']):null;
       $pr['preco_base']=(float)$pr['preco'];
       $pr['tem_variacoes']=(!empty($pr['tem_variacoes'])&&(int)$pr['tem_variacoes']===1)?1:0;
-      if($temProm&&!($pr['promo_desativado']??1)&&($pr['preco_promocional']??0)>0){
+      $promoExpirada=false;
+      if($temPromoDur && !empty($pr['promo_dias']) && !empty($pr['promo_inicio'])){
+        $promoFim=strtotime($pr['promo_inicio'].' +'.(int)$pr['promo_dias'].' days');
+        if($promoFim!==false && $promoFim<=strtotime('today')) $promoExpirada=true;
+      }
+      if($temProm&&!($pr['promo_desativado']??1)&&($pr['preco_promocional']??0)>0&&!$promoExpirada){
         $pr['preco_final']=(float)$pr['preco_promocional'];
         $pr['em_promo']=true;
         $pr['desc_pct']=round((1-$pr['preco_final']/$pr['preco_base'])*100);
@@ -254,6 +264,17 @@ $categorias=array_values(array_filter($categorias,fn($c)=>isset($produtosPorCat[
 $destaques=[];
 foreach($produtosPorCat as $ps) foreach($ps as $p) if($p['em_promo']) $destaques[]=$p;
 foreach($combosPorCat as $cs) foreach($cs as $c) $destaques[]=$c;
+
+/* Produto em promocao com foto/descricao de propaganda: exibido automaticamente ao entrar na loja */
+$promoAutoPopup=null;
+foreach($produtosPorCat as $ps){
+  foreach($ps as $p){
+    if($p['em_promo'] && (!empty($p['promo_imagem'])||!empty($p['promo_descricao']))){
+      $promoAutoPopup=$p;
+      break 2;
+    }
+  }
+}
 
 /* Informações extras da loja */
 $lojaContato    = cfg($conn,$lojaId,'loja_contato','');
@@ -452,7 +473,7 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 <div class="destaques-scroll">
   <?php foreach($destaques as $p): ?>
     <?php $isCombo = ($p['tipo'] ?? '') === 'combo'; ?>
-    <div class="destaque-card" onclick="abrirProduto(<?=$p['id']?>,<?=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'tipo'=>$isCombo?'combo':'produto']),ENT_QUOTES)?>)">
+    <div class="destaque-card" onclick="abrirProduto(<?=$p['id']?>,<?=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'tipo'=>$isCombo?'combo':'produto','promo_imagem'=>$isCombo?null:($p['promo_imagem']??null),'promo_descricao'=>$isCombo?null:($p['promo_descricao']??null)]),ENT_QUOTES)?>)">
       <?php if($p['imagem']): ?>
         <img class="destaque-img" src="<?=htmlspecialchars($p['imagem'])?>" alt="" loading="lazy">
       <?php else: ?>
@@ -480,7 +501,7 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
       <div class="cat-section-title"><?=htmlspecialchars($cat['nome'])?></div>
       <div class="cat-produtos">
       <?php foreach($prods as $p): ?>
-        <?php $pj=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0)]),ENT_QUOTES); ?>
+        <?php $pj=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'promo_imagem'=>$p['promo_imagem']??null,'promo_descricao'=>$p['promo_descricao']??null]),ENT_QUOTES); ?>
         <div class="product-row" onclick="abrirProduto(<?=$p['id']?>,<?=$pj?>)">
           <div class="product-row-info">
             <div class="product-row-name"><?=htmlspecialchars($p['nome'])?></div>
@@ -1484,6 +1505,21 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 
 <script>
 const CFG = <?=$cfgJS?>;
+const PROMO_AUTO = <?= $promoAutoPopup ? json_encode([
+  'id'=>$promoAutoPopup['id'],
+  'nome'=>$promoAutoPopup['nome'],
+  'descricao'=>$promoAutoPopup['descricao']??'',
+  'preco_base'=>$promoAutoPopup['preco_base'],
+  'preco_final'=>$promoAutoPopup['preco_final'],
+  'em_promo'=>true,
+  'desc_pct'=>$promoAutoPopup['desc_pct'],
+  'imagem'=>$promoAutoPopup['imagem'],
+  'quantidade_minima'=>(int)($promoAutoPopup['quantidade_minima']??0),
+  'pontos_ganho'=>(int)($promoAutoPopup['pontos_ganho']??0),
+  'tem_variacoes'=>0,
+  'promo_imagem'=>$promoAutoPopup['promo_imagem']??null,
+  'promo_descricao'=>$promoAutoPopup['promo_descricao']??null,
+], JSON_UNESCAPED_UNICODE) : 'null' ?>;
 </script>
 <script src="./assets/js/loja.js?v=<?= $lojaJsVer ?>"></script>
 </body>

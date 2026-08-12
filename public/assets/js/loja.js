@@ -631,9 +631,15 @@ function abrirProduto(id,d){
   const qtdMin = Math.max(0, parseInt(d.quantidade_minima||0));
   const qtdInicial = qtdMin > 0 ? qtdMin : 1;
   prodAtual={...d,q:qtdInicial,passos:null};
+  const promoDestaque = !!(d.em_promo && (d.promo_imagem || d.promo_descricao));
   document.getElementById('pdNome2').textContent=d.nome;
-  document.getElementById('pdDesc').textContent=d.descricao||'';
-  document.getElementById('pdPreco').textContent=fmtR(d.preco_final);
+  document.getElementById('pdDesc').textContent=(promoDestaque && d.promo_descricao) ? d.promo_descricao : (d.descricao||'');
+  const pdPrecoEl=document.getElementById('pdPreco');
+  if(d.em_promo){
+    pdPrecoEl.innerHTML='<span class="prod-modal-preco-old">'+fmtR(d.preco_base)+'</span> <span class="prod-modal-preco-final">'+fmtR(d.preco_final)+'</span>'+(d.desc_pct?' <span class="badge-promo">-'+d.desc_pct+'%</span>':'');
+  } else {
+    pdPrecoEl.textContent=fmtR(d.preco_final);
+  }
   document.getElementById('pdQtd').textContent=qtdInicial;
   document.getElementById('pdObs').value='';
   const aviso = document.getElementById('pdQtdMinimaAviso');
@@ -659,7 +665,8 @@ function abrirProduto(id,d){
   const img=document.getElementById('pdImg');
   const ph=document.getElementById('pdImgPh');
   const verMaior=document.getElementById('pdVerMaior');
-  if(d.imagem){img.src=d.imagem;img.classList.remove('d-none');if(ph)ph.classList.add('d-none');if(verMaior)verMaior.style.display='';}
+  const imgSrc=(promoDestaque && d.promo_imagem) ? d.promo_imagem : d.imagem;
+  if(imgSrc){img.src=imgSrc;img.classList.remove('d-none');if(ph)ph.classList.add('d-none');if(verMaior)verMaior.style.display='';}
   else{img.classList.add('d-none');if(ph)ph.classList.remove('d-none');if(verMaior)verMaior.style.display='none';}
   /* Combo: carrega passos via API */
   const comboSec = document.getElementById('pdComboSection');
@@ -693,6 +700,8 @@ function abrirProduto(id,d){
   _modal.classList.add('show');
   if(d.tipo==='combo') _modal.classList.add('combo-mode');
   else _modal.classList.remove('combo-mode');
+  if(promoDestaque) _modal.classList.add('promo-mode');
+  else _modal.classList.remove('promo-mode');
   document.body.style.overflow='hidden';
 }
 function fecharProdModal(){
@@ -3051,3 +3060,13 @@ function _renderHorarioSemana(semana){
 }
 setInterval(_atualizarLojaStatus, 20000);
 verificarCupomBanner();
+
+/* Popup automatico do produto em promocao (foto/descricao de propaganda), so na
+   primeira vez que o cliente entra na tela nessa sessao do navegador */
+if(typeof PROMO_AUTO!=='undefined' && PROMO_AUTO){
+  const _promoVistoKey='promo_visto_'+CFG.lojaId+'_'+PROMO_AUTO.id;
+  if(!sessionStorage.getItem(_promoVistoKey)){
+    sessionStorage.setItem(_promoVistoKey,'1');
+    setTimeout(()=>{ abrirProduto(PROMO_AUTO.id, PROMO_AUTO); }, 600);
+  }
+}

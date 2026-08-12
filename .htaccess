@@ -2,7 +2,20 @@
   Require all denied
 </FilesMatch>
 
+# Painel administrativo tem conteudo por usuario/loja logado — nunca pode ser
+# guardado no cache do servidor (LiteSpeed) nem repassado a outra pessoa.
+<IfModule LiteSpeed>
+  CacheDisable public /admin
+</IfModule>
+
 RewriteEngine On
+
+# Paginas do admin/superadmin sem .php visivel na URL (ex: /admin/dashboard -> admin/dashboard.php)
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(admin/.+)$ $1.php [L,QSA]
+
+# Tela inicial do site (landing page): /public/home -> /public/index.php
+RewriteRule ^public/home/?$ public/index.php [L,QSA]
 
 # Formato antigo, mantido por compatibilidade com links ja compartilhados
 RewriteRule ^lilly/([^/]+)/?$ public/loja.php?loja=$1 [L,QSA]

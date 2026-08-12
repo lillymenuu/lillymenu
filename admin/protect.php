@@ -1,6 +1,17 @@
 <?php
 session_start();
 
+/* Impede que CDN/proxy/navegador guarde em cache paginas autenticadas — sem isso,
+   um link copiado de dentro do sistema pode ser reaberto por qualquer pessoa (em
+   outro navegador/aba anonima) servido a partir do cache, sem passar pelo login.
+   O Cache-Control padrao sozinho nao basta na Hostinger: o servidor deles roda
+   LiteSpeed, que tem cache proprio (LSCache) e ignora o Cache-Control normal quando
+   o cabecalho especifico dele esta presente — por isso o X-LiteSpeed-Cache-Control
+   abaixo, que e o que realmente desativa o cache do servidor. */
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private');
+header('Pragma: no-cache');
+header('X-LiteSpeed-Cache-Control: no-cache');
+
 if (!isset($_SESSION['admin_id'])) {
   header("Location: index.php");
   exit;

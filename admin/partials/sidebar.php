@@ -191,6 +191,7 @@ $mostrarPdv = $menuPode('menu.pdv') && $planoPode('menu.pdv');
 $mostrarGestor = $menuPode('menu.gestor_pedidos') && $planoPode('menu.gestor_pedidos');
 $mostrarPedidos = $menuPode('menu.pedidos') && $planoPode('menu.pedidos');
 $mostrarProdutos = $menuPode('menu.produtos') && $planoPode('menu.produtos');
+$mostrarPromo = $menuPode('menu.promo') && $planoPode('menu.promo');
 $mostrarEstoque = $menuPode('menu.estoque') && $planoPode('menu.estoque');
 $mostrarClientes = $menuPode('menu.clientes') && $planoPode('menu.clientes');
 $mostrarRelatorios = $menuPode('menu.relatorios') && $planoPode('menu.relatorios');
@@ -228,7 +229,7 @@ try {
 } catch (Exception $e) {}
 
 $secAcessoRapido = $mostrarDashboard;
-$secDiaADia = $mostrarPdv || $mostrarGestor || $mostrarPedidos || $mostrarProdutos || $mostrarEstoque || $mostrarClientes || $mostrarOrcamentos;
+$secDiaADia = $mostrarPdv || $mostrarGestor || $mostrarPedidos || $mostrarProdutos || $mostrarPromo || $mostrarEstoque || $mostrarClientes || $mostrarOrcamentos;
 $secControle = $mostrarEntradaSaida || $mostrarMateriaPrimaControleControl;
 $secFinanceiro = $mostrarFinanceiro;
 $secRelatorios = $mostrarRelatorios || $mostrarFidelidade || $mostrarCrossSellRelatorio;
@@ -675,7 +676,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       <ul class="sidebar-menu">
         <?php if ($mostrarDashboard): ?>
           <li>
-            <a href="dashboard.php" class="<?= $rota=='dashboard.php'?'active':'' ?>">
+            <a href="dashboard" class="<?= $rota=='dashboard.php'?'active':'' ?>">
               <i class="bi bi-house"></i>
               <span>Dashboard</span>
             </a>
@@ -683,7 +684,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarMateriaPrima): ?>
           <li>
-            <a href="cad_materia_prima.php" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
+            <a href="cad_materia_prima" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
               <i class="bi bi-box-seam"></i>
               <span>Matéria-prima</span>
             </a>
@@ -691,7 +692,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarMateriaPrimaControle): ?>
           <li>
-            <a href="cad_materia_prima.php" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
+            <a href="cad_materia_prima" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
               <i class="bi bi-box-seam"></i>
               <span>Materia-prima</span>
             </a>
@@ -699,7 +700,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarMateriaPrimaControle): ?>
           <li>
-            <a href="cad_materia_prima.php" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
+            <a href="cad_materia_prima" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
               <i class="bi bi-box-seam"></i>
               <span>Materia-prima</span>
             </a>
@@ -713,7 +714,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       <ul class="sidebar-menu">
         <?php if ($mostrarPdv): ?>
           <li>
-            <a href="pdv.php" class="<?= $rota=='pdv.php'?'active':'' ?>" data-pdv-modal="1">
+            <a href="pdv" class="<?= $rota=='pdv.php'?'active':'' ?>" data-pdv-modal="1">
               <i class="bi bi-bag-check"></i>
               <span>Pedidos (PDV)</span>
             </a>
@@ -721,7 +722,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarGestor): ?>
           <li>
-            <a href="gestor_pedidos.php" class="<?= $rota=='gestor_pedidos.php'?'active':'' ?>">
+            <a href="gestor_pedidos" class="<?= $rota=='gestor_pedidos.php'?'active':'' ?>">
               <i class="bi bi-kanban"></i>
               <span>Gestor de Pedidos</span>
             </a>
@@ -729,7 +730,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarPedidos): ?>
           <li>
-            <a href="pedidos.php" class="<?= ($rota=='pedidos.php' || $rota=='pedido.php')?'active':'' ?>">
+            <a href="pedidos" class="<?= ($rota=='pedidos.php' || $rota=='pedido.php')?'active':'' ?>">
               <i class="bi bi-receipt"></i>
               <span>Lista de Pedidos</span>
             </a>
@@ -737,7 +738,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarOrcamentos): ?>
           <li>
-            <a href="orcamentos.php" class="<?= $rota=='orcamentos.php'?'active':'' ?>">
+            <a href="orcamentos" class="<?= $rota=='orcamentos.php'?'active':'' ?>">
               <i class="bi bi-file-earmark-text"></i>
               <span>Orçamento/Recibo</span>
             </a>
@@ -746,16 +747,24 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php if ($mostrarProdutos): ?>
           <div class="sidebar-section-title">Catálogo</div>
           <li>
-            <a href="produtos.php" class="<?= ($rota=='produtos.php' || $rota=='produtos.php')?'active':'' ?>">
+            <a href="produtos" class="<?= ($rota=='produtos.php' || $rota=='produtos.php')?'active':'' ?>">
               <i class="bi bi-bag"></i>
               <span>Produtos</span>
             </a>
           </li>
 
         <?php endif; ?>
+        <?php if ($mostrarPromo): ?>
+          <li>
+            <a href="promo" class="<?= $rota=='promo.php'?'active':'' ?>">
+              <i class="bi bi-megaphone"></i>
+              <span>Promo</span>
+            </a>
+          </li>
+        <?php endif; ?>
         <?php if ($mostrarEstoque): ?>
           <li>
-            <a href="estoque.php" class="<?= $rota=='estoque.php'?'active':'' ?>">
+            <a href="estoque" class="<?= $rota=='estoque.php'?'active':'' ?>">
               <i class="bi bi-box-seam"></i>
               <span>Estoque</span>
             </a>
@@ -763,7 +772,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarClientes): ?>
           <li>
-            <a href="clientes.php" class="<?= ($rota=='clientes.php' || $rota=='clientes.php')?'active':'' ?>">
+            <a href="clientes" class="<?= ($rota=='clientes.php' || $rota=='clientes.php')?'active':'' ?>">
               <i class="bi bi-grid-3x3-gap"></i>
               <span>Clientes</span>
             </a>
@@ -777,7 +786,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       <ul class="sidebar-menu">
         <?php if ($mostrarRelatorios): ?>
           <li>
-            <a href="relatorios.php" class="<?= $rota=='relatorios.php'?'active':'' ?>">
+            <a href="relatorios" class="<?= $rota=='relatorios.php'?'active':'' ?>">
               <i class="bi bi-bar-chart"></i>
               <span>Vendas</span>
             </a>
@@ -785,7 +794,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarRelatorios): ?>
           <li>
-            <a href="relatorios_clientes.php" class="<?= $rota=='relatorios_clientes.php'?'active':'' ?>">
+            <a href="relatorios_clientes" class="<?= $rota=='relatorios_clientes.php'?'active':'' ?>">
               <i class="bi bi-people"></i>
               <span>Relatório de clientes</span>
             </a>
@@ -793,7 +802,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarFidelidade): ?>
           <li>
-            <a href="relatorios_fidelidade.php" class="<?= $rota=='relatorios_fidelidade.php'?'active':'' ?>">
+            <a href="relatorios_fidelidade" class="<?= $rota=='relatorios_fidelidade.php'?'active':'' ?>">
               <i class="bi bi-award"></i>
               <span>Fidelidade</span>
             </a>
@@ -801,7 +810,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarCrossSellRelatorio): ?>
           <li>
-            <a href="relatorio_cross_sell.php" class="<?= $rota=='relatorio_cross_sell.php'?'active':'' ?>">
+            <a href="relatorio_cross_sell" class="<?= $rota=='relatorio_cross_sell.php'?'active':'' ?>">
               <i class="bi bi-shuffle"></i>
               <span>Cross-sell</span>
             </a>
@@ -815,7 +824,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       <ul class="sidebar-menu">
         <?php if ($mostrarMateriaPrimaControleControl): ?>
           <li>
-            <a href="cad_materia_prima.php" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
+            <a href="cad_materia_prima" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
               <i class="bi bi-box-seam"></i>
               <span>Materia-prima</span>
             </a>
@@ -823,7 +832,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarEntradaSaida): ?>
           <li>
-            <a href="entrada_saida.php" class="<?= $rota=='entrada_saida.php'?'active':'' ?>">
+            <a href="entrada_saida" class="<?= $rota=='entrada_saida.php'?'active':'' ?>">
               <i class="bi bi-arrow-left-right"></i>
               <span>Entrada / saída</span>
             </a>
@@ -842,37 +851,37 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       <div class="sidebar-section-title">Financeiro</div>
       <ul class="sidebar-menu">
         <li>
-          <a href="financeiro_dashboard.php" class="<?= $rota=='financeiro_dashboard.php'?'active':'' ?>">
+          <a href="financeiro_dashboard" class="<?= $rota=='financeiro_dashboard.php'?'active':'' ?>">
             <i class="bi bi-pie-chart"></i>
             <span>Dashboard</span>
           </a>
         </li>
         <li>
-          <a href="financeiro_lancamentos.php" class="<?= $rota=='financeiro_lancamentos.php'?'active':'' ?>">
+          <a href="financeiro_lancamentos" class="<?= $rota=='financeiro_lancamentos.php'?'active':'' ?>">
             <i class="bi bi-arrow-left-right"></i>
             <span>Lancamentos</span>
           </a>
         </li>
         <li>
-          <a href="financeiro_categorias.php" class="<?= $rota=='financeiro_categorias.php'?'active':'' ?>">
+          <a href="financeiro_categorias" class="<?= $rota=='financeiro_categorias.php'?'active':'' ?>">
             <i class="bi bi-diagram-3"></i>
             <span>Categorias</span>
           </a>
         </li>
         <li>
-          <a href="financeiro_contas.php" class="<?= $rota=='financeiro_contas.php'?'active':'' ?>">
+          <a href="financeiro_contas" class="<?= $rota=='financeiro_contas.php'?'active':'' ?>">
             <i class="bi bi-bank"></i>
             <span>Contas</span>
           </a>
         </li>
         <li>
-          <a href="financeiro_formas_pagamento.php" class="<?= $rota=='financeiro_formas_pagamento.php'?'active':'' ?>">
+          <a href="financeiro_formas_pagamento" class="<?= $rota=='financeiro_formas_pagamento.php'?'active':'' ?>">
             <i class="bi bi-credit-card-2-front"></i>
             <span>Formas de pagamento</span>
           </a>
         </li>
         <li>
-          <a href="financeiro_dre.php" class="<?= $rota=='financeiro_dre.php'?'active':'' ?>">
+          <a href="financeiro_dre" class="<?= $rota=='financeiro_dre.php'?'active':'' ?>">
             <i class="bi bi-table"></i>
             <span>DRE</span>
           </a>
@@ -885,7 +894,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       <ul class="sidebar-menu">
         <?php if ($mostrarWhatsLilly): ?>
         <li>
-          <a href="whatslilly.php" class="<?= $rota=='whatslilly.php'?'active':'' ?>" style="display:flex;align-items:center;gap:8px;">
+          <a href="whatslilly" class="<?= $rota=='whatslilly.php'?'active':'' ?>" style="display:flex;align-items:center;gap:8px;">
             <i class="bi bi-whatsapp" style="color:#25d366"></i>
             <span>WhatsLilly</span>
             <?php if ($wlNaoLidas > 0): ?>
@@ -899,7 +908,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
 
         <?php if ($mostrarListaTransmissao): ?>
           <li>
-            <a href="lista_transmissao.php" class="<?= $rota=='lista_transmissao.php'?'active':'' ?>">
+            <a href="lista_transmissao" class="<?= $rota=='lista_transmissao.php'?'active':'' ?>">
               <i class="bi bi-broadcast"></i>
               <span>Lista de Transmissão</span>
             </a>
@@ -913,7 +922,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       <ul class="sidebar-menu">
         <?php if ($mostrarGerenciamento): ?>
           <li>
-            <a href="superadmin/dashboard.php" class="<?= $emSuperadmin?'active':'' ?>">
+            <a href="superadmin/dashboard" class="<?= $emSuperadmin?'active':'' ?>">
               <i class="bi bi-building-gear"></i>
               <span>Gerenciamento</span>
             </a>
@@ -922,7 +931,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
 
         <?php if ($mostrarMotoboys): ?>
           <li>
-            <a href="motoboys.php" class="<?= $rota=='motoboys.php'?'active':'' ?>">
+            <a href="motoboys" class="<?= $rota=='motoboys.php'?'active':'' ?>">
               <i class="bi bi-bicycle"></i>
               <span>Motoboys</span>
             </a>
@@ -934,7 +943,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
 
         <?php if ($mostrarControleCaixa): ?>
           <li>
-            <a href="controle_caixa.php" class="<?= $rota=='controle_caixa.php'?'active':'' ?>">
+            <a href="controle_caixa" class="<?= $rota=='controle_caixa.php'?'active':'' ?>">
               <i class="bi bi-cash-stack"></i>
               <span>Controle de caixa</span>
             </a>
@@ -942,7 +951,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
         <?php if ($mostrarControleFiado): ?>
           <li>
-            <a href="controle_fiado.php" class="<?= $rota=='controle_fiado.php'?'active':'' ?>">
+            <a href="controle_fiado" class="<?= $rota=='controle_fiado.php'?'active':'' ?>">
               <i class="bi bi-journal-text"></i>
               <span>Controle de fiado</span>
             </a>
@@ -953,7 +962,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
 
         <?php if ($mostrarCupons): ?>
           <li>
-            <a href="cupons.php" class="<?= $rota=='cupons.php'?'active':'' ?>">
+            <a href="cupons" class="<?= $rota=='cupons.php'?'active':'' ?>">
               <i class="bi bi-ticket-perforated"></i>
               <span>Cupons</span>
             </a>
@@ -968,14 +977,14 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
           </li>
         <?php endif; ?>
         <li>
-          <a href="avaliacoes.php" class="<?= $rota=='avaliacoes.php'?'active':'' ?>">
+          <a href="avaliacoes" class="<?= $rota=='avaliacoes.php'?'active':'' ?>">
             <i class="bi bi-star-half"></i>
             <span>Avaliações</span>
           </a>
         </li>
         <?php if ($mostrarConfiguracoes): ?>
           <li>
-            <a href="configuracoes.php" class="<?= $rota=='configuracoes.php'?'active':'' ?>">
+            <a href="configuracoes" class="<?= $rota=='configuracoes.php'?'active':'' ?>">
               <i class="bi bi-gear"></i>
               <span>Configurações</span>
             </a>
@@ -989,7 +998,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <div class="user-name"><?= htmlspecialchars($usuarioNome) ?></div>
         <div class="user-email"><?= htmlspecialchars($lojaEmail) ?></div>
       </div>
-      <a href="logout.php" class="user-logout" title="Sair">
+      <a href="logout" class="user-logout" title="Sair">
         <i class="bi bi-box-arrow-right"></i>
         
       </a>
@@ -2198,7 +2207,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
           <div class="crosssell-stat-label">Seu faturamento aumentou</div>
           <div class="crosssell-stat-value" id="crossSellFaturamento">R$ 0,00</div>
           <div class="crosssell-stat-sub">a mais com o cross-sell</div>
-          <a href="relatorio_cross_sell.php" class="crosssell-stat-link">Ver relatório completo</a>
+          <a href="relatorio_cross_sell" class="crosssell-stat-link">Ver relatório completo</a>
         </div>
 
         <div class="crosssell-card">

@@ -32,6 +32,7 @@ $menuLabelsRecursos = [
   'menu.pedidos' => 'Lista de pedidos',
   'menu.orcamentos' => 'Orçamentos',
   'menu.produtos' => 'Produtos',
+  'menu.promo' => 'Promoções',
   'menu.estoque' => 'Estoque',
   'menu.clientes' => 'Clientes (CRM)',
   'menu.relatorios' => 'Relatórios (vendas)',
