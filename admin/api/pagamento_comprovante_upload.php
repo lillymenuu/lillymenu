@@ -3,22 +3,13 @@ require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../helpers/gerenciamento_module.php';
 require_once __DIR__ . '/../helpers/whats_send.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 gerenciamentoEnsureModule($conn);
 
 $lojaId = (int) ($_SESSION['loja_id'] ?? 0);
 
 if ($lojaId <= 0 || !isset($_FILES['comprovante']) || $_FILES['comprovante']['error'] !== UPLOAD_ERR_OK) {
-  header('Location: ../pagamento.php?msg=erro');
-  exit;
-}
-
-$tmp = $_FILES['comprovante']['tmp_name'];
-$name = $_FILES['comprovante']['name'] ?? '';
-$ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-$allowed = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
-
-if (!in_array($ext, $allowed, true) || filesize($tmp) > 5 * 1024 * 1024) {
   header('Location: ../pagamento.php?msg=erro');
   exit;
 }
@@ -39,20 +30,23 @@ if ($cobrancaId <= 0) {
   exit;
 }
 
-$dir = __DIR__ . '/../assets/uploads/comprovantes';
-if (!is_dir($dir)) {
-  @mkdir($dir, 0775, true);
+try {
+  $publicPath = storage_save_upload(
+    $_FILES['comprovante'],
+    'comprovantes',
+    'comprovante_' . $lojaId . '_' . $cobrancaId,
+    null,
+    ['jpg', 'jpeg', 'png', 'webp', 'pdf']
+  );
+} catch (RuntimeException $e) {
+  $publicPath = null;
 }
 
-$fileName = 'comprovante_' . $lojaId . '_' . $cobrancaId . '_' . date('Ymd_His') . '_' . random_int(100, 999) . '.' . $ext;
-$dest = $dir . '/' . $fileName;
-
-if (!move_uploaded_file($tmp, $dest)) {
+if ($publicPath === null) {
   header('Location: ../pagamento.php?msg=erro');
   exit;
 }
 
-$publicPath = 'assets/uploads/comprovantes/' . $fileName;
 $stmt = $conn->prepare("UPDATE cobrancas SET comprovante_arquivo = ?, comprovante_enviado_em = NOW(), motivo_rejeicao = NULL WHERE id = ?");
 $stmt->execute([$publicPath, $cobrancaId]);
 

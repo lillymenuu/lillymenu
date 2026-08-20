@@ -186,14 +186,25 @@ $indexJsVer = filemtime(__DIR__ . '/assets/js/index.js');
 <div class="modal fade" id="resetModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 p-4 border-0 shadow">
-      <h6 class="fw-bold mb-1">Redefinir senha</h6>
-      <p class="text-muted small mb-3">Digite seu e-mail para receber o link de redefinição.</p>
-      <form method="POST" action="reset_request.php">
-        <input type="email" name="email" class="form-control rounded-3 mb-3"
-               placeholder="E-mail" required style="height:46px">
-        <button class="btn btn-primary w-100 rounded-3 py-2 fw-bold"
-                style="background:#9C5523;border-color:#9C5523;color:#fff">Continuar</button>
-      </form>
+      <div id="resetFormView">
+        <h6 class="fw-bold mb-1">Redefinir senha</h6>
+        <p class="text-muted small mb-3">Digite seu e-mail para receber o link de redefinição.</p>
+        <form id="resetForm">
+          <input type="email" name="email" id="resetEmail" class="form-control rounded-3 mb-3"
+                 placeholder="E-mail" required style="height:46px">
+          <button type="submit" class="btn btn-primary w-100 rounded-3 py-2 fw-bold"
+                  style="background:#9C5523;border-color:#9C5523;color:#fff">Continuar</button>
+          <div class="small mt-2" id="resetMsg"></div>
+        </form>
+      </div>
+      <div id="resetSuccessView" class="d-none text-center py-2">
+        <div class="mb-3 mx-auto" style="width:52px;height:52px;border-radius:50%;background:#9C5523;display:flex;align-items:center;justify-content:center">
+          <i class="bi bi-check-lg text-white" style="font-size:24px"></i>
+        </div>
+        <h6 class="fw-bold mb-2">E-mail enviado!</h6>
+        <p class="text-muted small mb-3">Se o e-mail informado estiver cadastrado, enviamos um link para redefinir sua senha. Confira sua caixa de entrada (e o spam).</p>
+        <button type="button" class="btn btn-dark w-100 rounded-3 py-2 fw-bold" data-bs-dismiss="modal">Entendi</button>
+      </div>
     </div>
   </div>
 </div>

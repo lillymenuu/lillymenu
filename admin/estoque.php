@@ -89,6 +89,8 @@ $estoqueJsVer = filemtime(__DIR__ . '/assets/js/estoque.js');
   </div>
 
   <div class="estoque-grid" id="estoqueCards"></div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 </main>
@@ -179,16 +181,16 @@ const estoqueInicial = <?php echo json_encode($estoque); ?>;
             Caso voce venda o mesmo item como produto ou item de complemento (adicional), voce podera vincular esse
             aqui e o mesmo tera um unico estoque
           </div>
-          <button type="button" class="estoque-link">vincular outros itens</button>
+          <button type="button" class="estoque-link" id="btnVincularEstoque">vincular outros itens</button>
 
           <div class="estoque-section-title">Produtos vinculados</div>
           <div class="estoque-list" id="estoqueVinculados">
-            <div class="estoque-list-item">Nenhum item vinculado.</div>
+            <div class="estoque-list-item estoque-list-empty">Nenhum item vinculado.</div>
           </div>
 
           <div class="estoque-section-title">Adicionais(complementos) vinculados</div>
           <div class="estoque-list" id="estoqueAdicionais">
-            <div class="estoque-list-item">Nenhum item vinculado.</div>
+            <div class="estoque-list-item estoque-list-empty">Nenhum item vinculado.</div>
           </div>
         </form>
       </div>
@@ -202,6 +204,40 @@ const estoqueInicial = <?php echo json_encode($estoque); ?>;
   </div>
 </div>
 
+<!-- MODAL VINCULAR ESTOQUE -->
+<div class="modal fade" id="modalVincularEstoque" tabindex="-1" style="z-index:1070">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content combo-modal">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title fw-bold mb-1">Vincular outros itens ao estoque</h5>
+          <div class="estoque-subtitle" style="margin:0">Nessa tela voce podera vincular mais de um produto ao mesmo item de estoque. Selecione abaixo os itens que voce quer vincular.</div>
+        </div>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding-bottom:8px">
+        <div class="opcoes-picker-search">
+          <input type="text" id="estVinculoSearch" placeholder="Pesquisar produto" autocomplete="off">
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+          <button class="opcoes-picker-selall" style="margin-bottom:0" onclick="_estVinculoSelecionarTodos()">
+            <i class="bi bi-check2-all me-1"></i>Selecionar todos
+          </button>
+          <button class="opcoes-picker-selall" style="margin-bottom:0;color:#6b7280" onclick="_estVinculoDesmarcarTodos()">
+            <i class="bi bi-x-circle me-1"></i>Desmarcar todos
+          </button>
+        </div>
+        <div class="opcoes-grid" id="estVinculoGrid">
+          <div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Carregando produtos...</div>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <span id="estVinculoContador" style="font-size:12px;color:#6b7280"></span>
+        <button class="estoque-btn-primary" onclick="_estVinculoSalvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

@@ -1192,8 +1192,9 @@ if (modalLojaInfo) {
   const perfilBase64 = modalLojaInfo.querySelector('#lojaPerfilBase64');
   const capaRemoverFlag = modalLojaInfo.querySelector('#lojaCapaRemoverFlag');
   const perfilRemoverFlag = modalLojaInfo.querySelector('#lojaPerfilRemoverFlag');
-  const descricaoInput = modalLojaInfo.querySelector('#lojaDescricao');
-  const descricaoCount = modalLojaInfo.querySelector('#lojaDescricaoCount');
+  const contatoInput = modalLojaInfo.querySelector('#lojaContato');
+  const cnpjInput = modalLojaInfo.querySelector('#lojaCnpj');
+  const cepInput = modalLojaInfo.querySelector('#lojaCep');
   const linkSlug = modalLojaInfo.querySelector('#lojaLinkSlug');
   const linkPreview = modalLojaInfo.querySelector('#lojaLinkPreview');
   const linkHidden = modalLojaInfo.querySelector('#lojaLinkHidden');
@@ -1298,13 +1299,51 @@ if (modalLojaInfo) {
     });
   }
 
-  if (descricaoInput && descricaoCount) {
-    const atualizarDescricao = () => {
-      const tamanho = descricaoInput.value.length;
-      descricaoCount.textContent = `${tamanho}/300`;
-    };
-    descricaoInput.addEventListener('input', atualizarDescricao);
-    atualizarDescricao();
+  const maskTelefoneBR = el => {
+    let v = el.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 10) {
+      v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+    } else if (v.length > 5) {
+      v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    } else if (v.length > 2) {
+      v = v.replace(/(\d{2})(\d{0,4})/, '($1) $2');
+    } else if (v.length > 0) {
+      v = v.replace(/(\d{0,2})/, '($1');
+    }
+    el.value = v;
+  };
+  const maskCepBR = el => {
+    let v = el.value.replace(/\D/g, '').slice(0, 8);
+    if (v.length > 5) v = v.replace(/(\d{5})(\d{0,3})/, '$1-$2');
+    el.value = v;
+  };
+  const maskCpfCnpj = el => {
+    let v = el.value.replace(/\D/g, '').slice(0, 14);
+    if (v.length <= 11) {
+      v = v
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+      v = v
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    }
+    el.value = v;
+  };
+  if (contatoInput) {
+    contatoInput.addEventListener('input', () => maskTelefoneBR(contatoInput));
+    maskTelefoneBR(contatoInput);
+  }
+  if (cepInput) {
+    cepInput.addEventListener('input', () => maskCepBR(cepInput));
+    maskCepBR(cepInput);
+  }
+  if (cnpjInput) {
+    cnpjInput.addEventListener('input', () => maskCpfCnpj(cnpjInput));
+    maskCpfCnpj(cnpjInput);
   }
 
   if (linkSlug && linkPreview && linkHidden) {

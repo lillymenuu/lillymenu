@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../helpers/gerenciamento_module.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -164,30 +165,17 @@ $uploads = [
   'planos_hero_imagem' => 'planos_hero_imagem'
 ];
 
-$dir = __DIR__ . '/../assets/uploads/landing';
-if (!is_dir($dir)) {
-  @mkdir($dir, 0775, true);
-}
-
-$allowed = ['jpg','jpeg','png','webp'];
 foreach ($uploads as $field => $key) {
-  if (!isset($_FILES[$field]) || $_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
-    continue;
-  }
-  $tmp = $_FILES[$field]['tmp_name'];
-  $name = $_FILES[$field]['name'] ?? '';
-  $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-  if (!in_array($ext, $allowed, true)) {
-    continue;
-  }
-  if (filesize($tmp) > 5 * 1024 * 1024) {
+  if (!isset($_FILES[$field])) {
     continue;
   }
   $safe = preg_replace('/[^a-zA-Z0-9_-]+/', '_', $key);
-  $fileName = 'landing_' . $safe . '_' . date('Ymd_His') . '_' . random_int(100,999) . '.' . $ext;
-  $dest = $dir . '/' . $fileName;
-  if (move_uploaded_file($tmp, $dest)) {
-    $publicPath = 'assets/uploads/landing/' . $fileName;
+  try {
+    $publicPath = storage_save_upload($_FILES[$field], 'landing', 'landing_' . $safe);
+  } catch (RuntimeException $e) {
+    continue;
+  }
+  if ($publicPath !== null) {
     setLanding($conn, $key, $publicPath);
   }
 }

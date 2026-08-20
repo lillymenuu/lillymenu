@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -29,13 +30,8 @@ function limparSuporteMensagensExpiradas(PDO $conn): void {
   try {
     $stmt = $conn->query("SELECT anexo_arquivo FROM suporte_mensagens WHERE criado_em < (NOW() - INTERVAL 2 DAY) AND anexo_arquivo IS NOT NULL");
     $arquivos = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
-    $baseDir = realpath(__DIR__ . '/../assets/uploads/suporte');
     foreach ($arquivos as $relPath) {
-      if (!$relPath) continue;
-      $arquivo = realpath(__DIR__ . '/../' . $relPath);
-      if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-        unlink($arquivo);
-      }
+      storage_delete($relPath);
     }
     $conn->exec("DELETE FROM suporte_mensagens WHERE criado_em < (NOW() - INTERVAL 2 DAY)");
   } catch (Exception $e) {
@@ -43,31 +39,7 @@ function limparSuporteMensagensExpiradas(PDO $conn): void {
 }
 
 function salvarAnexoSuporte(array $arquivo, int $lojaId): ?string {
-  if (($arquivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
-    return null;
-  }
-  if ($arquivo['error'] !== UPLOAD_ERR_OK) {
-    throw new RuntimeException('Erro ao enviar o arquivo.');
-  }
-  $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-  $ext = strtolower(pathinfo($arquivo['name'] ?? '', PATHINFO_EXTENSION));
-  if (!in_array($ext, $allowed, true)) {
-    throw new RuntimeException('Imagem invalida (use JPG, PNG ou WebP).');
-  }
-  if ($arquivo['size'] > 5 * 1024 * 1024) {
-    throw new RuntimeException('Imagem muito grande (maximo 5MB).');
-  }
-  $dirRel = 'assets/uploads/suporte';
-  $dirAbs = __DIR__ . '/../' . $dirRel;
-  if (!is_dir($dirAbs)) {
-    @mkdir($dirAbs, 0775, true);
-  }
-  $fileName = 'suporte_' . $lojaId . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-  $dest = $dirAbs . '/' . $fileName;
-  if (!move_uploaded_file($arquivo['tmp_name'], $dest)) {
-    throw new RuntimeException('Erro ao salvar a imagem.');
-  }
-  return $dirRel . '/' . $fileName;
+  return storage_save_upload($arquivo, 'suporte', 'suporte_' . $lojaId, $lojaId);
 }
 
 garantirSuporteMensagensTable($conn);

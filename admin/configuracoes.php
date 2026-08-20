@@ -761,7 +761,7 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
       </section>
     <?php endforeach; ?>
 
-    <div class="dash-footer">Cardápio Digital Lilly (c) 2026</div>
+    <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
   </div>
 </div>
 
@@ -1445,81 +1445,74 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
                     <input type="hidden" name="loja_perfil_remover" id="lojaPerfilRemoverFlag" value="0">
                   </div>
 
-                  <div class="loja-section-title">Informacoes principais</div>
-                  <div class="loja-field">
-                    <label for="lojaNome">Nome da loja <span class="text-danger">*</span></label>
-                    <input class="loja-input" type="text" name="nome_loja" id="lojaNome" value="<?= htmlspecialchars($loja_nome) ?>">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaContato">Numero de contato <span class="text-danger">*</span></label>
-                    <input class="loja-input" type="text" name="loja_contato" id="lojaContato" value="<?= htmlspecialchars($loja_contato) ?>">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaDescricao">Descricao</label>
-                    <textarea class="loja-textarea" name="loja_descricao" id="lojaDescricao" maxlength="300"><?= htmlspecialchars($loja_descricao) ?></textarea>
-                    <div class="loja-counter" id="lojaDescricaoCount">0/300</div>
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaBoasVindas">Mensagem de boas vindas</label>
-                    <textarea class="loja-textarea" name="loja_boas_vindas" id="lojaBoasVindas" maxlength="300"><?= htmlspecialchars($loja_boas_vindas) ?></textarea>
-                  </div>
-
-                  <div class="loja-section-title">Documentos e link</div>
-                  <div class="loja-field">
-                    <label for="lojaCnpj">CNPJ</label>
-                    <input class="loja-input" type="text" name="loja_cnpj" id="lojaCnpj" value="<?= htmlspecialchars($loja_cnpj) ?>" placeholder="CNPJ da sua loja caso tenha">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaLinkSlug">Link customizado</label>
-                    <input class="loja-input" type="text" id="lojaLinkSlug" value="<?= htmlspecialchars($loja_link_slug) ?>" data-base="<?= htmlspecialchars($loja_link_base) ?>" placeholder="ex: tewconfeitaria">
-                    <div class="loja-link-hint">
-                      Customize seu link com o nome do seu estabelecimento, ficando mais facil para seus clientes identificarem a sua loja.
+                  <div class="loja-form-grid">
+                    <div class="loja-section-title">Informacoes principais</div>
+                    <div class="loja-field">
+                      <label for="lojaNome">Nome da loja <span class="text-danger">*</span></label>
+                      <input class="loja-input" type="text" name="nome_loja" id="lojaNome" value="<?= htmlspecialchars($loja_nome) ?>">
                     </div>
-                    <div class="loja-link-preview">
-                      <input type="text" id="lojaLinkPreview" readonly>
-                      <button type="button" id="lojaLinkCopy"><i class="bi bi-clipboard"></i></button>
+                    <div class="loja-field">
+                      <label for="lojaContato">Numero de contato <span class="text-danger">*</span></label>
+                      <input class="loja-input" type="text" inputmode="numeric" name="loja_contato" id="lojaContato" value="<?= htmlspecialchars($loja_contato) ?>" placeholder="(00) 00000-0000">
                     </div>
-                    <input type="hidden" name="link_loja" id="lojaLinkHidden" value="<?= htmlspecialchars($loja_link) ?>">
-                  </div>
 
-                  <div class="loja-section-title">Redes sociais</div>
-                  <div class="loja-field">
-                    <label for="lojaInstagram">Instagram</label>
-                    <input class="loja-input" type="text" name="loja_instagram" id="lojaInstagram" value="<?= htmlspecialchars($loja_instagram) ?>" placeholder="Ex.: tewconfeitaria">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaTiktok">Tiktok</label>
-                    <input class="loja-input" type="text" name="loja_tiktok" id="lojaTiktok" value="<?= htmlspecialchars($loja_tiktok) ?>" placeholder="Ex.: diggymenu">
-                  </div>
+                    <div class="loja-section-title">Documentos e link</div>
+                    <div class="loja-field loja-field--full">
+                      <label for="lojaCnpj">CPF ou CNPJ</label>
+                      <input class="loja-input" type="text" inputmode="numeric" name="loja_cnpj" id="lojaCnpj" value="<?= htmlspecialchars($loja_cnpj) ?>" placeholder="CPF ou CNPJ da sua loja caso tenha">
+                    </div>
+                    <div class="loja-field loja-field--full">
+                      <label for="lojaLinkSlug">Link customizado</label>
+                      <input class="loja-input" type="text" id="lojaLinkSlug" value="<?= htmlspecialchars($loja_link_slug) ?>" data-base="<?= htmlspecialchars($loja_link_base) ?>" placeholder="ex: tewconfeitaria">
+                      <div class="loja-link-hint">
+                        Customize seu link com o nome do seu estabelecimento, ficando mais facil para seus clientes identificarem a sua loja.
+                      </div>
+                      <div class="loja-link-preview">
+                        <input type="text" id="lojaLinkPreview" readonly>
+                        <button type="button" id="lojaLinkCopy"><i class="bi bi-clipboard"></i></button>
+                      </div>
+                      <input type="hidden" name="link_loja" id="lojaLinkHidden" value="<?= htmlspecialchars($loja_link) ?>">
+                    </div>
 
-                  <div class="loja-section-title">Endereco</div>
-                  <div class="loja-field">
-                    <label for="lojaCep">CEP <span class="text-danger">*</span></label>
-                    <input class="loja-input" type="text" name="loja_cep" id="lojaCep" value="<?= htmlspecialchars($loja_cep) ?>">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaRua">Rua <span class="text-danger">*</span></label>
-                    <input class="loja-input" type="text" name="loja_rua" id="lojaRua" value="<?= htmlspecialchars($loja_rua) ?>">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaNumero">Numero <span class="text-danger">*</span></label>
-                    <input class="loja-input" type="text" name="loja_numero" id="lojaNumero" value="<?= htmlspecialchars($loja_numero) ?>">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaBairro">Bairro <span class="text-danger">*</span></label>
-                    <input class="loja-input" type="text" name="loja_bairro" id="lojaBairro" value="<?= htmlspecialchars($loja_bairro) ?>">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaCidade">Cidade <span class="text-danger">*</span></label>
-                    <input class="loja-input" type="text" name="loja_cidade" id="lojaCidade" value="<?= htmlspecialchars($loja_cidade) ?>">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaEstado">Estado <span class="text-danger">*</span></label>
-                    <input class="loja-input" type="text" name="loja_estado" id="lojaEstado" value="<?= htmlspecialchars($loja_estado) ?>">
-                  </div>
-                  <div class="loja-field">
-                    <label for="lojaComplemento">Complemento</label>
-                    <input class="loja-input" type="text" name="loja_complemento" id="lojaComplemento" value="<?= htmlspecialchars($loja_complemento) ?>">
+                    <div class="loja-section-title">Redes sociais</div>
+                    <div class="loja-field">
+                      <label for="lojaInstagram">Instagram</label>
+                      <input class="loja-input" type="text" name="loja_instagram" id="lojaInstagram" value="<?= htmlspecialchars($loja_instagram) ?>" placeholder="Ex.: tewconfeitaria">
+                    </div>
+                    <div class="loja-field">
+                      <label for="lojaTiktok">Tiktok</label>
+                      <input class="loja-input" type="text" name="loja_tiktok" id="lojaTiktok" value="<?= htmlspecialchars($loja_tiktok) ?>" placeholder="Ex.: diggymenu">
+                    </div>
+
+                    <div class="loja-section-title">Endereco</div>
+                    <div class="loja-field">
+                      <label for="lojaCep">CEP <span class="text-danger">*</span></label>
+                      <input class="loja-input" type="text" inputmode="numeric" name="loja_cep" id="lojaCep" value="<?= htmlspecialchars($loja_cep) ?>" placeholder="00000-000">
+                    </div>
+                    <div class="loja-field">
+                      <label for="lojaNumero">Numero <span class="text-danger">*</span></label>
+                      <input class="loja-input" type="text" name="loja_numero" id="lojaNumero" value="<?= htmlspecialchars($loja_numero) ?>">
+                    </div>
+                    <div class="loja-field loja-field--full">
+                      <label for="lojaRua">Rua <span class="text-danger">*</span></label>
+                      <input class="loja-input" type="text" name="loja_rua" id="lojaRua" value="<?= htmlspecialchars($loja_rua) ?>">
+                    </div>
+                    <div class="loja-field">
+                      <label for="lojaBairro">Bairro <span class="text-danger">*</span></label>
+                      <input class="loja-input" type="text" name="loja_bairro" id="lojaBairro" value="<?= htmlspecialchars($loja_bairro) ?>">
+                    </div>
+                    <div class="loja-field">
+                      <label for="lojaCidade">Cidade <span class="text-danger">*</span></label>
+                      <input class="loja-input" type="text" name="loja_cidade" id="lojaCidade" value="<?= htmlspecialchars($loja_cidade) ?>">
+                    </div>
+                    <div class="loja-field">
+                      <label for="lojaEstado">Estado <span class="text-danger">*</span></label>
+                      <input class="loja-input" type="text" name="loja_estado" id="lojaEstado" value="<?= htmlspecialchars($loja_estado) ?>">
+                    </div>
+                    <div class="loja-field">
+                      <label for="lojaComplemento">Complemento</label>
+                      <input class="loja-input" type="text" name="loja_complemento" id="lojaComplemento" value="<?= htmlspecialchars($loja_complemento) ?>">
+                    </div>
                   </div>
                 <?php elseif ($card['id'] === 'taxa-entrega'): ?>
                   <div class="taxa-modal">
@@ -2120,6 +2113,8 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
                   </div>
                 <?php endif; ?>
               </form>
+
+
             <?php elseif ($card['id'] === 'pausa'): ?>
               <div class="pausa-modal-body">
                 <p class="pausa-desc">
@@ -2163,7 +2158,7 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
               <?php else: ?>
                 <?php if ($card['id'] === 'menu-custom'): ?>
                   <button type="button" class="btn-diggy-ghost" data-bs-dismiss="modal">Voltar</button>
-                <?php elseif ($card['id'] !== 'horarios'): ?>
+                <?php elseif ($card['id'] !== 'horarios' && $card['id'] !== 'loja-info'): ?>
                   <button type="button" class="btn-diggy-ghost" data-bs-dismiss="modal">Cancelar</button>
                 <?php endif; ?>
                 <?php if ($card['id'] === 'limpar-banco'): ?>
@@ -2172,7 +2167,7 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
                   <button type="button" class="btn-diggy-primary" id="btnImpressoraAdicionar">Adicionar impressora</button>
                 <?php elseif ($card['id'] === 'horarios'): ?>
                   <button type="button" class="btn-diggy-primary" id="btnHorarioCriar">
-                    Criar horario de funcionamento
+                    Criar horário
                   </button>
                 <?php else: ?>
                   <button type="button" class="btn-diggy-primary" data-modal-save="<?= $modalId ?>">Salvar</button>

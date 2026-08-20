@@ -3,14 +3,14 @@
     .motoboy-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}
     .motoboy-hero-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}
     .motoboy-stat-card{display:flex;align-items:center;gap:14px;padding:18px 20px;border:1px solid #e4ebf5;border-radius:24px;background:#fff}
-    .motoboy-stat-icon{width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff3b7c,#ff5b85);color:#fff;font-size:1.25rem}
+    .motoboy-stat-icon{width:54px;height:54px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#9C5523,#7A3F10);color:#fff;font-size:1.25rem}
     .motoboy-stat-meta small{display:block;font-size:.76rem;color:#8ea0bd;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
     .motoboy-stat-meta strong{display:block;font-size:1.5rem;color:#122033;line-height:1.1}
     .motoboy-stat-meta span{display:block;font-size:.84rem;color:#6e7f98;margin-top:4px}
     .motoboy-pill-card{padding:18px 20px;border:1px solid #e4ebf5;border-radius:24px;background:#fff}
     .motoboy-pill-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
     .motoboy-pill-head strong{font-size:1rem;color:#152338}
-    .motoboy-pill-value{font-size:1.35rem;font-weight:800;color:#ff3b7c;line-height:1.1}
+    .motoboy-pill-value{font-size:1.35rem;font-weight:800;color:#9C5523;line-height:1.1}
     .motoboy-pill-meta{display:flex;align-items:center;gap:8px;color:#6f8099;font-size:.82rem;flex-wrap:wrap}
     .motoboy-pill-note{display:block;margin-top:8px;font-size:.73rem;color:#8ea0bd;line-height:1.35}
     .motoboy-table th,.motoboy-table td{padding:6px 5px;font-size:.71rem;vertical-align:middle}

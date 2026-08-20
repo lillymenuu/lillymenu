@@ -30,27 +30,27 @@ $rota   = basename($_SERVER['PHP_SELF']);
 .fiado-page{max-width:1100px;margin:0 auto;padding:24px 20px}
 .fiado-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .fiado-title{font-size:1.3rem;font-weight:800;color:#111827;margin:0}
-.btn-fiado-primary{border:0;background:#f43f5e;color:#fff;border-radius:10px;padding:.6rem 1.2rem;font-weight:600;font-size:.85rem;font-family:inherit;cursor:pointer;transition:background .15s}
-.btn-fiado-primary:hover{background:#e11d48}
+.btn-fiado-primary{border:0;background:#9C5523;color:#fff;border-radius:10px;padding:.6rem 1.2rem;font-weight:600;font-size:.85rem;font-family:inherit;cursor:pointer;transition:background .15s}
+.btn-fiado-primary:hover{background:#7A3F10}
 .btn-fiado-ghost{border:1.5px solid #e5e7eb;background:#fff;color:#374151;border-radius:10px;padding:.6rem 1.2rem;font-weight:600;font-size:.85rem;font-family:inherit;cursor:pointer}
 .btn-fiado-ghost:hover{border-color:#9ca3af}
 .fiado-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:22px}
 .fiado-kpi-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px}
 .fiado-kpi-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.fiado-kpi-icon.pink{background:#fde2e8;color:#e11d48}
+.fiado-kpi-icon.pink{background:#f5ede5;color:#9C5523}
 .fiado-kpi-icon.blue{background:#dbeafe;color:#2563eb}
 .fiado-kpi-value{font-size:1.15rem;font-weight:800;color:#111827}
 .fiado-kpi-label{font-size:.78rem;color:#6b7280}
 .fiado-section-title{font-size:.95rem;font-weight:700;color:#111827;margin-bottom:12px}
 .fiado-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;margin-bottom:18px}
 .fiado-filter-head{display:flex;align-items:center;gap:10px;padding:16px 18px}
-.fiado-filter-icon{width:34px;height:34px;border-radius:10px;background:#fde2e8;color:#e11d48;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.fiado-filter-icon{width:34px;height:34px;border-radius:10px;background:#f5ede5;color:#9C5523;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
 .fiado-filter-title{font-weight:700;font-size:.88rem;color:#111827}
 .fiado-filter-body{padding:0 18px 18px}
 .fiado-filter-label{font-size:.66rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block}
 .fiado-filter-search{position:relative;max-width:420px}
 .fiado-filter-search input{width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:.55rem .9rem;padding-right:34px;font-size:.85rem;font-family:inherit;outline:none}
-.fiado-filter-search input:focus{border-color:#f43f5e}
+.fiado-filter-search input:focus{border-color:#9C5523}
 .fiado-filter-search i{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#9ca3af}
 .fiado-table-wrap{overflow-x:auto}
 .fiado-table{width:100%;border-collapse:collapse}
@@ -58,16 +58,16 @@ $rota   = basename($_SERVER['PHP_SELF']);
 .fiado-table td{font-size:.85rem;color:#374151;padding:12px 18px;border-bottom:1px solid #f5f6f8}
 .fiado-table tbody tr:last-child td{border-bottom:0}
 .fiado-table .td-nome{font-weight:600;color:#111827}
-.fiado-table .td-valor{font-weight:700;color:#e11d48}
+.fiado-table .td-valor{font-weight:700;color:#9C5523}
 .fiado-btn-detalhe{border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:.4rem .9rem;font-size:.78rem;font-weight:600;font-family:inherit;color:#374151;cursor:pointer;white-space:nowrap}
-.fiado-btn-detalhe:hover{border-color:#f43f5e;color:#e11d48}
+.fiado-btn-detalhe:hover{border-color:#9C5523;color:#9C5523}
 .fiado-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid #f0f0f0;flex-wrap:wrap;gap:10px}
 .fiado-per-page{display:flex;align-items:center;gap:6px;font-size:.78rem;color:#6b7280}
 .fiado-per-page select{border:1.5px solid #e5e7eb;border-radius:7px;padding:4px 8px;font-size:.78rem;font-family:inherit;cursor:pointer;outline:none}
 .fiado-info{font-size:.78rem;color:#6b7280}
 .fiado-pagination{display:flex;align-items:center;gap:4px}
 .fiado-page-btn{border:1.5px solid #e5e7eb;background:#fff;border-radius:7px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:600;cursor:pointer;color:#374151}
-.fiado-page-btn:hover:not(:disabled){border-color:#f43f5e;color:#e11d48}
+.fiado-page-btn:hover:not(:disabled){border-color:#9C5523;color:#9C5523}
 .fiado-page-btn:disabled{opacity:.4;cursor:not-allowed}
 .fiado-page-label{font-size:.78rem;color:#6b7280;padding:0 6px}
 .fiado-empty{text-align:center;padding:36px 20px;color:#9ca3af;font-size:.85rem}
@@ -101,7 +101,7 @@ $rota   = basename($_SERVER['PHP_SELF']);
 
 /* Tela de dividas do cliente */
 .fiado-total-label{font-size:.85rem;color:#374151;margin-bottom:2px}
-.fiado-total-valor{font-size:1.4rem;font-weight:800;color:#e11d48;margin-bottom:16px}
+.fiado-total-valor{font-size:1.4rem;font-weight:800;color:#9C5523;margin-bottom:16px}
 .fiado-detalhe-section-title{font-size:.92rem;font-weight:700;color:#111827;margin-bottom:10px}
 .fiado-hist-table-wrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:12px}
 .fiado-hist-table{width:100%;border-collapse:collapse}
@@ -110,12 +110,12 @@ $rota   = basename($_SERVER['PHP_SELF']);
 .fiado-hist-table tbody tr:last-child td{border-bottom:0}
 .fiado-badge{display:inline-block;border-radius:999px;padding:.2rem .65rem;font-size:.72rem;font-weight:700;border:1.5px solid transparent}
 .fiado-badge.pago{color:#16a34a;border-color:#86efac;background:#f0fdf4}
-.fiado-badge.venda{color:#e11d48;border-color:#fda4af;background:#fff1f2}
+.fiado-badge.venda{color:#9C5523;border-color:#d9b896;background:#f5ede5}
 .fiado-hist-pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px}
 .fiado-hist-arrow{border:0;background:transparent;color:#374151;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .fiado-hist-arrow:hover:not(:disabled){background:#f3f4f6}
 .fiado-hist-arrow:disabled{opacity:.35;cursor:not-allowed}
-.fiado-hist-num{width:30px;height:30px;border-radius:8px;border:1.5px solid #f43f5e;color:#e11d48;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700}
+.fiado-hist-num{width:30px;height:30px;border-radius:8px;border:1.5px solid #9C5523;color:#9C5523;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700}
 
 /* gestor_pedidos.css define .pedido-detalhe-modal{overflow:visible}, o que quebra o
    modal-dialog-scrollable do Bootstrap (precisa de overflow:hidden no modal-content
@@ -128,8 +128,8 @@ $rota   = basename($_SERVER['PHP_SELF']);
 .fiado-pay-method-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px 6px;background:#fff;cursor:pointer;font-size:.78rem;color:#374151;font-family:inherit}
 .fiado-pay-method-card i{font-size:1.3rem;color:#374151}
 .fiado-pay-method-card:hover{border-color:#cbd5e1}
-.fiado-pay-method-card.active{border-color:#f43f5e;background:#fff1f3;color:#e11d48}
-.fiado-pay-method-card.active i{color:#e11d48}
+.fiado-pay-method-card.active{border-color:#9C5523;background:#f5ede5;color:#9C5523}
+.fiado-pay-method-card.active i{color:#9C5523}
 </style>
 </head>
 <body class="dash-diggy">
@@ -203,6 +203,8 @@ $rota   = basename($_SERVER['PHP_SELF']);
       <div class="fiado-pagination" id="fiadoPagination"></div>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 </main>

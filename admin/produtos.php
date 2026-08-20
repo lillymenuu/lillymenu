@@ -380,6 +380,8 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
       <?php endforeach; ?>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <div class="modal fade produto-imagem-modal" id="modalProdutoImagem" tabindex="-1">
@@ -733,12 +735,12 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
               <div class="produto-variacoes-panel" id="produtoComplementoPrecoPanel">
                 <div class="produto-variacoes-head">
                   <div>
-                    <h6>Escolha seu complemento</h6>
-                    <p>Vincule grupos de complementos (tamanho, sabor, adicionais...) a este produto.</p>
-                    <div class="produto-variacoes-resumo" id="complementoPrecoResumo">Nenhum complemento vinculado.</div>
+                    <h6>Escolha o tipo</h6>
+                    <p>Cadastre os tipos disponíveis para este produto (ex.: massa amanteigada, massa chocolate).</p>
+                    <div class="produto-variacoes-resumo" id="complementoPrecoResumo">Nenhum tipo cadastrado.</div>
                   </div>
                   <button type="button" class="btn btn-diggy-primary btn-sm" id="btnGerenciarComplementoPreco">
-                    <i class="bi bi-plus-circle"></i> Gerenciar complemento
+                    <i class="bi bi-plus-circle"></i> Gerenciar tipo
                   </button>
                 </div>
               </div>
@@ -1037,11 +1039,11 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
     <div class="modal-content">
       <div class="modal-header border-0">
         <div>
-          <div class="produto-section-title">Complementos do produto</div>
-          <div class="produto-section-desc">Cadastre complementos e marque quando forem obrigatorios.</div>
+          <div class="produto-section-title">Tipos do produto</div>
+          <div class="produto-section-desc">Cadastre os tipos e marque quando forem obrigatorios.</div>
         </div>
         <div class="produto-variacao-tools">
-          <button type="button" class="produto-variacao-tool-btn" id="btnAddComplementoPrecoModal" aria-label="Adicionar complemento">
+          <button type="button" class="produto-variacao-tool-btn" id="btnAddComplementoPrecoModal" aria-label="Adicionar tipo">
             <i class="bi bi-plus"></i>
           </button>
           <button class="btn-close" data-bs-dismiss="modal"></button>
@@ -1051,7 +1053,7 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
         <div class="produto-variacao-list" id="complementoPrecoModalLista"></div>
       </div>
       <div class="modal-footer border-0">
-        <button type="button" class="btn btn-diggy-primary" id="btnSalvarComplementoPreco">Salvar complementos</button>
+        <button type="button" class="btn btn-diggy-primary" id="btnSalvarComplementoPreco">Salvar tipos</button>
       </div>
     </div>
   </div>
@@ -1081,12 +1083,14 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
             Caso voce venda o mesmo item como produto ou item de complemento, voce podera vincular esse aqui e o mesmo tera um unico estoque.
           </div>
           <div class="text-center mt-2">
-            <a href="javascript:void(0)" class="estoque-link">vincular outros itens</a>
+            <a href="javascript:void(0)" class="estoque-link" id="btnVincularEstoque">vincular outros itens</a>
           </div>
 
           <div class="estoque-vinculados">
             <h6>Produtos vinculados</h6>
-            <div class="estoque-vinculado-item" id="estoqueVinculadosLista"></div>
+            <div class="estoque-vinculado-list" id="estoqueVinculadosLista">
+              <div class="estoque-vinculado-row estoque-vinculado-empty">Nenhum item vinculado.</div>
+            </div>
           </div>
 
           <div class="estoque-historico">
@@ -1098,6 +1102,41 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
       <div class="modal-footer">
         <button class="btn-outline-diggy" type="button" onclick="deletarEstoque()">Deletar estoque</button>
         <button class="btn btn-diggy-primary" type="button" onclick="salvarEstoque()">Salvar estoque</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VINCULAR ESTOQUE -->
+<div class="modal fade" id="modalVincularEstoque" tabindex="-1" style="z-index:1085">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content combo-modal">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title fw-bold mb-1">Vincular outros itens ao estoque</h5>
+          <div class="produto-section-desc">Nessa tela voce podera vincular mais de um produto ao mesmo item de estoque. Selecione abaixo os itens que voce quer vincular.</div>
+        </div>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding-bottom:8px">
+        <div class="opcoes-picker-search">
+          <input type="text" id="estVinculoSearch" placeholder="Pesquisar produto" autocomplete="off">
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+          <button class="opcoes-picker-selall" style="margin-bottom:0" onclick="_estVinculoSelecionarTodos()">
+            <i class="bi bi-check2-all me-1"></i>Selecionar todos
+          </button>
+          <button class="opcoes-picker-selall" style="margin-bottom:0;color:#6b7280" onclick="_estVinculoDesmarcarTodos()">
+            <i class="bi bi-x-circle me-1"></i>Desmarcar todos
+          </button>
+        </div>
+        <div class="opcoes-grid" id="estVinculoGrid">
+          <div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Carregando produtos...</div>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <span id="estVinculoContador" style="font-size:12px;color:#6b7280"></span>
+        <button class="btn btn-diggy-primary" onclick="_estVinculoSalvar()">Salvar</button>
       </div>
     </div>
   </div>
@@ -1148,6 +1187,7 @@ let modalCategoria;
 let modalReordenar;
 let modalReordenarItens;
 let modalEstoque;
+let modalVincularEstoque;
 const formProduto = document.getElementById('formProduto');
 const produtoId = document.getElementById('produtoId');
 const produtoNome = document.getElementById('produtoNome');
@@ -1229,6 +1269,7 @@ const ordenarLista = document.getElementById('ordenarLista');
 const ordenarItensLista = document.getElementById('ordenarItensLista');
 const ordenarItensCategoria = document.getElementById('ordenarItensCategoria');
 const produtoToggles = document.querySelectorAll('.produto-toggle');
+const comboToggles = document.querySelectorAll('.combo-toggle');
 const categoriaToggles = document.querySelectorAll('.categoria-toggle-input');
 let categoriaAtualReordenar = null;
 let retomarModalProduto = false;

@@ -990,7 +990,7 @@
   font-weight:600;
 }
 .btn-estoque:hover{
-  background:#e11d48;
+  background:#7A3F10;
   color:#fff;
 }
 .estoque-modal{
@@ -1034,12 +1034,24 @@
   font-weight:700;
   margin-bottom:8px;
 }
-.estoque-vinculado-item{
+.estoque-vinculado-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:220px;
+  overflow-y:auto;
+}
+.estoque-vinculado-row{
   background:#f8fafc;
   border:1px solid #e5e7eb;
   border-radius:12px;
-  padding:10px 12px;
+  padding:12px 14px;
   font-size:13px;
+  color:#0f172a;
+}
+.estoque-vinculado-row.estoque-vinculado-empty{
+  color:#94a3b8;
+  text-align:center;
 }
 .estoque-historico{
   margin-top:14px;

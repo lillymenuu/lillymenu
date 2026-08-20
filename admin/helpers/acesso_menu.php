@@ -71,7 +71,7 @@ if (!function_exists('acessoExigirMenu')) {
   function acessoExigirMenu(PDO $conn, string $chave): void
   {
     if (!acessoMenuPermitido($conn, $chave)) {
-      header('Location: dashboard.php');
+      header('Location: dashboard');
       exit;
     }
   }

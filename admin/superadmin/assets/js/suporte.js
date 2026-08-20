@@ -1,4 +1,12 @@
 (function () {
+  // Caminho salvo no banco pode ser um caminho local relativo a admin/ (precisa
+  // subir um nivel daqui, admin/superadmin/) ou uma URL completa do R2 (usa direto).
+  function urlAdminSub(caminho) {
+    if (!caminho) return '';
+    if (/^https?:\/\//i.test(caminho)) return caminho;
+    return '../' + caminho.replace(/^\/+/, '');
+  }
+
   const listEl = document.getElementById('suporteConversas');
   const listEmptyEl = document.getElementById('suporteConversasEmpty');
   const contatosListEl = document.getElementById('suporteContatos');
@@ -134,7 +142,7 @@
     }
     const sideHtml = `<div class="suporte-msg-side"><div class="suporte-msg-avatar">${avatarInner}</div><div class="suporte-msg-hora">${formatarHora(msg.criado_em)}</div></div>`;
     const imagemHtml = msg.anexo_arquivo
-      ? `<img class="suporte-msg-image" src="../${escapeHtml(msg.anexo_arquivo)}" alt="Imagem enviada">`
+      ? `<img class="suporte-msg-image" src="${escapeHtml(urlAdminSub(msg.anexo_arquivo))}" alt="Imagem enviada">`
       : '';
     const textoHtml = msg.mensagem ? `<div class="suporte-msg-bubble">${escapeHtml(msg.mensagem)}</div>` : '';
     const menuHtml = `<button type="button" class="suporte-msg-menu" aria-label="Mais opções"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>`;
@@ -173,7 +181,7 @@
           if (listEmptyEl) listEmptyEl.style.display = 'none';
           data.conversas.forEach((c) => {
             totalNaoLidas += Number(c.nao_lidas) || 0;
-            const logoUrl = c.logo ? '../' + c.logo : '';
+            const logoUrl = urlAdminSub(c.logo);
             const item = document.createElement('div');
             item.className = 'suporte-admin-list-item' + (Number(c.loja_id) === lojaSelecionadaId ? ' active' : '');
             item.dataset.lojaId = c.loja_id;
@@ -244,7 +252,7 @@
         } else {
           if (contatosEmptyEl) contatosEmptyEl.style.display = 'none';
           data.conversas.forEach((c) => {
-            const logoUrl = c.logo ? '../' + c.logo : '';
+            const logoUrl = urlAdminSub(c.logo);
             const item = document.createElement('div');
             item.className = 'suporte-admin-list-item' + (Number(c.loja_id) === lojaSelecionadaId ? ' active' : '');
             item.dataset.lojaId = c.loja_id;

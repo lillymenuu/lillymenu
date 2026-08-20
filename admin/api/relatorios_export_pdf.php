@@ -87,6 +87,24 @@ $rowCanc            = $stmtCanc->fetch(PDO::FETCH_ASSOC);
 $totalCancelados      = (int)   ($rowCanc['qtd']   ?? 0);
 $totalCanceladosValor = (float) ($rowCanc['total'] ?? 0);
 
+// ── Registro fiado (pagamentos confirmados no periodo) ─────────────────────────
+$fiadoRecebido = 0.0;
+try {
+  $stmtFiado = $conn->prepare("
+    SELECT COALESCE(SUM(valor), 0) AS total
+    FROM fiado_lancamentos
+    WHERE loja_id = ? AND tipo = 'pagamento' AND DATE(criado_em) BETWEEN ? AND ?
+  ");
+  $stmtFiado->execute([$lojaId, $inicio, $fim]);
+  $fiadoRecebido = (float) $stmtFiado->fetchColumn();
+} catch (Exception $e) {
+  /* tabela fiado_lancamentos ainda nao existe */
+}
+
+/* Total vendido sem contar o valor dos pedidos cancelados (mesmo criterio
+   usado no card "Total vendido" da tela de relatorios) */
+$totalVendidoSemCancelamento = ($totalGeral - $totalCanceladosValor) + $fiadoRecebido;
+
 // ── Vendas por produto ────────────────────────────────────────────────────────
 $vendProdutos = [];
 try {
@@ -190,9 +208,13 @@ $html = '
   <div class="summary">
     <div class="summary-row">
       <span class="summary-cell"><strong>Total de pedidos:</strong> '.$totalPedidos.'</span>
-      <span class="summary-cell"><strong>Total vendido:</strong> R$ '.number_format($totalGeral, 2, ',', '.').'</span>
+      <span class="summary-cell"><strong>Total vendido:</strong> R$ '.number_format($totalGeral + $fiadoRecebido, 2, ',', '.').'</span>
+      <span class="summary-cell"><strong>Total sem cancelamento:</strong> R$ '.number_format($totalVendidoSemCancelamento, 2, ',', '.').'</span>
+    </div>
+    <div class="summary-row">
       <span class="summary-cell"><strong>Pedidos cancelados:</strong> '.$totalCancelados.'</span>
       <span class="summary-cell"><strong>Valor cancelado:</strong> R$ '.number_format($totalCanceladosValor, 2, ',', '.').'</span>
+      <span class="summary-cell"><strong>Registro fiado:</strong> R$ '.number_format($fiadoRecebido, 2, ',', '.').'</span>
     </div>
   </div>
 

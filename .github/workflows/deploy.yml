@@ -1,0 +1,27 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Envia so os arquivos versionados no git via rsync por SSH. NAO usa
+      # --delete (fica no padrao da action) de proposito: nunca queremos que
+      # este workflow apague algo no servidor sozinho (ex.: .env, imagens de
+      # cliente ainda nao migradas pro R2, vendor/) - so adiciona/atualiza.
+      - name: Deploy via rsync/SSH
+        uses: easingthemes/ssh-deploy@v6.0.3
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          REMOTE_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          REMOTE_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          TARGET: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+          SOURCE: "./"
+          EXCLUDE: ".git/, .github/, .claude/, .env, .env.example, vendor/, admin/assets/uploads/, tmp_sessions/, node_modules/"

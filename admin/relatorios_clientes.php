@@ -263,6 +263,7 @@ $rota   = basename($_SERVER['PHP_SELF']);
       </div>
     </div>
 
+    <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
   </div>
 
 </main>

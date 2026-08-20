@@ -53,6 +53,8 @@ $ltJsVer = filemtime(__DIR__ . '/assets/js/lista_transmissao.js');
       <div class="fin-empty"><i class="bi bi-broadcast" style="font-size:1.6rem;display:block;margin-bottom:8px;"></i>Nenhuma lista de transmissão criada ainda.</div>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <!-- Modal criar/editar lista -->

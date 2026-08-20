@@ -583,6 +583,8 @@ unset($queryBase['pagina']);
       <?php endif; ?>
       </div>
     </div>
+
+    <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
   </div>
 </div>
 

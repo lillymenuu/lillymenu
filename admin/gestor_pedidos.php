@@ -74,6 +74,8 @@ try {
   <div class="gestor-filtros"></div>
 
   <div class="kanban" id="kanban"></div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <!-- MODAL PEDIDO -->

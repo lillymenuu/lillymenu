@@ -1,3 +1,50 @@
+(function(){
+  const resetForm = document.getElementById('resetForm');
+  const resetFormView = document.getElementById('resetFormView');
+  const resetSuccessView = document.getElementById('resetSuccessView');
+  const resetMsg = document.getElementById('resetMsg');
+  const resetModalEl = document.getElementById('resetModal');
+  if (!resetForm) return;
+
+  resetModalEl?.addEventListener('hidden.bs.modal', () => {
+    resetForm.reset();
+    if (resetMsg) resetMsg.textContent = '';
+    resetFormView?.classList.remove('d-none');
+    resetSuccessView?.classList.add('d-none');
+  });
+
+  resetForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('resetEmail')?.value.trim();
+    if (!email) return;
+    const btn = resetForm.querySelector('button[type="submit"]');
+    if (resetMsg) { resetMsg.textContent = 'Enviando...'; resetMsg.className = 'small mt-2 text-muted'; }
+    if (btn) btn.disabled = true;
+    try {
+      const params = new URLSearchParams();
+      params.set('email', email);
+      const resp = await fetch('reset_request.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        if (resetMsg) resetMsg.textContent = '';
+        resetFormView?.classList.add('d-none');
+        resetSuccessView?.classList.remove('d-none');
+      } else {
+        resetMsg.textContent = data.msg || 'Erro ao enviar. Tente novamente.';
+        resetMsg.className = 'small mt-2 text-danger';
+      }
+    } catch (err) {
+      resetMsg.textContent = 'Erro ao enviar. Tente novamente.';
+      resetMsg.className = 'small mt-2 text-danger';
+    }
+    if (btn) btn.disabled = false;
+  });
+})();
+
 function toggleSenha(){
   var inp = document.getElementById('senha');
   var ico = document.getElementById('eyeIcon');

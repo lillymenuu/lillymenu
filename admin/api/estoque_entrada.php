@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
+require_once __DIR__ . '/../helpers/estoque_vinculo_module.php';
 
 header('Content-Type: application/json');
 
@@ -13,6 +14,9 @@ if ($produto_id <= 0 || $qtd <= 0) {
   echo json_encode(['ok'=>false,'msg'=>'Dados inválidos']);
   exit;
 }
+
+// DDL deve rodar ANTES da transação — DDL causa implicit commit no MySQL
+estoqueVinculoEnsureModule($conn);
 
 $conn->beginTransaction();
 
@@ -38,6 +42,7 @@ try {
   ")->execute([$produto_id, $qtd, $origem, $lojaId]);
 
   $conn->commit();
+  estoqueVinculoSincronizar($conn, $produto_id, $lojaId, ['tipo' => 'entrada', 'quantidade' => $qtd, 'origem' => $origem, 'referencia_id' => null]);
   echo json_encode(['ok'=>true]);
 } catch(Exception $e){
   $conn->rollBack();

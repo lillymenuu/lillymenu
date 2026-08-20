@@ -89,6 +89,8 @@ $dashboardHtml = financialRenderDashboardContent($resumoMensal, $dashboard, $dre
   <?php endif; ?>
 
   <div id="financial-dashboard-content"><?= $dashboardHtml ?></div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 </main>
 </div>

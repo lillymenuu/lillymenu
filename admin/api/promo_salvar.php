@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/acesso_menu.php';
 require_once __DIR__ . '/../helpers/operacao.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json');
 
@@ -35,37 +36,12 @@ if ($ativar && (!$precoPromocional || $precoPromocional <= 0)) {
   exit;
 }
 
-function salvarImagemPromo(string $base64): ?string {
-  if (!preg_match('/^data:image\\/(png|jpe?g|webp);base64,/', $base64, $match)) {
-    return null;
-  }
-  $dados = base64_decode(substr($base64, strpos($base64, ',') + 1));
-  if ($dados === false) {
-    return null;
-  }
-  $ext = $match[1] === 'jpeg' ? 'jpg' : $match[1];
-  $dirRel = 'assets/uploads/promo';
-  $dirAbs = __DIR__ . '/../' . $dirRel;
-  if (!is_dir($dirAbs)) {
-    mkdir($dirAbs, 0775, true);
-  }
-  $nome = 'promo_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-  $destino = $dirAbs . '/' . $nome;
-  if (file_put_contents($destino, $dados) === false) {
-    return null;
-  }
-  return $dirRel . '/' . $nome;
+function salvarImagemPromo(string $base64, ?int $lojaId = null): ?string {
+  return storage_save_base64($base64, 'promo', 'promo', $lojaId);
 }
 
 function removerImagemPromo(?string $relPath): void {
-  if (!$relPath) {
-    return;
-  }
-  $baseDir = realpath(__DIR__ . '/../assets/uploads/promo');
-  $arquivo = realpath(__DIR__ . '/../' . $relPath);
-  if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-    unlink($arquivo);
-  }
+  storage_delete($relPath);
 }
 
 $colunas = $conn->query("SHOW COLUMNS FROM produtos")->fetchAll(PDO::FETCH_COLUMN, 0);
@@ -105,7 +81,7 @@ try {
   if ($promoImagemRemover) {
     removerImagemPromo($atual['promo_imagem'] ?? null);
   } elseif ($promoImagemBase64 !== '') {
-    $novaImagem = salvarImagemPromo($promoImagemBase64);
+    $novaImagem = salvarImagemPromo($promoImagemBase64, $lojaId);
     if ($novaImagem === null) {
       $conn->rollBack();
       echo json_encode(['ok' => false, 'msg' => 'Imagem invalida (use JPG, PNG ou WebP).']);

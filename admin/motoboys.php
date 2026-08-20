@@ -298,7 +298,7 @@ $motoboyCodigoBase = getPedidoCodigoBase($conn, $lojaId);
       <div class="motoboy-pill-card">
         <div class="motoboy-pill-head">
           <strong><?= htmlspecialchars((string) $item['nome']) ?></strong>
-          <i class="bi bi-bicycle" style="font-size:1rem;color:#ff3b7c;"></i>
+          <i class="bi bi-bicycle" style="font-size:1rem;color:#9C5523;"></i>
         </div>
         <div class="motoboy-pill-value"><?= motoboyMoney($item['taxas_mes']) ?></div>
         <div class="motoboy-pill-meta">
@@ -430,6 +430,8 @@ $motoboyCodigoBase = getPedidoCodigoBase($conn, $lojaId);
       </div>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
   </div>
 </div>
 </div>

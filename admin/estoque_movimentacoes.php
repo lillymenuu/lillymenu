@@ -171,6 +171,7 @@ $estoqueMovimentacoesJsVer = filemtime(__DIR__ . '/assets/js/estoque_movimentaco
     </ul>
   </nav>
 
+  <div class="dash-footer" style="text-align:center;font-size:.75rem;color:#94a3b8;margin-top:6px">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 </main>

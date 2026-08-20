@@ -1944,6 +1944,8 @@ body.pdv-modal .pdv-search-btn{
 .pdv-variacao-row label{
   display:flex;
   align-items:center;
+  justify-content:space-between;
+  width:100%;
   gap:12px;
   font-weight:600;
   color:#0f172a;
@@ -2055,6 +2057,19 @@ body.pdv-modal .pdv-search-btn{
 }
 .pdv-combo-opcao-row:last-child{
   border-bottom:none;
+}
+.pdv-combo-opcao-row.esgotado{
+  opacity:.55;
+}
+.pdv-combo-badge-esgotado{
+  font-size:.62rem;
+  font-weight:700;
+  background:#dc2626;
+  color:#fff;
+  border-radius:4px;
+  padding:1px 5px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
 }
 .pdv-combo-opcao-info{
   flex:1;

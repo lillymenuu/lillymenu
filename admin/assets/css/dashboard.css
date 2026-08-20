@@ -1845,10 +1845,10 @@ body.dash-diggy .btn-diggy-primary{
   padding:.5rem 1.2rem;
   font-weight:600;
   font-size:.85rem;
-  box-shadow:0 10px 20px rgba(244,63,94,.2);
+  box-shadow:0 10px 20px rgba(156,85,35,.2);
 }
 body.dash-diggy .btn-diggy-primary:hover{
-  background:#e11d48;
+  background:#7A3F10;
   color:#fff;
 }
 body.dash-diggy .dash-section{

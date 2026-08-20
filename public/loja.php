@@ -1,8 +1,13 @@
 ﻿<?php
 session_start();
 date_default_timezone_set('America/Fortaleza');
+/* Conteudo dinamico (status aberto/fechado, pausa programada, estoque, promocoes):
+   nunca deve ser servido de um cache antigo pelo navegador */
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
 require_once '../config/database.php';
 require_once '../helpers/loja_context.php';
+require_once '../helpers/storage.php';
 require_once '../admin/helpers/config.php';
 require_once '../admin/helpers/whatsapp.php';
 
@@ -29,13 +34,7 @@ if (!$slug) { $slug = mb_strtolower($nomeLoja,'UTF-8'); $slug = preg_replace('/[
 if (!isset($_GET['loja']) && $slug) { header("Location: loja.php?loja=".urlencode($slug)); exit; }
 
 function fixImgPath(string $p): string {
-  if (!$p) return '';
-  if (preg_match('#^https?://#', $p) || $p[0] === '/') return $p;
-  // Constrói URL absoluta para funcionar com qualquer URL reescrita (ex: /lilly/nomedaloja)
-  $proto  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-  $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
-  $base   = rtrim(str_replace('/public', '', rtrim(dirname($_SERVER['SCRIPT_NAME']), '/')), '/');
-  return $proto . $host . $base . '/admin/' . ltrim($p, '/');
+  return storage_url_absoluta($p);
 }
 
 $descLoja    = cfg($conn,$lojaId,'loja_descricao','');
@@ -123,17 +122,52 @@ $receberPedidosAtivo = cfg($conn,$lojaId,'receber_pedidos_ativo','1') === '1';
 $notificarPedidoWhatsappAtivo = cfg($conn,$lojaId,'notificar_pedido_whatsapp_ativo','1') === '1';
 $lojaAberta = estaAberto($conn) && $receberPedidosAtivo;
 
+/* Pausa programada ativa: se houver, o motivo dela substitui a mensagem generica de fechado,
+   e agendamentos (entrega/retirada) so podem ser marcados para depois que ela acabar */
+$pausaAtivaTitulo = '';
+$pausaAtivaFim = '';
+if (!$lojaAberta) {
+  try {
+    $fusoConfigPausa = cfg($conn,$lojaId,'fuso_horario','America/Fortaleza');
+    try { $tzPausa = new DateTimeZone($fusoConfigPausa); } catch (Exception $e) { $tzPausa = new DateTimeZone('America/Fortaleza'); }
+    $agoraPausa = new DateTime('now', $tzPausa);
+    $stmtPausaAtiva = $conn->prepare("
+      SELECT titulo, CONCAT(data_fim, ' ', hora_fim) AS fim FROM pausas_programadas
+      WHERE loja_id = ?
+        AND CONCAT(data_inicio, ' ', hora_inicio) <= ?
+        AND CONCAT(data_fim, ' ', hora_fim) >= ?
+      LIMIT 1
+    ");
+    $stmtPausaAtiva->execute([$lojaId, $agoraPausa->format('Y-m-d H:i:s'), $agoraPausa->format('Y-m-d H:i:s')]);
+    $pausaAtivaRow = $stmtPausaAtiva->fetch(PDO::FETCH_ASSOC);
+    if ($pausaAtivaRow) {
+      $pausaAtivaTitulo = (string) $pausaAtivaRow['titulo'];
+      $pausaAtivaFim = (string) $pausaAtivaRow['fim'];
+    }
+  } catch (Exception $e) {
+    /* tabela pausas_programadas ainda nao existe */
+  }
+}
+
 /* Próximo horário */
 $proximoHorario = '';
 if (!$lojaAberta) {
   $hs = json_decode(cfg($conn,$lojaId,'horarios_semana',''),true) ?: [];
   $agora = new DateTime('now', new DateTimeZone('America/Fortaleza'));
   $dn = [1=>'Dom',2=>'Seg',3=>'Ter',4=>'Qua',5=>'Qui',6=>'Sex',7=>'Sab'];
-  for ($i=1;$i<=7;$i++){
-    $d=clone $agora; $d->modify("+$i day");
-    $ck=(((int)$d->format('N'))%7)+1;
-    $hd=$hs[$ck]??$hs[(string)$ck]??null;
-    if($hd&&!empty($hd['inicio'])){ $proximoHorario=$dn[$ck].' às '.$hd['inicio']; break; }
+  /* Primeiro checa se a loja ainda abre mais tarde hoje, antes de olhar os próximos dias */
+  $ckHoje = (((int)$agora->format('N'))%7)+1;
+  $hdHoje = $hs[$ckHoje]??$hs[(string)$ckHoje]??null;
+  if ($hdHoje && !empty($hdHoje['inicio']) && $agora->format('H:i') < $hdHoje['inicio']) {
+    $proximoHorario = 'hoje às '.$hdHoje['inicio'];
+  }
+  if (!$proximoHorario) {
+    for ($i=1;$i<=7;$i++){
+      $d=clone $agora; $d->modify("+$i day");
+      $ck=(((int)$d->format('N'))%7)+1;
+      $hd=$hs[$ck]??$hs[(string)$ck]??null;
+      if($hd&&!empty($hd['inicio'])){ $proximoHorario=$dn[$ck].' às '.$hd['inicio']; break; }
+    }
   }
   if(!$proximoHorario){ $ab=cfg($conn,$lojaId,'horario_abertura',''); if($ab) $proximoHorario='às '.$ab; }
 }
@@ -190,7 +224,7 @@ $_categoriaDisponivelAgora=function($cat) use ($_diaHoje,$_horaAgora){
 $produtosPorCat=[];
 foreach($categorias as $cat){
   if(!$_categoriaDisponivelAgora($cat)) continue;
-  $s=$conn->prepare("SELECT p.id,p.nome,p.descricao,p.preco{$si}{$sp}{$spd}{$spe}{$sqm}{$spg}{$sds}{$shi}{$shf}{$svr},IFNULL(e.quantidade,0) AS estoque FROM produtos p LEFT JOIN estoque e ON e.produto_id=p.id AND e.loja_id=p.loja_id WHERE p.categoria_id=? AND p.ativo=1 AND p.loja_id=? AND IFNULL(e.quantidade,0)>0 ORDER BY p.ordem IS NULL,p.ordem,p.nome");
+  $s=$conn->prepare("SELECT p.id,p.nome,p.descricao,p.preco{$si}{$sp}{$spd}{$spe}{$sqm}{$spg}{$sds}{$shi}{$shf}{$svr},IFNULL(e.quantidade,0) AS estoque FROM produtos p LEFT JOIN estoque e ON e.produto_id=p.id AND e.loja_id=p.loja_id WHERE p.categoria_id=? AND p.ativo=1 AND p.loja_id=? ORDER BY p.ordem IS NULL,p.ordem,p.nome");
   $s->execute([$cat['id'],$lojaId]);
   $prods=$s->fetchAll(PDO::FETCH_ASSOC);
   if($prods){
@@ -199,6 +233,8 @@ foreach($categorias as $cat){
       $pr['promo_imagem']=!empty($pr['promo_imagem'])?fixImgPath($pr['promo_imagem']):null;
       $pr['preco_base']=(float)$pr['preco'];
       $pr['tem_variacoes']=(!empty($pr['tem_variacoes'])&&(int)$pr['tem_variacoes']===1)?1:0;
+      $pr['estoque']=(int)$pr['estoque'];
+      $pr['esgotado']=$pr['estoque']<=0;
       $promoExpirada=false;
       if($temPromoDur && !empty($pr['promo_dias']) && !empty($pr['promo_inicio'])){
         $promoFim=strtotime($pr['promo_inicio'].' +'.(int)$pr['promo_dias'].' days');
@@ -324,6 +360,8 @@ $cfgJS=json_encode(['lojaId'=>$lojaId,'nomeLoja'=>$nomeLoja,'lojaPerfil'=>$perfi
 'pedidoMinRetiradaAtivo'=>$pedidoMinRetiradaAtivo,'pedidoMinRetirada'=>$pedidoMinRetirada,
 'clubePontosAtivo'=>$clubePontosAtivo,
 'catalogoVersao'=>cfg($conn,$lojaId,'catalogo_versao',''),
+'geoAtivo'=>cfg($conn,0,'saas_nominatim_ativo','1')==='1',
+'pausaAtivaFim'=>$pausaAtivaFim,
 ],JSON_UNESCAPED_UNICODE);
 $lojaCssVer = filemtime(__DIR__ . '/assets/css/loja.css');
 $lojaJsVer = filemtime(__DIR__ . '/assets/js/loja.js');
@@ -401,7 +439,7 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
     <div class="profile-meta-city"><?=htmlspecialchars($localidade)?></div>
   <?php endif; ?>
   <div class="profile-status-line <?=$lojaAberta?'open':'closed'?>" id="storeStatus">
-    <span id="storeStatusText"><?php if($lojaAberta): ?>Aberto agora<?php elseif(!$receberPedidosAtivo): ?>Não está recebendo pedidos<?php else: ?>Fechado<?=$proximoHorario?', abriremos '.$proximoHorario:''?><?php endif; ?></span>
+    <span id="storeStatusText"><?php if($lojaAberta): ?>Aberto agora<?php elseif($pausaAtivaTitulo!==''): ?>Pausa programada: <?=htmlspecialchars($pausaAtivaTitulo)?><?php elseif(!$receberPedidosAtivo): ?>Não está recebendo pedidos<?php else: ?>Fechado<?=$proximoHorario?', abriremos '.$proximoHorario:''?><?php endif; ?></span>
   </div>
 </div>
 
@@ -473,7 +511,7 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 <div class="destaques-scroll">
   <?php foreach($destaques as $p): ?>
     <?php $isCombo = ($p['tipo'] ?? '') === 'combo'; ?>
-    <div class="destaque-card" onclick="abrirProduto(<?=$p['id']?>,<?=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'tipo'=>$isCombo?'combo':'produto','promo_imagem'=>$isCombo?null:($p['promo_imagem']??null),'promo_descricao'=>$isCombo?null:($p['promo_descricao']??null)]),ENT_QUOTES)?>)">
+    <div class="destaque-card"<?=$isCombo?'':' data-produto-id="'.(int)$p['id'].'"'?> onclick="abrirProduto(<?=$p['id']?>,<?=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'tipo'=>$isCombo?'combo':'produto','promo_imagem'=>$isCombo?null:($p['promo_imagem']??null),'promo_descricao'=>$isCombo?null:($p['promo_descricao']??null),'estoque'=>$isCombo?null:(int)($p['estoque']??0),'esgotado'=>!$isCombo&&!empty($p['esgotado'])]),ENT_QUOTES)?>)">
       <?php if($p['imagem']): ?>
         <img class="destaque-img" src="<?=htmlspecialchars($p['imagem'])?>" alt="" loading="lazy">
       <?php else: ?>
@@ -482,6 +520,7 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
       <div class="destaque-badges">
         <?php if($p['em_promo']): ?><span class="badge-promo">-<?=$p['desc_pct']?>%</span><?php endif; ?>
         <?php if($isCombo): ?><span class="badge-combo">Combo</span><?php endif; ?>
+        <?php if(!$isCombo && !empty($p['esgotado'])): ?><span class="badge-esgotado">Esgotado</span><?php endif; ?>
       </div>
       <div class="destaque-price">R$ <?=number_format($p['preco_final'],2,',','.')?></div>
       <?php if($p['em_promo']): ?>
@@ -501,8 +540,8 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
       <div class="cat-section-title"><?=htmlspecialchars($cat['nome'])?></div>
       <div class="cat-produtos">
       <?php foreach($prods as $p): ?>
-        <?php $pj=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'promo_imagem'=>$p['promo_imagem']??null,'promo_descricao'=>$p['promo_descricao']??null]),ENT_QUOTES); ?>
-        <div class="product-row" onclick="abrirProduto(<?=$p['id']?>,<?=$pj?>)">
+        <?php $pj=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'promo_imagem'=>$p['promo_imagem']??null,'promo_descricao'=>$p['promo_descricao']??null,'estoque'=>(int)($p['estoque']??0),'esgotado'=>!empty($p['esgotado'])]),ENT_QUOTES); ?>
+        <div class="product-row<?=!empty($p['esgotado'])?' esgotado':''?>" data-produto-id="<?=(int)$p['id']?>" onclick="abrirProduto(<?=$p['id']?>,<?=$pj?>)">
           <div class="product-row-info">
             <div class="product-row-name"><?=htmlspecialchars($p['nome'])?></div>
             <?php if(!empty($p['descricao'])): ?>
@@ -521,8 +560,12 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
             <?php else: ?>
               <div class="product-row-img-ph"><i class="bi bi-image"></i></div>
             <?php endif; ?>
-            <button class="product-row-add" onclick="event.stopPropagation();abrirProduto(<?=$p['id']?>,<?=$pj?>)"><i class="bi bi-plus"></i></button>
-            <div class="product-row-qty d-none" id="pqty-<?=$p['id']?>">0</div>
+            <?php if(!empty($p['esgotado'])): ?>
+              <span class="product-row-esgotado">Esgotado</span>
+            <?php else: ?>
+              <button class="product-row-add" onclick="event.stopPropagation();abrirProduto(<?=$p['id']?>,<?=$pj?>)"><i class="bi bi-plus"></i></button>
+              <div class="product-row-qty d-none" id="pqty-<?=$p['id']?>">0</div>
+            <?php endif; ?>
           </div>
         </div>
       <?php endforeach; ?>
@@ -577,7 +620,7 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 <!-- ══ RODAPÉ ══ -->
 <footer class="loja-footer">
   <p>Tem um negócio e precisa de um cardápio digital simples e fácil? O <strong>Lilly</strong> é a solução.</p>
-  <a href="http://localhost/lillymenu/public/index.php" target="_blank" class="footer-btn">Saiba mais</a>
+  <a href="https://lillymenu.com/public/home" target="_blank" class="footer-btn">Saiba mais</a>
 </footer>
 
 <!-- ══ BOTTOM NAV ══ -->
@@ -836,49 +879,48 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 
 <!-- ══ MODAL VARIAÇÕES + EXTRAS ══ -->
 <div class="prod-modal-overlay" id="varModalOverlay" onclick="fecharVarModalLoja()"></div>
-<div class="prod-modal prod-modal-sheet" id="varModalLoja">
+<div class="prod-modal prod-modal-sheet varmodal-poster" id="varModalLoja">
   <button class="prod-modal-close" onclick="fecharVarModalLoja()"><i class="bi bi-x"></i></button>
   <div class="prod-modal-scroll">
-    <div class="varmodal-header">
-      <div class="varmodal-thumb">
-        <img id="varModalImg" src="" alt="" class="d-none">
-        <div class="varmodal-thumb-ph" id="varModalImgPh"><i class="bi bi-image"></i></div>
+    <div class="varmodal-layout">
+      <div class="varmodal-img-wrap">
+        <img id="varModalImg" src="" alt="" class="varmodal-img d-none">
+        <div class="varmodal-img-ph" id="varModalImgPh"><i class="bi bi-image"></i></div>
       </div>
       <div class="varmodal-info">
         <div class="varmodal-nome" id="varModalNome"></div>
-        <div class="varmodal-sub">Escolha uma das opções</div>
-        <div class="varmodal-sub" id="varModalIdTxt"></div>
+        <div class="varmodal-desc" id="varModalDesc"></div>
+        <div class="varmodal-preco" id="varModalPreco"></div>
+        <div class="comp-group-head">
+          <span class="comp-group-title">Escolha uma das opções</span>
+          <span class="comp-group-badge" id="varModalBadge" style="display:none">Obrigatório</span>
+        </div>
+        <div class="comp-radio-list" id="varModalLista"></div>
+        <div class="varmodal-search">
+          <i class="bi bi-search"></i>
+          <input type="text" id="varModalBusca" placeholder="Procure por uma opção" oninput="filtrarVariacoesLoja()">
+        </div>
+        <div class="varmodal-extra-section d-none" id="varModalExtraSection">
+          <div class="comp-group-head" style="margin-top:14px">
+            <span class="comp-group-title" style="text-transform:uppercase">Escolha seu extra</span>
+            <span class="comp-group-badge" id="varModalExtraBadge" style="display:none">Obrigatório</span>
+          </div>
+          <div class="comp-group-sub">Escolha 1 opção.</div>
+          <div class="comp-extra-list" id="varModalExtraLista"></div>
+        </div>
+        <div class="varmodal-extra-section d-none" id="varModalComplementoSection">
+          <div class="comp-group-head" style="margin-top:14px">
+            <span class="comp-group-title" style="text-transform:uppercase">Escolha o tipo</span>
+            <span class="comp-group-badge" id="varModalComplementoBadge" style="display:none">Obrigatório</span>
+          </div>
+          <div class="comp-group-sub">Escolha 1 opção.</div>
+          <div class="comp-extra-list" id="varModalComplementoLista"></div>
+        </div>
       </div>
     </div>
-    <div class="varmodal-body">
-      <div class="comp-group-head">
-        <span class="comp-group-title">Escolha uma das opcoes</span>
-        <span class="comp-group-badge" id="varModalBadge" style="display:none">Obrigatório</span>
-      </div>
-      <div class="comp-radio-list" id="varModalLista"></div>
-      <div class="varmodal-search">
-        <i class="bi bi-search"></i>
-        <input type="text" id="varModalBusca" placeholder="Procure por uma opção" oninput="filtrarVariacoesLoja()">
-      </div>
-      <div class="varmodal-extra-section d-none" id="varModalExtraSection">
-        <div class="comp-group-head" style="margin-top:14px">
-          <span class="comp-group-title" style="text-transform:uppercase">Escolha seu extra</span>
-          <span class="comp-group-badge" id="varModalExtraBadge" style="display:none">Obrigatório</span>
-        </div>
-        <div class="comp-group-sub">Escolha 1 opção.</div>
-        <div class="comp-extra-list" id="varModalExtraLista"></div>
-      </div>
-      <div class="varmodal-extra-section d-none" id="varModalComplementoSection">
-        <div class="comp-group-head" style="margin-top:14px">
-          <span class="comp-group-title" style="text-transform:uppercase">Escolha seu complemento</span>
-          <span class="comp-group-badge" id="varModalComplementoBadge" style="display:none">Obrigatório</span>
-        </div>
-        <div class="comp-group-sub">Escolha 1 opção.</div>
-        <div class="comp-extra-list" id="varModalComplementoLista"></div>
-      </div>
-      <div class="prod-modal-obs">
-        <textarea class="obs-field" id="varModalObs" rows="1" placeholder="Observações do cliente"></textarea>
-      </div>
+    <div class="prod-modal-obs">
+      <div class="prod-modal-obs-lbl">Alguma observação?</div>
+      <textarea class="obs-field" id="varModalObs" rows="1" placeholder="Observações do cliente"></textarea>
     </div>
   </div>
   <div class="prod-modal-footer">
@@ -1249,6 +1291,17 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
       </div>
     </div>
     <div id="endFormWrap">
+    <div class="geo-loc-prompt" id="geoLocPrompt" style="display:none">
+      <div class="geo-loc-icon"><i class="bi bi-geo-alt-fill"></i></div>
+      <div class="geo-loc-text">
+        <div class="geo-loc-title">Usar minha localização atual?</div>
+        <div class="geo-loc-sub">Preenchemos o endereço automaticamente, você só confirma o número.</div>
+      </div>
+      <div class="geo-loc-btns">
+        <button type="button" class="geo-loc-btn" id="geoLocBtnUsar" onclick="usarLocalizacaoAtual()">Usar</button>
+        <button type="button" class="geo-loc-dismiss" onclick="dispensarGeoPrompt()" aria-label="Fechar"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
     <div class="end-cep-wrap">
       <input type="text" id="eCep" placeholder="CEP" inputmode="numeric" maxlength="9" oninput="maskCep(this)">
       <button class="end-nao-sei" onclick="abrirCepManual()">Não sei meu cep</button>
@@ -1336,7 +1389,7 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
   <div class="sheet-footer" style="padding-top:8px">
     <div class="agend-footer-info" id="agendFooterInfo" style="display:none"></div>
     <button class="btn-primary" id="btnAgendConfirmar" onclick="confirmarAgendamento()" disabled
-      style="opacity:.5;background:var(--pink);border-radius:10px;letter-spacing:.05em">CONTINUAR</button>
+      style="opacity:.5;border-radius:10px;letter-spacing:.05em">CONTINUAR</button>
   </div>
 </div>
 
@@ -1493,7 +1546,7 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 </div>
 
 <!-- TOAST GENÉRICO -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast"><i class="bi bi-x-circle-fill toast-icon d-none" id="toastIcon"></i><span id="toastMsg"></span></div>
 <!-- TOAST CARRINHO -->
 <div class="toast-cart" id="toastCart">
   <div class="toast-cart-ico"><i class="bi bi-check-lg"></i></div>

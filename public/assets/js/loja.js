@@ -628,6 +628,13 @@ function abrirProduto(id,d){
     abrirVarModalLoja(id,d);
     return;
   }
+  /* Sobrescreve com o estoque mais recente conhecido (atualizado pelo polling
+     em _atualizarEstoqueLojaPoll) — evita abrir o modal com um "esgotado"
+     desatualizado do carregamento inicial da pagina. */
+  if(d.tipo!=='combo' && window._estoqueLiveMap && Object.prototype.hasOwnProperty.call(window._estoqueLiveMap, id)){
+    const qtdLive = window._estoqueLiveMap[id];
+    d = {...d, estoque: qtdLive, esgotado: qtdLive <= 0};
+  }
   const qtdMin = Math.max(0, parseInt(d.quantidade_minima||0));
   const qtdInicial = qtdMin > 0 ? qtdMin : 1;
   prodAtual={...d,q:qtdInicial,passos:null};
@@ -693,29 +700,66 @@ function abrirProduto(id,d){
   } else {
     comboSec.style.display='none';
     comboSec.innerHTML='';
-    if(addBtn){addBtn.disabled=false;addBtn.innerHTML='Adicionar <span id="pdTotal">'+fmtR(d.preco_final*qtdInicial)+'</span>';}
+    if(addBtn){
+      if(d.esgotado){
+        addBtn.disabled=true;
+        addBtn.innerHTML='Esgotado';
+      } else {
+        addBtn.disabled=false;
+        addBtn.innerHTML='Adicionar <span id="pdTotal">'+fmtR(d.preco_final*qtdInicial)+'</span>';
+      }
+    }
   }
-  document.getElementById('prodModalOverlay').classList.add('show');
   const _modal=document.getElementById('prodModal');
-  _modal.classList.add('show');
+  /* Define o "modo" do modal (sheet normal / combo / promo) antes de mostrar,
+     e força o navegador a aplicar isso já como estado de partida — senão a
+     transição de abertura anima a partir do modo do modal anterior (ex: sai
+     do centro da tela em vez de subir de baixo). */
   if(d.tipo==='combo') _modal.classList.add('combo-mode');
   else _modal.classList.remove('combo-mode');
   if(promoDestaque) _modal.classList.add('promo-mode');
   else _modal.classList.remove('promo-mode');
+  void _modal.offsetHeight;
+  document.getElementById('prodModalOverlay').classList.add('show');
+  _modal.classList.add('show');
   document.body.style.overflow='hidden';
 }
 function fecharProdModal(){
+  const _modal=document.getElementById('prodModal');
   document.getElementById('prodModalOverlay').classList.remove('show');
-  document.getElementById('prodModal').classList.remove('show');
+  _modal.classList.remove('show');
   document.getElementById('pdImgWrap')?.closest('.prod-modal-top')?.classList.remove('img-expanded');
   document.body.style.overflow='';
   const comboSec=document.getElementById('pdComboSection');
   if(comboSec){comboSec.style.display='none';comboSec.innerHTML='';}
+  /* So limpa o "modo" (combo/promo) depois que a animacao de fechar termina,
+     senao a proxima abertura comeca a transicao a partir de um modo errado */
+  setTimeout(()=>{ _modal.classList.remove('combo-mode','promo-mode'); }, 400);
 }
 function toggleImgExpand(){
   document.getElementById('pdImgWrap')?.closest('.prod-modal-top')?.classList.toggle('img-expanded');
 }
-function pdQtd(d){if(!prodAtual)return;const min=Math.max(1,parseInt(prodAtual.quantidade_minima||0));prodAtual.q=Math.max(min,prodAtual.q+d);document.getElementById('pdQtd').textContent=prodAtual.q;atualizarPdTotal();}
+/* Quanto ainda pode ser adicionado desse produto, descontando o que ja esta no carrinho
+   (soma todas as linhas com o mesmo id, mesmo com observacoes/combos diferentes) */
+function _estoqueRestante(id,estoqueTotal){
+  const jaNoCarrinho=carrinho.filter(i=>i.id===id).reduce((s,i)=>s+i.q,0);
+  return Math.max(0,estoqueTotal-jaNoCarrinho);
+}
+function pdQtd(d){
+  if(!prodAtual)return;
+  const min=Math.max(1,parseInt(prodAtual.quantidade_minima||0));
+  const novaQtd=Math.max(min,prodAtual.q+d);
+  if(d>0 && prodAtual.tipo!=='combo' && typeof prodAtual.estoque==='number'){
+    const restante=_estoqueRestante(prodAtual.id,prodAtual.estoque);
+    if(novaQtd>restante){
+      toast('Quantidade do item indisponível no momento!','erro');
+      return;
+    }
+  }
+  prodAtual.q=novaQtd;
+  document.getElementById('pdQtd').textContent=prodAtual.q;
+  atualizarPdTotal();
+}
 function atualizarPdTotal(){
   if(!prodAtual)return;
   const el=document.getElementById('pdTotal');
@@ -741,7 +785,7 @@ function addCart(){
     const obs=combosels.length?('[combo]\n'+comboLines+(userObs?'\n'+userObs:'')):userObs;
     const idx=carrinho.findIndex(i=>i.id===prodAtual.id&&i.obs===obs);
     if(idx>=0){carrinho[idx].q+=prodAtual.q;}
-    else carrinho.push({id:prodAtual.id,n:prodAtual.nome,p:prodAtual.preco_final,img:prodAtual.imagem,q:prodAtual.q,obs,uobs:userObs||undefined,combosels:combosels.length?combosels:undefined});
+    else carrinho.push({id:prodAtual.id,n:prodAtual.nome,p:prodAtual.preco_final,img:prodAtual.imagem,q:prodAtual.q,obs,uobs:userObs||undefined,combosels:combosels.length?combosels:undefined,combo:true});
     salvar();uiAtualizar();fecharProdModal();toastCart(prodAtual.nome);
     return;
   }
@@ -750,10 +794,15 @@ function addCart(){
     toast('Quantidade mínima para este produto: ' + qtdMin + ' unidade' + (qtdMin > 1 ? 's' : '') + '.');
     return;
   }
+  if(typeof prodAtual.estoque==='number' && prodAtual.q>_estoqueRestante(prodAtual.id,prodAtual.estoque)){
+    toast('Quantidade do item indisponível no momento!','erro');
+    return;
+  }
   const obs=document.getElementById('pdObs').value.trim();
+  const estoqueProduto=typeof prodAtual.estoque==='number'?prodAtual.estoque:undefined;
   const idx=carrinho.findIndex(i=>i.id===prodAtual.id&&i.obs===obs);
-  if(idx>=0)carrinho[idx].q+=prodAtual.q;
-  else{const pts=parseInt(prodAtual.pontos_ganho||0);carrinho.push({id:prodAtual.id,n:prodAtual.nome,p:prodAtual.preco_final,img:prodAtual.imagem,q:prodAtual.q,obs,pontos:pts||undefined});}
+  if(idx>=0){carrinho[idx].q+=prodAtual.q;carrinho[idx].estoque=estoqueProduto;}
+  else{const pts=parseInt(prodAtual.pontos_ganho||0);carrinho.push({id:prodAtual.id,n:prodAtual.nome,p:prodAtual.preco_final,img:prodAtual.imagem,q:prodAtual.q,obs,pontos:pts||undefined,estoque:estoqueProduto});}
   salvar();uiAtualizar();fecharProdModal();toastCart(prodAtual.nome);
 }
 
@@ -776,15 +825,16 @@ function renderComboPassos(){
     const obrig=passo.obrigatorio==1;
     const badge=obrig?`<span style="font-size:.67rem;background:#fff3cd;color:#b45309;border-radius:4px;padding:1px 7px;font-weight:700">Obrigatório</span>`:'';
     const opcs=passo.opcoes.map((opc,oi)=>{
-      const podeAdd=(max===0||totalSel<max)&&(rep||opc.qty===0);
+      const esgotado=!!opc.esgotado;
+      const podeAdd=!esgotado&&(max===0||totalSel<max)&&(rep||opc.qty===0);
       const podeSub=opc.qty>0;
       const imgHtml=opc.imagem
         ?`<img class="combo-opcao-img" src="${_escH(opc.imagem)}" alt="" loading="lazy">`
         :`<div class="combo-opcao-img-ph"><i class="bi bi-image"></i></div>`;
-      return `<div class="combo-opcao-row">
+      return `<div class="combo-opcao-row${esgotado?' esgotado':''}">
         <div class="combo-opcao-info">
           <div class="combo-opcao-nome">${_escH(opc.nome)}</div>
-          <div class="combo-opcao-inc">Incluído no valor do combo.</div>
+          <div class="combo-opcao-inc">${esgotado?'<span class="badge-esgotado">Esgotado</span>':'Incluído no valor do combo.'}</div>
         </div>
         ${imgHtml}
         <div class="combo-opcao-qty">
@@ -812,6 +862,7 @@ function comboQty(pi,oi,delta){
   const rep=passo.permite_repetir==1;
   const totalSel=passo.opcoes.reduce((s,o)=>s+o.qty,0);
   if(delta>0){
+    if(opc.esgotado)return;
     if(max>0&&totalSel>=max)return;
     if(!rep&&opc.qty>0)return;
     opc.qty++;
@@ -889,7 +940,8 @@ function abrirVarModalLoja(id,d){
   varModalComplementosObrigatorio=false;
   _vincularVarModalListeners();
   document.getElementById('varModalNome').textContent=d.nome;
-  document.getElementById('varModalIdTxt').textContent='ID '+id;
+  document.getElementById('varModalDesc').textContent=d.descricao||'';
+  document.getElementById('varModalPreco').textContent='a partir de '+fmtR(d.preco_final||d.preco_base||0);
   document.getElementById('varModalQtd').textContent='1';
   document.getElementById('varModalObs').value='';
   document.getElementById('varModalBusca').value='';
@@ -944,11 +996,11 @@ function renderVariacoesLoja(lista){
     const preco=parseFloat(v.preco||0);
     return `<div class="comp-radio-row" data-id="${v.id}" data-nome="${_escH(nome)}" data-preco="${preco}">
       <label>
-        <input type="radio" name="varModalRadio">
         <div>
           ${_escH(nome)}
           <small>R$ ${preco.toFixed(2).replace('.',',')}</small>
         </div>
+        <input type="radio" name="varModalRadio">
       </label>
     </div>`;
   }).join('');
@@ -989,7 +1041,7 @@ function renderComplementosItensLoja(lista){
   sec.classList.remove('d-none');
   document.getElementById('varModalComplementoBadge').style.display=varModalComplementosObrigatorio?'':'none';
   listaEl.innerHTML=lista.map(item=>{
-    const nome=item.nome||'Complemento';
+    const nome=item.nome||'Tipo';
     const preco=parseFloat(item.preco||0);
     return `<div class="comp-extra-row" data-nome="${_escH(nome)}" data-preco="${preco}">
       <div>
@@ -1038,7 +1090,7 @@ function confirmarVariacaoLoja(){
     return;
   }
   if(varModalComplementosObrigatorio && !varModalComplementoSelecionado){
-    toast('Selecione um complemento.');
+    toast('Selecione um tipo.');
     return;
   }
   const qtd=parseInt(document.getElementById('varModalQtd').textContent,10)||1;
@@ -1135,6 +1187,30 @@ function renderCarrinho(){
     if(minAlert) minAlert.classList.add('d-none');
   }
   carregarCrossSellSugestoes();
+  atualizarEstoqueCarrinho();
+}
+/* Busca o estoque atual dos produtos no carrinho — cobre tambem itens que
+   ja estavam salvos no localStorage antes dessa checagem existir */
+function atualizarEstoqueCarrinho(){
+  /* combos e resgates de pontos nao usam a tabela de estoque de produtos —
+     ficam de fora pra nao aplicar por engano o limite de um id coincidente */
+  const itensRastreaveis=carrinho.filter(i=>!i.combo && i.obs!=='[Resgate de pontos]');
+  const ids=[...new Set(itensRastreaveis.map(i=>i.id).filter(Boolean))];
+  if(!ids.length) return;
+  fetch(`api/estoque_lote.php?ids=${ids.join(',')}`)
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.ok||!d.estoque) return;
+      let mudou=false;
+      itensRastreaveis.forEach(item=>{
+        if(Object.prototype.hasOwnProperty.call(d.estoque,item.id)){
+          item.estoque=d.estoque[item.id];
+          mudou=true;
+        }
+      });
+      if(mudou) salvar();
+    })
+    .catch(()=>{});
 }
 function carregarCrossSellSugestoes(){
   const wrap=document.getElementById('cartCrossSellWrap');
@@ -1153,7 +1229,7 @@ function carregarCrossSellSugestoes(){
                 ${p.imagem?`<img class="cart-crosssell-img" src="${p.imagem}" alt="">`:`<div class="cart-crosssell-img" style="display:flex;align-items:center;justify-content:center;color:#ddd"><i class="bi bi-image"></i></div>`}
                 <div class="cart-crosssell-nome">${p.nome}</div>
                 <div class="cart-crosssell-preco">${fmtR(p.preco)}</div>
-                <button class="cart-crosssell-add" onclick="adicionarSugestaoCrossSell(${p.id},'${p.nome.replace(/'/g,"\\'")}',${p.preco},'${(p.imagem||'').replace(/'/g,"\\'")}')">Adicionar</button>
+                <button class="cart-crosssell-add" onclick="adicionarSugestaoCrossSell(${p.id},'${p.nome.replace(/'/g,"\\'")}',${p.preco},'${(p.imagem||'').replace(/'/g,"\\'")}',${p.estoque})">Adicionar</button>
               </div>
             `).join('')}
           </div>
@@ -1161,10 +1237,15 @@ function carregarCrossSellSugestoes(){
     })
     .catch(()=>{wrap.innerHTML='';});
 }
-function adicionarSugestaoCrossSell(id,nome,preco,imagem){
+function adicionarSugestaoCrossSell(id,nome,preco,imagem,estoque){
+  const temEstoque=typeof estoque==='number';
+  if(temEstoque && _estoqueRestante(id,estoque)<1){
+    toast('Quantidade do item indisponível no momento!','erro');
+    return;
+  }
   const idx=carrinho.findIndex(i=>i.id===id&&!i.obs);
-  if(idx>=0){carrinho[idx].q+=1;carrinho[idx].crossSell=true;}
-  else carrinho.push({id,n:nome,p:preco,img:imagem||'',q:1,crossSell:true});
+  if(idx>=0){carrinho[idx].q+=1;carrinho[idx].crossSell=true;carrinho[idx].estoque=temEstoque?estoque:undefined;}
+  else carrinho.push({id,n:nome,p:preco,img:imagem||'',q:1,crossSell:true,estoque:temEstoque?estoque:undefined});
   salvar();uiAtualizar();renderCarrinho();toastCart(nome);
 }
 let cupomAplicado=null; // {codigo, tipo, desconto, valor}
@@ -1355,6 +1436,10 @@ function limparCarrinho(){
 function altQ(i,d){
   const item=carrinho[i];
   if(!item) return;
+  if(d>0 && typeof item.estoque==='number' && _estoqueRestante(item.id,item.estoque)<d){
+    toast('Quantidade do item indisponível no momento!','erro');
+    return;
+  }
   item.q+=d;
   if(item.q<=0){
     /* devolver pontos se for resgate */
@@ -1503,7 +1588,57 @@ function abrirEnderecoSheet(){
       calcularTaxaEntrega(saved.b);
     }
   }
+  atualizarVisibilidadeGeoPrompt(!saved.cep);
   abrirSheet('endSheet');
+}
+
+/* ── Localização automática (Nominatim) ── */
+function atualizarVisibilidadeGeoPrompt(podeMostrar){
+  const prompt=document.getElementById('geoLocPrompt');
+  if(!prompt) return;
+  const jaDispensado=sessionStorage.getItem('geo_dispensado_'+CFG.lojaId);
+  const pode=podeMostrar && CFG.geoAtivo && !!navigator.geolocation && !jaDispensado;
+  prompt.style.display=pode?'flex':'none';
+}
+function dispensarGeoPrompt(){
+  sessionStorage.setItem('geo_dispensado_'+CFG.lojaId,'1');
+  const prompt=document.getElementById('geoLocPrompt');
+  if(prompt) prompt.style.display='none';
+}
+function usarLocalizacaoAtual(){
+  if(!navigator.geolocation){toast('Seu navegador não suporta localização.');return;}
+  const btn=document.getElementById('geoLocBtnUsar');
+  if(btn){btn.disabled=true;btn.textContent='Buscando...';}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const {latitude,longitude}=pos.coords;
+      fetch(`api/geo_reverso.php?lat=${latitude}&lng=${longitude}`)
+        .then(r=>r.json())
+        .then(d=>{
+          if(btn){btn.disabled=false;btn.textContent='Usar';}
+          if(!d.ok){toast(d.msg||'Não foi possível identificar seu endereço.');return;}
+          const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+          setV('eCep',d.cep);setV('eRua',d.rua);setV('eBairro',d.bairro);setV('eCidade',d.cidade);
+          const eEst=document.getElementById('eEstado'); if(eEst) eEst.value=d.estado||'';
+          const camposEl=document.getElementById('endCampos'); if(camposEl) camposEl.style.display='';
+          if(d.numero){ setV('eNum',d.numero); }
+          calcularTaxaEntrega(d.bairro||'');
+          dispensarGeoPrompt();
+          toast('Endereço preenchido! Confirme o número.');
+          setTimeout(()=>document.getElementById('eNum')?.focus(),200);
+        })
+        .catch(()=>{
+          if(btn){btn.disabled=false;btn.textContent='Usar';}
+          toast('Erro ao buscar seu endereço.');
+        });
+    },
+    err=>{
+      if(btn){btn.disabled=false;btn.textContent='Usar';}
+      const msg=err && err.code===1?'Permissão de localização negada.':'Não foi possível obter sua localização.';
+      toast(msg);
+    },
+    {timeout:8000,maximumAge:60000}
+  );
 }
 
 function usarEnderecoSalvo(){
@@ -1614,8 +1749,13 @@ function renderAgendDatas(horarios,minTipo,minVal,maxVal){
   const agora=new Date();
   const minMs=minTipo==='horas'?minVal*3600000:minVal*86400000;
   const maxMs=maxVal*86400000;
-  const dataMin=new Date(agora.getTime()+minMs);
+  let dataMin=new Date(agora.getTime()+minMs);
   const dataMax=new Date(agora.getTime()+maxMs);
+  /* Pausa programada ativa: nao deixa agendar pra antes dela acabar */
+  if(CFG.pausaAtivaFim){
+    const pausaFim=new Date(CFG.pausaAtivaFim.replace(' ','T'));
+    if(!isNaN(pausaFim) && pausaFim>dataMin) dataMin=pausaFim;
+  }
   const dias=[];
   const d=new Date(dataMin); d.setHours(0,0,0,0);
   while(d<=dataMax){
@@ -1654,6 +1794,18 @@ function renderAgendSlots(inicio,fim){
   const slots=[];
   let cur=hI*60+mI;
   const end=hF*60+mF;
+  /* Pausa programada ativa terminando no mesmo dia selecionado: horarios so
+     podem comecar depois que ela acabar */
+  if(CFG.pausaAtivaFim && agendDiaAtual && agendDiaAtual.date){
+    const pausaFim=new Date(CFG.pausaAtivaFim.replace(' ','T'));
+    if(!isNaN(pausaFim)
+      && pausaFim.getFullYear()===agendDiaAtual.date.getFullYear()
+      && pausaFim.getMonth()===agendDiaAtual.date.getMonth()
+      && pausaFim.getDate()===agendDiaAtual.date.getDate()){
+      const pausaFimMin=pausaFim.getHours()*60+pausaFim.getMinutes();
+      if(pausaFimMin>cur) cur=Math.ceil(pausaFimMin/30)*30;
+    }
+  }
   while(cur+30<=end){
     const hA=String(Math.floor(cur/60)).padStart(2,'0');
     const mA=String(cur%60).padStart(2,'0');
@@ -1692,6 +1844,9 @@ function confirmarAgendamento(){
   document.getElementById('agendResumo').classList.remove('d-none');
   fecharSheet('agendSheet');
   atualizarBtnContinuar();
+  if(document.getElementById('chk5')?.classList.contains('active')){
+    renderResumo(calcBreakdown());
+  }
 }
 
 /* ── Contato ─────── */
@@ -2181,6 +2336,7 @@ async function enviar(){
     localStorage.setItem('lc_hist_'+CFG.lojaId,JSON.stringify(hist.slice(0,20)));
     track('pedido');
     carrinho=[];salvar();uiAtualizar();
+    if(typeof _atualizarEstoqueLojaPoll==='function') _atualizarEstoqueLojaPoll();
     resetEstadoPedido();
     irStep(4);
     lancarParticulas();
@@ -2894,7 +3050,16 @@ function maskTel(el){let v=el.value.replace(/\D/g,'');
     const box=document.getElementById('cashbackBox');
     if(box) box.classList.add('d-none');
   }if(v.length>11)v=v.slice(0,11);if(v.length>6)v=v.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3');else if(v.length>2)v=v.replace(/(\d{2})(\d+)/,'($1) $2');el.value=v;if(v.replace(/\D/g,'').length>=10&&tipoPed==='entrega'){const e=JSON.parse(localStorage.getItem('lc_end_'+v.replace(/\D/g,''))||'{}');if(e.r&&!document.getElementById('eRua').value){document.getElementById('eRua').value=e.r;document.getElementById('eNum').value=e.n||'';document.getElementById('eBairro').value=e.b||'';document.getElementById('eComp').value=e.c||'';}}};
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function toast(msg,tipo){
+  const t=document.getElementById('toast');
+  const msgEl=document.getElementById('toastMsg');
+  const iconEl=document.getElementById('toastIcon');
+  if(msgEl) msgEl.textContent=msg; else t.textContent=msg;
+  if(iconEl) iconEl.classList.toggle('d-none',tipo!=='erro');
+  t.classList.toggle('toast-erro',tipo==='erro');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
 let _toastCartTimer=null;
 function toastCart(nome){
   const el=document.getElementById('toastCart');
@@ -2967,6 +3132,8 @@ function _atualizarLojaStatus(){
       let novoTexto;
       if(d.aberto){
         novoTexto='Aberto agora';
+      }else if(d.pausaTitulo){
+        novoTexto='Pausa programada: '+d.pausaTitulo;
       }else if(!d.receberPedidosAtivo){
         novoTexto='Loja não está recebendo pedidos no momento';
       }else{
@@ -2976,6 +3143,7 @@ function _atualizarLojaStatus(){
       CFG.lojaAberta=d.aberto;
       CFG.entAtiva=d.entAtiva;
       CFG.retAtiva=d.retAtiva;
+      CFG.pausaAtivaFim=d.pausaFim||'';
 
       /* Loja fechou/abriu enquanto o cliente navegava: mostra/oculta as opções
          de entrega e retirada imediatas (agendadas continuam sempre visíveis). */
@@ -3061,6 +3229,74 @@ function _renderHorarioSemana(semana){
 setInterval(_atualizarLojaStatus, 20000);
 verificarCupomBanner();
 
+/* ── Estoque em tempo real: sem isso, o badge "Esgotado" so refletia o
+   estoque de quando a pagina carregou — um cliente navegando nao via que um
+   produto zerou (por venda no PDV ou por outro pedido na loja) ate dar F5. */
+window._estoqueLiveMap = window._estoqueLiveMap || {};
+
+function _atualizarEstoqueLojaPoll(){
+  const ids = new Set();
+  document.querySelectorAll('[data-produto-id]').forEach(el => {
+    const id = parseInt(el.dataset.produtoId, 10);
+    if (id > 0) ids.add(id);
+  });
+  if (!ids.size) return;
+  fetch(`api/estoque_lote.php?ids=${Array.from(ids).join(',')}`)
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp || !resp.ok || !resp.estoque) return;
+      Object.entries(resp.estoque).forEach(([idStr, qtd]) => {
+        const id = parseInt(idStr, 10);
+        const quantidade = parseInt(qtd, 10) || 0;
+        window._estoqueLiveMap[id] = quantidade;
+        _aplicarEstoqueLojaNoCard(id, quantidade <= 0);
+      });
+    })
+    .catch(() => {});
+}
+
+function _aplicarEstoqueLojaNoCard(id, esgotado){
+  document.querySelectorAll(`[data-produto-id="${id}"]`).forEach(card => {
+    if (card.classList.contains('product-row')) {
+      card.classList.toggle('esgotado', esgotado);
+      const right = card.querySelector('.product-row-right');
+      if (!right) return;
+      let badge = right.querySelector('.product-row-esgotado');
+      const addBtn = right.querySelector('.product-row-add');
+      const qtyEl = right.querySelector('.product-row-qty');
+      if (esgotado) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'product-row-esgotado';
+          badge.textContent = 'Esgotado';
+          right.appendChild(badge);
+        }
+        if (addBtn) addBtn.style.display = 'none';
+        if (qtyEl) qtyEl.style.display = 'none';
+      } else {
+        if (badge) badge.remove();
+        if (addBtn) addBtn.style.display = '';
+        if (qtyEl) qtyEl.style.display = '';
+      }
+    } else if (card.classList.contains('destaque-card')) {
+      const badges = card.querySelector('.destaque-badges');
+      if (!badges) return;
+      let badge = badges.querySelector('.badge-esgotado');
+      if (esgotado) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'badge-esgotado';
+          badge.textContent = 'Esgotado';
+          badges.appendChild(badge);
+        }
+      } else if (badge) {
+        badge.remove();
+      }
+    }
+  });
+}
+setInterval(_atualizarEstoqueLojaPoll, 15000);
+
 /* Popup automatico do produto em promocao (foto/descricao de propaganda), so na
    primeira vez que o cliente entra na tela nessa sessao do navegador */
 if(typeof PROMO_AUTO!=='undefined' && PROMO_AUTO){
@@ -3070,3 +3306,4 @@ if(typeof PROMO_AUTO!=='undefined' && PROMO_AUTO){
     setTimeout(()=>{ abrirProduto(PROMO_AUTO.id, PROMO_AUTO); }, 600);
   }
 }
+

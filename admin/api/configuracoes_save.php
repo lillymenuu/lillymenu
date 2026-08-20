@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json');
 
@@ -50,37 +51,12 @@ function obterConfigValor(PDO $conn, string $chave, int $lojaId): ?string {
   return null;
 }
 
-function salvarImagemConfig(string $base64, string $prefixo): ?string {
-  if (!preg_match('/^data:image\\/(png|jpe?g|webp);base64,/', $base64, $match)) {
-    return null;
-  }
-  $dados = base64_decode(substr($base64, strpos($base64, ',') + 1));
-  if ($dados === false) {
-    return null;
-  }
-  $ext = $match[1] === 'jpeg' ? 'jpg' : $match[1];
-  $dirRel = 'assets/uploads/loja';
-  $dirAbs = __DIR__ . '/../' . $dirRel;
-  if (!is_dir($dirAbs)) {
-    mkdir($dirAbs, 0775, true);
-  }
-  $nome = $prefixo . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-  $destino = $dirAbs . '/' . $nome;
-  if (file_put_contents($destino, $dados) === false) {
-    return null;
-  }
-  return $dirRel . '/' . $nome;
+function salvarImagemConfig(string $base64, string $prefixo, ?int $lojaId = null): ?string {
+  return storage_save_base64($base64, 'loja', $prefixo, $lojaId);
 }
 
 function removerImagemConfig(?string $relPath): void {
-  if (!$relPath) {
-    return;
-  }
-  $baseDir = realpath(__DIR__ . '/../assets/uploads/loja');
-  $arquivo = realpath(__DIR__ . '/../' . $relPath);
-  if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-    unlink($arquivo);
-  }
+  storage_delete($relPath);
 }
 
 $erros = [];
@@ -180,7 +156,7 @@ try {
       continue;
     }
 
-    $nova = salvarImagemConfig($base64, $chave);
+    $nova = salvarImagemConfig($base64, $chave, $lojaId);
     if (!$nova) {
       throw new Exception('Imagem invalida.');
     }

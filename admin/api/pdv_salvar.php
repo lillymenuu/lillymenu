@@ -8,6 +8,8 @@ require_once __DIR__ . '/../helpers/config.php';
 require_once __DIR__ . '/../helpers/financial_module.php';
 require_once __DIR__ . '/../helpers/offline_module.php';
 require_once __DIR__ . '/../helpers/cashback_module.php';
+require_once __DIR__ . '/../helpers/combo_estoque_module.php';
+require_once __DIR__ . '/../helpers/estoque_vinculo_module.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/operacao.php';
 require_once __DIR__ . '/../../services/SaleFinancialIntegrationService.php';
@@ -17,6 +19,8 @@ header('Content-Type: application/json');
 $lojaId = (int) ($_SESSION['loja_id'] ?? 1);
 offlineEnsureModule($conn);
 cashbackEnsureModule($conn);
+comboEstoqueEnsureModule($conn);
+estoqueVinculoEnsureModule($conn);
 try {
   $colOrigem = $conn->query("SHOW COLUMNS FROM pedidos LIKE 'origem'")->fetch(PDO::FETCH_ASSOC);
   if (!$colOrigem) {
@@ -235,6 +239,10 @@ if ($pedidoEdicaoId && $pedidoEdicaoId <= 0) {
 }
 $statusCanceladoPedidos = statusPermitido($conn, 'pedidos', 'cancelado', 'finalizado');
 $statusCanceladoLog = statusPermitido($conn, 'pedido_status_log', 'cancelado', $statusCanceladoPedidos);
+// Pedido feito no PDV ja e criado pelo proprio admin/operador da loja, entao
+// pula a etapa de "Pendente" e entra direto como "Aceito" em gestor_pedidos.
+$statusInicialPedido = statusPermitido($conn, 'pedidos', 'aceito', 'pendente');
+$statusInicialLog = statusPermitido($conn, 'pedido_status_log', 'aceito', $statusInicialPedido);
 
 if (!in_array($perfil, ['admin', 'gerente'], true)) {
   $cupom = '';
@@ -262,10 +270,25 @@ if ($offlineUuid !== '') {
 
 try {
   $produtoIdsCheck = [];
+  $comboIdsCheck = [];
   foreach ($itens as $i) {
     $pid = isset($i['id']) ? (int) $i['id'] : 0;
+    $isComboItem = !empty($i['combosels']) && is_array($i['combosels']);
     if ($pid > 0) {
-      $produtoIdsCheck[$pid] = true;
+      // Itens de combo carregam o id da tabela "combos" (nao "produtos").
+      if ($isComboItem) {
+        $comboIdsCheck[$pid] = true;
+      } else {
+        $produtoIdsCheck[$pid] = true;
+      }
+    }
+    if ($isComboItem) {
+      foreach ($i['combosels'] as $sel) {
+        $selId = isset($sel['id']) ? (int) $sel['id'] : 0;
+        if ($selId > 0) {
+          $produtoIdsCheck[$selId] = true;
+        }
+      }
     }
   }
   if ($produtoIdsCheck) {
@@ -278,9 +301,69 @@ try {
       exit;
     }
   }
+  if ($comboIdsCheck) {
+    $placeholdersCombo = implode(',', array_fill(0, count($comboIdsCheck), '?'));
+    $stmtCombo = $conn->prepare("SELECT COUNT(*) FROM combos WHERE id IN ($placeholdersCombo) AND loja_id = ?");
+    $stmtCombo->execute([...array_keys($comboIdsCheck), $lojaId]);
+    $qtdCombo = (int) $stmtCombo->fetchColumn();
+    if ($qtdCombo !== count($comboIdsCheck)) {
+      echo json_encode(['ok' => false, 'msg' => 'Existem combos invalidos para esta loja.']);
+      exit;
+    }
+  }
 } catch (Exception $e) {
   echo json_encode(['ok' => false, 'msg' => 'Erro ao validar produtos.']);
   exit;
+}
+
+// Estoque: bloqueia o lancamento de um pedido novo se faltar estoque de algum
+// produto avulso ou de algum componente escolhido num combo. So roda pra
+// pedido NOVO — editar um pedido existente (mesmos itens, so mudando
+// pagamento/endereco/etc) nao consome estoque adicional, entao nao ha o que
+// bloquear aqui.
+if (!$pedidoEdicaoId) {
+  try {
+    $estoqueNecessario = [];
+    foreach ($itens as $i) {
+      $qtdItemChk = max(1, (int) ($i['qtd'] ?? 1));
+      if (!empty($i['combosels']) && is_array($i['combosels'])) {
+        foreach ($i['combosels'] as $sel) {
+          $selId = isset($sel['id']) ? (int) $sel['id'] : 0;
+          $selQtd = (int) ($sel['qtd'] ?? 1) * $qtdItemChk;
+          if ($selId > 0 && $selQtd > 0) {
+            $estoqueNecessario[$selId] = ($estoqueNecessario[$selId] ?? 0) + $selQtd;
+          }
+        }
+      } else {
+        $prodIdChk = isset($i['id']) ? (int) $i['id'] : 0;
+        if ($prodIdChk > 0) {
+          $estoqueNecessario[$prodIdChk] = ($estoqueNecessario[$prodIdChk] ?? 0) + $qtdItemChk;
+        }
+      }
+    }
+    if ($estoqueNecessario) {
+      $idsChk = array_keys($estoqueNecessario);
+      $phChk = implode(',', array_fill(0, count($idsChk), '?'));
+      $stmtEstChk = $conn->prepare("
+        SELECT p.id, p.nome, IFNULL(e.quantidade, 0) AS estoque
+        FROM produtos p
+        LEFT JOIN estoque e ON e.produto_id = p.id AND e.loja_id = p.loja_id
+        WHERE p.id IN ($phChk) AND p.loja_id = ?
+      ");
+      $stmtEstChk->execute([...$idsChk, $lojaId]);
+      foreach ($stmtEstChk->fetchAll(PDO::FETCH_ASSOC) as $rowChk) {
+        $pidChk = (int) $rowChk['id'];
+        $necessario = $estoqueNecessario[$pidChk] ?? 0;
+        if ($necessario > 0 && (int) $rowChk['estoque'] < $necessario) {
+          echo json_encode(['ok' => false, 'msg' => '"' . $rowChk['nome'] . '" esta sem estoque suficiente no momento.']);
+          exit;
+        }
+      }
+    }
+  } catch (Exception $e) {
+    echo json_encode(['ok' => false, 'msg' => 'Erro ao validar estoque.']);
+    exit;
+  }
 }
 
 try {
@@ -890,7 +973,7 @@ try {
     $dinheiroRecebido > 0 ? $dinheiroRecebido : null,
     $troco,
     $cupom !== '' ? $cupom : null,
-    'pendente',
+    $statusInicialPedido,
     $lojaId
   ];
   if ($temObsCliente) {
@@ -999,6 +1082,7 @@ try {
       continue;
     }
     $produtoIdItem = isset($i['id']) ? (int) $i['id'] : 0;
+    $isComboItem = !empty($i['combosels']) && is_array($i['combosels']);
 
     $valores = [
       $pedidoId,
@@ -1012,11 +1096,16 @@ try {
       $valores[] = $produtoIdItem > 0 ? $produtoIdItem : null;
     }
     $stmtItem->execute($valores);
+    $pedidoItemId = (int) $conn->lastInsertId();
 
-    if ($produtoIdItem > 0) {
+    // Para itens de combo, $produtoIdItem e o id da tabela "combos", nao de
+    // "produtos" — nao pode ser usado pra baixar estoque (estoque e controlado
+    // pelos itens que compoem o combo, tratados abaixo via combosels).
+    if ($produtoIdItem > 0 && !$isComboItem) {
       $stmtEstoqueInsert->execute([$produtoIdItem, $lojaId]);
       $stmtEstoqueUpdate->execute([$qtdItem, $produtoIdItem, $lojaId]);
       $stmtMov->execute([$produtoIdItem, $qtdItem, $pedidoId, $lojaId]);
+      estoqueVinculoSincronizar($conn, $produtoIdItem, $lojaId, ['tipo' => 'saida', 'quantidade' => $qtdItem, 'origem' => 'pedido', 'referencia_id' => $pedidoId]);
     }
 
     if (!empty($i['combosels']) && is_array($i['combosels'])) {
@@ -1029,7 +1118,11 @@ try {
         $stmtEstoqueInsert->execute([$selId, $lojaId]);
         $stmtEstoqueUpdate->execute([$selQtd, $selId, $lojaId]);
         $stmtMov->execute([$selId, $selQtd, $pedidoId, $lojaId]);
+        estoqueVinculoSincronizar($conn, $selId, $lojaId, ['tipo' => 'saida', 'quantidade' => $selQtd, 'origem' => 'pedido', 'referencia_id' => $pedidoId]);
       }
+      // Persiste os componentes usados pra que o cancelamento do pedido saiba
+      // o que devolver ao estoque (ver admin/helpers/combo_estoque_module.php).
+      comboEstoqueRegistrarComponentes($conn, (int) $pedidoId, $pedidoItemId, $i['combosels'], $qtdItem, $lojaId);
     }
   }
 
@@ -1057,7 +1150,7 @@ try {
       INSERT INTO pedido_status_log (pedido_id, status, loja_id)
       VALUES (?, ?, ?)
     ");
-    $stmtLog->execute([$pedidoId, 'pendente', $lojaId]);
+    $stmtLog->execute([$pedidoId, $statusInicialLog, $lojaId]);
 
   if ($cupomAplicado && $cupomId) {
     $stmtCupom = $conn->prepare("
@@ -1288,6 +1381,7 @@ try {
         $stmtEstoqueInsert->execute([$produtoIdOld, $lojaId]);
         $stmtEstoqueRepor->execute([$qtdOld, $produtoIdOld, $lojaId]);
         $stmtMovRepor->execute([$produtoIdOld, $qtdOld, $pedidoEdicaoId, $lojaId]);
+        estoqueVinculoSincronizar($conn, $produtoIdOld, $lojaId, ['tipo' => 'entrada', 'quantidade' => $qtdOld, 'origem' => 'pedido_editado', 'referencia_id' => $pedidoEdicaoId]);
       }
     }
 

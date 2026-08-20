@@ -77,13 +77,17 @@ if ($caixaAbertoAnterior) {
 }
 
 try {
+  // Data/hora calculada em PHP (fuso America/Fortaleza, ja setado no topo deste
+  // arquivo) — nao usar NOW() do MySQL, que segue o fuso do servidor do banco
+  // (pode ser UTC) e abria o caixa com a data do dia seguinte a noite.
+  $agora = date('Y-m-d H:i:s');
   $stmt = $conn->prepare("
     INSERT INTO caixa_turnos
       (operador_id, status, saldo_inicial, aberto_em, obs_abertura, loja_id)
     VALUES
-      (?, 'aberto', ?, NOW(), ?, ?)
+      (?, 'aberto', ?, ?, ?, ?)
   ");
-  $stmt->execute([$operadorId, $saldoInicial, $observacoes ?: null, $lojaId]);
+  $stmt->execute([$operadorId, $saldoInicial, $agora, $observacoes ?: null, $lojaId]);
   $caixaId = $conn->lastInsertId();
 
   $stmt = $conn->prepare("

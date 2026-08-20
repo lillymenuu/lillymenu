@@ -281,6 +281,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
       <?php endfor; ?>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <div class="modal fade clientes-modal" id="modalClienteEdit" tabindex="-1">

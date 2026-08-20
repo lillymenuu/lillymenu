@@ -198,6 +198,24 @@ function wireCepLookup(cepInput, ruaInput, bairroInput, cidadeInput, estadoInput
 }
 wireCepLookup(leadCep, leadRua, leadBairro, leadCidade, leadEstado, leadMsg);
 
+const cadastroSucessoModal = document.getElementById('cadastroSucessoModal');
+const cadastroSucessoFechar = document.getElementById('cadastroSucessoFechar');
+
+function toggleCadastroSucessoModal(open){
+  if (!cadastroSucessoModal) return;
+  const isOpen = typeof open === 'boolean' ? open : !cadastroSucessoModal.classList.contains('show');
+  cadastroSucessoModal.classList.toggle('show', isOpen);
+  cadastroSucessoModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+}
+
+cadastroSucessoFechar?.addEventListener('click', () => toggleCadastroSucessoModal(false));
+cadastroSucessoModal?.addEventListener('click', (e) => {
+  if (e.target === cadastroSucessoModal) toggleCadastroSucessoModal(false);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') toggleCadastroSucessoModal(false);
+});
+
 function wireSignupForm(formEl, msgEl, aceiteEl){
   formEl?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -256,9 +274,17 @@ function wireSignupForm(formEl, msgEl, aceiteEl){
       const resp = await fetch('api/cadastro_loja.php', { method: 'POST', body: formData });
       const data = await resp.json();
       if (data.ok) {
-        msgEl.textContent = 'Cadastro efetuado com sucesso. Aguarde a liberacao do acesso a sua loja.';
-        msgEl.className = 'lead-msg success';
+        msgEl.textContent = '';
+        msgEl.className = 'lead-msg';
         formEl.reset();
+        formEl.querySelectorAll('.lead-dropdown').forEach((dropdown) => {
+          const text = dropdown.querySelector('.lead-drop-text');
+          const input = dropdown.querySelector('input[type="hidden"]');
+          if (input) input.value = input.defaultValue;
+          if (text) text.textContent = input && input.defaultValue ? input.defaultValue : 'Selecionar';
+        });
+        toggleCadastroModal(false);
+        toggleCadastroSucessoModal(true);
       } else {
         msgEl.textContent = data.msg || 'Erro ao cadastrar. Tente novamente.';
         msgEl.className = 'lead-msg error';

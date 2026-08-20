@@ -480,7 +480,7 @@ try {
       </div>
     </div>
 
-    <div class="dash-footer">Cardapio Digital Lilly 2026</div>
+    <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
   </div>
 
   </main>

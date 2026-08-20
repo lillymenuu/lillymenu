@@ -121,6 +121,15 @@ p{margin:0}
 .cadastro-modal-close{position:absolute;top:18px;right:18px;background:transparent;color:var(--text)}
 .cadastro-form{display:flex;flex-direction:column;gap:14px}
 
+.cadastro-sucesso-card{width:420px;padding:38px 34px 32px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.cadastro-sucesso-icon{width:56px;height:56px;border-radius:50%;background:var(--pink);display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:0 10px 22px rgba(236,72,153,.3)}
+.cadastro-sucesso-title{font-size:19px;font-weight:700;color:var(--text);margin-bottom:10px}
+.cadastro-sucesso-text{font-size:13.5px;line-height:1.6;color:var(--muted);margin-bottom:24px}
+.cadastro-sucesso-btn{padding:12px 36px}
+@media (max-width:600px){
+  .cadastro-sucesso-card{width:94vw;padding:30px 22px 26px}
+}
+
 /* ── Solucoes (linhas alternadas) ── */
 .solucoes{padding:80px 0 30px}
 .solucoes-title{text-align:center;font-size:30px;color:var(--text);margin-bottom:46px}

@@ -7,6 +7,8 @@ mb_internal_encoding('UTF-8');
 
 require_once '../../config/database.php';
 require_once '../../helpers/telefone.php';
+require_once '../../admin/helpers/combo_estoque_module.php';
+require_once '../../admin/helpers/estoque_vinculo_module.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   echo json_encode(['ok'=>false,'msg'=>'Método inválido']); exit;
@@ -20,6 +22,8 @@ try {
   }
 } catch (Exception $e) {
 }
+comboEstoqueEnsureModule($conn);
+estoqueVinculoEnsureModule($conn);
 
 $lojaId    = (int) ($_POST['loja_id'] ?? 1);
 $nome      = trim($_POST['cliente_nome'] ?? '');
@@ -60,6 +64,49 @@ if (!$nome || !$telefone) {
 }
 if (!$itens) {
   echo json_encode(['ok'=>false,'msg'=>'Nenhum item no carrinho']); exit;
+}
+
+/* Estoque: o badge "Esgotado" no cardápio e as opções de combo desabilitadas
+   no modal já impedem isso no front-end, mas a checagem aqui fecha a brecha de
+   montar o pedido direto na API. Soma a necessidade por produto (um mesmo
+   produto pode aparecer avulso e como componente de combo) e bloqueia o
+   pedido inteiro se faltar estoque de qualquer um. */
+$estoqueNecessario = [];
+foreach ($itens as $item) {
+  $qtdItemChk = max(1, (int) ($item['qtd'] ?? 1));
+  if (!empty($item['combosels']) && is_array($item['combosels'])) {
+    foreach ($item['combosels'] as $sel) {
+      $selId  = (int) ($sel['id'] ?? 0);
+      $selQtd = (int) ($sel['qtd'] ?? 1) * $qtdItemChk;
+      if ($selId > 0 && $selQtd > 0) {
+        $estoqueNecessario[$selId] = ($estoqueNecessario[$selId] ?? 0) + $selQtd;
+      }
+    }
+  } else {
+    $prodIdChk = (int) ($item['id'] ?? 0);
+    if ($prodIdChk > 0) {
+      $estoqueNecessario[$prodIdChk] = ($estoqueNecessario[$prodIdChk] ?? 0) + $qtdItemChk;
+    }
+  }
+}
+if ($estoqueNecessario) {
+  $idsChk = array_keys($estoqueNecessario);
+  $phChk  = implode(',', array_fill(0, count($idsChk), '?'));
+  $stmtEstChk = $conn->prepare("
+    SELECT p.id, p.nome, IFNULL(e.quantidade, 0) AS estoque
+    FROM produtos p
+    LEFT JOIN estoque e ON e.produto_id = p.id AND e.loja_id = p.loja_id
+    WHERE p.id IN ($phChk) AND p.loja_id = ?
+  ");
+  $stmtEstChk->execute([...$idsChk, $lojaId]);
+  foreach ($stmtEstChk->fetchAll(PDO::FETCH_ASSOC) as $rowChk) {
+    $pidChk = (int) $rowChk['id'];
+    $necessario = $estoqueNecessario[$pidChk] ?? 0;
+    if ($necessario > 0 && (int) $rowChk['estoque'] < $necessario) {
+      echo json_encode(['ok'=>false,'msg'=>'"' . $rowChk['nome'] . '" está sem estoque suficiente no momento.']);
+      exit;
+    }
+  }
 }
 
 /* Loja fechada: só aceita pedido imediato se estiver aberta agora — entrega/retirada
@@ -184,23 +231,36 @@ try {
 
     $ph2 = implode(',',array_fill(0,count($fi),'?'));
     $fl2 = implode(',',$fi);
+    $isComboItem = !empty($item['combosels']) && is_array($item['combosels']);
     $conn->prepare("INSERT INTO pedido_itens($fl2) VALUES($ph2)")->execute($vi);
+    $pedidoItemId = (int) $conn->lastInsertId();
 
-    /* descontar estoque se existir */
-    try {
-      $conn->prepare("UPDATE estoque SET quantidade=quantidade-? WHERE produto_id=? AND loja_id=? AND quantidade>=?")->execute([$qtd,$prodId,$lojaId,$qtd]);
-    } catch (Exception $e) {}
+    /* descontar estoque se existir — itens de combo usam o id da tabela
+       "combos" aqui (nao de "produtos"), entao o estoque deles e controlado
+       so pelos componentes escolhidos (combosels), tratados abaixo */
+    if (!$isComboItem) {
+      try {
+        $conn->prepare("UPDATE estoque SET quantidade=quantidade-? WHERE produto_id=? AND loja_id=? AND quantidade>=?")->execute([$qtd,$prodId,$lojaId,$qtd]);
+        estoqueVinculoSincronizar($conn, $prodId, $lojaId, ['tipo' => 'saida', 'quantidade' => $qtd, 'origem' => 'pedido', 'referencia_id' => $pedidoId]);
+      } catch (Exception $e) {}
+    }
 
     /* descontar estoque dos itens selecionados no combo */
-    if (!empty($item['combosels']) && is_array($item['combosels'])) {
+    if ($isComboItem) {
       $stmtEst = $conn->prepare("UPDATE estoque SET quantidade=quantidade-? WHERE produto_id=? AND loja_id=? AND quantidade>=?");
       foreach ($item['combosels'] as $sel) {
         $selId  = (int)($sel['id']  ?? 0);
         $selQtd = (int)($sel['qtd'] ?? 1) * $qtd; // multiplica pela qtd do combo
         if ($selId > 0 && $selQtd > 0) {
-          try { $stmtEst->execute([$selQtd, $selId, $lojaId, $selQtd]); } catch (Exception $e) {}
+          try {
+            $stmtEst->execute([$selQtd, $selId, $lojaId, $selQtd]);
+            estoqueVinculoSincronizar($conn, $selId, $lojaId, ['tipo' => 'saida', 'quantidade' => $selQtd, 'origem' => 'pedido', 'referencia_id' => $pedidoId]);
+          } catch (Exception $e) {}
         }
       }
+      /* Persiste os componentes usados pra que o cancelamento do pedido saiba
+         o que devolver ao estoque (ver admin/helpers/combo_estoque_module.php). */
+      comboEstoqueRegistrarComponentes($conn, (int) $pedidoId, $pedidoItemId, $item['combosels'], $qtd, $lojaId);
     }
   }
 

@@ -156,6 +156,8 @@ $rootOptionsHtml = financialRenderCategoryParentOptions($rootCategories, (int) (
       <?php endif; ?>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 <div class="modal fade" id="financialCategoryDeleteModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">

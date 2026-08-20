@@ -52,6 +52,7 @@ $pdvConfirmacaoJsVer = filemtime(__DIR__ . '/assets/js/pdv_confirmacao.js');
 
   </div>
 
+  <div class="dash-footer" style="text-align:center;font-size:.75rem;color:#94a3b8;margin-top:6px">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

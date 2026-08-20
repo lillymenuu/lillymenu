@@ -288,6 +288,7 @@ $avaliacoesCssVer = filemtime(__DIR__ . '/assets/css/avaliacoes.css');
     <?php endif; ?>
   </div>
 
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div><!-- /fin-page -->
 </main>
 </body>

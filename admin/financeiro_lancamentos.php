@@ -133,6 +133,8 @@ $transactionsTableHtml = financialRenderTransactionsTable($conn, $tenantId, $tra
       <div id="financial-transaction-table"><?= $transactionsTableHtml ?></div>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <div class="modal fade" id="financialTransactionModal" tabindex="-1" aria-hidden="true">

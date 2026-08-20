@@ -80,6 +80,8 @@ $financeiroContasJsVer = filemtime(__DIR__ . '/assets/js/financeiro_contas.js');
       <div id="financial-account-table"><?= $accountsTableHtml ?></div>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <div class="modal fade" id="financialAccountModal" tabindex="-1" aria-hidden="true">

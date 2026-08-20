@@ -51,7 +51,7 @@ $menuLabelsRecursos = [
 
 $saasCfg = [];
 try {
-  $stmt = $conn->query("SELECT chave, valor FROM configuracoes WHERE loja_id = 0 AND chave IN ('saas_pix_chave','saas_pix_nome','saas_whatsapp_numero')");
+  $stmt = $conn->query("SELECT chave, valor FROM configuracoes WHERE loja_id = 0 AND chave IN ('saas_pix_chave','saas_pix_nome','saas_whatsapp_numero','saas_nominatim_ativo')");
   foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
     $saasCfg[$row['chave']] = $row['valor'];
   }
@@ -128,6 +128,19 @@ $configJsVer = filemtime(__DIR__ . '/assets/js/configuracoes.js');
             </div>
             <div class="modal-msg" id="pixConfigMsg" aria-live="polite"></div>
           </form>
+        </div>
+      </section>
+
+      <section class="card cfg-card" id="nominatimConfigCard">
+        <div class="cfg-card-head">
+          <div>
+            <div class="cfg-card-title">Endereço automático por localização (Nominatim)</div>
+            <div class="cfg-card-sub">Permite que o cliente use o GPS para preencher o endereço de entrega automaticamente, via serviço gratuito Nominatim (OpenStreetMap).</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="nominatimAtivoToggle" <?= ($saasCfg['saas_nominatim_ativo'] ?? '1') === '1' ? 'checked' : '' ?>>
+            <span class="slider"></span>
+          </label>
         </div>
       </section>
 

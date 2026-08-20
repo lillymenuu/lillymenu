@@ -153,7 +153,7 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <button type="button" class="orc-address-btn" data-bs-toggle="modal" data-bs-target="#modalEndereco">
               <i class="bi bi-geo-alt"></i>
-              Informar endereco
+              Informar endereço
             </button>
             <div class="orc-address-summary d-none" id="orcEnderecoResumo"></div>
           </div>
@@ -172,7 +172,7 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <div class="orc-discount-controls">
                 <select id="orcDescontoTipo">
                   <option value="valor">Valor (R$)</option>
-                  <option value="percent">Percentual (%)</option>
+                  <option value="percent">Por (%)</option>
                 </select>
                 <input type="number" step="0.01" id="orcDescontoValor" value="0">
               </div>
@@ -206,13 +206,15 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <input type="hidden" name="itens_json" id="itensJson" value="[]">
     <input type="hidden" name="total" id="orcTotalInput" value="0">
   </form>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <div class="modal fade orc-modal orc-modal-address" id="modalEndereco" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="width:520px;max-width:520px;">
     <div class="modal-content">
       <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title">Endereco do cliente</h5>
+        <h5 class="modal-title">Endereço do cliente</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
@@ -248,7 +250,7 @@ $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
       </div>
       <div class="orc-modal-footer">
-        <button type="button" class="btn btn-orc" data-bs-dismiss="modal">Salvar endereco</button>
+        <button type="button" class="btn btn-orc" data-bs-dismiss="modal">Salvar endereço</button>
       </div>
     </div>
   </div>

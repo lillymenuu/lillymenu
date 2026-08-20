@@ -80,6 +80,8 @@ $financeiroFormasPagamentoJsVer = filemtime(__DIR__ . '/assets/js/financeiro_for
       <div id="financial-method-table"><?= $methodsTableHtml ?></div>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <div class="modal fade" id="financialMethodModal" tabindex="-1" aria-hidden="true">

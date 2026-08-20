@@ -4,7 +4,7 @@ body{background:#ffffff}
 .clientes-title{font-size:1.2rem;font-weight:600;margin:0}
 .clientes-subtitle{color:#6b7280;font-size:.9rem;margin:4px 0 0}
 .btn-clientes{background:#9C5523;border:0;color:#fff;border-radius:999px;padding:.55rem 1.2rem;font-weight:600;box-shadow:0 12px 22px rgba(156,85,35,.25)}
-.btn-clientes:hover{background:#e11d48;color:#fff}
+.btn-clientes:hover{background:#7A3F10;color:#fff}
 /* ── rc-table layout ── */
 .rc-card{background:#fff;border-radius:16px;border:1px solid #e5e7eb}
 .rc-filters{padding:14px 18px}

@@ -2,18 +2,13 @@
 session_start();
 header('Content-Type: application/json; charset=UTF-8');
 require_once '../../config/database.php';
+require_once '../../helpers/storage.php';
 
 $lojaId  = (int)($_GET['loja_id'] ?? 1);
 $comboId = (int)($_GET['id'] ?? 0);
 
 function fixImgPath(string $p): string {
-  if (!$p) return '';
-  if (preg_match('#^https?://#', $p) || $p[0] === '/') return $p;
-  $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-  $host  = $_SERVER['HTTP_HOST'] ?? 'localhost';
-  // combo_detalhe.php está em public/api/ → 3 níveis acima = raiz do projeto
-  $base  = rtrim(dirname(dirname(dirname($_SERVER['SCRIPT_NAME']))), '/');
-  return $proto . $host . $base . '/admin/' . ltrim($p, '/');
+  return storage_url_absoluta($p);
 }
 
 if ($comboId <= 0 || $lojaId <= 0) {
@@ -41,9 +36,10 @@ try {
     $imgSel   = $temImg ? 'p.imagem' : "'' AS imagem";
 
     $stmtO = $conn->prepare("
-        SELECT o.produto_id AS id, p.nome, $imgSel AS imagem
+        SELECT o.produto_id AS id, p.nome, $imgSel AS imagem, IFNULL(e.quantidade,0) AS estoque
         FROM combo_passo_opcoes o
         JOIN produtos p ON p.id = o.produto_id AND p.loja_id = o.loja_id
+        LEFT JOIN estoque e ON e.produto_id = o.produto_id AND e.loja_id = o.loja_id
         WHERE o.passo_id = ? AND o.loja_id = ?
         ORDER BY o.ordem IS NULL, o.ordem, o.id
     ");
@@ -51,7 +47,9 @@ try {
         $stmtO->execute([$passo['id'], $lojaId]);
         $opcoes = $stmtO->fetchAll(PDO::FETCH_ASSOC);
         foreach ($opcoes as &$opc) {
-            $opc['imagem'] = fixImgPath((string)($opc['imagem'] ?? ''));
+            $opc['imagem']   = fixImgPath((string)($opc['imagem'] ?? ''));
+            $opc['estoque']  = (int)($opc['estoque'] ?? 0);
+            $opc['esgotado'] = $opc['estoque'] <= 0;
         }
         unset($opc);
         $passo['opcoes'] = $opcoes;

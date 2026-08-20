@@ -752,6 +752,8 @@ $entradaSaidaJsVer = filemtime(__DIR__ . '/assets/js/entrada_saida.js');
       </div>
       </div>
     </div>
+
+    <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 </div>
 

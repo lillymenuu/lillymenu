@@ -25,6 +25,7 @@ $permsMenu = [
   'menu.pedidos',
   'menu.orcamentos',
   'menu.produtos',
+  'menu.promo',
   'menu.estoque',
   'menu.clientes',
   'menu.relatorios',
@@ -38,6 +39,8 @@ $permsMenu = [
   'menu.lista_transmissao',
   'menu.configuracoes',
   'menu.avaliacoes',
+  'menu.cross_sell_config',
+  'menu.relatorio_cross_sell',
 ];
 $permsNivel1 = $permsMenu;
 $permsNivel2 = [
@@ -88,17 +91,33 @@ function garantirNiveisPadrao(PDO $conn, array $niveisPadrao): array {
     }
     $permissoesJson = $row['permissoes_json'] ?? json_encode($nivel['permissoes'], JSON_UNESCAPED_UNICODE);
     $decoded = json_decode((string) $permissoesJson, true);
+    $atual = is_array($decoded) ? $decoded : [];
     $temMenu = false;
-    if (is_array($decoded)) {
-      foreach ($decoded as $perm) {
-        if (strpos((string) $perm, 'menu.') === 0) {
-          $temMenu = true;
-          break;
-        }
+    foreach ($atual as $perm) {
+      if (strpos((string) $perm, 'menu.') === 0) {
+        $temMenu = true;
+        break;
       }
     }
+
+    $precisaAtualizar = false;
     if (!$temMenu) {
-      $permissoesJson = json_encode($nivel['permissoes'], JSON_UNESCAPED_UNICODE);
+      /* nivel sem nenhuma permissao de menu ainda: aplica a lista padrao inteira */
+      $atual = $nivel['permissoes'];
+      $precisaAtualizar = true;
+    } elseif ($slug === 'nivel-1') {
+      /* "Acesso total ao sistema": inclui automaticamente as telas novas que
+         foram adicionadas ao sistema depois que este nivel foi criado, sem
+         remover nenhuma permissao extra que ja estivesse la */
+      $faltando = array_diff($nivel['permissoes'], $atual);
+      if ($faltando) {
+        $atual = array_values(array_unique(array_merge($atual, $faltando)));
+        $precisaAtualizar = true;
+      }
+    }
+
+    if ($precisaAtualizar) {
+      $permissoesJson = json_encode($atual, JSON_UNESCAPED_UNICODE);
       $stmtUp = $conn->prepare("
         UPDATE permissoes_niveis
         SET permissoes_json = ?, atualizado_em = NOW()
@@ -702,6 +721,8 @@ function perfilLabel($perfil){
         </div>
       <?php endif; ?>
     </div>
+
+    <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
   </div>
 
   <div class="modal fade settings-modal settings-modal--permissoes" id="modal-permissoes" tabindex="-1" aria-hidden="true">
@@ -745,6 +766,7 @@ function perfilLabel($perfil){
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.pedidos">Lista de pedidos</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.orcamentos">Orcamentos</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.produtos">Produtos</label>
+              <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.promo">Promocoes</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.estoque">Estoque</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.clientes">Clientes</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.relatorios">Relatorios (vendas)</label>
@@ -757,6 +779,9 @@ function perfilLabel($perfil){
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.whatslilly">WhatsLilly</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.lista_transmissao">Lista de Transmissao</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.configuracoes">Configuracoes</label>
+              <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.avaliacoes">Avaliacoes</label>
+              <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.cross_sell_config">Configuracoes do Cross-sell</label>
+              <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.relatorio_cross_sell">Relatorio de Cross-sell</label>
             </div>
           </div>
 

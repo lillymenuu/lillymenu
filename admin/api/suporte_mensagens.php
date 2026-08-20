@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -29,13 +30,8 @@ function limparSuporteMensagensExpiradas(PDO $conn): void {
   try {
     $stmt = $conn->query("SELECT anexo_arquivo FROM suporte_mensagens WHERE criado_em < (NOW() - INTERVAL 2 DAY) AND anexo_arquivo IS NOT NULL");
     $arquivos = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
-    $baseDir = realpath(__DIR__ . '/../assets/uploads/suporte');
     foreach ($arquivos as $relPath) {
-      if (!$relPath) continue;
-      $arquivo = realpath(__DIR__ . '/../' . $relPath);
-      if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-        unlink($arquivo);
-      }
+      storage_delete($relPath);
     }
     $conn->exec("DELETE FROM suporte_mensagens WHERE criado_em < (NOW() - INTERVAL 2 DAY)");
   } catch (Exception $e) {

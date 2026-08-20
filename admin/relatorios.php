@@ -82,13 +82,30 @@ $faturamento = (float) ($resumo['faturamento'] ?? 0);
 $ticketMedio = $totalPedidos > 0 ? $faturamento / $totalPedidos : 0;
 $taxaEntregaTotal = (float) ($resumo['taxa_entrega'] ?? 0);
 
+/* Pagamentos de fiado confirmados no periodo: so entram aqui quando o
+   pagamento e confirmado (tipo='pagamento'), nunca no momento da venda fiado */
+$fiadoRecebido = 0.0;
+try {
+  $stmtFiado = $conn->prepare("
+    SELECT COALESCE(SUM(valor), 0) AS total
+    FROM fiado_lancamentos
+    WHERE loja_id = ? AND tipo = 'pagamento' AND DATE(criado_em) BETWEEN ? AND ?
+  ");
+  $stmtFiado->execute([$lojaId, $inicio, $fim]);
+  $fiadoRecebido = (float) $stmtFiado->fetchColumn();
+} catch (Exception $e) {
+  /* tabela fiado_lancamentos ainda nao existe */
+}
+
 $stmt = $conn->prepare("
-  SELECT COUNT(*) AS total_cancelados
+  SELECT COUNT(*) AS total_cancelados, COALESCE(SUM(p.total), 0) AS valor_cancelados
   FROM pedidos p
   $whereCancelados
 ");
 $stmt->execute($paramsCancelados);
-$canceladosTotal = (int) $stmt->fetchColumn();
+$rowCancelados = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+$canceladosTotal = (int) ($rowCancelados['total_cancelados'] ?? 0);
+$canceladosValor = (float) ($rowCancelados['valor_cancelados'] ?? 0);
 
 $stmt = $conn->prepare("
   SELECT COUNT(*) AS total_pedidos
@@ -173,7 +190,7 @@ function renderPaginacao($paginas, $pagina){
   return $itens;
 }
 
-function renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticketMedio, $taxaEntregaTotal, $canceladosTotal, $pedidos, $pagina, $paginas, $total, $limite){
+function renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticketMedio, $taxaEntregaTotal, $canceladosTotal, $pedidos, $pagina, $paginas, $total, $limite, $fiadoRecebido = 0.0, $canceladosValor = 0.0){
   ?>
   <div class="relatorio-body-inner" data-pagina="<?= $pagina ?>">
     <div class="relatorio-section" id="sectionVendasDia">
@@ -184,7 +201,7 @@ function renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticket
       <div class="relatorio-kpis">
         <div class="relatorio-kpi">
           <div class="relatorio-kpi-label">Total vendido</div>
-          <div class="relatorio-kpi-value" id="kpiFaturamento">R$ <?= number_format($faturamento, 2, ',', '.') ?></div>
+          <div class="relatorio-kpi-value" id="kpiFaturamento">R$ <?= number_format($faturamento + $fiadoRecebido, 2, ',', '.') ?></div>
         </div>
         <div class="relatorio-kpi">
           <div class="relatorio-kpi-label">Media de valor por transacao</div>
@@ -201,6 +218,14 @@ function renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticket
         <div class="relatorio-kpi">
           <div class="relatorio-kpi-label">Pedidos cancelados</div>
           <div class="relatorio-kpi-value" id="kpiCancelados"><?= $canceladosTotal ?></div>
+        </div>
+        <div class="relatorio-kpi">
+          <div class="relatorio-kpi-label">Valor cancelado</div>
+          <div class="relatorio-kpi-value" id="kpiCanceladosValor">R$ <?= number_format($canceladosValor, 2, ',', '.') ?></div>
+        </div>
+        <div class="relatorio-kpi">
+          <div class="relatorio-kpi-label">Registro fiado</div>
+          <div class="relatorio-kpi-value" id="kpiFiado">R$ <?= number_format($fiadoRecebido, 2, ',', '.') ?></div>
         </div>
       </div>
       <div class="relatorio-payments-grid">
@@ -373,7 +398,7 @@ function renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticket
 }
 
 if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
-  renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticketMedio, $taxaEntregaTotal, $canceladosTotal, $pedidos, $pagina, $paginas, $totalPedidosTabela, $limite);
+  renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticketMedio, $taxaEntregaTotal, $canceladosTotal, $pedidos, $pagina, $paginas, $totalPedidosTabela, $limite, $fiadoRecebido, $canceladosValor);
   exit;
 }
 
@@ -385,7 +410,7 @@ $relatoriosJsVer = filemtime(__DIR__ . '/assets/js/relatorios.js');
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Relatorio de vendas</title>
+<title>Relatório de vendas</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -406,7 +431,7 @@ $relatoriosJsVer = filemtime(__DIR__ . '/assets/js/relatorios.js');
 <div class="container-fluid relatorio-page">
   <div class="relatorio-header">
     <div>
-      <h1 class="relatorio-title">Relatorio de vendas</h1>
+      <h1 class="relatorio-title">Relatório de vendas</h1>
       <p class="relatorio-subtitle">Acompanhe o resumo e os pedidos do periodo.</p>
     </div>
     <div class="relatorio-actions">
@@ -423,7 +448,7 @@ $relatoriosJsVer = filemtime(__DIR__ . '/assets/js/relatorios.js');
     <div class="relatorio-filter-head">
       <h3 class="relatorio-filter-title">Filtros</h3>
     </div>
-    <form id="formFiltro" class="relatorio-filters" method="get" action="relatorios.php">
+    <form id="formFiltro" class="relatorio-filters" method="get" action="relatorios">
       <div class="relatorio-filter-grid">
         <div class="relatorio-filter-field">
           <label for="tipoSelect">Tipo do pedido</label>
@@ -459,10 +484,10 @@ $relatoriosJsVer = filemtime(__DIR__ . '/assets/js/relatorios.js');
   </div>
 
   <div id="relatorioBody" class="relatorio-body">
-    <?php renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticketMedio, $taxaEntregaTotal, $canceladosTotal, $pedidos, $pagina, $paginas, $totalPedidosTabela, $limite); ?>
+    <?php renderRelatorioBody($inicio, $fim, $totalPedidos, $faturamento, $ticketMedio, $taxaEntregaTotal, $canceladosTotal, $pedidos, $pagina, $paginas, $totalPedidosTabela, $limite, $fiadoRecebido, $canceladosValor); ?>
   </div>
 
-  <div class="dash-footer">Cardápio Digital Lilly (c) 2026</div>
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 </main>

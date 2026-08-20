@@ -174,6 +174,8 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
       </section>
     <?php endforeach; ?>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <!-- ══ MODAL DE PROMOCAO ══ -->

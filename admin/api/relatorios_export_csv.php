@@ -93,6 +93,24 @@ $totalCancelados   = (int)   ($rowCanc['qtd']    ?? 0);
 $valorCancelados   = (float) ($rowCanc['total']  ?? 0);
 $ticketMedio       = $totalPedidos > 0 ? $totalGeral / $totalPedidos : 0;
 
+// Registro fiado (pagamentos confirmados no periodo)
+$fiadoRecebido = 0.0;
+try {
+  $stmtFiado = $conn->prepare("
+    SELECT COALESCE(SUM(valor), 0) AS total
+    FROM fiado_lancamentos
+    WHERE loja_id = ? AND tipo = 'pagamento' AND DATE(criado_em) BETWEEN ? AND ?
+  ");
+  $stmtFiado->execute([$lojaId, $inicio, $fim]);
+  $fiadoRecebido = (float) $stmtFiado->fetchColumn();
+} catch (Exception $e) {
+  /* tabela fiado_lancamentos ainda nao existe */
+}
+
+/* Total vendido sem contar o valor dos pedidos cancelados (mesmo criterio
+   usado no card "Total vendido" da tela de relatorios) */
+$totalVendidoSemCancelamento = ($totalGeral - $valorCancelados) + $fiadoRecebido;
+
 // Vendas por dia
 $stmtDia = $conn->prepare("
   SELECT {$campoDataPedido} AS dia, COUNT(*) AS pedidos, COALESCE(SUM(p.total),0) AS total
@@ -229,11 +247,13 @@ $sh->setCellValue('B4', 'Valor');
 $sh->setCellValue('C4', 'Observação');
 
 $metricas = [
-  ['Total de Pedidos',        $totalPedidos,   'pedidos no período'],
-  ['Total Vendido',           $totalGeral,     'receita bruta'],
-  ['Ticket Médio',            $ticketMedio,    'média por pedido'],
-  ['Pedidos Cancelados',      $totalCancelados,'cancelados no período'],
-  ['Valor Total Cancelado',   $valorCancelados,'receita perdida'],
+  ['Total de Pedidos',              $totalPedidos,   'pedidos no período'],
+  ['Total Vendido',                 $totalGeral + $fiadoRecebido, 'receita bruta (inclui fiado recebido)'],
+  ['Ticket Médio',                  $ticketMedio,    'média por pedido'],
+  ['Pedidos Cancelados',            $totalCancelados,'cancelados no período'],
+  ['Valor Total Cancelado',         $valorCancelados,'receita perdida'],
+  ['Total Vendido sem Cancelamento',$totalVendidoSemCancelamento, 'receita liquida (exclui cancelados)'],
+  ['Registro Fiado',                $fiadoRecebido,  'pagamentos de fiado confirmados no período'],
 ];
 
 $row = 5;
@@ -241,7 +261,7 @@ foreach ($metricas as $i => $m) {
   $sh->setCellValue("A{$row}", $m[0]);
   $sh->setCellValue("B{$row}", $m[1]);
   $sh->setCellValue("C{$row}", $m[2]);
-  if (in_array($i, [1,2,4])) {
+  if (in_array($i, [1,2,4,5,6])) {
     $sh->getStyle("B{$row}")->getNumberFormat()->setFormatCode('"R$ "#,##0.00');
   }
   $sh->getStyle("A{$row}")->getFont()->setBold(true);

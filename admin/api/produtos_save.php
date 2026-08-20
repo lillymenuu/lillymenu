@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/operacao.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json');
 
@@ -81,37 +82,12 @@ if (!$temDataValidade) {
 $extrasJson = (string) ($_POST['extras_json'] ?? '[]');
 $complementosItensJson = (string) ($_POST['complementos_itens_json'] ?? '[]');
 
-function salvarImagemProduto($base64) {
-  if (!preg_match('/^data:image\\/(png|jpe?g|webp);base64,/', $base64, $match)) {
-    return null;
-  }
-  $dados = base64_decode(substr($base64, strpos($base64, ',') + 1));
-  if ($dados === false) {
-    return null;
-  }
-  $ext = $match[1] === 'jpeg' ? 'jpg' : $match[1];
-  $dirRel = 'assets/uploads/produtos';
-  $dirAbs = __DIR__ . '/../' . $dirRel;
-  if (!is_dir($dirAbs)) {
-    mkdir($dirAbs, 0775, true);
-  }
-  $nome = 'produto_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-  $destino = $dirAbs . '/' . $nome;
-  if (file_put_contents($destino, $dados) === false) {
-    return null;
-  }
-  return $dirRel . '/' . $nome;
+function salvarImagemProduto($base64, ?int $lojaId = null) {
+  return storage_save_base64($base64, 'produtos', 'produto', $lojaId);
 }
 
 function removerImagemProduto($relPath) {
-  if (!$relPath) {
-    return;
-  }
-  $baseDir = realpath(__DIR__ . '/../assets/uploads/produtos');
-  $arquivo = realpath(__DIR__ . '/../' . $relPath);
-  if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-    unlink($arquivo);
-  }
+  storage_delete($relPath);
 }
 
 function tabelaExiste(PDO $conn, string $tabela): bool {
@@ -286,7 +262,7 @@ if ($id !== '' && (int)$id > 0) {
       removerImagemProduto($imagemAtual);
       $imagemAtual = null;
     } elseif ($imagemBase64 !== '') {
-      $novaImagem = salvarImagemProduto($imagemBase64);
+      $novaImagem = salvarImagemProduto($imagemBase64, $lojaId);
       if (!$novaImagem) {
         echo json_encode(['ok'=>false, 'msg'=>'Imagem invalida.']);
         exit;
@@ -431,7 +407,7 @@ if ($temOrdem) {
   $values[] = $novaOrdem;
 }
 if ($temImagem && $imagemBase64 !== '') {
-  $imagemSalva = salvarImagemProduto($imagemBase64);
+  $imagemSalva = salvarImagemProduto($imagemBase64, $lojaId);
   if (!$imagemSalva) {
     echo json_encode(['ok'=>false, 'msg'=>'Imagem invalida.']);
     exit;

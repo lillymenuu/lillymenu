@@ -1056,7 +1056,7 @@ body.dash-diggy .pedidos-page{
     <?php renderPedidosTabela($pedidos, $paginas, $pagina, $limite, $total); ?>
   </div>
 
-  <div class="dash-footer">Cardapio Digital Will (c) 2026</div>
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <!-- ── Modal Zerar Sequência ── -->

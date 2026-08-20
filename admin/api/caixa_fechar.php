@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Fortaleza');
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/operacao.php';
@@ -31,15 +32,18 @@ if (!$caixa) {
 }
 
 try {
+  // Data/hora calculada em PHP (fuso America/Fortaleza) — nao usar NOW() do
+  // MySQL, que segue o fuso do servidor do banco (pode ser UTC).
+  $agora = date('Y-m-d H:i:s');
   $stmt = $conn->prepare("
     UPDATE caixa_turnos
     SET status = 'fechado',
         saldo_final = ?,
-        fechado_em = NOW(),
+        fechado_em = ?,
         obs_fechamento = ?
     WHERE id = ? AND loja_id = ?
   ");
-  $stmt->execute([$saldoFinal, $observacoes ?: null, $caixaId, $lojaId]);
+  $stmt->execute([$saldoFinal, $agora, $observacoes ?: null, $caixaId, $lojaId]);
 
   registrarOperacao($conn, 'caixa_fechado', 'caixa:' . $caixaId, [
     'saldo_final' => $saldoFinal

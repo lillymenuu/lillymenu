@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 if (!isset($_SESSION['admin_id'])) {
   header('Location: ../index.php');
@@ -32,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $nome = trim((string) ($admin['nome'] ?? 'Admin'));
 $iniciais = dashIniciais($nome);
-$fotoUrl = !empty($admin['foto']) ? '../' . $admin['foto'] : '';
+$fotoUrl = storage_url_admin_sub($admin['foto'] ?? '');
 $lockCssVer = filemtime(__DIR__ . '/assets/css/auth-lock-screen.css');
 ?>
 <!DOCTYPE html>

@@ -22,7 +22,7 @@ body.materia-prima-page{font-family:"Manrope",sans-serif;background:#f4f7fb;}
 .mp-actions{display:flex;gap:10px;flex-wrap:wrap;}
 .mp-btn-primary,.mp-btn-outline,.mp-btn-danger{border-radius:13px;padding:.62rem .9rem;font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;text-decoration:none;cursor:pointer;}
 .mp-btn-primary{background:#9C5523;color:#fff;box-shadow:0 14px 28px rgba(156,85,35,.20);}
-.mp-btn-primary:hover{background:#f01863;color:#fff;}
+.mp-btn-primary:hover{background:#7A3F10;color:#fff;}
 .mp-btn-outline{background:#fff;color:#0f172a;border-color:#dbe4f0;}
 .mp-btn-outline:hover{background:#f8fafc;color:#0f172a;}
 .mp-btn-danger{background:#fff1f2;color:#e11d48;border-color:#fecdd3;}

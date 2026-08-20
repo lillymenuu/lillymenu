@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json');
 
@@ -32,13 +33,7 @@ try {
     $conn->prepare("DELETE FROM combo_passos WHERE combo_id = ? AND loja_id = ?")->execute([$comboId, $lojaId]);
     $conn->prepare("DELETE FROM combos WHERE id = ? AND loja_id = ?")->execute([$comboId, $lojaId]);
 
-    if (!empty($combo['imagem'])) {
-        $baseDir = realpath(__DIR__ . '/../assets/uploads/combos');
-        $arquivo = realpath(__DIR__ . '/../' . $combo['imagem']);
-        if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-            unlink($arquivo);
-        }
-    }
+    storage_delete($combo['imagem'] ?? null);
 
     echo json_encode(['ok' => true]);
 } catch (Throwable $e) {

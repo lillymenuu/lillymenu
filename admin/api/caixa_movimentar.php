@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Fortaleza');
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/operacao.php';
@@ -37,10 +38,13 @@ if (!$caixaId) {
 }
 
 try {
+  // Data/hora calculada em PHP (fuso America/Fortaleza) — nao usar NOW() do
+  // MySQL, que segue o fuso do servidor do banco (pode ser UTC).
+  $agora = date('Y-m-d H:i:s');
   $stmt = $conn->prepare("
     INSERT INTO caixa_movimentacoes
       (caixa_id, operador_id, tipo, valor, observacoes, criado_em, loja_id)
-    VALUES (?, ?, ?, ?, ?, NOW(), ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   ");
   $stmt->execute([
     $caixaId,
@@ -48,6 +52,7 @@ try {
     $tipo,
     $valor,
     $observacoes ?: null,
+    $agora,
     $lojaId
   ]);
 

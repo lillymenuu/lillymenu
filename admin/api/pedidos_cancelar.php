@@ -4,6 +4,7 @@ require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/operacao.php';
 require_once __DIR__ . '/../helpers/financial_module.php';
 require_once __DIR__ . '/../helpers/cashback_module.php';
+require_once __DIR__ . '/../helpers/pedido_estoque_module.php';
 require_once __DIR__ . '/../../services/SaleFinancialIntegrationService.php';
 
 exigirPerfil(['admin', 'gerente']);
@@ -46,6 +47,10 @@ if (!$id) {
 $statusCanceladoPedidos = statusPermitido($conn, 'pedidos', 'cancelado', 'finalizado');
 $statusCanceladoLog = statusPermitido($conn, 'pedido_status_log', 'cancelado', $statusCanceladoPedidos);
 
+// DDL deve rodar ANTES da transação — DDL causa implicit commit no MySQL
+comboEstoqueEnsureModule($conn);
+estoqueVinculoEnsureModule($conn);
+
 $conn->beginTransaction();
 try {
   $stmtStatus = $conn->prepare("SELECT status FROM pedidos WHERE id = ? AND loja_id = ? LIMIT 1");
@@ -66,55 +71,7 @@ try {
     VALUES (?, ?, ?)
   ")->execute([$id, $statusCanceladoLog, $lojaId]);
 
-  $itensColunas = $conn->query("SHOW COLUMNS FROM pedido_itens")->fetchAll(PDO::FETCH_COLUMN, 0);
-  $temProdutoId = in_array('produto_id', $itensColunas, true);
-  $temProdutoNome = in_array('produto_nome', $itensColunas, true);
-
-  $selectItens = $temProdutoId
-    ? "SELECT produto_id, produto_nome, quantidade FROM pedido_itens WHERE pedido_id = ? AND loja_id = ?"
-    : "SELECT NULL AS produto_id, produto_nome, quantidade FROM pedido_itens WHERE pedido_id = ? AND loja_id = ?";
-  $stmtItens = $conn->prepare($selectItens);
-  $stmtItens->execute([$id, $lojaId]);
-  $itens = $stmtItens->fetchAll(PDO::FETCH_ASSOC);
-
-  $stmtEstoqueInsert = $conn->prepare("
-    INSERT IGNORE INTO estoque (produto_id, quantidade, loja_id)
-    VALUES (?, 0, ?)
-  ");
-  $stmtEstoqueUpdate = $conn->prepare("
-    UPDATE estoque
-    SET quantidade = quantidade + ?
-    WHERE produto_id = ? AND loja_id = ?
-  ");
-  $stmtMov = $conn->prepare("
-    INSERT INTO estoque_movimentacoes
-      (produto_id, tipo, quantidade, origem, referencia_id, loja_id)
-    VALUES (?, 'entrada', ?, 'pedido_cancelado', ?, ?)
-  ");
-  $stmtBuscaProduto = $conn->prepare("
-    SELECT id FROM produtos WHERE nome = ? AND loja_id = ? LIMIT 1
-  ");
-
-  foreach ($itens as $item) {
-    $produtoId = (int) ($item['produto_id'] ?? 0);
-    $quantidade = (int) ($item['quantidade'] ?? 0);
-    if ($quantidade <= 0) {
-      continue;
-    }
-    if ($produtoId <= 0 && $temProdutoNome) {
-      $nomeProduto = trim((string) ($item['produto_nome'] ?? ''));
-      if ($nomeProduto !== '') {
-        $stmtBuscaProduto->execute([$nomeProduto, $lojaId]);
-        $produtoId = (int) $stmtBuscaProduto->fetchColumn();
-      }
-    }
-    if ($produtoId <= 0) {
-      continue;
-    }
-    $stmtEstoqueInsert->execute([$produtoId, $lojaId]);
-    $stmtEstoqueUpdate->execute([$quantidade, $produtoId, $lojaId]);
-    $stmtMov->execute([$produtoId, $quantidade, $id, $lojaId]);
-  }
+  pedidoRestaurarEstoqueCancelado($conn, (int) $id, $lojaId);
 
   cashbackCancelarPendente($conn, (int) $id, $lojaId);
 

@@ -3,6 +3,7 @@ session_start();
 date_default_timezone_set('America/Fortaleza');
 require_once '../config/database.php';
 require_once '../helpers/loja_context.php';
+require_once '../helpers/storage.php';
 
 $pedidoId = (int)($_GET['id'] ?? 0);
 $token    = trim($_GET['token'] ?? '');
@@ -143,10 +144,7 @@ body{font-family:'Manrope',sans-serif;background:#f5f5f5;color:#111827;min-heigh
 <div class="track-header">
   <?php
     /* corrigir caminho da logo */
-    $perfilLojaFull = $perfilLoja;
-    if ($perfilLoja && !preg_match('#^https?://#',$perfilLoja) && substr($perfilLoja,0,1)!=='/') {
-      $perfilLojaFull = '../admin/' . ltrim($perfilLoja,'/');
-    }
+    $perfilLojaFull = storage_url_relativa($perfilLoja);
   ?>
   <?php if ($perfilLojaFull): ?>
     <img class="track-header-logo" src="<?= htmlspecialchars($perfilLojaFull) ?>" alt="<?= htmlspecialchars($nomeLoja) ?>">

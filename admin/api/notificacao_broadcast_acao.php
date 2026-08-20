@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../helpers/notificacoes_broadcast.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 if (($_SESSION['admin_perfil'] ?? '') !== 'superadmin') {
   http_response_code(403);
@@ -47,11 +48,7 @@ if ($id > 0 && $acao === 'excluir') {
     $conn->commit();
 
     if ($imagem) {
-      $baseDir = realpath(__DIR__ . '/../assets/uploads/notificacoes');
-      $arquivo = realpath(__DIR__ . '/../' . $imagem);
-      if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-        unlink($arquivo);
-      }
+      storage_delete($imagem);
     }
   } catch (Exception $e) {
     if ($conn->inTransaction()) {

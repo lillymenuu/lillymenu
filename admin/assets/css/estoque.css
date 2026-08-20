@@ -49,7 +49,7 @@
   box-shadow:0 10px 20px rgba(156,85,35,.25);
 }
 .btn-estoque-primary:hover{
-  background:#e11d48;
+  background:#7A3F10;
   color:#fff;
 }
 .estoque-filter{
@@ -330,20 +330,26 @@
   display:flex;
   flex-direction:column;
   gap:8px;
+  max-height:220px;
+  overflow-y:auto;
 }
 .estoque-list-item{
   background:#f8fafc;
   border-radius:12px;
-  padding:10px 12px;
+  padding:12px 14px;
   font-size:.85rem;
   color:#111827;
+}
+.estoque-list-item.estoque-list-empty{
+  color:#94a3b8;
+  text-align:center;
 }
 .estoque-btn-outline{
   border:1px solid #e2e8f0;
   background:#fff;
   color:#111827;
-  border-radius:14px;
-  padding:10px 16px;
+  border-radius:999px;
+  padding:10px 18px;
   font-weight:600;
   font-size:.85rem;
 }
@@ -351,8 +357,8 @@
   border:0;
   background:#9C5523;
   color:#fff;
-  border-radius:14px;
-  padding:10px 16px;
+  border-radius:999px;
+  padding:10px 18px;
   font-weight:600;
   font-size:.85rem;
 }
@@ -371,3 +377,21 @@
     grid-template-columns:1fr;
   }
 }
+
+/* ===== Modal "Vincular outros itens ao estoque" — mesmo padrao visual do
+   picker de opcoes de combo em admin/produtos.php (admin/assets/css/produtos.css) ===== */
+.combo-modal{border-radius:20px;border:none}
+.combo-modal .modal-header{border-bottom:1px solid #f3f4f6;padding:20px 24px 16px}
+.combo-modal .modal-body{padding:20px 24px;max-height:72vh;overflow-y:auto}
+.combo-modal .modal-footer{border-top:1px solid #f3f4f6;padding:14px 24px}
+.opcoes-picker-search{display:flex;gap:8px;margin-bottom:10px}
+.opcoes-picker-search input{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;font-size:13px;flex:1}
+.opcoes-picker-selall{font-size:12px;font-weight:600;color:#9C5523;background:none;border:none;padding:0;margin-bottom:10px;cursor:pointer;display:block}
+.opcoes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:360px;overflow-y:auto}
+.opcoes-item{display:flex;align-items:center;gap:8px;padding:10px;background:#f8f9fa;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:border-color .12s,background .12s}
+.opcoes-item.selected{border-color:#9C5523;background:#f5ede5}
+.opcoes-item img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0}
+.opcoes-item-thumb{width:40px;height:40px;border-radius:8px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#9ca3af;flex-shrink:0;font-size:16px}
+.opcoes-item-name{font-size:12px;font-weight:500;flex:1;line-height:1.3}
+.opcoes-item-check{width:18px;height:18px;border-radius:4px;border:1.5px solid #d1d5db;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px}
+.opcoes-item.selected .opcoes-item-check{background:#9C5523;border-color:#9C5523;color:#fff}

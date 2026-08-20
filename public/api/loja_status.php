@@ -26,6 +26,32 @@ try {
   $lojaAberta = estaAberto($conn) && $receberPedidosAtivo;
   $catalogoVersao = cfg($conn,$lojaId,'catalogo_versao','');
 
+  /* Pausa programada ativa: mesma checagem usada em loja.php */
+  $pausaAtivaTitulo = '';
+  $pausaAtivaFim = '';
+  if (!$lojaAberta) {
+    try {
+      $fusoConfigPausa = cfg($conn,$lojaId,'fuso_horario','America/Fortaleza');
+      try { $tzPausa = new DateTimeZone($fusoConfigPausa); } catch (Exception $e) { $tzPausa = new DateTimeZone('America/Fortaleza'); }
+      $agoraPausa = new DateTime('now', $tzPausa);
+      $stmtPausaAtiva = $conn->prepare("
+        SELECT titulo, CONCAT(data_fim, ' ', hora_fim) AS fim FROM pausas_programadas
+        WHERE loja_id = ?
+          AND CONCAT(data_inicio, ' ', hora_inicio) <= ?
+          AND CONCAT(data_fim, ' ', hora_fim) >= ?
+        LIMIT 1
+      ");
+      $stmtPausaAtiva->execute([$lojaId, $agoraPausa->format('Y-m-d H:i:s'), $agoraPausa->format('Y-m-d H:i:s')]);
+      $pausaAtivaRow = $stmtPausaAtiva->fetch(PDO::FETCH_ASSOC);
+      if ($pausaAtivaRow) {
+        $pausaAtivaTitulo = (string) $pausaAtivaRow['titulo'];
+        $pausaAtivaFim = (string) $pausaAtivaRow['fim'];
+      }
+    } catch (Exception $e) {
+      /* tabela pausas_programadas ainda nao existe */
+    }
+  }
+
   /* Semana completa de horários (mesma lógica do painel "Horário" do loja.php) */
   $horSemana   = json_decode(cfg($conn,$lojaId,'horarios_semana',''),true) ?: [];
   $horaAb      = cfg($conn,$lojaId,'horario_abertura','');
@@ -114,6 +140,8 @@ try {
     'ok' => true,
     'aberto' => $lojaAberta,
     'receberPedidosAtivo' => $receberPedidosAtivo,
+    'pausaTitulo' => $pausaAtivaTitulo,
+    'pausaFim' => $pausaAtivaFim,
     'proximoHorario' => $proximoHorario,
     'entAtiva' => $entAtiva,
     'retAtiva' => $retAtiva,

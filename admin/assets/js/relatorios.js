@@ -94,14 +94,14 @@ async function carregarRelatorio(pagina){
 
   relatorioBody.classList.add('is-loading');
   try {
-    const res = await fetch(`relatorios.php?${params.toString()}`);
+    const res = await fetch(`relatorios?${params.toString()}`);
     const html = await res.text();
     relatorioBody.innerHTML = html;
     if (window.refreshCustomSelects) window.refreshCustomSelects(relatorioBody);
     const paginaNova = relatorioBody.querySelector('.relatorio-body-inner');
     paginaAtual = paginaNova ? Number(paginaNova.dataset.pagina || 1) : (pagina || 1);
     const urlParams = buildParams(paginaAtual);
-    history.replaceState(null, '', `relatorios.php?${urlParams.toString()}`);
+    history.replaceState(null, '', `relatorios?${urlParams.toString()}`);
     carregarResumoApi();
   } catch (err) {
     console.warn('Falha ao carregar relatorio.', err);
@@ -350,6 +350,7 @@ function carregarResumoApi(){
       const resumo = d.resumo || {};
       const clientesFrequencia = d.clientes_frequencia || clientes;
       const cancelados = Number(d.cancelados || 0);
+      const canceladosValor = Number(d.cancelados_valor || 0);
 
       renderDias(vendasDia);
       renderChartProdutos(produtos);
@@ -398,16 +399,21 @@ function carregarResumoApi(){
           faturamento += Number(v.total || 0);
         });
       }
+      const fiadoRecebido = Number(d.fiado_recebido || 0);
       const kpiPedidos = document.getElementById('kpiPedidos');
       const kpiFaturamento = document.getElementById('kpiFaturamento');
       const kpiTicket = document.getElementById('kpiTicket');
       const kpiTaxaEntrega = document.getElementById('kpiTaxaEntrega');
       const kpiCancelados = document.getElementById('kpiCancelados');
+      const kpiCanceladosValor = document.getElementById('kpiCanceladosValor');
+      const kpiFiado = document.getElementById('kpiFiado');
       if (kpiPedidos) kpiPedidos.textContent = pedidos;
-      if (kpiFaturamento) kpiFaturamento.textContent = formatarMoeda(faturamento);
+      if (kpiFaturamento) kpiFaturamento.textContent = formatarMoeda(faturamento + fiadoRecebido);
       if (kpiTicket) kpiTicket.textContent = formatarMoeda(pedidos > 0 ? faturamento / pedidos : 0);
       if (kpiTaxaEntrega) kpiTaxaEntrega.textContent = formatarMoeda(taxaEntrega);
+      if (kpiFiado) kpiFiado.textContent = formatarMoeda(fiadoRecebido);
       if (kpiCancelados) kpiCancelados.textContent = cancelados;
+      if (kpiCanceladosValor) kpiCanceladosValor.textContent = formatarMoeda(canceladosValor);
     })
     .catch(() => {
       renderDias([]);
@@ -420,11 +426,13 @@ function carregarResumoApi(){
       const kpiDebito = document.getElementById('kpiDebito');
       const kpiDinheiro = document.getElementById('kpiDinheiro');
       const kpiCancelados = document.getElementById('kpiCancelados');
+      const kpiCanceladosValor = document.getElementById('kpiCanceladosValor');
       if (kpiPix) kpiPix.textContent = formatarMoeda(0);
       if (kpiCredito) kpiCredito.textContent = formatarMoeda(0);
       if (kpiDebito) kpiDebito.textContent = formatarMoeda(0);
       if (kpiDinheiro) kpiDinheiro.textContent = formatarMoeda(0);
       if (kpiCancelados) kpiCancelados.textContent = 0;
+      if (kpiCanceladosValor) kpiCanceladosValor.textContent = formatarMoeda(0);
     });
 }
 

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json');
 
@@ -96,34 +97,14 @@ if ($id > 0) {
 }
 
 if ($imagemRemover && $imagemExistente) {
-    $baseDir = realpath(__DIR__ . '/../assets/uploads/combos');
-    $arquivo = realpath(__DIR__ . '/../' . $imagemExistente);
-    if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-        unlink($arquivo);
-    }
+    storage_delete($imagemExistente);
     $imagemPath = null;
 } elseif ($imagemBase64 !== '') {
-    if (preg_match('/^data:image\/(png|jpe?g|webp);base64,/', $imagemBase64, $match)) {
-        $dados = base64_decode(substr($imagemBase64, strpos($imagemBase64, ',') + 1));
-        if ($dados !== false) {
-            $ext    = $match[1] === 'jpeg' ? 'jpg' : $match[1];
-            $dirRel = 'assets/uploads/combos';
-            $dirAbs = __DIR__ . '/../' . $dirRel;
-            if (!is_dir($dirAbs)) {
-                mkdir($dirAbs, 0775, true);
-            }
-            $nomeArq = 'combo_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            $destino = $dirAbs . '/' . $nomeArq;
-            if (file_put_contents($destino, $dados) !== false) {
-                $imagemPath = $dirRel . '/' . $nomeArq;
-                if ($imagemExistente) {
-                    $baseDir = realpath(__DIR__ . '/../assets/uploads/combos');
-                    $arquivo = realpath(__DIR__ . '/../' . $imagemExistente);
-                    if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-                        unlink($arquivo);
-                    }
-                }
-            }
+    $novaImagem = storage_save_base64($imagemBase64, 'combos', 'combo', $lojaId);
+    if ($novaImagem !== null) {
+        $imagemPath = $novaImagem;
+        if ($imagemExistente) {
+            storage_delete($imagemExistente);
         }
     }
 } // end elseif imagem_base64

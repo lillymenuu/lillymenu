@@ -61,4 +61,4 @@ $_SESSION['admin_nome'] = $admin['nome'];
 $_SESSION['admin_email'] = $admin['email'] ?? '';
 $_SESSION['admin_perfil'] = $admin['perfil'] ?? 'admin';
 $_SESSION['loja_id'] = (int) ($admin['loja_id'] ?? 1);
-echo json_encode(['ok' => true, 'redirect' => 'dashboard.php']);
+echo json_encode(['ok' => true, 'redirect' => 'dashboard']);

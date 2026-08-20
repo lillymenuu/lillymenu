@@ -597,7 +597,7 @@ carregarFunil();
 /* ── Busca de páginas do sistema ── */
 (function(){
   const paginas = [
-    { nome:'Dashboard',             url:'dashboard.php',               icone:'bi-speedometer2' },
+    { nome:'Dashboard',             url:'dashboard',                   icone:'bi-speedometer2' },
     { nome:'Pedidos',               url:'pedidos.php',                 icone:'bi-bag' },
     { nome:'Gestor de Pedidos',     url:'gestor_pedidos.php',          icone:'bi-kanban' },
     { nome:'Produtos',              url:'produtos.php',                icone:'bi-box-seam' },
@@ -610,7 +610,7 @@ carregarFunil();
     { nome:'Financeiro Dashboard',  url:'financeiro_dashboard.php',    icone:'bi-graph-up-arrow' },
     { nome:'Lançamentos',           url:'financeiro_lancamentos.php',  icone:'bi-journal-text' },
     { nome:'DRE',                   url:'financeiro_dre.php',          icone:'bi-bar-chart-line' },
-    { nome:'Relatórios',            url:'relatorios.php',              icone:'bi-file-earmark-bar-graph' },
+    { nome:'Relatórios',            url:'relatorios',                  icone:'bi-file-earmark-bar-graph' },
     { nome:'Relatório Clientes',    url:'relatorios_clientes.php',     icone:'bi-person-lines-fill' },
     { nome:'Relatório Fidelidade',  url:'relatorios_fidelidade.php',   icone:'bi-star' },
     { nome:'Lojas',                 url:'superadmin/dashboard.php',    icone:'bi-shop' },

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/operacao.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json');
 
@@ -25,13 +26,7 @@ try {
   $stmt = $conn->prepare("DELETE FROM produtos WHERE id = ? AND loja_id = ?");
   $stmt->execute([$id, $lojaId]);
 
-  if ($imagem) {
-    $baseDir = realpath(__DIR__ . '/../assets/uploads/produtos');
-    $arquivo = realpath(__DIR__ . '/../' . $imagem);
-    if ($baseDir && $arquivo && strpos($arquivo, $baseDir) === 0 && is_file($arquivo)) {
-      unlink($arquivo);
-    }
-  }
+  storage_delete($imagem);
   bumpCatalogoVersao($conn, $lojaId);
   echo json_encode(['ok' => true]);
 } catch (Exception $e) {

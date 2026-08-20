@@ -39,15 +39,22 @@ try {
     $imagemSel = $temImagem ? 'p.imagem' : "NULL AS imagem";
 
     $stmtOpc = $conn->prepare("
-        SELECT o.produto_id AS id, p.nome, p.preco, $imagemSel AS imagem
+        SELECT o.produto_id AS id, p.nome, p.preco, $imagemSel AS imagem, IFNULL(e.quantidade,0) AS estoque
         FROM combo_passo_opcoes o
         JOIN produtos p ON p.id = o.produto_id AND p.loja_id = o.loja_id
+        LEFT JOIN estoque e ON e.produto_id = o.produto_id AND e.loja_id = o.loja_id
         WHERE o.passo_id = ? AND o.loja_id = ?
         ORDER BY o.ordem IS NULL, o.ordem, o.id
     ");
     foreach ($passos as &$passo) {
         $stmtOpc->execute([$passo['id'], $lojaId]);
-        $passo['opcoes'] = $stmtOpc->fetchAll(PDO::FETCH_ASSOC);
+        $opcoes = $stmtOpc->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($opcoes as &$opc) {
+            $opc['estoque']  = (int) ($opc['estoque'] ?? 0);
+            $opc['esgotado'] = $opc['estoque'] <= 0;
+        }
+        unset($opc);
+        $passo['opcoes'] = $opcoes;
     }
     unset($passo);
 

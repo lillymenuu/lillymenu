@@ -6,6 +6,7 @@ require_once __DIR__ . '/../helpers/financial_module.php';
 require_once __DIR__ . '/../helpers/config.php';
 require_once __DIR__ . '/../helpers/cashback_module.php';
 require_once __DIR__ . '/../helpers/caixa_module.php';
+require_once __DIR__ . '/../helpers/pedido_estoque_module.php';
 require_once __DIR__ . '/../../services/SaleFinancialIntegrationService.php';
 
 $lojaId = (int) ($_SESSION['loja_id'] ?? 1);
@@ -19,10 +20,19 @@ if (!$id || !$status) {
 
 // DDL deve rodar ANTES da transação — DDL causa implicit commit no MySQL
 cashbackEnsureModule($conn);
+comboEstoqueEnsureModule($conn);
+estoqueVinculoEnsureModule($conn);
 
 $conn->beginTransaction();
 
 try {
+  // Estoque so deve ser reposto quando o pedido esta REALMENTE virando
+  // cancelado agora (nao repor de novo se ja estava cancelado — evita duplicar
+  // entrada de estoque num duplo clique/retry).
+  $stmtStatusAtual = $conn->prepare("SELECT status FROM pedidos WHERE id = ? AND loja_id = ? LIMIT 1");
+  $stmtStatusAtual->execute([$id, $lojaId]);
+  $statusAntes = $stmtStatusAtual->fetchColumn();
+
   // atualiza pedido
   $stmt = $conn->prepare("UPDATE pedidos SET status = ? WHERE id = ? AND loja_id = ?");
   $stmt->execute([$status, $id, $lojaId]);
@@ -33,6 +43,10 @@ try {
     VALUES (?, ?, ?)
   ");
   $stmt->execute([$id, $status, $lojaId]);
+
+  if ($status === 'cancelado' && $statusAntes !== 'cancelado') {
+    pedidoRestaurarEstoqueCancelado($conn, (int) $id, $lojaId);
+  }
 
   $conn->commit();
 

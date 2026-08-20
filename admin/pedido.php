@@ -264,6 +264,8 @@ $pedidoJsVer = filemtime(__DIR__ . '/assets/js/pedido.js');
     </div>
 
   </div>
+
+  <div class="dash-footer" style="text-align:center;font-size:.75rem;color:#94a3b8;margin-top:6px">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 </main>

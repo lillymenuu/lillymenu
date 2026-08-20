@@ -4,8 +4,14 @@
 
 # Painel administrativo tem conteudo por usuario/loja logado — nunca pode ser
 # guardado no cache do servidor (LiteSpeed) nem repassado a outra pessoa.
+# /public tambem e dinamico por loja/sessao (loja.php: status aberto-fechado,
+# pausa programada, carrinho; APIs) e precisa da mesma exclusao. Inclui a
+# pasta toda (nao so loja.php) porque a loja tambem e acessada por URLs
+# reescritas (ex: /nomedaloja, /lilly/nomedaloja) que nao tem "/public" visivel
+# na URL original — so a pasta toda garante que o cache nao pegue essas rotas.
 <IfModule LiteSpeed>
   CacheDisable public /admin
+  CacheDisable public /public
 </IfModule>
 
 RewriteEngine On

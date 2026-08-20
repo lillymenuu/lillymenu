@@ -1018,7 +1018,7 @@ function obterEstoqueRestante(card, reservas = null){
   if (!card) return 0;
   const inicial = parseInt(card.dataset.estoque || 0, 10) || 0;
   const reservaAtual = reservas || calcularReservas();
-  const reservado = reservaAtual[card.dataset.id] || 0;
+  const reservado = calcularReservaGrupo(card.dataset.id, reservaAtual);
   return inicial - reservado;
 }
 
@@ -1059,11 +1059,18 @@ function atualizarEstoqueCarrinho(mostrarAviso = false){
 
 function validarEstoqueItens(){
   const reservas = calcularReservas();
+  const gruposVerificados = new Set();
   for (const [id, qtd] of Object.entries(reservas)) {
     const card = document.querySelector(`.pdv-product-card[data-id="${id}"]`);
-    const inicial = card ? parseInt(card.dataset.estoque || 0, 10) || 0 : 0;
-    if (qtd > inicial) {
-      const nome = card ? card.dataset.nome : 'Produto';
+    if (!card) continue;
+    const grupoId = produtoParaGrupo[id];
+    const chave = grupoId ? ('g' + grupoId) : ('p' + id);
+    if (gruposVerificados.has(chave)) continue;
+    gruposVerificados.add(chave);
+    const inicial = parseInt(card.dataset.estoque || 0, 10) || 0;
+    const totalReservado = calcularReservaGrupo(id, reservas);
+    if (totalReservado > inicial) {
+      const nome = card.dataset.nome || 'Produto';
       mostrarToast(`${nome} sem estoque suficiente. Disponivel: ${Math.max(0, inicial)}.`, 'warn');
       return false;
     }
@@ -1778,6 +1785,34 @@ const pdvExtrasObrig = window.PDV_EXTRAS_OBRIG || {};
 const pdvComplementosItensMap = window.PDV_COMPLEMENTOS_ITENS || {};
 const pdvComplementosItensObrig = window.PDV_COMPLEMENTOS_ITENS_OBRIG || {};
 const produtoCards = document.querySelectorAll('.pdv-product-card');
+
+// Mapa produto_id -> grupo_id, usado pra refletir em tempo real no card de um
+// produto quando outro produto vinculado ao mesmo estoque compartilhado e
+// adicionado ao carrinho (ver calcularReservaGrupo). Reconstruido a cada poll
+// de estoque pra acompanhar vinculos criados/removidos com o PDV ja aberto.
+let produtoParaGrupo = {};
+function reconstruirMapaGrupos(){
+  produtoParaGrupo = {};
+  produtoCards.forEach(card => {
+    const grupoId = parseInt(card.dataset.grupo || 0, 10) || 0;
+    if (grupoId > 0) {
+      produtoParaGrupo[card.dataset.id] = grupoId;
+    }
+  });
+}
+reconstruirMapaGrupos();
+
+function calcularReservaGrupo(produtoId, reservas){
+  const grupoId = produtoParaGrupo[produtoId];
+  if (!grupoId) return reservas[produtoId] || 0;
+  let total = 0;
+  produtoCards.forEach(card => {
+    if (parseInt(card.dataset.grupo || 0, 10) === grupoId) {
+      total += reservas[card.dataset.id] || 0;
+    }
+  });
+  return total;
+}
 const produtoBusca = document.getElementById('produtoBusca');
 const categoriaTabs = document.querySelectorAll('.pdv-tab');
 const pdvFiltroPromo = document.getElementById('pdvFiltroPromo');
@@ -2187,15 +2222,16 @@ function renderComboPassosPdv(){
     const obrig = passo.obrigatorio == 1;
     const badge = obrig ? '<span class="pdv-combo-badge-obrig">Obrigatorio</span>' : '';
     const opcs = passo.opcoes.map((opc, oi) => {
-      const podeAdd = (max === 0 || totalSel < max) && (rep || opc.qty === 0);
+      const esgotado = !!opc.esgotado;
+      const podeAdd = !esgotado && (max === 0 || totalSel < max) && (rep || opc.qty === 0);
       const podeSub = opc.qty > 0;
       const imgHtml = opc.imagem
         ? `<img class="pdv-combo-opcao-img" src="${escapeHtml(opc.imagem)}" alt="">`
         : `<div class="pdv-combo-opcao-img-ph"><i class="bi bi-image"></i></div>`;
-      return `<div class="pdv-combo-opcao-row">
+      return `<div class="pdv-combo-opcao-row${esgotado ? ' esgotado' : ''}">
         <div class="pdv-combo-opcao-info">
           <div class="pdv-combo-opcao-nome">${escapeHtml(opc.nome)}</div>
-          <div class="pdv-combo-opcao-inc">Incluido no valor do combo.</div>
+          <div class="pdv-combo-opcao-inc">${esgotado ? '<span class="pdv-combo-badge-esgotado">Esgotado</span>' : 'Incluido no valor do combo.'}</div>
         </div>
         ${imgHtml}
         <div class="pdv-combo-opcao-qty">
@@ -2224,6 +2260,7 @@ function comboQtyPdv(pi, oi, delta){
   const rep = passo.permite_repetir == 1;
   const totalSel = passo.opcoes.reduce((s, o) => s + o.qty, 0);
   if (delta > 0) {
+    if (opc.esgotado) return;
     if (max > 0 && totalSel >= max) return;
     if (!rep && opc.qty > 0) return;
     opc.qty++;
@@ -2303,11 +2340,11 @@ function renderVariacoesModal(lista){
     html += `
       <div class="pdv-variacao-row" data-nome="${nome}" data-preco="${preco}" data-id="${v.id}">
         <label>
-          <input type="radio" name="variacaoEscolhida">
           <div>
             ${nome}
             <small>R$ ${preco.toFixed(2)}</small>
           </div>
+          <input type="radio" name="variacaoEscolhida">
         </label>
       </div>
     `;
@@ -3012,6 +3049,27 @@ produtoBusca.addEventListener('keydown', e => {
 filtrarProdutos();
 atualizarEstoqueCarrinho();
 atualizarQtdCards();
+
+// Atualiza o estoque dos cards sozinho — sem isso, uma venda feita em outra
+// aba do PDV ou na loja publica enquanto essa tela fica aberta so aparecia
+// depois de um F5 manual.
+function atualizarEstoquePdvPoll(){
+  fetch('api/estoque_list.php')
+    .then(r => r.json())
+    .then(lista => {
+      if (!Array.isArray(lista)) return;
+      lista.forEach(item => {
+        const card = document.querySelector(`.pdv-product-card[data-id="${item.id}"]`);
+        if (!card || card.dataset.combo === '1') return;
+        card.dataset.estoque = String(parseInt(item.quantidade, 10) || 0);
+        card.dataset.grupo = String(parseInt(item.grupo_id, 10) || 0);
+      });
+      reconstruirMapaGrupos();
+      atualizarEstoqueCarrinho(true);
+    })
+    .catch(() => {});
+}
+setInterval(atualizarEstoquePdvPoll, 10000);
 
 const modalAvulsoEl = document.getElementById('modalAvulso');
 const avulsoNome = document.getElementById('avulsoNome');

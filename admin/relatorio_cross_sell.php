@@ -176,6 +176,38 @@ $relatoriosCssVer = filemtime(__DIR__ . '/assets/css/relatorios.css');
     margin-top:2px;
   }
   .filtros-premium-apply:hover{background:#7d4419}
+
+  /* ── Cards "elaborados" (mesma linguagem visual do financeiro) ── */
+  .cs-card-head{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    margin-bottom:18px;
+  }
+  .cs-card-head-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .cs-card-title{font-size:1rem;font-weight:700;color:#0f172a;margin:0}
+  .cs-card-subtitle{font-size:.78rem;color:#94a3b8}
+  .cs-icon{
+    width:46px;height:46px;border-radius:16px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:1.1rem;
+    background:linear-gradient(135deg,#c97240,#9C5523);
+    box-shadow:0 12px 22px rgba(156,85,35,.24);
+  }
+  .cs-chart-wrap{height:260px;margin-bottom:4px}
+  .cs-chart-wrap canvas{width:100% !important;height:100% !important}
+
+  .cs-rank-list{display:flex;flex-direction:column;gap:16px}
+  .cs-rank-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .cs-rank-badge{
+    width:22px;height:22px;border-radius:50%;flex-shrink:0;
+    background:#f5ede5;color:#9C5523;font-size:.7rem;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .cs-rank-name{flex:1;min-width:0;font-size:.84rem;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cs-rank-value{font-size:.84rem;font-weight:700;color:#0f172a;flex-shrink:0}
+  .cs-rank-track{width:100%;height:10px;border-radius:999px;background:#f1f2f5;overflow:hidden}
+  .cs-rank-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#c97240 0%,#9C5523 100%);transition:width .6s ease}
+  .cs-rank-meta{font-size:.72rem;color:#94a3b8;margin-top:5px}
+  .cs-empty{padding:32px 12px;text-align:center;color:#94a3b8;font-size:.86rem}
 </style>
 </head>
 <body class="dash-diggy">
@@ -255,25 +287,44 @@ $relatoriosCssVer = filemtime(__DIR__ . '/assets/css/relatorios.css');
 
   <div class="relatorio-section relatorio-split">
     <div class="relatorio-card p-3">
-      <div class="relatorio-card-title">Faturamento de cross-sell por dia</div>
-      <div class="relatorio-chart-wrap">
-        <canvas id="chartCrossSell" height="180"></canvas>
+      <div class="cs-card-head">
+        <div class="cs-card-head-text">
+          <h2 class="cs-card-title">Faturamento de cross-sell por dia</h2>
+          <div class="cs-card-subtitle">Evolucao do valor gerado no periodo</div>
+        </div>
+        <div class="cs-icon"><i class="bi bi-graph-up-arrow"></i></div>
+      </div>
+      <div class="cs-chart-wrap">
+        <canvas id="chartCrossSell"></canvas>
       </div>
     </div>
     <div class="relatorio-card p-3">
-      <div class="relatorio-card-title">Produtos mais vendidos via cross-sell</div>
-      <div class="relatorio-mini-grid">
-        <?php if (!$topProdutos): ?>
-          <div class="relatorio-mini-card">Nenhuma venda de cross-sell no periodo.</div>
-        <?php endif; ?>
-        <?php foreach ($topProdutos as $tp): ?>
-          <div class="relatorio-mini-card">
-            <div class="relatorio-mini-title"><?= htmlspecialchars($tp['nome']) ?></div>
-            <div class="relatorio-mini-meta">Total: <strong>R$ <?= number_format((float) $tp['valor'], 2, ',', '.') ?></strong></div>
-            <div class="relatorio-mini-meta">Quantidade: <strong><?= (int) $tp['qtd'] ?></strong></div>
-          </div>
-        <?php endforeach; ?>
+      <div class="cs-card-head">
+        <div class="cs-card-head-text">
+          <h2 class="cs-card-title">Produtos mais vendidos</h2>
+          <div class="cs-card-subtitle">Ranking via cross-sell no periodo</div>
+        </div>
+        <div class="cs-icon"><i class="bi bi-trophy-fill"></i></div>
       </div>
+      <?php if (!$topProdutos): ?>
+        <div class="cs-empty">Nenhuma venda de cross-sell no periodo.</div>
+      <?php else: ?>
+        <?php $maxProdutoValor = max(array_map(fn($p) => (float) $p['valor'], $topProdutos)) ?: 1; ?>
+        <div class="cs-rank-list">
+          <?php foreach ($topProdutos as $i => $tp): ?>
+            <?php $pctBar = max(6, ((float) $tp['valor'] / $maxProdutoValor) * 100); ?>
+            <div class="cs-rank-row">
+              <div class="cs-rank-head">
+                <span class="cs-rank-badge"><?= $i + 1 ?></span>
+                <span class="cs-rank-name"><?= htmlspecialchars($tp['nome']) ?></span>
+                <span class="cs-rank-value">R$ <?= number_format((float) $tp['valor'], 2, ',', '.') ?></span>
+              </div>
+              <div class="cs-rank-track"><div class="cs-rank-fill" style="width:<?= $pctBar ?>%"></div></div>
+              <div class="cs-rank-meta"><?= (int) $tp['qtd'] ?> unidade<?= (int) $tp['qtd'] === 1 ? '' : 's' ?> vendida<?= (int) $tp['qtd'] === 1 ? '' : 's' ?></div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -316,6 +367,8 @@ $relatoriosCssVer = filemtime(__DIR__ . '/assets/css/relatorios.css');
       </div>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -323,6 +376,12 @@ $relatoriosCssVer = filemtime(__DIR__ . '/assets/css/relatorios.css');
 <script>
   const ctx = document.getElementById('chartCrossSell');
   if (ctx) {
+    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, 'rgba(201,114,64,.32)');
+    gradient.addColorStop(1, 'rgba(201,114,64,0)');
+
+    const formatBRL = (v) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
     new Chart(ctx, {
       type: 'line',
       data: {
@@ -331,15 +390,46 @@ $relatoriosCssVer = filemtime(__DIR__ . '/assets/css/relatorios.css');
           label: 'Faturamento cross-sell',
           data: <?= json_encode($chartValores) ?>,
           borderColor: '#9C5523',
-          backgroundColor: 'rgba(156,85,35,.12)',
+          borderWidth: 3,
+          backgroundColor: gradient,
           fill: true,
-          tension: .3
+          tension: .35,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#9C5523',
+          pointBorderWidth: 2,
+          pointHoverBackgroundColor: '#9C5523',
+          pointHoverBorderColor: '#fff'
         }]
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            padding: 10,
+            cornerRadius: 10,
+            displayColors: false,
+            callbacks: { label: (item) => formatBRL(item.parsed.y) }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: '#f1f2f5' },
+            border: { display: false },
+            ticks: { color: '#94a3b8', font: { size: 11 }, callback: (v) => formatBRL(v) }
+          },
+          x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: '#94a3b8', font: { size: 11 } }
+          }
+        }
       }
     });
   }

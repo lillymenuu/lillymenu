@@ -62,6 +62,8 @@ $dreTableHtml = financialRenderDreTable($rows, $ano);
     <div class="fin-card-head"><div><h2 class="fin-card-title">Tabela DRE</h2><div class="fin-card-subtitle">Receita bruta, despesas, lucro liquido e margem por competencia.</div></div></div>
     <div class="fin-card-body" id="financial-dre-table"><?= $dreTableHtml ?></div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 </main>
 </div>

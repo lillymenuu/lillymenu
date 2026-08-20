@@ -1,20 +1,6 @@
-function toggleSidebar(){
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.querySelector('.sidebar-overlay');
-
-  if(window.innerWidth <= 991){
-    sidebar.classList.toggle('show');
-    overlay.style.display = sidebar.classList.contains('show') ? 'block' : 'none';
-  }else{
-    sidebar.classList.toggle('collapsed');
-  }
-}
-
-
-
-
 let modalProducao;
 let modalNovoEstoque;
+let modalVincularEstoque;
 let estoqueLista = Array.isArray(estoqueInicial) ? estoqueInicial : [];
 
 const estoqueCards = document.getElementById('estoqueCards');
@@ -203,13 +189,154 @@ function carregarEstoque(produtoId){
       if (!resp || !resp.ok) return;
       if (estoqueQuantidade) estoqueQuantidade.value = resp.quantidade ?? 0;
       if (estoqueMinimo) estoqueMinimo.value = resp.quantidade_minima ?? 0;
-      if (estoqueVinculados) {
-        estoqueVinculados.innerHTML = '<div class="estoque-list-item">Nenhum item vinculado.</div>';
-      }
       if (estoqueAdicionais) {
-        estoqueAdicionais.innerHTML = '<div class="estoque-list-item">Nenhum item vinculado.</div>';
+        estoqueAdicionais.innerHTML = '<div class="estoque-list-item estoque-list-empty">Nenhum item vinculado.</div>';
       }
+      carregarProdutosVinculados(produtoId);
     });
+}
+
+/* ===== ESTOQUE VINCULADO (varios produtos, um so estoque) ===== */
+var estVinculoState = { produtoId: null, produtos: [], filtered: [], selectedIds: [] };
+
+function _estVinculoEsc(s){
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function carregarProdutosVinculados(produtoId){
+  garantirRefsEstoqueModal();
+  if (!estoqueVinculados) return;
+  estoqueVinculados.innerHTML = '<div class="estoque-list-item">Carregando...</div>';
+  fetch(`api/estoque_vinculo_produtos.php?produto_id=${encodeURIComponent(produtoId)}`)
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp.ok) {
+        estoqueVinculados.innerHTML = '<div class="estoque-list-item estoque-list-empty">Nenhum item vinculado.</div>';
+        return;
+      }
+      const vinculados = resp.produtos.filter(p => p.vinculado);
+      estoqueVinculados.innerHTML = vinculados.length
+        ? vinculados.map(p => `<div class="estoque-list-item">${_estVinculoEsc(p.nome)}</div>`).join('')
+        : '<div class="estoque-list-item estoque-list-empty">Nenhum item vinculado.</div>';
+    })
+    .catch(() => {
+      estoqueVinculados.innerHTML = '<div class="estoque-list-item estoque-list-empty">Nenhum item vinculado.</div>';
+    });
+}
+
+function _estVinculoAbrir(){
+  garantirRefsEstoqueModal();
+  if (!producaoProdutoId || !producaoProdutoId.value) {
+    toast('Salve o estoque do produto antes de vincular outros itens.');
+    return;
+  }
+  estVinculoState.produtoId = producaoProdutoId.value;
+  estVinculoState.selectedIds = [];
+  const searchEl = document.getElementById('estVinculoSearch');
+  if (searchEl) searchEl.value = '';
+  const grid = document.getElementById('estVinculoGrid');
+  if (grid) grid.innerHTML = '<div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Carregando produtos...</div>';
+  if (modalVincularEstoque) modalVincularEstoque.show();
+
+  fetch(`api/estoque_vinculo_produtos.php?produto_id=${encodeURIComponent(estVinculoState.produtoId)}`)
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp.ok) {
+        if (grid) grid.innerHTML = '<div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Erro ao carregar produtos</div>';
+        return;
+      }
+      estVinculoState.produtos = resp.produtos || [];
+      estVinculoState.filtered = estVinculoState.produtos;
+      estVinculoState.selectedIds = estVinculoState.produtos.filter(p => p.vinculado).map(p => p.id);
+      _estVinculoRenderGrid();
+      _estVinculoAtualizarContador();
+    })
+    .catch(() => {
+      if (grid) grid.innerHTML = '<div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Erro de comunicação</div>';
+    });
+}
+
+function _estVinculoRenderGrid(){
+  const grid = document.getElementById('estVinculoGrid');
+  if (!grid) return;
+  const prods = estVinculoState.filtered;
+  if (!prods.length) {
+    grid.innerHTML = '<div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Nenhum produto encontrado</div>';
+    return;
+  }
+  grid.innerHTML = prods.map(p => {
+    const sel = estVinculoState.selectedIds.indexOf(p.id) >= 0;
+    const thumb = p.imagem
+      ? `<img src="${_estVinculoEsc(p.imagem)}" alt="">`
+      : '<div class="opcoes-item-thumb"><i class="bi bi-bag"></i></div>';
+    return `<div class="opcoes-item${sel ? ' selected' : ''}" data-id="${p.id}" onclick="_estVinculoToggle(this,${p.id})">
+      ${thumb}
+      <span class="opcoes-item-name">${_estVinculoEsc(p.nome)}</span>
+      <div class="opcoes-item-check">${sel ? '<i class="bi bi-check" style="font-size:11px"></i>' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function _estVinculoToggle(el, id){
+  const idx = estVinculoState.selectedIds.indexOf(id);
+  if (idx >= 0) {
+    estVinculoState.selectedIds.splice(idx, 1);
+    el.classList.remove('selected');
+    el.querySelector('.opcoes-item-check').innerHTML = '';
+  } else {
+    estVinculoState.selectedIds.push(id);
+    el.classList.add('selected');
+    el.querySelector('.opcoes-item-check').innerHTML = '<i class="bi bi-check" style="font-size:11px"></i>';
+  }
+  _estVinculoAtualizarContador();
+}
+
+function _estVinculoFiltrar(){
+  const searchEl = document.getElementById('estVinculoSearch');
+  const termo = (searchEl && searchEl.value || '').toLowerCase();
+  estVinculoState.filtered = estVinculoState.produtos.filter(p => !termo || p.nome.toLowerCase().indexOf(termo) >= 0);
+  _estVinculoRenderGrid();
+}
+
+function _estVinculoSelecionarTodos(){
+  estVinculoState.filtered.forEach(p => {
+    if (estVinculoState.selectedIds.indexOf(p.id) < 0) estVinculoState.selectedIds.push(p.id);
+  });
+  _estVinculoRenderGrid();
+  _estVinculoAtualizarContador();
+}
+
+function _estVinculoDesmarcarTodos(){
+  const filteredIds = estVinculoState.filtered.map(p => p.id);
+  estVinculoState.selectedIds = estVinculoState.selectedIds.filter(id => filteredIds.indexOf(id) < 0);
+  _estVinculoRenderGrid();
+  _estVinculoAtualizarContador();
+}
+
+function _estVinculoAtualizarContador(){
+  const el = document.getElementById('estVinculoContador');
+  if (el) el.textContent = estVinculoState.selectedIds.length > 0 ? estVinculoState.selectedIds.length + ' selecionado(s)' : '';
+}
+
+function _estVinculoSalvar(){
+  fetch('api/estoque_vinculo_save.php', {
+    method: 'POST',
+    body: new URLSearchParams({
+      produto_id: estVinculoState.produtoId,
+      produto_ids: estVinculoState.selectedIds.join(',')
+    })
+  })
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp.ok) {
+        toast(resp.msg || 'Erro ao vincular itens');
+        return;
+      }
+      if (modalVincularEstoque) modalVincularEstoque.hide();
+      carregarProdutosVinculados(estVinculoState.produtoId);
+      toast('Itens vinculados com sucesso');
+    })
+    .catch(() => toast('Erro ao vincular itens'));
 }
 
 function salvarEstoque(){
@@ -280,6 +407,25 @@ function toast(msg){
     modalNovoEstoque = new bootstrap.Modal(
       document.getElementById('modalNovoEstoque')
     );
+    const modalVincularEstoqueEl = document.getElementById('modalVincularEstoque');
+    if (modalVincularEstoqueEl) {
+      modalVincularEstoque = new bootstrap.Modal(modalVincularEstoqueEl);
+      // Abre por cima do modalProducao, ja aberto — precisa de um z-index maior
+      // pro backdrop nao ficar entre os dois modais (Bootstrap nao empilha sozinho).
+      modalVincularEstoqueEl.addEventListener('shown.bs.modal', () => {
+        modalVincularEstoqueEl.style.zIndex = '1070';
+        const bds = document.querySelectorAll('.modal-backdrop');
+        if (bds.length > 0) bds[bds.length - 1].style.zIndex = '1065';
+      });
+    }
+    const btnVincularEstoqueEl = document.getElementById('btnVincularEstoque');
+    if (btnVincularEstoqueEl) {
+      btnVincularEstoqueEl.addEventListener('click', _estVinculoAbrir);
+    }
+    const estVinculoSearchEl = document.getElementById('estVinculoSearch');
+    if (estVinculoSearchEl) {
+      estVinculoSearchEl.addEventListener('input', _estVinculoFiltrar);
+    }
     garantirRefsEstoqueModal();
     garantirRefsNovoEstoque();
     aplicarFiltros();
@@ -303,4 +449,9 @@ function toast(msg){
         }
       });
     }
+
+    // Atualiza os numeros de estoque sozinho — sem isso, uma venda feita no
+    // PDV ou na loja publica enquanto esta tela fica aberta so aparecia depois
+    // de um F5 manual.
+    setInterval(atualizarEstoque, 12000);
   });

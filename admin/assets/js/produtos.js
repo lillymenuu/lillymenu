@@ -48,6 +48,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalEstoqueEl = document.getElementById('modalEstoque');
   if (modalEstoqueEl) {
     modalEstoque = new bootstrap.Modal(modalEstoqueEl);
+    // Bootstrap nao incrementa z-index sozinho pra modais empilhados: sem isso, o
+    // backdrop deste modal fica no mesmo nivel do modalProduto por tras E do proprio
+    // modalEstoque, bloqueando cliques nele mesmo (mesmo padrao usado no combo wizard,
+    // ex.: modalCriandoPasso, pra abrir um modal por cima de outro ja aberto).
+    modalEstoqueEl.addEventListener('shown.bs.modal', () => {
+      modalEstoqueEl.style.zIndex = '1070';
+      const bds = document.querySelectorAll('.modal-backdrop');
+      if (bds.length > 0) bds[bds.length - 1].style.zIndex = '1065';
+    });
+  }
+  const modalVincularEstoqueEl = document.getElementById('modalVincularEstoque');
+  if (modalVincularEstoqueEl) {
+    modalVincularEstoque = new bootstrap.Modal(modalVincularEstoqueEl);
+    // Abre por cima do modalEstoque (ja empilhado sobre o modalProduto) — precisa
+    // ficar num nivel ainda mais alto, mesmo padrao do modalSelecionarOpcoes (combo).
+    modalVincularEstoqueEl.addEventListener('shown.bs.modal', () => {
+      modalVincularEstoqueEl.style.zIndex = '1085';
+      const bds = document.querySelectorAll('.modal-backdrop');
+      if (bds.length > 0) bds[bds.length - 1].style.zIndex = '1080';
+    });
+  }
+  const btnVincularEstoqueEl = document.getElementById('btnVincularEstoque');
+  if (btnVincularEstoqueEl) {
+    btnVincularEstoqueEl.addEventListener('click', _estVinculoAbrir);
+  }
+  const estVinculoSearchEl = document.getElementById('estVinculoSearch');
+  if (estVinculoSearchEl) {
+    estVinculoSearchEl.addEventListener('input', _estVinculoFiltrar);
   }
 
   if (produtoImagemCard && produtoImagemInput) {
@@ -150,10 +178,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (btnSalvarComplementoPreco) {
     btnSalvarComplementoPreco.addEventListener('click', () => {
-      complementosPrecoAtual = coletarComplementoPrecoModal();
+      const coletados = coletarComplementoPrecoModal();
+      if (coletados.length && !coletados.some(v => v.obrigatorio)) {
+        toast('Marque pelo menos um tipo como obrigatorio.');
+        return;
+      }
+      complementosPrecoAtual = coletados;
       _atualizarResumoComplementoPreco();
       if (modalComplementosPreco) modalComplementosPreco.hide();
-      toast('Complementos atualizados.');
+      toast('Tipos atualizados.');
     });
   }
   if (complementoPrecoModalLista) {
@@ -291,6 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (comboToggles.length) {
+    comboToggles.forEach(toggle => {
+      toggle.addEventListener('change', () => atualizarDisponibilidadeCombo(toggle));
+    });
+  }
+
   if (categoriaToggles.length) {
     categoriaToggles.forEach(toggle => {
       toggle.addEventListener('change', () => atualizarDisponibilidadeCategoria(toggle));
@@ -313,7 +352,30 @@ document.addEventListener('DOMContentLoaded', () => {
   if (produtoNome) {
     produtoNome.addEventListener('input', atualizarNomeEstoque);
   }
+
+  // Atualiza os numeros de estoque dos cards sozinho — sem isso, uma venda
+  // feita no PDV ou na loja publica enquanto essa tela fica aberta so
+  // aparecia depois de um F5 manual.
+  setInterval(atualizarEstoqueCardsPoll, 12000);
 });
+
+function atualizarEstoqueCardsPoll(){
+  fetch('api/estoque_list.php')
+    .then(r => r.json())
+    .then(lista => {
+      if (!Array.isArray(lista)) return;
+      lista.forEach(item => {
+        const card = document.querySelector(`.produto-card[data-id="${item.id}"]`);
+        if (!card) return;
+        const info = card.querySelector('.produto-estoque-info');
+        if (!info) return;
+        const qtd = parseInt(item.quantidade, 10) || 0;
+        info.classList.toggle('is-ok', qtd > 0);
+        info.innerHTML = `<i class="bi bi-box-seam"></i>${qtd} em estoque`;
+      });
+    })
+    .catch(() => {});
+}
 
 /* ===== UX ===== */
 function toast(msg){
@@ -892,7 +954,7 @@ function renderComplementoPrecoModalProduto(){
   if (!complementosPrecoAtual.length) {
     complementoPrecoModalLista.innerHTML = `
       <div class="produto-variacao-empty">
-        Nenhum complemento cadastrado.
+        Nenhum tipo cadastrado.
       </div>
     `;
     return;
@@ -904,7 +966,7 @@ function renderComplementoPrecoModalProduto(){
     row.innerHTML = `
       <div class="produto-variacao-field">
         <label>Nome</label>
-        <input type="text" value="${v.nome ?? ''}" placeholder="Ex.: Amanteigada" data-complemento-preco-field="nome">
+        <input type="text" value="${v.nome ?? ''}" placeholder="Ex.: Massa amanteigada" data-complemento-preco-field="nome">
       </div>
       <div class="produto-variacao-field">
         <label>Preco</label>
@@ -1175,6 +1237,34 @@ function atualizarDisponibilidadeProduto(input){
     });
 }
 
+function atualizarDisponibilidadeCombo(input){
+  const id = input.dataset.id;
+  if (!id) return;
+  const ativo = input.checked ? 1 : 0;
+  input.disabled = true;
+
+  fetch('api/combo_toggle.php', {
+    method: 'POST',
+    body: new URLSearchParams({ id, ativo })
+  })
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp.ok) {
+        input.checked = !input.checked;
+        toast('Erro ao atualizar combo');
+        return;
+      }
+      toastSucessoTopo(input.checked ? 'Combo habilitado' : 'Combo desabilitado');
+    })
+    .catch(() => {
+      input.checked = !input.checked;
+      toast('Erro ao atualizar combo');
+    })
+    .finally(() => {
+      input.disabled = false;
+    });
+}
+
 function atualizarDisponibilidadeCategoria(input){
   const id = input.dataset.id;
   if (!id) return;
@@ -1218,9 +1308,7 @@ function abrirModalEstoque(){
   }
 
   estoqueProdutoId.value = id;
-  if (estoqueVinculadosLista) {
-    estoqueVinculadosLista.textContent = produtoNome.value || 'Produto';
-  }
+  carregarProdutosVinculados(id);
 
   fetch(`api/estoque_get.php?produto_id=${encodeURIComponent(id)}`)
     .then(r => r.json())
@@ -1235,6 +1323,143 @@ function abrirModalEstoque(){
       modalEstoque.show();
     })
     .catch(() => toast('Erro ao carregar estoque'));
+}
+
+/* ===== ESTOQUE VINCULADO (varios produtos, um so estoque) ===== */
+var estVinculoState = { produtoId: null, produtos: [], filtered: [], selectedIds: [] };
+
+function carregarProdutosVinculados(produtoId){
+  const el = document.getElementById('estoqueVinculadosLista');
+  if (!el) return;
+  const vazio = '<div class="estoque-vinculado-row estoque-vinculado-empty">Nenhum item vinculado.</div>';
+  el.innerHTML = '<div class="estoque-vinculado-row estoque-vinculado-empty">Carregando...</div>';
+  fetch(`api/estoque_vinculo_produtos.php?produto_id=${encodeURIComponent(produtoId)}`)
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp.ok) {
+        el.innerHTML = vazio;
+        return;
+      }
+      const vinculados = resp.produtos.filter(p => p.vinculado);
+      el.innerHTML = vinculados.length
+        ? vinculados.map(p => `<div class="estoque-vinculado-row">${escapeHtml(p.nome)}</div>`).join('')
+        : vazio;
+    })
+    .catch(() => { el.innerHTML = vazio; });
+}
+
+function _estVinculoAbrir(){
+  if (!estoqueProdutoId || !estoqueProdutoId.value) {
+    toast('Salve o estoque do produto antes de vincular outros itens.');
+    return;
+  }
+  estVinculoState.produtoId = estoqueProdutoId.value;
+  estVinculoState.selectedIds = [];
+  const searchEl = document.getElementById('estVinculoSearch');
+  if (searchEl) searchEl.value = '';
+  const grid = document.getElementById('estVinculoGrid');
+  if (grid) grid.innerHTML = '<div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Carregando produtos...</div>';
+  if (modalVincularEstoque) modalVincularEstoque.show();
+
+  fetch(`api/estoque_vinculo_produtos.php?produto_id=${encodeURIComponent(estVinculoState.produtoId)}`)
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp.ok) {
+        if (grid) grid.innerHTML = '<div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Erro ao carregar produtos</div>';
+        return;
+      }
+      estVinculoState.produtos = resp.produtos || [];
+      estVinculoState.filtered = estVinculoState.produtos;
+      estVinculoState.selectedIds = estVinculoState.produtos.filter(p => p.vinculado).map(p => p.id);
+      _estVinculoRenderGrid();
+      _estVinculoAtualizarContador();
+    })
+    .catch(() => {
+      if (grid) grid.innerHTML = '<div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Erro de comunicação</div>';
+    });
+}
+
+function _estVinculoRenderGrid(){
+  const grid = document.getElementById('estVinculoGrid');
+  if (!grid) return;
+  const prods = estVinculoState.filtered;
+  if (!prods.length) {
+    grid.innerHTML = '<div class="text-center py-4" style="grid-column:1/-1;color:#9ca3af;font-size:13px">Nenhum produto encontrado</div>';
+    return;
+  }
+  grid.innerHTML = prods.map(p => {
+    const sel = estVinculoState.selectedIds.indexOf(p.id) >= 0;
+    const thumb = p.imagem
+      ? `<img src="${escapeHtml(p.imagem)}" alt="">`
+      : '<div class="opcoes-item-thumb"><i class="bi bi-bag"></i></div>';
+    return `<div class="opcoes-item${sel ? ' selected' : ''}" data-id="${p.id}" onclick="_estVinculoToggle(this,${p.id})">
+      ${thumb}
+      <span class="opcoes-item-name">${escapeHtml(p.nome)}</span>
+      <div class="opcoes-item-check">${sel ? '<i class="bi bi-check" style="font-size:11px"></i>' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function _estVinculoToggle(el, id){
+  const idx = estVinculoState.selectedIds.indexOf(id);
+  if (idx >= 0) {
+    estVinculoState.selectedIds.splice(idx, 1);
+    el.classList.remove('selected');
+    el.querySelector('.opcoes-item-check').innerHTML = '';
+  } else {
+    estVinculoState.selectedIds.push(id);
+    el.classList.add('selected');
+    el.querySelector('.opcoes-item-check').innerHTML = '<i class="bi bi-check" style="font-size:11px"></i>';
+  }
+  _estVinculoAtualizarContador();
+}
+
+function _estVinculoFiltrar(){
+  const searchEl = document.getElementById('estVinculoSearch');
+  const termo = (searchEl && searchEl.value || '').toLowerCase();
+  estVinculoState.filtered = estVinculoState.produtos.filter(p => !termo || p.nome.toLowerCase().indexOf(termo) >= 0);
+  _estVinculoRenderGrid();
+}
+
+function _estVinculoSelecionarTodos(){
+  estVinculoState.filtered.forEach(p => {
+    if (estVinculoState.selectedIds.indexOf(p.id) < 0) estVinculoState.selectedIds.push(p.id);
+  });
+  _estVinculoRenderGrid();
+  _estVinculoAtualizarContador();
+}
+
+function _estVinculoDesmarcarTodos(){
+  const filteredIds = estVinculoState.filtered.map(p => p.id);
+  estVinculoState.selectedIds = estVinculoState.selectedIds.filter(id => filteredIds.indexOf(id) < 0);
+  _estVinculoRenderGrid();
+  _estVinculoAtualizarContador();
+}
+
+function _estVinculoAtualizarContador(){
+  const el = document.getElementById('estVinculoContador');
+  if (el) el.textContent = estVinculoState.selectedIds.length > 0 ? estVinculoState.selectedIds.length + ' selecionado(s)' : '';
+}
+
+function _estVinculoSalvar(){
+  fetch('api/estoque_vinculo_save.php', {
+    method: 'POST',
+    body: new URLSearchParams({
+      produto_id: estVinculoState.produtoId,
+      produto_ids: estVinculoState.selectedIds.join(',')
+    })
+  })
+    .then(r => r.json())
+    .then(resp => {
+      if (!resp.ok) {
+        toast(resp.msg || 'Erro ao vincular itens');
+        return;
+      }
+      if (modalVincularEstoque) modalVincularEstoque.hide();
+      carregarProdutosVinculados(estVinculoState.produtoId);
+      toastSucessoTopo('Itens vinculados com sucesso');
+    })
+    .catch(() => toast('Erro ao vincular itens'));
 }
 
 function carregarHistoricoEstoque(produtoId){
@@ -1307,33 +1532,38 @@ function salvarEstoque(){
 function deletarEstoque(){
   if (!estoqueProdutoId) return;
   const id = estoqueProdutoId.value;
-  const confirmar = confirm('Deseja deletar o estoque deste produto?');
-  if (!confirmar) return;
 
-  fetch('api/estoque_delete.php', {
-    method: 'POST',
-    body: new URLSearchParams({ produto_id: id })
-  })
-    .then(r => r.json())
-    .then(resp => {
-      if (!resp.ok) {
-        toast('Erro ao deletar estoque');
-        return;
-      }
-      if (estoqueQuantidade) estoqueQuantidade.value = 0;
-      if (estoqueMinimo) estoqueMinimo.value = 0;
-      atualizarQtdEstoque(0);
-      const card = document.querySelector(`.produto-card[data-id="${id}"]`);
-      if (card) {
-        const info = card.querySelector('.produto-estoque-info');
-        if (info) {
-          info.classList.remove('is-ok');
-          info.innerHTML = `<i class="bi bi-box-seam"></i>0 em estoque`;
-        }
-      }
-      if (modalEstoque) modalEstoque.hide();
-    })
-    .catch(() => toast('Erro ao deletar estoque'));
+  showConfirm(
+    'Atenção',
+    'Essa ação é irreversível e não poderá ser desfeita.',
+    'Deletar',
+    function() {
+      fetch('api/estoque_delete.php', {
+        method: 'POST',
+        body: new URLSearchParams({ produto_id: id })
+      })
+        .then(r => r.json())
+        .then(resp => {
+          if (!resp.ok) {
+            toast('Erro ao deletar estoque');
+            return;
+          }
+          if (estoqueQuantidade) estoqueQuantidade.value = 0;
+          if (estoqueMinimo) estoqueMinimo.value = 0;
+          atualizarQtdEstoque(0);
+          const card = document.querySelector(`.produto-card[data-id="${id}"]`);
+          if (card) {
+            const info = card.querySelector('.produto-estoque-info');
+            if (info) {
+              info.classList.remove('is-ok');
+              info.innerHTML = `<i class="bi bi-box-seam"></i>0 em estoque`;
+            }
+          }
+          if (modalEstoque) modalEstoque.hide();
+        })
+        .catch(() => toast('Erro ao deletar estoque'));
+    }
+  );
 }
 
 function selecionarModoCategoria(valor){
@@ -2413,8 +2643,8 @@ function _atualizarResumoComplementoPreco() {
   if (!el) return;
   var n = complementosPrecoAtual.length;
   el.textContent = n
-    ? (n + (n === 1 ? ' complemento cadastrado.' : ' complementos cadastrados.'))
-    : 'Nenhum complemento cadastrado.';
+    ? (n + (n === 1 ? ' tipo cadastrado.' : ' tipos cadastrados.'))
+    : 'Nenhum tipo cadastrado.';
 }
 
 /* ----- DOMContentLoaded wiring ----- */

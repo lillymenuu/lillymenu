@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../helpers/notificacoes_broadcast.php';
+require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,31 +15,7 @@ if (($_SESSION['admin_perfil'] ?? '') !== 'superadmin') {
 garantirNotificacoesBroadcastTabelas($conn);
 
 function salvarImagemNotificacao(array $arquivo): ?string {
-  if (($arquivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
-    return null;
-  }
-  if ($arquivo['error'] !== UPLOAD_ERR_OK) {
-    throw new RuntimeException('Erro ao enviar o arquivo.');
-  }
-  $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-  $ext = strtolower(pathinfo($arquivo['name'] ?? '', PATHINFO_EXTENSION));
-  if (!in_array($ext, $allowed, true)) {
-    throw new RuntimeException('Imagem invalida (use JPG, PNG ou WebP).');
-  }
-  if ($arquivo['size'] > 5 * 1024 * 1024) {
-    throw new RuntimeException('Imagem muito grande (maximo 5MB).');
-  }
-  $dirRel = 'assets/uploads/notificacoes';
-  $dirAbs = __DIR__ . '/../' . $dirRel;
-  if (!is_dir($dirAbs)) {
-    @mkdir($dirAbs, 0775, true);
-  }
-  $fileName = 'notif_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-  $dest = $dirAbs . '/' . $fileName;
-  if (!move_uploaded_file($arquivo['tmp_name'], $dest)) {
-    throw new RuntimeException('Erro ao salvar a imagem.');
-  }
-  return $dirRel . '/' . $fileName;
+  return storage_save_upload($arquivo, 'notificacoes', 'notif');
 }
 
 $titulo = trim((string) ($_POST['titulo'] ?? ''));

@@ -96,14 +96,31 @@ $stmt = $conn->prepare("
 $stmt->execute($paramsRelatorio);
 $resumo = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
+/* Pagamentos de fiado confirmados no periodo: so entram aqui quando o
+   pagamento e confirmado (tipo='pagamento'), nunca no momento da venda fiado */
+$fiadoRecebido = 0.0;
+try {
+  $stmtFiado = $conn->prepare("
+    SELECT COALESCE(SUM(valor), 0) AS total
+    FROM fiado_lancamentos
+    WHERE loja_id = ? AND tipo = 'pagamento' AND DATE(criado_em) BETWEEN ? AND ?
+  ");
+  $stmtFiado->execute([$lojaId, $inicio, $fim]);
+  $fiadoRecebido = (float) $stmtFiado->fetchColumn();
+} catch (Exception $e) {
+  /* tabela fiado_lancamentos ainda nao existe */
+}
+
 $stmt = $conn->prepare("
-  SELECT COUNT(*) AS total_cancelados
+  SELECT COUNT(*) AS total_cancelados, COALESCE(SUM(p.total), 0) AS valor_cancelados
   FROM pedidos p
   {$joinCompetencia}
   $whereCancelados
 ");
 $stmt->execute($paramsCancelados);
-$cancelados = (int) $stmt->fetchColumn();
+$rowCancelados = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+$cancelados = (int) ($rowCancelados['total_cancelados'] ?? 0);
+$canceladosValor = (float) ($rowCancelados['valor_cancelados'] ?? 0);
 
 /* ================= PRODUTOS MAIS VENDIDOS ================= */
 $stmt = $conn->prepare("
@@ -206,7 +223,9 @@ $clientes_frequencia = $stmt->fetchAll(PDO::FETCH_ASSOC);
 echo json_encode([
   'vendas_dia' => $vendas_dia,
   'resumo'     => $resumo,
+  'fiado_recebido' => $fiadoRecebido,
   'cancelados' => $cancelados,
+  'cancelados_valor' => $canceladosValor,
   'produtos'   => $produtos,
   'vendas_produtos' => $vendas_produtos,
   'vendas_pagamento' => $vendas_pagamento,

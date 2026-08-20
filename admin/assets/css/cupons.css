@@ -32,7 +32,7 @@ body.cupons-page{
   box-shadow:0 10px 20px rgba(156,85,35,.22);
 }
 .cupons-btn:hover{
-  background:#e11d48;
+  background:#7A3F10;
   color:#fff;
 }
 .cupons-grid{
@@ -165,7 +165,7 @@ body.cupons-page{
   box-shadow:0 12px 24px rgba(156,85,35,.25);
 }
 .cupom-save:hover{
-  background:#e11d48;
+  background:#7A3F10;
   color:#fff;
 }
 .cupom-delete{

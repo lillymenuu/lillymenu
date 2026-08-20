@@ -1,5 +1,6 @@
 <?php
 require_once '../config/database.php';
+require_once __DIR__ . '/../helpers/storage.php';
 
 function landing_table_exists(PDO $conn): bool {
   try {
@@ -37,14 +38,7 @@ function landing_get(PDO $conn, string $key, string $default = ''): string {
 }
 
 function landing_asset(string $path): string {
-  $path = trim($path);
-  if ($path === '') {
-    return '';
-  }
-  if (preg_match('#^https?://#i', $path)) {
-    return $path;
-  }
-  return '../admin/' . ltrim($path, '/');
+  return storage_url_relativa($path);
 }
 
 function planos_icon(string $key): string {

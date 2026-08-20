@@ -607,5 +607,7 @@ $historico = array_slice($historico, 0, 20);
       </div>
     </div>
   </div>
+
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </body>
 </html>

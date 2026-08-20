@@ -16,6 +16,7 @@ if (!$modoModalFlag) {
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/helpers/config.php';
+require_once __DIR__ . '/helpers/estoque_vinculo_module.php';
 
 function tabelaExistePdv(PDO $conn, string $tabela): bool {
   try {
@@ -57,12 +58,14 @@ $selectImagem = $temImagem ? ', p.imagem' : '';
 $selectVariacoes = $temVariacoesCol ? ', p.tem_variacoes' : '';
 $selectPontosGanho = $temPontosGanho ? ', p.pontos_ganho' : '';
 $selectPontosCusto = $temPontosCusto ? ', p.pontos_custo' : '';
+estoqueVinculoEnsureModule($conn);
 $stmtProdutos = $conn->prepare("
   SELECT p.id, p.nome, p.preco AS preco_base, $precoExpr AS preco, $promoExpr AS em_promocao, p.categoria_id,
-         IFNULL(e.quantidade, 0) AS estoque_quantidade{$selectImagem}{$selectVariacoes}{$selectPontosGanho}{$selectPontosCusto}
+         IFNULL(e.quantidade, 0) AS estoque_quantidade, egm.grupo_id{$selectImagem}{$selectVariacoes}{$selectPontosGanho}{$selectPontosCusto}
   FROM produtos p
   LEFT JOIN categorias c ON c.id = p.categoria_id AND c.loja_id = p.loja_id
   LEFT JOIN estoque e ON e.produto_id = p.id AND e.loja_id = p.loja_id
+  LEFT JOIN estoque_grupo_membros egm ON egm.produto_id = p.id AND egm.loja_id = p.loja_id
   WHERE p.ativo = 1
     AND p.loja_id = ?
     AND IFNULL(e.quantidade, 0) >= 0
@@ -598,6 +601,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                         <div class="pdv-product-card<?= ($p['em_promocao'] ?? 0) ? ' promo' : '' ?><?= (!empty($p['tem_variacoes']) && (int) $p['tem_variacoes'] === 1) ? ' has-variacoes' : '' ?>"
                              role="button" tabindex="0"
                              data-id="<?= $p['id'] ?>"
+                             data-grupo="<?= (int) ($p['grupo_id'] ?? 0) ?>"
                              data-nome="<?= htmlspecialchars($p['nome']) ?>"
                              data-preco="<?= $p['preco'] ?>"
                              data-variacoes="<?= (!empty($p['tem_variacoes']) && (int) $p['tem_variacoes'] === 1) ? 1 : 0 ?>"
@@ -1947,7 +1951,6 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
           <div>
             <div class="pdv-variacao-title" id="variacaoProdutoNome">Produto</div>
             <div class="pdv-variacao-sub">Escolha uma das opções</div>
-            <div class="pdv-variacao-sub" id="variacaoProdutoId"></div>
           </div>
         </div>
         <div class="pdv-variacao-tools">
@@ -1972,7 +1975,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
             <span class="fw-semibold">ESCOLHA SEU EXTRA</span>
             <span class="pdv-variacao-badge" id="extraObrigatorio">Obrigatorio</span>
           </div>
-          <div class="pdv-extra-sub">Escolha 1 opcao.</div>
+          <div class="pdv-extra-sub">Escolha até 2 opções.</div>
           <div class="pdv-extra-list" id="extraLista"></div>
         </div>
         <div class="pdv-extra-section d-none" id="complementoItensSection">
@@ -1980,7 +1983,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
             <span class="fw-semibold">ESCOLHA SEU COMPLEMENTO</span>
             <span class="pdv-variacao-badge" id="complementoItensObrigatorio">Obrigatorio</span>
           </div>
-          <div class="pdv-extra-sub">Escolha 1 opcao.</div>
+          <div class="pdv-extra-sub">Escolha sua opção.</div>
           <div class="pdv-extra-list" id="complementoItensLista"></div>
         </div>
         <div class="pdv-variacao-obs">

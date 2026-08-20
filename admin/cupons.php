@@ -138,7 +138,7 @@ $cuponsJsVer = filemtime(__DIR__ . '/assets/js/cupons.js');
     </div>
   <?php endif; ?>
 
-  <div class="dash-footer">Cardapio Digital Will (c) 2026</div>
+  <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
 
 </main>

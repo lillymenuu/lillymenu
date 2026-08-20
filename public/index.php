@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../helpers/storage.php';
 
 function landing_table_exists(PDO $conn): bool {
   try {
@@ -37,14 +38,7 @@ function landing_get(PDO $conn, string $key, string $default = ''): string {
 }
 
 function landing_asset(string $path): string {
-  $path = trim($path);
-  if ($path === '') {
-    return '';
-  }
-  if (preg_match('#^https?://#i', $path)) {
-    return $path;
-  }
-  return '../admin/' . ltrim($path, '/');
+  return storage_url_relativa($path);
 }
 
 $brand = landing_get($conn, 'brand', 'Lilly Menu');
@@ -343,7 +337,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
           <input type="hidden" name="plano_id" value="">
           <div class="lead-drop-menu">
             <?php foreach ($planosDisponiveis as $p): ?>
-              <button type="button" class="lead-drop-item" data-value="<?= (int) $p['id'] ?>"><?= htmlspecialchars($p['nome']) ?> — R$ <?= number_format((float) $p['valor'], 2, ',', '.') ?>/mês</button>
+              <button type="button" class="lead-drop-item" data-value="<?= (int) $p['id'] ?>"><?= htmlspecialchars($p['nome']) ?></button>
             <?php endforeach; ?>
           </div>
         </div>
@@ -559,7 +553,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
           <input type="hidden" name="plano_id" value="">
           <div class="lead-drop-menu">
             <?php foreach ($planosDisponiveis as $p): ?>
-              <button type="button" class="lead-drop-item" data-value="<?= (int) $p['id'] ?>"><?= htmlspecialchars($p['nome']) ?> — R$ <?= number_format((float) $p['valor'], 2, ',', '.') ?>/mês</button>
+              <button type="button" class="lead-drop-item" data-value="<?= (int) $p['id'] ?>"><?= htmlspecialchars($p['nome']) ?></button>
             <?php endforeach; ?>
           </div>
         </div>
@@ -624,6 +618,20 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
       <button class="btn btn-pink lead-submit" type="submit">CADASTRAR</button>
       <div class="lead-msg" id="leadMsgModal"></div>
     </form>
+  </div>
+</div>
+
+<div class="lead-modal" id="cadastroSucessoModal" aria-hidden="true">
+  <div class="lead-modal-card cadastro-sucesso-card">
+    <div class="cadastro-sucesso-icon">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+    </div>
+    <h3 class="cadastro-sucesso-title">Cadastro realizado!</h3>
+    <p class="cadastro-sucesso-text">
+      Acabamos de enviar o acesso ao sistema para o e-mail cadastrado.
+      Confira sua caixa de entrada (e o spam) para encontrar o link de acesso.
+    </p>
+    <button type="button" class="btn btn-pink cadastro-sucesso-btn" id="cadastroSucessoFechar">Entendi</button>
   </div>
 </div>
 

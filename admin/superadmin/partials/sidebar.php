@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../helpers/storage.php';
 $rota = basename($_SERVER['PHP_SELF']);
 ?>
   <aside class="sidebar">
@@ -20,7 +21,7 @@ $rota = basename($_SERVER['PHP_SELF']);
       } catch (Exception $e) {
         $superadminFoto = null;
       }
-      $superadminFotoUrl = $superadminFoto ? '../' . $superadminFoto : '';
+      $superadminFotoUrl = storage_url_admin_sub($superadminFoto);
     ?>
     <div class="sidebar-profile" id="btnEditarPerfil">
       <div class="avatar" data-iniciais="<?= htmlspecialchars($superadminIniciais) ?>" data-foto="<?= htmlspecialchars($superadminFotoUrl) ?>">

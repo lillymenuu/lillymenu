@@ -1,6 +1,14 @@
 (function () {
   const planosDisponiveis = (typeof CONFIG_PLANOS !== 'undefined') ? CONFIG_PLANOS : [];
 
+  // Caminho salvo no banco pode ser um caminho local relativo a admin/ (precisa
+  // subir um nivel daqui, admin/superadmin/) ou uma URL completa do R2 (usa direto).
+  function urlAdminSub(caminho) {
+    if (!caminho) return '';
+    if (/^https?:\/\//i.test(caminho)) return caminho;
+    return '../' + caminho.replace(/^\/+/, '');
+  }
+
   function formatMoneyBR(v) {
     const n = parseFloat(v || 0);
     return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -22,6 +30,24 @@
   const pixConfigBody = document.getElementById('pixConfigBody');
   pixConfigToggle?.addEventListener('click', () => {
     pixConfigBody.style.display = pixConfigBody.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.getElementById('nominatimAtivoToggle')?.addEventListener('change', async (e) => {
+    const checkbox = e.target;
+    const ativoAnterior = !checkbox.checked;
+    checkbox.disabled = true;
+    try {
+      const body = new FormData();
+      body.append('ativo', checkbox.checked ? '1' : '0');
+      const resp = await fetch('../api/gerenciamento_nominatim_salvar.php', { method: 'POST', body });
+      const data = await resp.json();
+      if (!data.ok) {
+        checkbox.checked = ativoAnterior;
+      }
+    } catch (e) {
+      checkbox.checked = ativoAnterior;
+    }
+    checkbox.disabled = false;
   });
 
   document.getElementById('pixConfigForm')?.addEventListener('submit', async (e) => {
@@ -176,7 +202,7 @@
       <div><strong>Valor:</strong> ${formatMoneyBR(btn.dataset.cobrancaValor)}</div>
       <div><strong>Vencimento:</strong> ${formatDateBR(btn.dataset.cobrancaVencimento)}</div>`;
     if (comprovante) {
-      html += `<a class="pagamento-comprovante-link" href="../${comprovante}" target="_blank" rel="noopener">Ver comprovante enviado em ${formatDateTimeBR(btn.dataset.comprovanteEnviadoEm)}</a>
+      html += `<a class="pagamento-comprovante-link" href="${urlAdminSub(comprovante)}" target="_blank" rel="noopener">Ver comprovante enviado em ${formatDateTimeBR(btn.dataset.comprovanteEnviadoEm)}</a>
       <div class="pagamento-acoes">
         <button class="action-btn danger" type="button" id="btnRejeitarComprovante">Rejeitar</button>
         <button class="action-btn primary" type="button" id="btnAprovarComprovante">Aprovar pagamento</button>

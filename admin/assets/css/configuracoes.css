@@ -117,7 +117,7 @@ body.dash-diggy .settings-card .mini-title{
 }
 .btn-diggy-pause{
   border:0;
-  background:#f43f5e;
+  background:#9C5523;
   color:#fff;
   border-radius:999px;
   padding:.55rem 1.3rem;
@@ -126,7 +126,7 @@ body.dash-diggy .settings-card .mini-title{
   transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
 }
 .btn-diggy-pause:hover{
-  background:#e11d48;
+  background:#7A3F10;
 }
 .btn-diggy-pause:active{
   transform:translateY(1px) scale(.98);
@@ -788,15 +788,16 @@ body.dash-diggy .settings-card .mini-title{
   height:18px;
 }
 .settings-modal--loja-info .modal-dialog{
-  width:574px;
-  max-width:574px;
+  width:860px;
+  max-width:860px;
 }
 .settings-modal--loja-info .modal-content{
-  height:480px;
+  height:auto;
+  max-height:86vh;
 }
 .settings-modal--loja-info .modal-body{
   overflow-y:auto;
-  padding:12px 18px 8px;
+  padding:14px 28px 8px;
 }
 .settings-modal--loja-info .modal-footer{
   justify-content:flex-end;
@@ -899,22 +900,51 @@ body.dash-diggy .settings-card .mini-title{
   right:2px;
   bottom:2px;
 }
+.loja-form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px 18px;
+}
+.loja-form-grid .loja-section-title{
+  grid-column:1/-1;
+}
+.loja-field--full{
+  grid-column:1/-1;
+}
 .loja-section-title{
-  font-size:.9rem;
+  font-size:.76rem;
   font-weight:700;
-  color:#111827;
-  margin:6px 0 12px;
+  color:var(--brand-dark,#7A3F10);
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin:20px 0 2px;
+  padding-bottom:8px;
+  border-bottom:1px solid #f1f5f9;
+}
+.loja-form-grid > .loja-section-title:first-child{
+  margin-top:0;
 }
 .loja-field{
-  background:#f3f4f6;
-  border-radius:12px;
-  padding:10px 12px;
-  margin-bottom:12px;
+  background:#f8fafc;
+  border:1.5px solid #e5e7eb;
+  border-radius:14px;
+  padding:10px 14px;
+  margin-bottom:0;
+  transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.loja-field:hover{
+  border-color:#d6dbe3;
+}
+.loja-field:focus-within{
+  background:#fff;
+  border-color:var(--brand,#9C5523);
+  box-shadow:0 0 0 3px rgba(156,85,35,.12);
 }
 .loja-field label{
-  font-size:.72rem;
+  font-size:.7rem;
+  font-weight:600;
   color:#64748b;
-  margin-bottom:4px;
+  margin-bottom:3px;
   display:block;
 }
 .loja-input,
@@ -924,6 +954,7 @@ body.dash-diggy .settings-card .mini-title{
   width:100%;
   font-size:.9rem;
   color:#111827;
+  outline:none;
 }
 .loja-textarea{
   resize:none;
@@ -964,6 +995,7 @@ body.dash-diggy .settings-card .mini-title{
 #btnHorarioCriar{
   padding:.35rem .9rem;
   font-size:.78rem;
+  margin-left:0;
 }
 .settings-modal--horarios .modal-dialog{
   width:340px;
@@ -977,8 +1009,22 @@ body.dash-diggy .settings-card .mini-title{
   overflow-y:auto;
   padding:14px 18px 8px;
 }
+.settings-modal--horarios .modal-header{
+  position:relative;
+  justify-content:center;
+}
+.settings-modal--horarios .modal-title{
+  flex:1;
+  text-align:center;
+}
+.settings-modal--horarios .modal-header .btn-close{
+  position:absolute;
+  right:1rem;
+  top:50%;
+  transform:translateY(-50%);
+}
 .settings-modal--horarios .modal-footer{
-  justify-content:flex-end;
+  justify-content:center;
   padding:0 18px 16px;
   border-top:0;
 }
@@ -1874,6 +1920,9 @@ body.dash-diggy .settings-card .mini-title{
   .settings-modal--loja-info .modal-content{
     height:auto;
     max-height:calc(100vh - 24px);
+  }
+  .loja-form-grid{
+    grid-template-columns:1fr;
   }
   .settings-modal--agendados .modal-dialog{
     width:calc(100% - 24px);

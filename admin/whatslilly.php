@@ -165,6 +165,8 @@ $pixNome  = config($conn, 'pagamento_pix_nome', '');
 
 </div><!-- /wl-layout -->
 
+<div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
+
 <!-- Modal de confirmação de exclusão -->
 <div class="wl-modal-overlay" id="wlConfirmOverlay">
   <div class="wl-modal wl-confirm-modal">

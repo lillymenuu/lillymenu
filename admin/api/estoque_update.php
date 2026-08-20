@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
+require_once __DIR__ . '/../helpers/estoque_vinculo_module.php';
 
 header('Content-Type: application/json');
 
@@ -16,6 +17,9 @@ if ($produtoId <= 0 || $quantidade < 0 || $minimo < 0) {
 
 $colunas = $conn->query("SHOW COLUMNS FROM estoque")->fetchAll(PDO::FETCH_COLUMN, 0);
 $temMinimo = in_array('quantidade_minima', $colunas, true);
+
+// DDL deve rodar ANTES da transação — DDL causa implicit commit no MySQL
+estoqueVinculoEnsureModule($conn);
 
 $conn->beginTransaction();
 
@@ -50,8 +54,10 @@ try {
   }
 
   $delta = $quantidade - $quantidadeAtual;
+  $mov = null;
   if ($delta !== 0) {
     $tipo = $delta > 0 ? 'entrada' : 'saida';
+    $mov = ['tipo' => $tipo, 'quantidade' => abs($delta), 'origem' => 'ajuste', 'referencia_id' => null];
     $stmt = $conn->prepare("
       INSERT INTO estoque_movimentacoes (produto_id, tipo, quantidade, origem, loja_id)
       VALUES (?, ?, ?, 'ajuste', ?)
@@ -60,6 +66,7 @@ try {
   }
 
   $conn->commit();
+  estoqueVinculoSincronizar($conn, $produtoId, $lojaId, $mov);
   echo json_encode(['ok' => true]);
 } catch (Exception $e) {
   $conn->rollBack();
