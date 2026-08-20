@@ -1,3 +1,25 @@
+function formatarDinheiroInput(valor){
+  const numero = Number(valor || 0);
+  return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parseDinheiroInput(valor){
+  const texto = String(valor || '').trim();
+  if (!texto) return 0;
+  const normalizado = texto.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+  const numero = Number(normalizado);
+  return Number.isFinite(numero) ? numero : 0;
+}
+
+function aplicarMascaraDinheiroInput(campo){
+  if (!campo) return;
+  const digitos = String(campo.value || '').replace(/\D/g, '');
+  const numero = digitos ? (Number(digitos) / 100) : 0;
+  campo.value = numero
+    ? numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : '';
+}
+
 function atualizarPontosUi(){
   if (!produtoPontosGanho || !produtoPontosCusto) return;
   const ganhoAtivo = pontosGanhoAtivo ? pontosGanhoAtivo.checked : false;
@@ -33,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pontosGanhoAtivo) pontosGanhoAtivo.addEventListener('change', atualizarPontosUi);
   if (pontosCustoAtivo) pontosCustoAtivo.addEventListener('change', atualizarPontosUi);
   atualizarPontosUi();
+  if (produtoPreco) produtoPreco.addEventListener('input', () => aplicarMascaraDinheiroInput(produtoPreco));
+  if (produtoPrecoPromo) produtoPrecoPromo.addEventListener('input', () => aplicarMascaraDinheiroInput(produtoPrecoPromo));
   const modalCategoriaEl = document.getElementById('modalCategoria');
   if (modalCategoriaEl) {
     modalCategoria = new bootstrap.Modal(modalCategoriaEl);
@@ -1762,9 +1786,9 @@ function editarProduto(id){
       _atualizarResumoComplementoPreco();
       if (produtoCodigo) produtoCodigo.value = p.codigo ?? '';
       if (produtoDescricao) produtoDescricao.value = p.descricao ?? '';
-      produtoPreco.value = p.preco;
+      produtoPreco.value = formatarDinheiroInput(p.preco);
       produtoAtivo.checked = p.ativo == 1;
-      if (produtoPrecoPromo) produtoPrecoPromo.value = p.preco_promocional ?? '';
+      if (produtoPrecoPromo) produtoPrecoPromo.value = p.preco_promocional ? formatarDinheiroInput(p.preco_promocional) : '';
       if (produtoPontosGanho) produtoPontosGanho.value = p.pontos_ganho ?? '';
       if (produtoPontosCusto) produtoPontosCusto.value = p.pontos_custo ?? '';
       if (pontosGanhoAtivo && produtoPontosGanho) {
@@ -1839,6 +1863,8 @@ function salvarProduto(){
   const idAtual = produtoId ? produtoId.value : '';
   // Garante que o ID correto está no payload (nunca salva sem ID para update)
   if (idAtual) dados.set('id', idAtual);
+  // Preco/preco promocional exibem mascara "7,50" na tela; o backend espera numero.
+  dados.set('preco', parseDinheiroInput(produtoPreco.value));
   // Força valores explícitos para evitar coleta incorreta pelo FormData
   dados.set('categoria_id', _categoriaSelecionada);
   dados.set('apenas_agendamento', (produtoApenasAgendamento && produtoApenasAgendamento.checked) ? 1 : 0);
@@ -1849,7 +1875,7 @@ function salvarProduto(){
     dados.set('promo_desativado', produtoPromoDesativado.checked ? 0 : 1);
   }
   if (produtoPrecoPromo) {
-    dados.set('preco_promocional', produtoPrecoPromo.value || '');
+    dados.set('preco_promocional', produtoPrecoPromo.value ? parseDinheiroInput(produtoPrecoPromo.value) : '');
   }
   if (produtoVariacoes) {
     dados.set('tem_variacoes', produtoVariacoes.checked ? 1 : 0);
@@ -1923,8 +1949,8 @@ function salvarProduto(){
           const produtoSalvo = {
           id: produtoId.value || resp.id,
           nome: produtoNome.value.trim(),
-          preco: produtoPreco.value,
-          preco_promocional: produtoPrecoPromo ? produtoPrecoPromo.value : '',
+          preco: parseDinheiroInput(produtoPreco.value),
+          preco_promocional: produtoPrecoPromo ? parseDinheiroInput(produtoPrecoPromo.value) : '',
           promo_ativa: produtoPromoDesativado ? produtoPromoDesativado.checked : false,
           ativo: produtoAtivo.checked ? 1 : 0,
           categoria_id: produtoCategoria ? produtoCategoria.value : '',

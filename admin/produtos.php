@@ -671,7 +671,7 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
             <div class="tab-pane fade" id="produtoPrecoTab" role="tabpanel">
               <div class="produto-field">
                 <label class="form-label">Preço</label>
-                <input type="number" step="0.01"
+                <input type="text" inputmode="decimal" placeholder="0,00"
                        class="form-control produto-input"
                        id="produtoPreco" name="preco" required>
               </div>
@@ -688,7 +688,7 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
                   </div>
                 <div class="produto-field mt-3" id="promoField">
                   <label class="form-label">Preço promocional</label>
-                  <input type="number" step="0.01"
+                  <input type="text" inputmode="decimal" placeholder="0,00"
                          class="form-control produto-input"
                          id="produtoPrecoPromo" name="preco_promocional" disabled>
                 </div>
