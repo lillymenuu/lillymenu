@@ -720,7 +720,7 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
                   </button>
                 </div>
               </div>
-              <div class="produto-variacoes-panel" id="produtoExtrasPanel">
+              <div class="produto-variacoes-panel d-none" id="produtoExtrasPanel">
                 <div class="produto-variacoes-head">
                   <div>
                     <h6>Escolha seu extra</h6>
@@ -732,7 +732,7 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
                   </button>
                 </div>
               </div>
-              <div class="produto-variacoes-panel" id="produtoComplementoPrecoPanel">
+              <div class="produto-variacoes-panel d-none" id="produtoComplementoPrecoPanel">
                 <div class="produto-variacoes-head">
                   <div>
                     <h6>Escolha o tipo</h6>

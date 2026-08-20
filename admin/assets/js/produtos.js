@@ -129,11 +129,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (produtoVariacoes && produtoVariacoesPanel) {
     const atualizarVariacoesUI = () => {
-      if (produtoVariacoes.checked) {
-        produtoVariacoesPanel.classList.remove('d-none');
-      } else {
-        produtoVariacoesPanel.classList.add('d-none');
-      }
+      const habilitado = produtoVariacoes.checked;
+      produtoVariacoesPanel.classList.toggle('d-none', !habilitado);
+      // "Escolha seu extra" e "Escolha o tipo" ficam junto do mesmo switch de
+      // variacoes, ocultos por padrao ate o produto ser marcado como "possui
+      // diferentes precos, tamanhos ou cores".
+      if (produtoExtrasPanel) produtoExtrasPanel.classList.toggle('d-none', !habilitado);
+      if (produtoComplementoPrecoPanel) produtoComplementoPrecoPanel.classList.toggle('d-none', !habilitado);
     };
     produtoVariacoes.addEventListener('change', atualizarVariacoesUI);
     atualizarVariacoesUI();
@@ -1741,6 +1743,11 @@ function abrirModalProduto(categoriaId = ''){
   if (pontosGanhoAtivo) pontosGanhoAtivo.checked = false;
   if (pontosCustoAtivo) pontosCustoAtivo.checked = false;
   if (produtoVariacoes) produtoVariacoes.checked = false;
+  // .checked = false nao dispara "change" sozinho, entao os paineis
+  // (variacoes/extras/tipo) precisam ser escondidos aqui explicitamente.
+  if (produtoVariacoesPanel) produtoVariacoesPanel.classList.add('d-none');
+  if (produtoExtrasPanel) produtoExtrasPanel.classList.add('d-none');
+  if (produtoComplementoPrecoPanel) produtoComplementoPrecoPanel.classList.add('d-none');
   variacoesAtual = [];
   atualizarResumoVariacoes();
   extrasAtual = [];
@@ -1802,17 +1809,27 @@ function editarProduto(id){
         produtoPromoDesativado.checked =
           p.promo_desativado === undefined ? false : p.promo_desativado == 0;
       }
-      if (produtoVariacoes) {
-        produtoVariacoes.checked =
-          p.tem_variacoes === undefined ? false : p.tem_variacoes == 1;
-        if (produtoVariacoesPanel) {
-          produtoVariacoesPanel.classList.toggle('d-none', !produtoVariacoes.checked);
-        }
-      }
       variacoesAtual = Array.isArray(p.variacoes) ? p.variacoes : [];
       atualizarResumoVariacoes();
       extrasAtual = Array.isArray(p.extras) ? p.extras : [];
       atualizarResumoExtras();
+      const temComplementosItensExistentes = Array.isArray(p.complementos_itens) && p.complementos_itens.length > 0;
+      if (produtoVariacoes) {
+        produtoVariacoes.checked =
+          p.tem_variacoes === undefined ? false : p.tem_variacoes == 1;
+        // Extras e tipos ficam junto do switch de variacoes, mas se o produto ja
+        // tiver extras/tipos cadastrados de antes, mantem cada painel visivel pra
+        // nao esconder dado ja existente do lojista (checagem independente por painel).
+        if (produtoVariacoesPanel) {
+          produtoVariacoesPanel.classList.toggle('d-none', !produtoVariacoes.checked);
+        }
+        if (produtoExtrasPanel) {
+          produtoExtrasPanel.classList.toggle('d-none', !(produtoVariacoes.checked || extrasAtual.length > 0));
+        }
+        if (produtoComplementoPrecoPanel) {
+          produtoComplementoPrecoPanel.classList.toggle('d-none', !(produtoVariacoes.checked || temComplementosItensExistentes));
+        }
+      }
       if (produtoCatalogo) {
         produtoCatalogo.checked =
           p.disponivel_catalogo === undefined ? true : p.disponivel_catalogo != 0;
