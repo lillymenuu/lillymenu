@@ -133,11 +133,16 @@ $planDetailsCssVer = filemtime(__DIR__ . '/assets/css/plan-details.css');
   </div>
 
   <div class="plan-card">
-    <span class="plan-badge <?= $badgeClasse ?>"><?= htmlspecialchars($badgeTexto) ?></span>
-    <div class="plan-card-nome"><?= htmlspecialchars($plano['nome']) ?></div>
-    <?php if ($validoAteData !== ''): ?>
-      <div class="plan-card-validade"><span class="plan-dot"></span><?= htmlspecialchars($validoAteLabel) ?>: <?= htmlspecialchars($validoAteData) ?></div>
-    <?php endif; ?>
+    <div class="plan-card-header">
+      <div>
+        <span class="plan-badge <?= $badgeClasse ?>"><?= htmlspecialchars($badgeTexto) ?></span>
+        <div class="plan-card-nome"><?= htmlspecialchars($plano['nome']) ?></div>
+        <?php if ($validoAteData !== ''): ?>
+          <div class="plan-card-validade"><span class="plan-dot"></span><?= htmlspecialchars($validoAteLabel) ?>: <?= htmlspecialchars($validoAteData) ?></div>
+        <?php endif; ?>
+      </div>
+      <button type="button" class="plan-btn-renovar" id="btnRenovar"><i class="bi bi-arrow-repeat"></i> Renovar</button>
+    </div>
 
     <div class="plan-card-rows">
       <div class="plan-card-row"><span>Assinatura</span><strong><?= htmlspecialchars($assinaturaDesdeFmt) ?></strong></div>
@@ -171,35 +176,30 @@ $planDetailsCssVer = filemtime(__DIR__ . '/assets/css/plan-details.css');
         <?php endforeach; ?>
       </div>
       <div class="plan-picker-msg" id="trocarPlanoMsg"></div>
-      <button type="button" class="pay-btn" id="btnConfirmarTrocaPlano">Confirmar troca</button>
+      <button type="button" class="plan-btn-primary" id="btnConfirmarTrocaPlano">Confirmar troca</button>
     <?php endif; ?>
   </div>
 
-  <div class="plan-card">
-    <button type="button" class="pay-btn" id="btnRenovar">Renovar</button>
-    <div class="d-none" id="renovacaoBox">
-      <?php include __DIR__ . '/partials/renovacao_pagamento.php'; ?>
-    </div>
-  </div>
-
-  <div class="plan-card">
+  <?php if ($cobrancaCpfAtual === '' || $cobrancaTelefoneAtual === ''): ?>
+  <div class="plan-card" id="perfilCobrancaCard">
     <div class="plan-card-titulo">Perfil de cobrança</div>
     <div class="plan-card-desc">Usado nos detalhes das suas transações.</div>
     <form id="formPerfilCobranca">
       <div class="row g-2 mt-1">
         <div class="col-sm-6">
           <label class="form-label">CPF</label>
-          <input type="text" class="form-control" id="perfilCpf" name="cpf" placeholder="000.000.000-00" value="<?= htmlspecialchars($cobrancaCpfAtual) ?>">
+          <input type="text" class="form-control" id="perfilCpf" name="cpf" placeholder="000.000.000-00" value="<?= htmlspecialchars($cobrancaCpfAtual) ?>" inputmode="numeric">
         </div>
         <div class="col-sm-6">
           <label class="form-label">Telefone</label>
-          <input type="text" class="form-control" id="perfilTelefone" name="telefone" placeholder="(00) 00000-0000" value="<?= htmlspecialchars($cobrancaTelefoneAtual) ?>">
+          <input type="text" class="form-control" id="perfilTelefone" name="telefone" placeholder="(00) 00000-0000" value="<?= htmlspecialchars($cobrancaTelefoneAtual) ?>" inputmode="numeric">
         </div>
       </div>
-      <button type="submit" class="pay-btn plan-perfil-btn">Salvar perfil</button>
+      <button type="submit" class="plan-btn-primary plan-perfil-btn">Salvar perfil</button>
       <div class="plan-picker-msg" id="perfilCobrancaMsg"></div>
     </form>
   </div>
+  <?php endif; ?>
 
   <div class="dash-footer">Cardápio Digital Lilly &copy; <?= date('Y') ?></div>
 </div>
@@ -235,6 +235,21 @@ $planDetailsCssVer = filemtime(__DIR__ . '/assets/css/plan-details.css');
   </div>
 </div>
 
+<!-- MODAL RENOVAR (gera Pix / envia comprovante) -->
+<div class="modal fade" id="modalRenovar" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Renovar assinatura</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <?php include __DIR__ . '/partials/renovacao_pagamento.php'; ?>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 function escapeHtml(v){
@@ -254,8 +269,15 @@ function formatDateTimeBR(v){
   return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
 }
 
+const modalHistoricoEl = document.getElementById('modalHistoricoTransacoes');
+const modalHistorico = new bootstrap.Modal(modalHistoricoEl);
+const modalDetalheEl = document.getElementById('modalDetalheTransacao');
+const modalDetalhe = new bootstrap.Modal(modalDetalheEl);
+const modalRenovarEl = document.getElementById('modalRenovar');
+const modalRenovar = new bootstrap.Modal(modalRenovarEl);
+
 document.getElementById('btnRenovar')?.addEventListener('click', function(){
-  document.getElementById('renovacaoBox').classList.toggle('d-none');
+  modalRenovar.show();
 });
 
 document.getElementById('btnTrocarPlano')?.addEventListener('click', function(){
@@ -263,8 +285,37 @@ document.getElementById('btnTrocarPlano')?.addEventListener('click', function(){
 });
 
 <?php if ($uploadMsg !== ''): ?>
-document.getElementById('renovacaoBox')?.classList.remove('d-none');
+modalRenovar.show();
 <?php endif; ?>
+
+function maskCpf(el){
+  let v = el.value.replace(/\D/g, '').slice(0, 11);
+  v = v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  el.value = v;
+}
+function maskTelefoneBR(el){
+  let v = el.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length > 10) {
+    v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+  } else if (v.length > 5) {
+    v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+  } else if (v.length > 2) {
+    v = v.replace(/(\d{2})(\d{0,4})/, '($1) $2');
+  } else if (v.length > 0) {
+    v = v.replace(/(\d{0,2})/, '($1');
+  }
+  el.value = v;
+}
+const perfilCpfEl = document.getElementById('perfilCpf');
+const perfilTelefoneEl = document.getElementById('perfilTelefone');
+if (perfilCpfEl) {
+  perfilCpfEl.addEventListener('input', () => maskCpf(perfilCpfEl));
+  maskCpf(perfilCpfEl);
+}
+if (perfilTelefoneEl) {
+  perfilTelefoneEl.addEventListener('input', () => maskTelefoneBR(perfilTelefoneEl));
+  maskTelefoneBR(perfilTelefoneEl);
+}
 
 document.getElementById('btnConfirmarTrocaPlano')?.addEventListener('click', function(){
   const escolhido = document.querySelector('input[name="planoTroca"]:checked');
@@ -308,17 +359,15 @@ document.getElementById('formPerfilCobranca')?.addEventListener('submit', functi
     .then(data => {
       msgEl.textContent = data.ok ? 'Perfil salvo com sucesso.' : (data.msg || 'Erro ao salvar.');
       msgEl.className = 'plan-picker-msg ' + (data.ok ? 'plan-picker-msg--ok' : 'plan-picker-msg--erro');
+      if (data.ok) {
+        setTimeout(() => document.getElementById('perfilCobrancaCard')?.classList.add('d-none'), 1200);
+      }
     })
     .catch(() => {
       msgEl.textContent = 'Erro ao salvar.';
       msgEl.className = 'plan-picker-msg plan-picker-msg--erro';
     });
 });
-
-const modalHistoricoEl = document.getElementById('modalHistoricoTransacoes');
-const modalHistorico = new bootstrap.Modal(modalHistoricoEl);
-const modalDetalheEl = document.getElementById('modalDetalheTransacao');
-const modalDetalhe = new bootstrap.Modal(modalDetalheEl);
 
 // Modal aninhado (detalhe abre por cima do historico) precisa do dialog E do
 // backdrop com z-index maior que o modal de baixo, senao o Bootstrap nao
