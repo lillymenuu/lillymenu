@@ -122,24 +122,6 @@ if (strpos($_linkLojaRaw, $_linkLojaBaseAntigo) === 0) {
 }
 $_slug = preg_replace('/\.php$/i', '', $_slug);
 $linkLoja = $_slug !== '' ? $_linkLojaBase . $_slug : '';
-$versiculoCache = config($conn, 'versiculo_dia_texto', '');
-$versiculoRefCache = config($conn, 'versiculo_dia_ref', '');
-$versiculoDataCache = config($conn, 'versiculo_dia_data', '');
-$versiculoCacheLower = function_exists('mb_strtolower') ? mb_strtolower($versiculoCache) : strtolower($versiculoCache);
-$versiculoInvalido = $versiculoCacheLower && (
-  strpos($versiculoCacheLower, 'diariamente um novo versiculo') !== false
-  || strpos($versiculoCacheLower, 'diariamente um novo versículo') !== false
-  || strpos($versiculoCacheLower, 'versiculo diario') !== false
-  || strpos($versiculoCacheLower, 'versiculo diário') !== false
-  || strpos($versiculoCacheLower, 'descubra nosso versiculo diario') !== false
-  || strpos($versiculoCacheLower, 'descubra nosso versículo diário') !== false
-);
-if ($versiculoInvalido) {
-  $versiculoCache = '';
-  $versiculoRefCache = '';
-  $versiculoDataCache = '';
-}
-
 $lojaNome = config($conn, 'nome_loja', 'T&W Confeitaria');
 $lojaVerificada = config($conn, 'loja_verificada', '0') === '1';
 $_SESSION['loja_nome'] = $lojaNome;
@@ -341,20 +323,18 @@ try {
       <div class="community-texts">
         <div class="dash-verse-top">
           <span class="dash-verse-title">Versiculo de Hoje</span>
-          <span class="dash-verse-meta" id="versiculoMeta" data-date="<?= htmlspecialchars($versiculoDataCache ?: date('Y-m-d')) ?>"></span>
+          <span class="dash-verse-meta" id="versiculoMeta" data-date="<?= date('Y-m-d') ?>"></span>
         </div>
         <div class="dash-verse-text"
              id="versiculoTexto"
-             data-texto="<?= htmlspecialchars($versiculoCache) ?>"
-             data-ref="<?= htmlspecialchars($versiculoRefCache) ?>"
-             data-data="<?= htmlspecialchars($versiculoDataCache ?: date('Y-m-d')) ?>"
-             data-has-cache="<?= $versiculoCache ? '1' : '0' ?>">
-          <?= $versiculoCache ? '"' . htmlspecialchars($versiculoCache) . '"' : 'Carregando versiculo do dia...' ?>
+             data-texto=""
+             data-ref=""
+             data-data="<?= date('Y-m-d') ?>"
+             data-has-cache="0">
+          Carregando versiculo do dia...
         </div>
         <div class="dash-verse-bottom">
-          <a class="dash-verse-ref" id="versiculoRef"
-             href="<?= $versiculoRefCache ? 'https://www.bibliaon.com/busca/?q=' . urlencode($versiculoRefCache) : '#' ?>"
-             target="_blank" rel="noopener"><?= htmlspecialchars($versiculoRefCache) ?></a>
+          <a class="dash-verse-ref" id="versiculoRef" href="#" target="_blank" rel="noopener"></a>
           <div class="dash-verse-react">
             <span>Gostou?</span>
             <button type="button" id="btnVersoGostou" aria-label="Gostei"><i class="bi bi-emoji-smile"></i></button>

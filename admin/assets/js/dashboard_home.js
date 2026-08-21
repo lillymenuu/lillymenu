@@ -349,7 +349,7 @@ if (versiculoMeta) {
 async function carregarVersiculo(){
   if (!versiculoTexto) return;
   try {
-    const response = await fetch('./api/versiculo_dia.php?force=1', { cache: 'no-store' });
+    const response = await fetch('./api/versiculo_dia.php', { cache: 'no-store' });
     const payload = await response.json();
     if (payload && payload.ok) {
       const versoTexto = payload.texto || 'Versiculo indisponivel.';

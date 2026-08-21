@@ -4,8 +4,6 @@ require_once __DIR__ . '/../protect.php';
 
 header('Content-Type: application/json');
 
-$lojaId = (int) ($_SESSION['loja_id'] ?? 1);
-
 function tabelaExiste(PDO $conn, string $tabela): bool {
   try {
     $stmt = $conn->prepare("SHOW TABLES LIKE ?");
@@ -13,36 +11,6 @@ function tabelaExiste(PDO $conn, string $tabela): bool {
     return (bool) $stmt->fetchColumn();
   } catch (Exception $e) {
     return false;
-  }
-}
-
-function obterConfig(PDO $conn, string $chave, int $lojaId, bool $temLoja): ?string {
-  if ($temLoja) {
-    $stmt = $conn->prepare("SELECT valor FROM configuracoes WHERE chave = ? AND loja_id = ? LIMIT 1");
-    $stmt->execute([$chave, $lojaId]);
-  } else {
-    $stmt = $conn->prepare("SELECT valor FROM configuracoes WHERE chave = ? LIMIT 1");
-    $stmt->execute([$chave]);
-  }
-  $valor = $stmt->fetchColumn();
-  return $valor !== false ? (string) $valor : null;
-}
-
-function salvarConfig(PDO $conn, string $chave, string $valor, int $lojaId, bool $temLoja): void {
-  if ($temLoja) {
-    $stmt = $conn->prepare("
-      INSERT INTO configuracoes (loja_id, chave, valor)
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE valor = VALUES(valor)
-    ");
-    $stmt->execute([$lojaId, $chave, $valor]);
-  } else {
-    $stmt = $conn->prepare("
-      INSERT INTO configuracoes (chave, valor)
-      VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE valor = VALUES(valor)
-    ");
-    $stmt->execute([$chave, $valor]);
   }
 }
 
@@ -255,56 +223,13 @@ function extrairVersiculo(string $html): array {
   return [null, null];
 }
 
-$temLojaConfig = false;
-try {
-  $temLojaConfig = (bool) $conn->query("SHOW COLUMNS FROM configuracoes LIKE 'loja_id'")->fetchColumn();
-} catch (Exception $e) {
-  $temLojaConfig = false;
-}
-
-if (!tabelaExiste($conn, 'configuracoes')) {
-  echo json_encode(['ok' => false, 'msg' => 'Configuracoes nao encontradas.']);
-  exit;
-}
-
+// O versiculo nunca e gravado no banco — busca direto na fonte a cada
+// chamada, entao o dia seguinte ja mostra outro automaticamente (o proprio
+// site de origem muda o versiculo por dia, sem precisarmos guardar nada).
 $hoje = date('Y-m-d');
 $fonteUrl = 'https://www.bibliaon.com/versiculo_do_dia/';
 $temReacoes = tabelaExiste($conn, 'versiculo_reacoes');
 $adminId = (int) ($_SESSION['admin_id'] ?? 0);
-$force = isset($_GET['force']) && (string) $_GET['force'] === '1';
-  $textoCache = obterConfig($conn, 'versiculo_dia_texto', $lojaId, $temLojaConfig);
-  $refCache = obterConfig($conn, 'versiculo_dia_ref', $lojaId, $temLojaConfig);
-  $dataCache = obterConfig($conn, 'versiculo_dia_data', $lojaId, $temLojaConfig);
-if ($textoCache) {
-  $textoCacheLimpo = limparVersiculoTexto($textoCache);
-  if ($textoCacheLimpo !== $textoCache) {
-      salvarConfig($conn, 'versiculo_dia_texto', $textoCacheLimpo, $lojaId, $temLojaConfig);
-    $textoCache = $textoCacheLimpo;
-  }
-}
-if (versiculoInvalido($textoCache)) {
-  $textoCache = '';
-  $refCache = '';
-  $dataCache = '';
-}
-
-if (!$force && $textoCache && $dataCache === $hoje) {
-  $reacaoAtual = null;
-  if ($temReacoes && $adminId > 0) {
-    $stmt = $conn->prepare("SELECT reacao FROM versiculo_reacoes WHERE admin_id = ? AND data_versiculo = ? LIMIT 1");
-    $stmt->execute([$adminId, $dataCache]);
-    $reacaoAtual = $stmt->fetchColumn() ?: null;
-  }
-  echo json_encode([
-    'ok' => true,
-    'texto' => $textoCache,
-    'referencia' => $refCache ?? '',
-    'data' => $dataCache,
-    'reacao' => $reacaoAtual,
-    'fonte_url' => $fonteUrl
-  ]);
-  exit;
-}
 
 $context = stream_context_create([
   'http' => [
@@ -323,55 +248,15 @@ if (!$html && function_exists('curl_init')) {
 }
 
 if (!$html) {
-  if ($textoCache) {
-    $reacaoAtual = null;
-    if ($temReacoes && $adminId > 0) {
-      $stmt = $conn->prepare("SELECT reacao FROM versiculo_reacoes WHERE admin_id = ? AND data_versiculo = ? LIMIT 1");
-      $stmt->execute([$adminId, $dataCache ?: $hoje]);
-      $reacaoAtual = $stmt->fetchColumn() ?: null;
-    }
-    echo json_encode([
-      'ok' => true,
-      'texto' => $textoCache,
-      'referencia' => $refCache ?? '',
-      'data' => $dataCache,
-      'reacao' => $reacaoAtual,
-      'fonte_url' => $fonteUrl,
-      'stale' => true
-    ]);
-    exit;
-  }
   echo json_encode(['ok' => false, 'msg' => 'Sem conexao para atualizar.']);
   exit;
 }
 
 [$textoVerso, $referencia] = extrairVersiculo($html);
 if (!$textoVerso || versiculoInvalido($textoVerso)) {
-  if ($textoCache) {
-    $reacaoAtual = null;
-    if ($temReacoes && $adminId > 0) {
-      $stmt = $conn->prepare("SELECT reacao FROM versiculo_reacoes WHERE admin_id = ? AND data_versiculo = ? LIMIT 1");
-      $stmt->execute([$adminId, $dataCache ?: $hoje]);
-      $reacaoAtual = $stmt->fetchColumn() ?: null;
-    }
-    echo json_encode([
-      'ok' => true,
-      'texto' => $textoCache,
-      'referencia' => $refCache ?? '',
-      'data' => $dataCache,
-      'reacao' => $reacaoAtual,
-      'fonte_url' => $fonteUrl,
-      'stale' => true
-    ]);
-    exit;
-  }
   echo json_encode(['ok' => false, 'msg' => 'Nao foi possivel obter o versiculo.']);
   exit;
 }
-
-  salvarConfig($conn, 'versiculo_dia_texto', $textoVerso, $lojaId, $temLojaConfig);
-  salvarConfig($conn, 'versiculo_dia_ref', $referencia, $lojaId, $temLojaConfig);
-  salvarConfig($conn, 'versiculo_dia_data', $hoje, $lojaId, $temLojaConfig);
 
 $reacaoAtual = null;
 if ($temReacoes && $adminId > 0) {
