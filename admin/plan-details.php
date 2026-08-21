@@ -141,7 +141,9 @@ $planDetailsCssVer = filemtime(__DIR__ . '/assets/css/plan-details.css');
           <div class="plan-card-validade"><span class="plan-dot"></span><?= htmlspecialchars($validoAteLabel) ?>: <?= htmlspecialchars($validoAteData) ?></div>
         <?php endif; ?>
       </div>
+      <?php if ($status !== 'trial'): ?>
       <button type="button" class="plan-btn-renovar" id="btnRenovar"><i class="bi bi-arrow-repeat"></i> Renovar</button>
+      <?php endif; ?>
     </div>
 
     <div class="plan-card-rows">
