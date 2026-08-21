@@ -44,7 +44,9 @@ if (!function_exists('mpCriarPagamentoPix')) {
 
     // Mercado Pago exige o formato ISO-8601 completo, incluindo milissegundos
     // (ex: 2026-08-10T15:57:00.000-03:00) — sem os ".000" ele rejeita como formato invalido.
-    $expiraEm = date('Y-m-d\TH:i:s.000P', strtotime('+30 minutes'));
+    // 2h de folga (era 30min) pra loja nao correr risco de escanear o Pix e o banco
+    // recusar por "expirado" antes de dar tempo de concluir o pagamento.
+    $expiraEm = date('Y-m-d\TH:i:s.000P', strtotime('+2 hours'));
 
     $body = [
       'transaction_amount' => (float) $dados['valor'],
