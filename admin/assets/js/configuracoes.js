@@ -2365,4 +2365,33 @@ if (usuariosModal) {
         });
     });
   }
+
+document.querySelectorAll('[data-toggle-config]').forEach(input => {
+  input.addEventListener('change', () => {
+    const chave = input.dataset.toggleConfig;
+    const ativo = input.checked;
+    input.disabled = true;
+    fetch('api/config_toggle.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chave, ativo })
+    })
+      .then(r => r.json())
+      .then(resp => {
+        if (!resp || !resp.ok) {
+          input.checked = !ativo;
+          mostrarToast((resp && resp.msg) || 'Erro ao salvar.', false);
+          return;
+        }
+        mostrarToast(ativo ? 'Versiculo do dia ativado no dashboard.' : 'Versiculo do dia ocultado do dashboard.', true);
+      })
+      .catch(() => {
+        input.checked = !ativo;
+        mostrarToast('Erro ao salvar.', false);
+      })
+      .finally(() => {
+        input.disabled = false;
+      });
+  });
+});
 }

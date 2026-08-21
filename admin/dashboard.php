@@ -318,6 +318,7 @@ try {
       </div>
     </div>
 
+    <?php if (config($conn, 'versiculo_dashboard_ativo', '1') === '1'): ?>
     <div class="dash-community card dash-verse">
       <button type="button" class="share-copy" aria-label="Copiar versiculo do dia"><i class="bi bi-clipboard"></i></button>
       <div class="community-texts">
@@ -343,6 +344,7 @@ try {
         </div>
       </div>
     </div>
+    <?php endif; ?>
 
     <div class="dash-section">
       <div class="dash-section-head">

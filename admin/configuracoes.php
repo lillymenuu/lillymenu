@@ -24,6 +24,7 @@ $gestor_pedidos_ativo = config($conn, 'gestor_pedidos_ativo', '1');
 $notificar_pedido_whatsapp_ativo = config($conn, 'notificar_pedido_whatsapp_ativo', '1');
 $aceite_automatico_diggy_ativo = config($conn, 'aceite_automatico_diggy_ativo', '0');
 $ifood_ativo = config($conn, 'ifood_ativo', '0');
+$versiculo_dashboard_ativo = config($conn, 'versiculo_dashboard_ativo', '1');
 $taxa_entrega = config($conn, 'taxa_entrega');
 $taxa_entrega_tipo = config($conn, 'taxa_entrega_tipo', 'dinamica');
 $taxa_entrega_gratis = config($conn, 'taxa_entrega_gratis', '0');
@@ -684,6 +685,15 @@ $settingsSections = [
         'icon' => 'bi bi-graph-up',
         'title' => 'Eventos',
         'desc' => 'Registros de eventos do dashboard.'
+      ],
+      [
+        'id' => 'versiculo-dashboard',
+        'icon' => 'bi bi-book',
+        'title' => 'Receber Versículo do dia',
+        'desc' => 'Mostrar o card do versículo no dashboard.',
+        'type' => 'toggle',
+        'toggle_key' => 'versiculo_dashboard_ativo',
+        'toggle_checked' => $versiculo_dashboard_ativo === '1'
       ]
     ]
   ]
@@ -739,23 +749,40 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
         </div>
         <div class="settings-grid">
           <?php foreach ($section['cards'] as $card): ?>
-            <?php $modalId = 'modal-' . $card['id']; ?>
-            <?php $toneClass = ($card['tone'] ?? '') === 'danger' ? ' settings-card--danger' : ''; ?>
-            <?php $cardLink = $card['link'] ?? ''; ?>
-            <a class="mini-card settings-card<?= $toneClass ?>"
-               href="<?= $cardLink ? htmlspecialchars($cardLink) : 'javascript:void(0)' ?>"
-               <?= $cardLink ? '' : 'data-modal="' . $modalId . '" role="button"' ?>>
-              <?php if (!empty($card['badge'])): ?>
-                <span class="settings-card-badge"><?= htmlspecialchars($card['badge']) ?></span>
-              <?php endif; ?>
-              <div class="mini-icon">
-                <i class="<?= htmlspecialchars($card['icon']) ?>"></i>
+            <?php if (($card['type'] ?? '') === 'toggle'): ?>
+              <div class="mini-card settings-card settings-card--toggle">
+                <div class="mini-icon">
+                  <i class="<?= htmlspecialchars($card['icon']) ?>"></i>
+                </div>
+                <div class="settings-card-body">
+                  <div class="mini-title"><?= htmlspecialchars($card['title']) ?></div>
+                  <div class="mini-desc"><?= htmlspecialchars($card['desc']) ?></div>
+                </div>
+                <div class="form-check form-switch settings-card-switch" onclick="event.stopPropagation()">
+                  <input class="form-check-input" type="checkbox"
+                         data-toggle-config="<?= htmlspecialchars($card['toggle_key']) ?>"
+                         <?= !empty($card['toggle_checked']) ? 'checked' : '' ?>>
+                </div>
               </div>
-              <div>
-                <div class="mini-title"><?= htmlspecialchars($card['title']) ?></div>
-                <div class="mini-desc"><?= htmlspecialchars($card['desc']) ?></div>
-              </div>
-            </a>
+            <?php else: ?>
+              <?php $modalId = 'modal-' . $card['id']; ?>
+              <?php $toneClass = ($card['tone'] ?? '') === 'danger' ? ' settings-card--danger' : ''; ?>
+              <?php $cardLink = $card['link'] ?? ''; ?>
+              <a class="mini-card settings-card<?= $toneClass ?>"
+                 href="<?= $cardLink ? htmlspecialchars($cardLink) : 'javascript:void(0)' ?>"
+                 <?= $cardLink ? '' : 'data-modal="' . $modalId . '" role="button"' ?>>
+                <?php if (!empty($card['badge'])): ?>
+                  <span class="settings-card-badge"><?= htmlspecialchars($card['badge']) ?></span>
+                <?php endif; ?>
+                <div class="mini-icon">
+                  <i class="<?= htmlspecialchars($card['icon']) ?>"></i>
+                </div>
+                <div>
+                  <div class="mini-title"><?= htmlspecialchars($card['title']) ?></div>
+                  <div class="mini-desc"><?= htmlspecialchars($card['desc']) ?></div>
+                </div>
+              </a>
+            <?php endif; ?>
           <?php endforeach; ?>
         </div>
       </section>

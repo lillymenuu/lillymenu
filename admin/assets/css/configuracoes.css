@@ -95,6 +95,32 @@ body.dash-diggy .settings-card .mini-icon{
 body.dash-diggy .settings-card .mini-title{
   font-weight:700;
 }
+.settings-card--toggle{
+  align-items:center;
+  cursor:default;
+}
+.settings-card--toggle:hover{
+  transform:none;
+  box-shadow:0 2px 8px rgba(15,23,42,.04);
+  border-color:#e5e7eb;
+}
+.settings-card-body{
+  flex:1;
+  min-width:0;
+}
+.settings-card-switch{
+  flex-shrink:0;
+  margin-left:auto;
+}
+.settings-card-switch .form-check-input{
+  width:2.4em;
+  height:1.3em;
+  cursor:pointer;
+}
+.settings-card-switch .form-check-input:checked{
+  background-color:#9C5523;
+  border-color:#9C5523;
+}
 .btn-diggy-ghost{
   border:1px solid var(--settings-border);
   background:linear-gradient(180deg, #ffffff 0%, #f6f7fb 100%);
