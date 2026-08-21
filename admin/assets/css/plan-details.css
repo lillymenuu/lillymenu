@@ -1,0 +1,47 @@
+.plan-details-page{max-width:640px}
+
+.plan-card{background:#fff;border-radius:16px;padding:20px 22px;box-shadow:0 4px 16px rgba(15,23,42,.06);border:1px solid #e5e7eb;margin-bottom:18px}
+.plan-card-titulo{font-size:.95rem;font-weight:700;color:#0f172a;margin-bottom:4px}
+.plan-card-desc{font-size:.82rem;color:#64748b;margin-bottom:4px}
+.plan-card-vazio{padding:18px 0;text-align:center;color:#94a3b8;font-size:.88rem}
+
+.plan-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin-bottom:6px}
+.plan-badge--ativa{background:#f3e8ff;color:#7e22ce}
+.plan-badge--trial{background:#fff7ed;color:#c2410c}
+.plan-badge--suspensa{background:#fef2f2;color:#b91c1c}
+
+.plan-card-nome{font-size:1.15rem;font-weight:700;color:#0f172a}
+.plan-card-validade{display:flex;align-items:center;gap:6px;font-size:.82rem;color:#16a34a;margin-top:4px}
+.plan-dot{width:6px;height:6px;border-radius:50%;background:#16a34a;flex-shrink:0}
+
+.plan-card-rows{margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb}
+.plan-card-row{display:flex;justify-content:space-between;padding:8px 0;font-size:.88rem;color:#64748b}
+.plan-card-row strong{color:#0f172a}
+
+.plan-action-btn{width:100%;display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;font-weight:600;font-size:.88rem;color:#0f172a;cursor:pointer;font-family:inherit}
+.plan-action-btn:hover{background:#f8fafc}
+.plan-action-btn i:first-child{margin-right:4px;color:#9C5523}
+
+.plan-picker{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.plan-picker-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;cursor:pointer;font-size:.88rem}
+.plan-picker-item:has(input:checked){border-color:#9C5523;background:#fdf6f0}
+.plan-picker-nome{flex:1;font-weight:600;color:#0f172a}
+.plan-picker-valor{color:#64748b;font-size:.82rem}
+.plan-picker-msg{margin-top:10px;font-size:.82rem}
+.plan-picker-msg--ok{color:#047857}
+.plan-picker-msg--erro{color:#b91c1c}
+
+.plan-perfil-btn{margin-top:16px}
+
+.plan-historico-sub{font-size:.8rem;color:#64748b;margin-bottom:14px}
+.plan-historico-item{cursor:pointer;border-radius:10px;margin:0 -8px;padding:10px 8px!important;transition:background .15s}
+.plan-historico-item:hover{background:#f8fafc}
+
+.detalhe-transacao-topo{text-align:center;padding:8px 0 18px}
+.detalhe-transacao-icone{width:48px;height:48px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;color:#64748b}
+.detalhe-transacao-valor{font-size:1.3rem;font-weight:700;color:#0f172a}
+.detalhe-transacao-data{font-size:.8rem;color:#64748b;margin-top:2px}
+.detalhe-transacao-bloco{border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.detalhe-transacao-bloco-titulo{font-size:.78rem;font-weight:700;color:#0f172a;margin-bottom:8px}
+.detalhe-transacao-linha{display:flex;justify-content:space-between;padding:4px 0;font-size:.85rem;color:#64748b}
+.detalhe-transacao-linha strong{color:#0f172a;font-weight:600;text-align:right}

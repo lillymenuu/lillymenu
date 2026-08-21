@@ -982,6 +982,12 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
             <span>Avaliações</span>
           </a>
         </li>
+        <li>
+          <a href="plan-details" class="<?= $rota=='plan-details.php'?'active':'' ?>">
+            <i class="bi bi-credit-card"></i>
+            <span>Assinatura</span>
+          </a>
+        </li>
         <?php if ($mostrarConfiguracoes): ?>
           <li>
             <a href="configuracoes" class="<?= $rota=='configuracoes.php'?'active':'' ?>">

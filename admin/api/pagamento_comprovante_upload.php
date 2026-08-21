@@ -8,9 +8,14 @@ require_once __DIR__ . '/../../helpers/storage.php';
 gerenciamentoEnsureModule($conn);
 
 $lojaId = (int) ($_SESSION['loja_id'] ?? 0);
+// Permite chamar este endpoint tanto do gate de pagamento (admin/pagamento.php)
+// quanto da tela de auto-atendimento (admin/plan-details.php) e voltar pra
+// quem chamou — allow-list evita open redirect a partir do POST.
+$retornosPermitidos = ['pagamento', 'plan-details'];
+$retorno = in_array($_POST['retorno'] ?? '', $retornosPermitidos, true) ? $_POST['retorno'] : 'pagamento';
 
 if ($lojaId <= 0 || !isset($_FILES['comprovante']) || $_FILES['comprovante']['error'] !== UPLOAD_ERR_OK) {
-  header('Location: ../pagamento.php?msg=erro');
+  header('Location: ../' . $retorno . '.php?msg=erro');
   exit;
 }
 
@@ -26,7 +31,7 @@ if ($assinaturaId > 0) {
 }
 
 if ($cobrancaId <= 0) {
-  header('Location: ../pagamento.php?msg=erro');
+  header('Location: ../' . $retorno . '.php?msg=erro');
   exit;
 }
 
@@ -43,7 +48,7 @@ try {
 }
 
 if ($publicPath === null) {
-  header('Location: ../pagamento.php?msg=erro');
+  header('Location: ../' . $retorno . '.php?msg=erro');
   exit;
 }
 
@@ -60,5 +65,5 @@ $numeroSuporte = (string) ($stmt->fetchColumn() ?: '5585985049577');
 
 whatsEnviarMensagem($conn, 0, $numeroSuporte, "A loja \"{$lojaNome}\" enviou um comprovante de pagamento. Acesse Gerenciamento para revisar.");
 
-header('Location: ../pagamento.php?msg=enviado');
+header('Location: ../' . $retorno . '.php?msg=enviado');
 exit;
