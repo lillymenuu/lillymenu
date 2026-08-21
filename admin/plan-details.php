@@ -262,7 +262,16 @@ function formatMoneyBR(v){
 }
 function formatDateBR(v){
   if (!v) return '-';
-  const d = new Date(String(v).replace(' ', 'T'));
+  const s = String(v);
+  // Datas "puras" (sem hora, ex. vencimento) vem como YYYY-MM-DD — o construtor
+  // Date() trata esse formato como UTC meia-noite, o que exibe o dia anterior
+  // em fusos atras de UTC (Brasil). Formata direto da string pra nao depender
+  // de fuso horario nenhum.
+  const soData = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (soData && s.length <= 10) {
+    return `${soData[3]}/${soData[2]}/${soData[1]}`;
+  }
+  const d = new Date(s.replace(' ', 'T'));
   return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('pt-BR');
 }
 function formatDateTimeBR(v){
