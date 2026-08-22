@@ -295,7 +295,14 @@ const STEP_LABELS=['Contato','Entrega','Agendamento','Pagamento','Distribuição
 let _stepsCompleted=[]; // índices concluídos
 
 function renderStepsBar(current){
-  const dots=STEP_LABELS.map((label,i)=>{
+  /* "Agendamento" (indice 2) so faz sentido pra entrega/retirada agendada —
+     pedido imediato pula direto de Entrega pra Pagamento. Os indices dos
+     outros passos continuam os mesmos (0,1,3,4,5), so filtramos o que aparece. */
+  const isAgendada=tipoPed==='entrega_agendada'||tipoPed==='retirada_agendada';
+  const visibleIdx=STEP_LABELS.map((_,i)=>i).filter(i=>i!==2||isAgendada);
+
+  const dots=visibleIdx.map(i=>{
+    const label=STEP_LABELS[i];
     const done=_stepsCompleted.includes(i);
     const active=i===current;
     const dotClass=done?'done':(active?'active':'');
@@ -309,10 +316,10 @@ function renderStepsBar(current){
   /* desenha as linhas de progresso entre dots — a linha preenchida anima
      "andando" pro proximo status toda vez que a barra e redesenhada */
   const items=[];
-  for(let i=0;i<STEP_LABELS.length;i++){
-    items.push(dots[i]);
-    if(i<STEP_LABELS.length-1){
-      const filled=_stepsCompleted.includes(i);
+  for(let k=0;k<visibleIdx.length;k++){
+    items.push(dots[k]);
+    if(k<visibleIdx.length-1){
+      const filled=_stepsCompleted.includes(visibleIdx[k]);
       items.push(`<div class="steps-line"><div class="steps-line-fill${filled?' filled':''}"></div></div>`);
     }
   }
