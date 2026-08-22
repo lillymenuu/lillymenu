@@ -314,10 +314,17 @@ if ($caixaSelecionado) {
   $fechadoEm = $caixaSelecionado['fechado_em'] ?? null;
   $ate = $fechadoEm ?: date('Y-m-d H:i:s');
   if ($temCaixaPedido && $abertoEm) {
-    /* inclui pedidos do caixa E pedidos sem caixa (loja online) criados no período */
+    /* Inclui pedidos do caixa (pelo caixa_id) E pedidos sem caixa (loja online,
+       caixa_id NULL) criados no período. Pra esses ultimos, o piso e a meia-noite
+       do dia em que o caixa abriu — nao o horario exato de abertura — porque um
+       pedido online pode ter sido finalizado num intervalo em que nenhum caixa
+       estava aberto ainda (ex: entre o fechamento de ontem e a abertura de hoje),
+       e nesse caso ele fica com caixa_id NULL pra sempre; usar o horario exato
+       de abertura como piso faria esse pedido nunca aparecer em turno nenhum. */
+    $inicioOnline = date('Y-m-d', strtotime($abertoEm)) . ' 00:00:00';
     $wherePedidosParts[] = "(p.caixa_id = ? OR (p.caixa_id IS NULL AND $dataExpr BETWEEN ? AND ?))";
     $paramsPedidos[] = $caixaSelecionado['id'];
-    $paramsPedidos[] = $abertoEm;
+    $paramsPedidos[] = $inicioOnline;
     $paramsPedidos[] = $ate;
   } elseif ($temCaixaPedido) {
     $wherePedidosParts[] = "p.caixa_id = ?";
@@ -342,11 +349,16 @@ if ($caixaSelecionado) {
   }
   if ($temCaixaPedido && $abertoEm) {
     /* Pedidos do caixa: pelo caixa_id.
-       Pedidos online (caixa_id NULL): desde a abertura real do caixa ($abertoEm),
-       NÃO desde meia-noite — evita cortar pedidos online feitos no mesmo turno. */
+       Pedidos online (caixa_id NULL): desde a meia-noite do dia em que o caixa
+       abriu, nao desde o horario exato de abertura — um pedido online pode ter
+       sido finalizado num intervalo sem nenhum caixa aberto (ex: entre o
+       fechamento de ontem e a abertura de hoje) e fica com caixa_id NULL pra
+       sempre; usar o horario exato de abertura como piso fazia esse pedido
+       nunca aparecer em turno nenhum, mesmo sendo do mesmo dia. */
+    $inicioOnline = date('Y-m-d', strtotime($abertoEm)) . ' 00:00:00';
     $wherePedidosParts[] = "(p.caixa_id = ? OR (p.caixa_id IS NULL AND $dataExpr >= ?))";
     $paramsPedidos[] = $caixaAtual['id'];
-    $paramsPedidos[] = $abertoEm;
+    $paramsPedidos[] = $inicioOnline;
   } elseif ($temCaixaPedido) {
     $wherePedidosParts[] = "p.caixa_id = ?";
     $paramsPedidos[] = $caixaAtual['id'];
