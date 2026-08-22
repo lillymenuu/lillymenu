@@ -276,6 +276,72 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
 </header>
 
 <section class="hero" id="inicio">
+  <svg class="hero-network" style="top:-55px; left:-70px;" width="780" height="640" viewBox="0 0 440 360" fill="none">
+    <defs>
+      <radialGradient id="heroNodeGlowA" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#9C5523" stop-opacity=".16"/>
+        <stop offset="100%" stop-color="#9C5523" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <circle cx="150" cy="30" r="50" fill="url(#heroNodeGlowA)"/>
+    <circle cx="220" cy="160" r="50" fill="url(#heroNodeGlowA)"/>
+    <g stroke="#1f2328" stroke-opacity=".12" stroke-width="1.1">
+      <line x1="30" y1="50" x2="150" y2="30"/>
+      <line x1="150" y1="30" x2="260" y2="65"/>
+      <line x1="30" y1="50" x2="95" y2="140"/>
+      <line x1="150" y1="30" x2="95" y2="140"/>
+      <line x1="95" y1="140" x2="220" y2="160"/>
+      <line x1="260" y1="65" x2="220" y2="160"/>
+      <line x1="260" y1="65" x2="345" y2="110"/>
+      <line x1="220" y1="160" x2="345" y2="110"/>
+      <line x1="95" y1="140" x2="135" y2="240"/>
+      <line x1="220" y1="160" x2="305" y2="245"/>
+      <line x1="135" y1="240" x2="305" y2="245"/>
+      <line x1="30" y1="50" x2="45" y2="200"/>
+      <line x1="45" y1="200" x2="135" y2="240"/>
+      <line x1="345" y1="110" x2="395" y2="200"/>
+      <line x1="305" y1="245" x2="395" y2="200"/>
+    </g>
+    <g fill="#1f2328" fill-opacity=".32">
+      <circle cx="30" cy="50" r="3"/><circle cx="260" cy="65" r="3"/><circle cx="95" cy="140" r="3"/>
+      <circle cx="345" cy="110" r="3"/><circle cx="135" cy="240" r="3"/><circle cx="305" cy="245" r="3"/>
+      <circle cx="45" cy="200" r="3"/><circle cx="395" cy="200" r="3"/>
+    </g>
+    <g fill="#9C5523"><circle cx="150" cy="30" r="5.2"/><circle cx="220" cy="160" r="5.2"/></g>
+  </svg>
+  <svg class="hero-network" style="bottom:-55px; right:-70px; transform:scale(-1,-1);" width="780" height="640" viewBox="0 0 440 360" fill="none">
+    <defs>
+      <radialGradient id="heroNodeGlowB" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#9C5523" stop-opacity=".16"/>
+        <stop offset="100%" stop-color="#9C5523" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <circle cx="150" cy="30" r="50" fill="url(#heroNodeGlowB)"/>
+    <circle cx="220" cy="160" r="50" fill="url(#heroNodeGlowB)"/>
+    <g stroke="#1f2328" stroke-opacity=".12" stroke-width="1.1">
+      <line x1="30" y1="50" x2="150" y2="30"/>
+      <line x1="150" y1="30" x2="260" y2="65"/>
+      <line x1="30" y1="50" x2="95" y2="140"/>
+      <line x1="150" y1="30" x2="95" y2="140"/>
+      <line x1="95" y1="140" x2="220" y2="160"/>
+      <line x1="260" y1="65" x2="220" y2="160"/>
+      <line x1="260" y1="65" x2="345" y2="110"/>
+      <line x1="220" y1="160" x2="345" y2="110"/>
+      <line x1="95" y1="140" x2="135" y2="240"/>
+      <line x1="220" y1="160" x2="305" y2="245"/>
+      <line x1="135" y1="240" x2="305" y2="245"/>
+      <line x1="30" y1="50" x2="45" y2="200"/>
+      <line x1="45" y1="200" x2="135" y2="240"/>
+      <line x1="345" y1="110" x2="395" y2="200"/>
+      <line x1="305" y1="245" x2="395" y2="200"/>
+    </g>
+    <g fill="#1f2328" fill-opacity=".32">
+      <circle cx="30" cy="50" r="3"/><circle cx="260" cy="65" r="3"/><circle cx="95" cy="140" r="3"/>
+      <circle cx="345" cy="110" r="3"/><circle cx="135" cy="240" r="3"/><circle cx="305" cy="245" r="3"/>
+      <circle cx="45" cy="200" r="3"/><circle cx="395" cy="200" r="3"/>
+    </g>
+    <g fill="#9C5523"><circle cx="150" cy="30" r="5.2"/><circle cx="220" cy="160" r="5.2"/></g>
+  </svg>
   <div class="container hero-grid">
     <div class="hero-copy">
       <div class="hero-tag">
@@ -307,6 +373,8 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
       </div>
 
     </div>
+    <div class="lead-card-wrap">
+    <div class="lead-card-glow"></div>
     <form class="lead-card" id="teste" autocomplete="off">
       <div class="lead-field">
         <label><?= htmlspecialchars($leadNameLabel) ?> <span class="req">*</span></label>
@@ -404,6 +472,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
       <button class="btn btn-pink lead-submit" type="submit"><?= htmlspecialchars($leadButtonText) ?></button>
       <div class="lead-msg" id="leadMsg"></div>
     </form>
+    </div>
   </div>
 </section>
 
