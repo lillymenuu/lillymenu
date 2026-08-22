@@ -330,6 +330,7 @@ $painelJsVer = filemtime(__DIR__ . '/assets/js/painel.js');
                 <button type="button" class="preset-btn" data-preset="lapis"><span class="preset-dot" style="background:#5F3475"></span>Lapis</button>
                 <button type="button" class="preset-btn" data-preset="tinta"><span class="preset-dot" style="background:#545454"></span>Tinta</button>
                 <button type="button" class="preset-btn" data-preset="cobre"><span class="preset-dot" style="background:#9C5523"></span>Cobre</button>
+                <button type="button" class="preset-btn" data-preset="minimalista"><span class="preset-dot" style="background:#9C5523;border:1px solid #e2ddd5"></span>Minimalista (Branco &amp; Marrom)</button>
               </div>
               <div class="theme-config-grid" id="themeConfigFields">
                 <div>

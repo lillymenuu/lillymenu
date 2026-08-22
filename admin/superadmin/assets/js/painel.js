@@ -115,6 +115,17 @@
       theme_pink: '#D97B3F', theme_pink_dark: '#9C5523',
       theme_link: '#9C5523', theme_light_bg: '#FBF3EC',
       theme_text: '#2c1810', theme_muted: '#8a7060', theme_border: '#ecdfd2'
+    },
+    minimalista: {
+      /* Marrom padrao do sistema (mesma cor usada no painel admin) sobre
+         fundo branco/claro — estilo minimalista, sem preenchimentos solidos
+         grandes (nav e hero ja ficam brancos direto no CSS). */
+      theme_navy: '#9C5523', theme_navy_deep: '#7A3F10',
+      theme_blue_soft: '#f5ede5', theme_blue_soft_text: '#7A3F10',
+      theme_blue_btn: '#f5ede5', theme_blue_btn_text: '#7A3F10',
+      theme_pink: '#9C5523', theme_pink_dark: '#7A3F10',
+      theme_link: '#9C5523', theme_light_bg: '#faf9f7',
+      theme_text: '#1f2328', theme_muted: '#5b6169', theme_border: '#ece7e0'
     }
   };
 
