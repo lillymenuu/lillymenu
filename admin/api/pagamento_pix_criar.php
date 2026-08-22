@@ -82,12 +82,16 @@ if ($cobrancaExistente) {
   $cobrancaId = (int) $conn->lastInsertId();
 }
 
+// So chega aqui quando nao ha Pix em cache ainda valido (bloco acima ja teria
+// retornado). A chave de idempotencia inclui o timestamp pra cada tentativa ser
+// unica — se usasse so o id da cobranca, o Mercado Pago devolveria o MESMO Pix
+// (ja expirado) de uma tentativa anterior em vez de gerar um novo de verdade.
 $resultado = mpCriarPagamentoPix([
   'valor'              => (float) $plano['valor'],
   'descricao'          => 'Assinatura LillyMenu - ' . $plano['nome'],
   'email_pagador'      => $emailPagador,
   'referencia_externa' => (string) $cobrancaId,
-  'chave_idempotencia' => 'cobranca_' . $cobrancaId,
+  'chave_idempotencia' => 'cobranca_' . $cobrancaId . '_' . time(),
 ]);
 
 if (!$resultado['ok']) {
