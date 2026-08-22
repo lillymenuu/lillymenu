@@ -300,19 +300,20 @@ function renderStepsBar(current){
     const active=i===current;
     const dotClass=done?'done':(active?'active':'');
     const lblClass=done?'done':(active?'active':'');
-    const inner=done?'<i class="bi bi-check2" style="font-size:.6rem"></i>':'';
+    const inner=done?'<i class="bi bi-check2" style="font-size:.72rem"></i>':'';
     return `<div class="step-item">
       <div class="step-dot ${dotClass}">${inner}</div>
       <div class="step-label ${lblClass}">${label.replace('\n','<br>')}</div>
     </div>`;
   });
-  /* desenha as linhas de progresso entre dots */
+  /* desenha as linhas de progresso entre dots — a linha preenchida anima
+     "andando" pro proximo status toda vez que a barra e redesenhada */
   const items=[];
   for(let i=0;i<STEP_LABELS.length;i++){
     items.push(dots[i]);
     if(i<STEP_LABELS.length-1){
-      const lineColor=_stepsCompleted.includes(i)?'#7c3aed':'#e5e7eb';
-      items.push(`<div style="flex:1;height:2px;background:${lineColor};margin-top:9px;z-index:0"></div>`);
+      const filled=_stepsCompleted.includes(i);
+      items.push(`<div class="steps-line"><div class="steps-line-fill${filled?' filled':''}"></div></div>`);
     }
   }
   const bar=`<div class="steps-bar">${items.join('')}</div>`;
