@@ -291,7 +291,7 @@ function abrirPontosDoCarrinho(){
 }
 
 /* ── Steps bar ── */
-const STEP_LABELS=['Contato','Entrega','Agendamento','Pagamento','Distribuição\nde pagamento','Resumo'];
+const STEP_LABELS=['Contato','Entrega','Agendamento','Pagamento','Resumo'];
 let _stepsCompleted=[]; // índices concluídos
 
 function renderStepsBar(current){
@@ -2012,8 +2012,8 @@ function irStep(n){
     const bd=calcBreakdown();
     atualizarChkBreakdown(bd);
     if(btnProx){btnProx.textContent='Enviar pedido';btnProx.disabled=false;btnProx.style.opacity='1';}
-    marcarStepConcluido(3);marcarStepConcluido(4);
-    renderStepsBar(5); /* Resumo */
+    marcarStepConcluido(3);
+    renderStepsBar(4); /* Resumo */
     renderResumo(bd);
   }
 }
