@@ -17,6 +17,12 @@ try {
         $pass
     );
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Sem isso, NOW()/CURDATE()/CURRENT_TIMESTAMP do MySQL seguem o fuso do
+    // SERVIDOR do banco (SYSTEM), que raramente bate com o fuso do Brasil usado
+    // no PHP (date_default_timezone_set('America/Fortaleza') em varios arquivos)
+    // — causa pedidos/caixa com data/hora adiantada ou atrasada. -03:00 fixo
+    // porque o Brasil nao tem mais horario de verao.
+    $conn->exec("SET time_zone = '-03:00'");
 } catch (PDOException $e) {
     die("Erro na conexão: " . $e->getMessage());
 }
