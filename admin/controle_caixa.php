@@ -39,35 +39,25 @@ function buscarResumo(PDO $conn, string $joinPedidos, $where, array $params) {
 }
 
 function buscarPagamentos(PDO $conn, string $joinPedidos, $where, array $params) {
+  // LEFT JOIN (nao INNER + fallback global): um pedido sem linha em
+  // pedido_pagamentos (ex: insert que falhou silenciosamente em
+  // public/api/pedido_criar.php) precisa continuar entrando aqui via
+  // p.forma_pagamento, mesmo que OUTROS pedidos do mesmo periodo tenham
+  // pedido_pagamentos normalmente — antes, bastava 1 pedido com
+  // pedido_pagamentos pra esse pedido sumir da lista inteira.
   $stmt = $conn->prepare("
     SELECT
-      COALESCE(NULLIF(pp.forma, ''), 'outro') AS forma,
+      COALESCE(NULLIF(pp.forma, ''), NULLIF(p.forma_pagamento, ''), 'outro') AS forma,
       COUNT(*) AS quantidade,
-      COALESCE(SUM(pp.valor), 0) AS total
-    FROM pedido_pagamentos pp
-    JOIN pedidos p ON p.id = pp.pedido_id AND pp.loja_id = p.loja_id
+      COALESCE(SUM(COALESCE(pp.valor, p.total)), 0) AS total
+    FROM pedidos p
+    LEFT JOIN pedido_pagamentos pp ON pp.pedido_id = p.id AND pp.loja_id = p.loja_id
     {$joinPedidos}
     $where
-    GROUP BY forma
+    GROUP BY COALESCE(NULLIF(pp.forma, ''), NULLIF(p.forma_pagamento, ''), 'outro')
   ");
   $stmt->execute($params);
-  $pagamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-  if (!$pagamentos) {
-    $stmt = $conn->prepare("
-      SELECT
-        COALESCE(NULLIF(p.forma_pagamento, ''), 'outro') AS forma,
-        COUNT(*) AS quantidade,
-        COALESCE(SUM(p.total), 0) AS total
-      FROM pedidos p
-      {$joinPedidos}
-      $where
-      GROUP BY forma
-    ");
-    $stmt->execute($params);
-    $pagamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  }
-  return $pagamentos;
+  return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function tabelaFiadoLancamentosExiste(PDO $conn): bool {
@@ -518,42 +508,27 @@ try {
 $movimentosTabela = [];
 $movimentosTabelaErro = false;
 try {
+  // LEFT JOIN (nao INNER + fallback global — mesmo problema do buscarPagamentos
+  // acima): garante que todo pedido do periodo aparece na lista, mesmo os que
+  // nao tem linha em pedido_pagamentos, sem depender de TODOS os pedidos do
+  // periodo estarem nessa mesma situacao pro fallback disparar.
   $stmt = $conn->prepare("
     SELECT
-      CONCAT('pg-', pp.id) AS uid,
+      COALESCE(CONCAT('pg-', pp.id), CONCAT('pd-', p.id)) AS uid,
       LOWER(COALESCE(NULLIF(pp.forma, ''), NULLIF(p.forma_pagamento, ''), 'outro')) AS forma,
-      COALESCE(pp.valor, 0) AS valor,
+      COALESCE(pp.valor, p.total, 0) AS valor,
       COALESCE(pp.criado_em, p.criado_em) AS criado_em,
       CONCAT('Pedido #', {$pedidoCodigoExpr}) AS observacoes,
       'entrada' AS direcao,
       'LILLY' AS origem
-    FROM pedido_pagamentos pp
-    JOIN pedidos p ON p.id = pp.pedido_id AND p.loja_id = pp.loja_id
+    FROM pedidos p
+    LEFT JOIN pedido_pagamentos pp ON pp.pedido_id = p.id AND pp.loja_id = p.loja_id
     {$pedidoJoinCompetencia}
     $wherePedidos
     ORDER BY COALESCE(pp.criado_em, p.criado_em) DESC
   ");
   $stmt->execute($paramsPedidos);
   $movimentosTabela = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-  if (!$movimentosTabela) {
-    $stmt = $conn->prepare("
-      SELECT
-        CONCAT('pd-', p.id) AS uid,
-        LOWER(COALESCE(NULLIF(p.forma_pagamento, ''), 'outro')) AS forma,
-        COALESCE(p.total, 0) AS valor,
-        p.criado_em AS criado_em,
-        CONCAT('Pedido #', {$pedidoCodigoExpr}) AS observacoes,
-        'entrada' AS direcao,
-        'LILLY' AS origem
-      FROM pedidos p
-      {$pedidoJoinCompetencia}
-      $wherePedidos
-      ORDER BY p.criado_em DESC
-    ");
-    $stmt->execute($paramsPedidos);
-    $movimentosTabela = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  }
 
   $movimentosTabela = array_merge(
     $movimentosTabela,
