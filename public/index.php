@@ -94,6 +94,17 @@ try {
 } catch (Exception $e) {
   $planosDisponiveis = [];
 }
+// Evita plano repetido na listagem (ex: dois registros com o mesmo nome
+// cadastrados por engano) — mantem so a primeira ocorrencia de cada nome.
+$planosVistos = [];
+$planosDisponiveis = array_values(array_filter($planosDisponiveis, function ($p) use (&$planosVistos) {
+  $chave = mb_strtolower(trim((string) $p['nome']));
+  if (isset($planosVistos[$chave])) {
+    return false;
+  }
+  $planosVistos[$chave] = true;
+  return true;
+}));
 
 /* ── Solucoes (linhas alternadas) ── */
 $solucoesTitulo = landing_get($conn, 'solucoes_titulo', 'Solucoes para a sua gestao');
@@ -391,6 +402,8 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
           <input type="text" name="contato" id="leadWhatsapp" required inputmode="tel" autocomplete="tel">
         </div>
       </div>
+      <div class="lead-extra-wrap" id="leadExtraWrap">
+      <div class="lead-extra-inner">
       <div class="lead-field">
         <label><?= htmlspecialchars($leadCompanyLabel) ?> <span class="req">*</span></label>
         <input type="text" name="empresa" required>
@@ -471,6 +484,8 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
       </label>
       <button class="btn btn-pink lead-submit" type="submit"><?= htmlspecialchars($leadButtonText) ?></button>
       <div class="lead-msg" id="leadMsg"></div>
+      </div>
+      </div>
     </form>
     </div>
   </div>

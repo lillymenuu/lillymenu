@@ -51,6 +51,21 @@ backTop?.addEventListener('click', () => {
 
 const leadForm = document.getElementById('teste');
 const leadMsg = document.getElementById('leadMsg');
+
+/* Formulario comeca compacto (so Nome/E-mail/WhatsApp visiveis) e o resto
+   "cresce" suavemente assim que o cliente comeca a preencher, pra nao
+   assustar com um formulario gigante logo de cara. */
+const leadExtraWrap = document.getElementById('leadExtraWrap');
+if (leadExtraWrap && leadForm) {
+  const revelarLeadExtra = () => leadExtraWrap.classList.add('show');
+  ['nome', 'email', 'contato'].forEach((campo) => {
+    const el = leadForm.querySelector(`[name="${campo}"]`);
+    el?.addEventListener('input', revelarLeadExtra, { once: true });
+    el?.addEventListener('focus', () => {
+      if (campo === 'contato') revelarLeadExtra();
+    });
+  });
+}
 const leadWhatsapp = document.getElementById('leadWhatsapp');
 const leadCnpj = document.getElementById('leadCnpj');
 const leadCep = document.getElementById('leadCep');
@@ -86,6 +101,26 @@ if (leadAddressModal) {
   });
 }
 
+/* Menu do dropdown usa position:fixed (nao absolute) pra nao ser cortado
+   por nenhum ancestral com overflow:hidden/auto (ex: o card do lead com o
+   efeito de brilho, ou o modal com scroll interno) — a posicao e calculada
+   na hora de abrir, com base no botao. */
+function posicionarLeadDropMenu(btn, menu){
+  const rect = btn.getBoundingClientRect();
+  const menuMaxHeight = 220;
+  const espacoAbaixo = window.innerHeight - rect.bottom;
+  const abrirPraCima = espacoAbaixo < menuMaxHeight + 12 && rect.top > menuMaxHeight + 12;
+  menu.style.left = rect.left + 'px';
+  menu.style.width = rect.width + 'px';
+  if (abrirPraCima) {
+    menu.style.top = '';
+    menu.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+  } else {
+    menu.style.bottom = '';
+    menu.style.top = (rect.bottom + 6) + 'px';
+  }
+}
+
 document.querySelectorAll('.lead-dropdown').forEach((dropdown) => {
   const btn = dropdown.querySelector('.lead-drop-btn');
   const menu = dropdown.querySelector('.lead-drop-menu');
@@ -99,7 +134,9 @@ document.querySelectorAll('.lead-dropdown').forEach((dropdown) => {
       if (openEl !== dropdown) openEl.classList.remove('open');
     });
     dropdown.classList.toggle('open');
-    btn.setAttribute('aria-expanded', dropdown.classList.contains('open') ? 'true' : 'false');
+    const isOpen = dropdown.classList.contains('open');
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    if (isOpen) posicionarLeadDropMenu(btn, menu);
   });
 
   menu.querySelectorAll('.lead-drop-item').forEach((item) => {
@@ -116,6 +153,11 @@ document.querySelectorAll('.lead-dropdown').forEach((dropdown) => {
 document.addEventListener('click', () => {
   document.querySelectorAll('.lead-dropdown.open').forEach((openEl) => openEl.classList.remove('open'));
 });
+/* fecha o menu se rolar a pagina ou qualquer contêiner com scroll (ex: o
+   modal), pra nao deixar o menu "flutuando" fora do lugar certo */
+window.addEventListener('scroll', () => {
+  document.querySelectorAll('.lead-dropdown.open').forEach((openEl) => openEl.classList.remove('open'));
+}, true);
 
 function formatLeadWhatsapp(value){
   let digits = (value || '').replace(/\D/g,'');
