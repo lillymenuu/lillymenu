@@ -316,20 +316,6 @@ $painelJsVer = filemtime(__DIR__ . '/assets/js/painel.js');
             <div class="landing-section landing-tab-section" data-tab="tema">
               <h4>Tema da landing</h4>
               <div class="preset-row">
-                <button type="button" class="preset-btn" data-preset="navy"><span class="preset-dot" style="background:#102a43"></span>Navy</button>
-                <button type="button" class="preset-btn" data-preset="azul"><span class="preset-dot" style="background:#1d4ed8"></span>Azul</button>
-                <button type="button" class="preset-btn" data-preset="verde"><span class="preset-dot" style="background:#15803d"></span>Verde</button>
-                <button type="button" class="preset-btn" data-preset="preto"><span class="preset-dot" style="background:#0f172a"></span>Preto</button>
-                <button type="button" class="preset-btn" data-preset="laranja"><span class="preset-dot" style="background:#c2410c"></span>Laranja</button>
-                <button type="button" class="preset-btn" data-preset="rosa"><span class="preset-dot" style="background:#9C5523"></span>Marrom</button>
-                <button type="button" class="preset-btn" data-preset="indigo"><span class="preset-dot" style="background:#3730a3"></span>Indigo</button>
-                <button type="button" class="preset-btn" data-preset="teal"><span class="preset-dot" style="background:#0f766e"></span>Teal</button>
-                <button type="button" class="preset-btn" data-preset="dourado"><span class="preset-dot" style="background:#b45309"></span>Dourado</button>
-                <button type="button" class="preset-btn" data-preset="fireside"><span class="preset-dot" style="background:#E76814"></span>Fireside</button>
-                <button type="button" class="preset-btn" data-preset="safira"><span class="preset-dot" style="background:#0474C4"></span>Safira</button>
-                <button type="button" class="preset-btn" data-preset="lapis"><span class="preset-dot" style="background:#5F3475"></span>Lapis</button>
-                <button type="button" class="preset-btn" data-preset="tinta"><span class="preset-dot" style="background:#545454"></span>Tinta</button>
-                <button type="button" class="preset-btn" data-preset="cobre"><span class="preset-dot" style="background:#9C5523"></span>Cobre</button>
                 <button type="button" class="preset-btn" data-preset="minimalista"><span class="preset-dot" style="background:#9C5523;border:1px solid #e2ddd5"></span>Minimalista (Branco &amp; Marrom)</button>
               </div>
               <div class="theme-config-grid" id="themeConfigFields">
