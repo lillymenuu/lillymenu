@@ -269,6 +269,7 @@ p{margin:0}
   .cta-card-btn{width:100%;justify-content:center}
   .footer-grid{grid-template-columns:1fr 1fr;gap:28px 16px}
   .footer-about,.footer-col--social{grid-column:1 / -1}
+  .footer-bottom{padding:18px 0 36px}
   .whatsapp-float{width:48px;height:48px}
   .whatsapp-float svg{width:22px;height:22px}
   .back-top{width:42px;height:42px}
