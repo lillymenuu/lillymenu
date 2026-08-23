@@ -76,6 +76,7 @@ $campos = [
   'cta_title',
   'cta_text',
   'cta_button_link',
+  'cta_button_text',
   'cta_item1_titulo', 'cta_item1_texto',
   'cta_item2_titulo', 'cta_item2_texto',
   'cta_item3_titulo', 'cta_item3_texto',

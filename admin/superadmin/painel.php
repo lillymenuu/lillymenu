@@ -102,6 +102,7 @@ $landing = [
   'cta_title' => landingGet($conn, 'cta_title', 'Fale com um especialista'),
   'cta_text' => landingGet($conn, 'cta_text', 'Nosso especialista vai entrar em contato com voce para tirar suas duvidas e oferecer toda a atencao que voce merece.'),
   'cta_button_link' => landingGet($conn, 'cta_button_link', '#contato'),
+  'cta_button_text' => landingGet($conn, 'cta_button_text', 'Falar agora'),
   'cta_item1_titulo' => landingGet($conn, 'cta_item1_titulo', 'Junte-se a nossa comunidade'),
   'cta_item1_texto' => landingGet($conn, 'cta_item1_texto', 'Faca parte de uma rede de donos de negocio que se apoiam mutuamente.'),
   'cta_item2_titulo' => landingGet($conn, 'cta_item2_titulo', '{brand} News: fique a frente no mercado'),
@@ -507,6 +508,10 @@ $painelJsVer = filemtime(__DIR__ . '/assets/js/painel.js');
                 <div>
                   <label class="form-label">Titulo do CTA final</label>
                   <input class="form-control" type="text" name="cta_title" value="<?= htmlspecialchars($landing['cta_title']) ?>">
+                </div>
+                <div>
+                  <label class="form-label">Texto do botao do CTA</label>
+                  <input class="form-control" type="text" name="cta_button_text" value="<?= htmlspecialchars($landing['cta_button_text']) ?>">
                 </div>
                 <div>
                   <label class="form-label">Link do botao do CTA</label>

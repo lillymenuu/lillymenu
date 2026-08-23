@@ -185,8 +185,12 @@ p{margin:0}
 /* ── CTA especialista ── */
 .cta-especialista{padding:20px 0 90px}
 .cta-card{background:radial-gradient(circle at 80% 20%, rgba(255,255,255,.04), transparent 60%), var(--navy);border-radius:22px;padding:46px 50px;color:#fff}
+.cta-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.cta-card-head-text{flex:1;min-width:240px}
 .cta-card h2{font-size:28px;margin-bottom:12px}
 .cta-card p{color:#c7d2de;font-size:14.5px;line-height:1.6;max-width:520px;margin-bottom:30px}
+.cta-card-btn{flex-shrink:0;background:#fff;color:var(--navy);white-space:nowrap}
+.cta-card-btn:hover{background:var(--light-bg)}
 .cta-items{display:flex;align-items:flex-start;gap:0;border-top:1px solid rgba(255,255,255,.14);padding-top:30px}
 .cta-item{display:flex;align-items:flex-start;gap:14px;flex:1;padding-right:24px}
 .cta-item-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -262,7 +266,9 @@ p{margin:0}
   .segmentos-overlay h2{font-size:22px}
   .segmentos-card{padding:22px}
   .cta-card{padding:30px 24px}
-  .footer-grid{grid-template-columns:1fr;gap:24px}
+  .cta-card-btn{width:100%;justify-content:center}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:28px 16px}
+  .footer-about,.footer-col--social{grid-column:1 / -1}
   .whatsapp-float{width:48px;height:48px}
   .whatsapp-float svg{width:22px;height:22px}
   .back-top{width:42px;height:42px}

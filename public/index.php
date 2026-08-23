@@ -138,6 +138,7 @@ $segmentosTitulo = str_replace('{brand}', $brand, $segmentosTitulo);
 $ctaTitle = landing_get($conn, 'cta_title', 'Fale com um especialista');
 $ctaText = landing_get($conn, 'cta_text', 'Nosso especialista vai entrar em contato com voce para tirar suas duvidas e oferecer toda a atencao que voce merece.');
 $ctaButtonLink = landing_get($conn, 'cta_button_link', '#contato');
+$ctaButtonText = landing_get($conn, 'cta_button_text', 'Falar agora');
 $ctaItensDefault = [
   ['titulo' => 'Junte-se a nossa comunidade', 'texto' => 'Faca parte de uma rede de donos de negocio que se apoiam mutuamente.'],
   ['titulo' => '{brand} News: fique a frente no mercado', 'texto' => 'Receba atualizacoes sobre o mercado de alimentacao e delivery.'],
@@ -818,8 +819,13 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
 <section class="cta-especialista" id="contato">
   <div class="container">
     <div class="cta-card reveal">
-      <h2 data-field="cta_title"><?= htmlspecialchars($ctaTitle) ?></h2>
-      <p data-field="cta_text"><?= htmlspecialchars($ctaText) ?></p>
+      <div class="cta-card-head">
+        <div class="cta-card-head-text">
+          <h2 data-field="cta_title"><?= htmlspecialchars($ctaTitle) ?></h2>
+          <p data-field="cta_text"><?= htmlspecialchars($ctaText) ?></p>
+        </div>
+        <a class="btn cta-card-btn" href="<?= htmlspecialchars($ctaButtonLink) ?>" data-field-href="cta_button_link" data-field="cta_button_text"><?= htmlspecialchars($ctaButtonText) ?></a>
+      </div>
       <div class="cta-items">
         <?php foreach ($ctaItens as $i => $item): $n = $i + 1; ?>
           <?php if ($i > 0): ?><div class="cta-divider"></div><?php endif; ?>
@@ -880,7 +886,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
       <?php endforeach; ?>
       </div>
     </div>
-    <div class="footer-col">
+    <div class="footer-col footer-col--social">
       <h5>Acompanhe a <span data-field="brand"><?= htmlspecialchars($brand) ?></span></h5>
       <div class="footer-social">
         <a href="<?= htmlspecialchars($footerSocialInstagram) ?>" aria-label="Instagram" data-field-href="footer_social_instagram">
