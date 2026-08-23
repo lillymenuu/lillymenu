@@ -241,7 +241,7 @@ $painelJsVer = filemtime(__DIR__ . '/assets/js/painel.js');
           <h3>Landing page</h3>
           <p>Atualize os textos, imagens e o tema da pagina principal (public/index.php).</p>
         </div>
-        <a class="action-btn ghost" href="../public/index.php" target="_blank" rel="noopener">Visualizar</a>
+        <a class="action-btn ghost" href="../../public/index.php" target="_blank" rel="noopener">Visualizar</a>
       </div>
       <div class="landing-panel-body">
       <form id="landingForm" enctype="multipart/form-data">
@@ -829,10 +829,10 @@ $painelJsVer = filemtime(__DIR__ . '/assets/js/painel.js');
       <div class="landing-preview-col">
         <div class="landing-preview-head">
           <span>Preview em tempo real</span>
-          <a href="../public/index.php" target="_blank" rel="noopener">Abrir em nova aba</a>
+          <a href="../../public/index.php" target="_blank" rel="noopener">Abrir em nova aba</a>
         </div>
         <div class="landing-preview-frame-wrap">
-          <iframe id="landingPreviewFrame" src="../public/index.php" title="Preview da landing page"></iframe>
+          <iframe id="landingPreviewFrame" src="../../public/index.php" title="Preview da landing page"></iframe>
         </div>
       </div>
       </div>
