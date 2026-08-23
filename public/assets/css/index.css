@@ -185,7 +185,7 @@ p{margin:0}
 /* ── CTA especialista ── */
 .cta-especialista{padding:20px 0 90px}
 .cta-card{background:radial-gradient(circle at 80% 20%, rgba(255,255,255,.04), transparent 60%), var(--navy);border-radius:22px;padding:46px 50px;color:#fff}
-.cta-card-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.cta-card-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:16px}
 .cta-card-head-text{flex:1;min-width:240px}
 .cta-card h2{font-size:28px;margin-bottom:12px}
 .cta-card p{color:#c7d2de;font-size:14.5px;line-height:1.6;max-width:520px;margin-bottom:30px}
