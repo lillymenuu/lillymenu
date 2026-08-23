@@ -52,17 +52,19 @@ backTop?.addEventListener('click', () => {
 const leadForm = document.getElementById('teste');
 const leadMsg = document.getElementById('leadMsg');
 
-/* Formulario comeca compacto (so Nome/E-mail/WhatsApp visiveis) e o resto
-   "cresce" suavemente assim que o cliente comeca a preencher, pra nao
-   assustar com um formulario gigante logo de cara. Anima max-height com a
-   altura REAL medida via JS (nao um valor fixo grande) — assim a transicao
-   de 1.1s fica proporcional ao conteudo, em vez de "pular" quase instantaneo
-   (grid-template-rows com fr nao anima de forma confiavel em todo navegador).
-   Depois que a animacao termina, o max-height vira "none" pra nao cortar o
-   conteudo se ele mudar de altura depois (ex: mensagem de erro aparecendo). */
+/* Formulario comeca compacto (Nome/E-mail/WhatsApp/Empresa visiveis) e o
+   resto "cresce" suavemente assim que o cliente preenche "Nome da empresa",
+   pra nao assustar com um formulario gigante logo de cara. Anima max-height
+   com a altura REAL medida via JS (nao um valor fixo grande) — assim a
+   transicao de 1.1s fica proporcional ao conteudo, em vez de "pular" quase
+   instantaneo (grid-template-rows com fr nao anima de forma confiavel em
+   todo navegador). Depois que a animacao termina, o max-height vira "none"
+   pra nao cortar o conteudo se ele mudar de altura depois (ex: mensagem de
+   erro aparecendo). */
 const leadExtraWrap = document.getElementById('leadExtraWrap');
 if (leadExtraWrap && leadForm) {
   const leadExtraInner = leadExtraWrap.querySelector('.lead-extra-inner');
+  const leadEmpresaInput = leadForm.querySelector('[name="empresa"]');
   let leadExtraRevelado = false;
   const revelarLeadExtra = () => {
     if (leadExtraRevelado || !leadExtraInner) return;
@@ -72,12 +74,8 @@ if (leadExtraWrap && leadForm) {
       leadExtraWrap.style.maxHeight = 'none';
     }, { once: true });
   };
-  ['nome', 'email', 'contato'].forEach((campo) => {
-    const el = leadForm.querySelector(`[name="${campo}"]`);
-    el?.addEventListener('input', revelarLeadExtra, { once: true });
-    el?.addEventListener('focus', () => {
-      if (campo === 'contato') revelarLeadExtra();
-    });
+  leadEmpresaInput?.addEventListener('input', () => {
+    if (leadEmpresaInput.value.trim() !== '') revelarLeadExtra();
   });
 }
 const leadWhatsapp = document.getElementById('leadWhatsapp');

@@ -402,12 +402,12 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
           <input type="text" name="contato" id="leadWhatsapp" required inputmode="tel" autocomplete="tel">
         </div>
       </div>
-      <div class="lead-extra-wrap" id="leadExtraWrap">
-      <div class="lead-extra-inner">
       <div class="lead-field">
         <label><?= htmlspecialchars($leadCompanyLabel) ?> <span class="req">*</span></label>
         <input type="text" name="empresa" required>
       </div>
+      <div class="lead-extra-wrap" id="leadExtraWrap">
+      <div class="lead-extra-inner">
       <div class="lead-field">
         <label>Escolha o seu plano <span class="req">*</span></label>
         <div class="lead-dropdown" data-name="plano">
