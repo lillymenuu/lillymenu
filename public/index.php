@@ -248,14 +248,14 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
     <div class="brand">
       <div class="brand-logo">
         <?php if ($logoImage): ?>
-          <img src="<?= htmlspecialchars(landing_asset($logoImage)) ?>" alt="logo">
+          <img src="<?= htmlspecialchars(landing_asset($logoImage)) ?>" alt="logo" data-media-slot="logo_image">
         <?php else: ?>
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2"><path d="M4 8a4 4 0 014-4h2M20 16a4 4 0 01-4 4h-2M8 4L5 7l3 3M16 20l3-3-3-3"/></svg>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" data-media-slot="logo_image"><path d="M4 8a4 4 0 014-4h2M20 16a4 4 0 01-4 4h-2M8 4L5 7l3 3M16 20l3-3-3-3"/></svg>
         <?php endif; ?>
       </div>
-      <span class="brand-title"><?= htmlspecialchars($brand) ?></span>
+      <span class="brand-title" data-field="brand"><?= htmlspecialchars($brand) ?></span>
     </div>
-    <nav class="nav-links">
+    <nav class="nav-links" data-list="nav_links_items">
       <?php foreach ($navLinksItens as $item): ?>
         <a href="<?= htmlspecialchars($item['url']) ?>"><?= htmlspecialchars($item['label']) ?></a>
       <?php endforeach; ?>
@@ -276,7 +276,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
        
         <a class="mobile-nav-btn mobile-nav-btn--gray" href="<?= htmlspecialchars($navCtaSecondaryLink) ?>"><?= htmlspecialchars($navCtaSecondaryText) ?> conta</a>
       </div>
-      <div class="nav-links">
+      <div class="nav-links" data-list="nav_links_items">
         <?php foreach ($navLinksItens as $item): ?>
           <a href="<?= htmlspecialchars($item['url']) ?>"><?= htmlspecialchars($item['label']) ?></a>
         <?php endforeach; ?>
@@ -357,29 +357,29 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
     <div class="hero-copy">
       <div class="hero-tag">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg>
-        <?= htmlspecialchars($heroBadge) ?>
+        <span data-field="hero_badge"><?= htmlspecialchars($heroBadge) ?></span>
       </div>
-      <h1><?= nl2br(htmlspecialchars($heroTitle)) ?></h1>
-      <p><?= htmlspecialchars($heroSubtitle) ?></p>
+      <h1 data-field="hero_title" data-nl2br="1"><?= nl2br(htmlspecialchars($heroTitle)) ?></h1>
+      <p data-field="hero_subtitle"><?= htmlspecialchars($heroSubtitle) ?></p>
       
       <div class="hero-points">
         <div class="hero-point">
           <span class="hero-point-check">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
           </span>
-          <span><?= htmlspecialchars($heroStat1) ?></span>
+          <span data-field="hero_stat1"><?= htmlspecialchars($heroStat1) ?></span>
         </div>
         <div class="hero-point">
           <span class="hero-point-check">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
           </span>
-          <span><?= htmlspecialchars($heroStat2) ?></span>
+          <span data-field="hero_stat2"><?= htmlspecialchars($heroStat2) ?></span>
         </div>
          <div class="hero-point">
           <span class="hero-point-check">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
           </span>
-          <span><?= htmlspecialchars($heroStat3) ?></span>
+          <span data-field="hero_stat3"><?= htmlspecialchars($heroStat3) ?></span>
         </div>
       </div>
 
@@ -388,22 +388,22 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
     <div class="lead-card-glow"></div>
     <form class="lead-card" id="teste" autocomplete="off">
       <div class="lead-field">
-        <label><?= htmlspecialchars($leadNameLabel) ?> <span class="req">*</span></label>
+        <label><span data-field="lead_name_label"><?= htmlspecialchars($leadNameLabel) ?></span> <span class="req">*</span></label>
         <input type="text" name="nome" required>
       </div>
       <div class="lead-field">
-        <label><?= htmlspecialchars($leadEmailLabel) ?> <span class="req">*</span></label>
+        <label><span data-field="lead_email_label"><?= htmlspecialchars($leadEmailLabel) ?></span> <span class="req">*</span></label>
         <input type="email" name="email" required>
       </div>
       <div class="lead-field">
-        <label><?= htmlspecialchars($leadWhatsappLabel) ?> <span class="req">*</span></label>
+        <label><span data-field="lead_whatsapp_label"><?= htmlspecialchars($leadWhatsappLabel) ?></span> <span class="req">*</span></label>
         <div class="phone-field">
           <span class="phone-prefix">BR +55</span>
           <input type="text" name="contato" id="leadWhatsapp" required inputmode="tel" autocomplete="tel">
         </div>
       </div>
       <div class="lead-field">
-        <label><?= htmlspecialchars($leadCompanyLabel) ?> <span class="req">*</span></label>
+        <label><span data-field="lead_company_label"><?= htmlspecialchars($leadCompanyLabel) ?></span> <span class="req">*</span></label>
         <input type="text" name="empresa" required>
       </div>
       <div class="lead-extra-wrap" id="leadExtraWrap">
@@ -447,7 +447,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
         </div>
       </div>
       <div class="lead-field">
-        <label><?= htmlspecialchars($leadRevenueLabel) ?> <span class="req">*</span></label>
+        <label><span data-field="lead_revenue_label"><?= htmlspecialchars($leadRevenueLabel) ?></span> <span class="req">*</span></label>
         <?php $revOptions = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string)$leadRevenueOptions)))); ?>
         <div class="lead-dropdown" data-name="faturamento">
           <button type="button" class="lead-drop-btn" aria-expanded="false">
@@ -463,7 +463,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
         </div>
       </div>
       <div class="lead-field">
-        <label><?= htmlspecialchars($leadSegmentLabel) ?></label>
+        <label><span data-field="lead_segment_label"><?= htmlspecialchars($leadSegmentLabel) ?></span></label>
         <?php $segOptions = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string)$leadSegmentOptions)))); ?>
         <div class="lead-dropdown" data-name="segmento">
           <button type="button" class="lead-drop-btn" aria-expanded="false">
@@ -480,9 +480,9 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
       </div>
       <label class="lead-checkbox">
         <input type="checkbox" id="leadAceite" required>
-        <span><?= htmlspecialchars($leadPrivacyText) ?></span>
+        <span data-field="lead_privacy_text"><?= htmlspecialchars($leadPrivacyText) ?></span>
       </label>
-      <button class="btn btn-pink lead-submit" type="submit"><?= htmlspecialchars($leadButtonText) ?></button>
+      <button class="btn btn-pink lead-submit" type="submit" data-field="lead_button_text"><?= htmlspecialchars($leadButtonText) ?></button>
       <div class="lead-msg" id="leadMsg"></div>
       </div>
       </div>
@@ -765,22 +765,22 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
 
 <section class="solucoes" id="solucoes">
   <div class="container">
-    <h2 class="solucoes-title reveal"><?= htmlspecialchars($solucoesTitulo) ?></h2>
+    <h2 class="solucoes-title reveal" data-field="solucoes_titulo"><?= htmlspecialchars($solucoesTitulo) ?></h2>
   </div>
-  <?php foreach ($solucoesList as $i => $sol): ?>
+  <?php foreach ($solucoesList as $i => $sol): $n = $i + 1; ?>
     <div class="solucao-row<?= $i % 2 === 1 ? ' reverse' : '' ?>">
       <div class="solucao-media">
         <?php if (!empty($sol['imagem'])): ?>
-          <img src="<?= htmlspecialchars(landing_asset($sol['imagem'])) ?>" alt="<?= htmlspecialchars($sol['titulo']) ?>">
+          <img src="<?= htmlspecialchars(landing_asset($sol['imagem'])) ?>" alt="<?= htmlspecialchars($sol['titulo']) ?>" data-media-slot="solucao<?= $n ?>_imagem">
         <?php else: ?>
-          <div class="solucao-media-placeholder">Envie a imagem no painel</div>
+          <div class="solucao-media-placeholder" data-media-slot="solucao<?= $n ?>_imagem">Envie a imagem no painel</div>
         <?php endif; ?>
       </div>
       <div class="solucao-text reveal">
-        <h3><?= htmlspecialchars($sol['titulo']) ?></h3>
-        <p><?= nl2br(htmlspecialchars($sol['texto'])) ?></p>
-        <a class="solucao-link" href="<?= htmlspecialchars($solucoesLinkUrl) ?>">
-          <?= htmlspecialchars($solucoesLinkTexto) ?>
+        <h3 data-field="solucao<?= $n ?>_titulo"><?= htmlspecialchars($sol['titulo']) ?></h3>
+        <p data-field="solucao<?= $n ?>_texto" data-nl2br="1"><?= nl2br(htmlspecialchars($sol['texto'])) ?></p>
+        <a class="solucao-link" href="<?= htmlspecialchars($solucoesLinkUrl) ?>" data-field-href="solucoes_link_url">
+          <span data-field="solucoes_link_texto"><?= htmlspecialchars($solucoesLinkTexto) ?></span>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
       </div>
@@ -791,19 +791,19 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
 <section class="segmentos" id="segmentos">
   <div class="segmentos-media">
     <?php if ($segmentosImagem): ?>
-      <img src="<?= htmlspecialchars(landing_asset($segmentosImagem)) ?>" alt="Segmentos">
+      <img src="<?= htmlspecialchars(landing_asset($segmentosImagem)) ?>" alt="Segmentos" data-media-slot="segmentos_imagem">
     <?php else: ?>
-      <div class="segmentos-media-placeholder">Envie a imagem no painel</div>
+      <div class="segmentos-media-placeholder" data-media-slot="segmentos_imagem">Envie a imagem no painel</div>
     <?php endif; ?>
     <div class="segmentos-overlay">
       <div class="container">
-        <h2 class="reveal"><?= htmlspecialchars($segmentosTitulo) ?></h2>
+        <h2 class="reveal" data-field="segmentos_titulo"><?= htmlspecialchars($segmentosTitulo) ?></h2>
       </div>
     </div>
   </div>
   <div class="container">
     <div class="segmentos-card reveal">
-      <div class="segmentos-grid">
+      <div class="segmentos-grid" data-list="segmentos_items">
         <?php foreach ($segmentosList as $segmento): ?>
           <div class="segmento-item">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg>
@@ -818,18 +818,18 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
 <section class="cta-especialista" id="contato">
   <div class="container">
     <div class="cta-card reveal">
-      <h2><?= htmlspecialchars($ctaTitle) ?></h2>
-      <p><?= htmlspecialchars($ctaText) ?></p>
+      <h2 data-field="cta_title"><?= htmlspecialchars($ctaTitle) ?></h2>
+      <p data-field="cta_text"><?= htmlspecialchars($ctaText) ?></p>
       <div class="cta-items">
-        <?php foreach ($ctaItens as $i => $item): ?>
+        <?php foreach ($ctaItens as $i => $item): $n = $i + 1; ?>
           <?php if ($i > 0): ?><div class="cta-divider"></div><?php endif; ?>
           <div class="cta-item">
             <div class="cta-item-icon">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.5-3.2 4.2-4.6 7-4.6s5.5 1.4 7 4.6"/></svg>
             </div>
             <div>
-              <div class="cta-item-title"><?= htmlspecialchars($item['titulo']) ?></div>
-              <div class="cta-item-text"><?= htmlspecialchars($item['texto']) ?></div>
+              <div class="cta-item-title" data-field="cta_item<?= $n ?>_titulo"><?= htmlspecialchars($item['titulo']) ?></div>
+              <div class="cta-item-text" data-field="cta_item<?= $n ?>_texto"><?= htmlspecialchars($item['texto']) ?></div>
             </div>
           </div>
         <?php endforeach; ?>
@@ -844,50 +844,52 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
       <div class="brand footer-brand">
         <div class="brand-logo">
           <?php if ($logoImage): ?>
-            <img src="<?= htmlspecialchars(landing_asset($logoImage)) ?>" alt="logo">
+            <img src="<?= htmlspecialchars(landing_asset($logoImage)) ?>" alt="logo" data-media-slot="logo_image">
           <?php else: ?>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M4 8a4 4 0 014-4h2M20 16a4 4 0 01-4 4h-2M8 4L5 7l3 3M16 20l3-3-3-3"/></svg>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" data-media-slot="logo_image"><path d="M4 8a4 4 0 014-4h2M20 16a4 4 0 01-4 4h-2M8 4L5 7l3 3M16 20l3-3-3-3"/></svg>
           <?php endif; ?>
         </div>
-        <span class="brand-title"><?= htmlspecialchars($brand) ?></span>
+        <span class="brand-title" data-field="brand"><?= htmlspecialchars($brand) ?></span>
       </div>
       <div class="footer-contact">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>
-        <a href="mailto:<?= htmlspecialchars($footerEmail) ?>"><?= htmlspecialchars($footerEmail) ?></a>
+        <a href="mailto:<?= htmlspecialchars($footerEmail) ?>" data-field="footer_email" data-field-mailto="1"><?= htmlspecialchars($footerEmail) ?></a>
       </div>
       <div class="footer-contact">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.5 11.7A8.5 8.5 0 117.2 4.1a8.5 8.5 0 0113.3 7.6z"/></svg>
-        <span><?= htmlspecialchars($footerTelefone) ?></span>
+        <span data-field="footer_telefone"><?= htmlspecialchars($footerTelefone) ?></span>
       </div>
-      <?php if ($footerEndereco): ?>
-      <div class="footer-contact">
+      <div class="footer-contact" data-field-wrap="footer_endereco" style="<?= $footerEndereco ? '' : 'display:none' ?>">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.1 7-11a7 7 0 10-14 0c0 4.9 7 11 7 11z"/></svg>
-        <span><?= htmlspecialchars($footerEndereco) ?></span>
+        <span data-field="footer_endereco"><?= htmlspecialchars($footerEndereco) ?></span>
       </div>
-      <?php endif; ?>
     </div>
     <div class="footer-col">
-      <h5><?= htmlspecialchars($footerMenuTitulo) ?></h5>
+      <h5 data-field="footer_menu_titulo"><?= htmlspecialchars($footerMenuTitulo) ?></h5>
+      <div data-list="footer_menu_items">
       <?php foreach ($footerMenuItens as $item): ?>
         <a href="<?= htmlspecialchars($item['url']) ?>"><?= htmlspecialchars($item['label']) ?></a>
       <?php endforeach; ?>
+      </div>
     </div>
     <div class="footer-col">
-      <h5><?= htmlspecialchars($footerParaVoceTitulo) ?></h5>
+      <h5 data-field="footer_para_voce_titulo"><?= htmlspecialchars($footerParaVoceTitulo) ?></h5>
+      <div data-list="footer_para_voce_items">
       <?php foreach ($footerParaVoceItens as $item): ?>
         <a href="<?= htmlspecialchars($item['url']) ?>"><?= htmlspecialchars($item['label']) ?></a>
       <?php endforeach; ?>
+      </div>
     </div>
     <div class="footer-col">
-      <h5>Acompanhe a <?= htmlspecialchars($brand) ?></h5>
+      <h5>Acompanhe a <span data-field="brand"><?= htmlspecialchars($brand) ?></span></h5>
       <div class="footer-social">
-        <a href="<?= htmlspecialchars($footerSocialInstagram) ?>" aria-label="Instagram">
+        <a href="<?= htmlspecialchars($footerSocialInstagram) ?>" aria-label="Instagram" data-field-href="footer_social_instagram">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
         </a>
-        <a href="<?= htmlspecialchars($footerSocialLinkedin) ?>" aria-label="LinkedIn">
+        <a href="<?= htmlspecialchars($footerSocialLinkedin) ?>" aria-label="LinkedIn" data-field-href="footer_social_linkedin">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 10v6M7 7v.01M12 16v-4a2 2 0 014 0v4M12 12v4"/></svg>
         </a>
-        <a href="<?= htmlspecialchars($footerSocialYoutube) ?>" aria-label="YouTube">
+        <a href="<?= htmlspecialchars($footerSocialYoutube) ?>" aria-label="YouTube" data-field-href="footer_social_youtube">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M11 10l4 2-4 2v-4z"/></svg>
         </a>
       </div>
@@ -902,12 +904,124 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
   <svg viewBox="0 0 24 24"><path d="M12 5l-6 6M12 5l6 6"/><path d="M12 5v14"/></svg>
 </button>
 
-<a class="whatsapp-float" href="<?= htmlspecialchars($whatsLink) ?>" target="_blank" rel="noopener" aria-label="Fale conosco no WhatsApp">
+<a class="whatsapp-float" href="<?= htmlspecialchars($whatsLink) ?>" target="_blank" rel="noopener" aria-label="Fale conosco no WhatsApp" data-field-href="__whats_link">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path fill="currentColor" d="M12.04 2.01C6.53 2.01 2 6.54 2 12.05c0 1.86.52 3.66 1.5 5.22L2 22l4.84-1.27c1.5.82 3.19 1.26 4.93 1.26 5.51 0 10.04-4.53 10.04-10.04 0-5.51-4.53-9.94-10.04-9.94zm5.86 14.62c-.25.7-1.45 1.35-2 1.42-.53.06-1.2.09-1.94-.12-.45-.14-1.03-.34-1.77-.67-3.11-1.36-5.13-4.69-5.29-4.91-.16-.22-1.25-1.67-1.25-3.2 0-1.53.8-2.28 1.08-2.59.28-.31.61-.39.81-.39.2 0 .4 0 .58.01.19.01.44-.07.69.53.25.6.84 2.07.91 2.22.07.15.12.33.02.53-.1.2-.15.33-.3.51-.15.18-.32.4-.46.54-.15.15-.3.31-.13.61.17.3.76 1.24 1.63 2.01 1.12.99 2.06 1.3 2.35 1.45.3.15.47.12.64-.07.18-.2.74-.86.94-1.16.2-.3.4-.25.67-.15.27.1 1.73.82 2.03.97.3.15.5.22.57.34.07.12.07.7-.18 1.4z"/>
   </svg>
 </a>
 
 <script src="./assets/js/index.js?v=<?= $indexJsVer ?>"></script>
+<script>
+(function(){
+  function esc(s){ var d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; }
+
+  function renderLinkList(container, items){
+    container.innerHTML = '';
+    (items || []).forEach(function(it){
+      var a = document.createElement('a');
+      a.href = it.url || '#';
+      a.textContent = it.label || '';
+      container.appendChild(a);
+    });
+  }
+
+  function renderSegmentosList(container, items){
+    container.innerHTML = '';
+    (items || []).forEach(function(text){
+      var div = document.createElement('div');
+      div.className = 'segmento-item';
+      div.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg><span></span>';
+      div.querySelector('span').textContent = text;
+      container.appendChild(div);
+    });
+  }
+
+  var brandFontsMap = {
+    'Poppins':'Poppins:wght@600;700;800', 'Inter':'Inter:wght@600;700;800', 'Montserrat':'Montserrat:wght@600;700;800',
+    'Raleway':'Raleway:wght@600;700;800', 'Playfair Display':'Playfair+Display:wght@600;700;800',
+    'Quicksand':'Quicksand:wght@600;700', 'Pacifico':'Pacifico', 'Oswald':'Oswald:wght@600;700'
+  };
+
+  function applyField(key, value){
+    if (typeof key !== 'string') return;
+
+    if (key.indexOf('theme_') === 0) {
+      document.documentElement.style.setProperty('--' + key.slice(6).replace(/_/g, '-'), value);
+      return;
+    }
+
+    if (key === 'nav_brand_font') {
+      if (brandFontsMap[value] && value !== 'Poppins') {
+        var linkId = 'preview-font-' + value.replace(/\s+/g, '-');
+        if (!document.getElementById(linkId)) {
+          var link = document.createElement('link');
+          link.id = linkId;
+          link.rel = 'stylesheet';
+          link.href = 'https://fonts.googleapis.com/css2?family=' + brandFontsMap[value] + '&display=swap';
+          document.head.appendChild(link);
+        }
+      }
+      document.documentElement.style.setProperty('--brand-font', "'" + value + "', 'Poppins', sans-serif");
+      return;
+    }
+
+    if (key === 'footer_endereco') {
+      var wrap = document.querySelector('[data-field-wrap="footer_endereco"]');
+      var span = document.querySelector('[data-field="footer_endereco"]');
+      if (span) span.textContent = value;
+      if (wrap) wrap.style.display = value ? '' : 'none';
+      return;
+    }
+
+    var mediaSlots = document.querySelectorAll('[data-media-slot="' + key + '"]');
+    if (mediaSlots.length) {
+      mediaSlots.forEach(function(slot){
+        var img = document.createElement('img');
+        img.src = value;
+        img.alt = slot.getAttribute('alt') || '';
+        img.setAttribute('data-media-slot', key);
+        slot.replaceWith(img);
+      });
+      return;
+    }
+
+    document.querySelectorAll('[data-field-href="' + key + '"]').forEach(function(el){
+      el.setAttribute('href', value);
+    });
+
+    document.querySelectorAll('[data-field="' + key + '"]').forEach(function(el){
+      if (el.dataset.nl2br === '1') {
+        el.innerHTML = esc(value).replace(/\n/g, '<br>');
+      } else {
+        el.textContent = value;
+      }
+      if (el.dataset.fieldMailto === '1') {
+        el.setAttribute('href', 'mailto:' + value);
+      }
+    });
+  }
+
+  function applyList(key, items){
+    if (key === 'segmentos_items') {
+      var grid = document.querySelector('[data-list="segmentos_items"]');
+      if (grid) renderSegmentosList(grid, items);
+      return;
+    }
+    document.querySelectorAll('[data-list="' + key + '"]').forEach(function(container){
+      renderLinkList(container, items);
+    });
+  }
+
+  window.addEventListener('message', function(ev){
+    if (ev.origin !== window.location.origin) return;
+    var msg = ev.data;
+    if (!msg || msg.type !== 'lillymenu-landing-preview') return;
+    var fields = msg.fields || {};
+    var lists = msg.lists || {};
+    Object.keys(fields).forEach(function(k){ applyField(k, fields[k]); });
+    Object.keys(lists).forEach(function(k){ applyList(k, lists[k]); });
+  }, false);
+})();
+</script>
 </body>
 </html>

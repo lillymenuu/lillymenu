@@ -826,6 +826,15 @@ $painelJsVer = filemtime(__DIR__ . '/assets/js/painel.js');
           <button class="action-btn primary" type="submit">Salvar alteracoes</button>
         </div>
       </form>
+      <div class="landing-preview-col">
+        <div class="landing-preview-head">
+          <span>Preview em tempo real</span>
+          <a href="../public/index.php" target="_blank" rel="noopener">Abrir em nova aba</a>
+        </div>
+        <div class="landing-preview-frame-wrap">
+          <iframe id="landingPreviewFrame" src="../public/index.php" title="Preview da landing page"></iframe>
+        </div>
+      </div>
       </div>
       </section>
     </div>

@@ -176,3 +176,120 @@
     }
     if (submitBtn) submitBtn.disabled = false;
   });
+
+  const previewFrame = document.getElementById('landingPreviewFrame');
+  if (previewFrame && landingForm) {
+    const LIST_FIELDS = ['nav_links_items', 'footer_menu_items', 'footer_para_voce_items'];
+    const PLAIN_LIST_FIELDS = ['segmentos_items'];
+
+    const parseLinkList = (raw) => String(raw || '').split(/\r\n|\r|\n/).map((line) => {
+      line = line.trim();
+      if (!line) return null;
+      const parts = line.split('|');
+      const label = (parts[0] || '').trim();
+      const url = (parts[1] || '').trim();
+      if (!label) return null;
+      return { label, url: url || '#' };
+    }).filter(Boolean);
+
+    const parsePlainList = (raw) => String(raw || '').split(/\r\n|\r|\n/).map((s) => s.trim()).filter(Boolean);
+
+    const getFieldValue = (name) => {
+      const el = landingForm.querySelector('[name="' + name + '"]');
+      return el ? el.value : '';
+    };
+
+    const currentBrand = () => getFieldValue('brand') || 'Lilly Menu';
+    const withBrand = (text) => String(text || '').split('{brand}').join(currentBrand());
+
+    const buildWhatsLink = () => {
+      const number = getFieldValue('whatsapp_number').replace(/\D+/g, '');
+      const message = withBrand(getFieldValue('whatsapp_message')) || ('Ola! Quero conhecer o ' + currentBrand() + '.');
+      return 'https://wa.me/' + number + '?text=' + encodeURIComponent(message);
+    };
+
+    const postToPreview = (fields, lists) => {
+      const win = previewFrame.contentWindow;
+      if (!win) return;
+      win.postMessage({ type: 'lillymenu-landing-preview', fields: fields || {}, lists: lists || {} }, window.location.origin);
+    };
+
+    const computeAndSendField = (name, rawValue) => {
+      const fields = {};
+      const lists = {};
+
+      if (LIST_FIELDS.includes(name)) {
+        let items = parseLinkList(rawValue);
+        if (name === 'nav_links_items' || name === 'footer_para_voce_items') {
+          items = items.map((it) => ({ label: withBrand(it.label), url: it.url }));
+        }
+        lists[name] = items;
+      } else if (PLAIN_LIST_FIELDS.includes(name)) {
+        lists[name] = parsePlainList(rawValue);
+      } else if (name === 'whatsapp_number' || name === 'whatsapp_message') {
+        fields.__whats_link = buildWhatsLink();
+      } else if (name === 'segmentos_titulo' || name === 'cta_item2_titulo') {
+        fields[name] = withBrand(rawValue);
+      } else if (name === 'brand') {
+        fields[name] = rawValue;
+        fields.segmentos_titulo = withBrand(getFieldValue('segmentos_titulo'));
+        fields.cta_item2_titulo = withBrand(getFieldValue('cta_item2_titulo'));
+        fields.__whats_link = buildWhatsLink();
+        lists.nav_links_items = parseLinkList(getFieldValue('nav_links_items')).map((it) => ({ label: withBrand(it.label), url: it.url }));
+        lists.footer_para_voce_items = parseLinkList(getFieldValue('footer_para_voce_items')).map((it) => ({ label: withBrand(it.label), url: it.url }));
+      } else {
+        fields[name] = rawValue;
+      }
+
+      postToPreview(fields, lists);
+    };
+
+    const sendFullSync = () => {
+      const fields = {};
+      const lists = {};
+      const seen = {};
+      const formData = new FormData(landingForm);
+      for (const [name, value] of formData.entries()) {
+        if (seen[name] || typeof value !== 'string') continue;
+        seen[name] = true;
+        if (LIST_FIELDS.includes(name) || PLAIN_LIST_FIELDS.includes(name)) continue;
+        fields[name] = value;
+      }
+      fields.segmentos_titulo = withBrand(getFieldValue('segmentos_titulo'));
+      fields.cta_item2_titulo = withBrand(getFieldValue('cta_item2_titulo'));
+      fields.__whats_link = buildWhatsLink();
+      lists.nav_links_items = parseLinkList(getFieldValue('nav_links_items')).map((it) => ({ label: withBrand(it.label), url: it.url }));
+      lists.footer_menu_items = parseLinkList(getFieldValue('footer_menu_items'));
+      lists.footer_para_voce_items = parseLinkList(getFieldValue('footer_para_voce_items')).map((it) => ({ label: withBrand(it.label), url: it.url }));
+      lists.segmentos_items = parsePlainList(getFieldValue('segmentos_items'));
+      postToPreview(fields, lists);
+    };
+
+    previewFrame.addEventListener('load', sendFullSync);
+    window.__landingPreviewFullSync = sendFullSync;
+
+    const debounceTimers = {};
+    landingForm.addEventListener('input', (ev) => {
+      const el = ev.target;
+      const name = el.name;
+      if (!name || el.type === 'file') return;
+      clearTimeout(debounceTimers[name]);
+      debounceTimers[name] = setTimeout(() => computeAndSendField(name, el.value), 120);
+    });
+
+    landingForm.addEventListener('change', (ev) => {
+      const el = ev.target;
+      if (!el.name || el.type !== 'file') return;
+      const file = el.files && el.files[0];
+      if (!file) return;
+      const fields = {};
+      fields[el.name] = URL.createObjectURL(file);
+      postToPreview(fields, {});
+    });
+  }
+
+  presetButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setTimeout(() => { if (window.__landingPreviewFullSync) window.__landingPreviewFullSync(); }, 0);
+    });
+  });
