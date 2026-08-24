@@ -7,9 +7,12 @@ colors:
   soft-tint-bg: "#f5ede5"
   soft-tint-text: "#7A3F10"
   paper-white: "#faf9f7"
+  pure-white: "#ffffff"
   ink-graphite: "#1f2328"
   muted-text: "#5b6169"
   sand-border: "#ece7e0"
+  state-success: "#16a34a"
+  state-error: "#dc2626"
 typography:
   display:
     fontFamily: "Poppins, sans-serif"
@@ -17,9 +20,19 @@ typography:
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: "-0.5px"
+  display-sm:
+    fontFamily: "Poppins, sans-serif"
+    fontSize: "38px"
+    fontWeight: 700
+    lineHeight: 1.2
   headline:
     fontFamily: "Poppins, sans-serif"
-    fontSize: "28px"
+    fontSize: "30px"
+    fontWeight: 700
+    lineHeight: 1.25
+  headline-sm:
+    fontFamily: "Poppins, sans-serif"
+    fontSize: "24px"
     fontWeight: 700
     lineHeight: 1.25
   title:
@@ -32,16 +45,32 @@ typography:
     fontSize: "16px"
     fontWeight: 400
     lineHeight: 1.6
+  body-sm:
+    fontFamily: "Poppins, sans-serif"
+    fontSize: "14.5px"
+    fontWeight: 400
+    lineHeight: 1.6
   label:
     fontFamily: "Poppins, sans-serif"
     fontSize: "13px"
     fontWeight: 600
     lineHeight: 1.4
+  label-sm:
+    fontFamily: "Poppins, sans-serif"
+    fontSize: "12px"
+    fontWeight: 600
+    lineHeight: 1.3
 rounded:
+  xs: "8px"
+  xs2: "9px"
   sm: "10px"
+  sm2: "12px"
   md: "14px"
-  lg: "18px"
-  xl: "22px"
+  lg: "16px"
+  lg2: "18px"
+  xl: "20px"
+  xl2: "22px"
+  xxl: "24px"
   pill: "999px"
 spacing:
   xs: "8px"
@@ -110,12 +139,19 @@ Paleta restrita por design: dois acentos (cobre + seu tom claro) e uma escala ne
 
 ### Neutral
 - **Branco Papel** (`#faf9f7`): fundo padrão de seções claras — branco levemente quente, não clínico.
+- **Branco Puro** (`#ffffff`): fundo de cards/superfícies elevadas sobre o Branco Papel (ex: `.lead-card`, `.segmentos-card`) e cor de texto/ícone sobre botões e fundos escuros — reservado para onde precisa do contraste máximo; o fundo de página em si nunca usa branco puro.
 - **Grafite Profundo** (`#1f2328`): texto principal — quase preto, com leve frieza, não preto puro.
 - **Texto Suave** (`#5b6169`): texto secundário/legendas — nome herdado do próprio painel admin (campo "Texto suave (muted)").
-- **Areia Clara** (`#ece7e0`): bordas e divisores — nunca cinza puro, sempre com o mesmo calor da paleta.
+- **Areia Clara** (`#ece7e0`): bordas e divisores, e fundo de ícones pequenos sobre superfícies claras (ex: `.beneficio-icon`) — nunca cinza puro, sempre com o mesmo calor da paleta.
+
+### Semantic
+- **Sucesso** (`#16a34a`): mensagens de sucesso de formulário e check-marks de recurso incluso (ex: lista de features do plano). Verde convencional, não deriva da marca — reservado a feedback de estado.
+- **Erro** (`#dc2626`): mensagens de erro de formulário. Vermelho convencional, mesma lógica do Sucesso.
 
 ### Named Rules
 **A Regra dos Dois Tons.** A folha de estilo expõe variáveis para azul, rosa e link separados (`--blue-btn`, `--pink`, `--link`), mas o tema em uso hoje ("Minimalista") os colapsa deliberadamente para apenas Cobre Queimado + Realce Suave. Não usar a existência dessas variáveis como licença para introduzir uma terceira cor de acento — a restrição é a decisão de design, não uma lacuna a preencher.
+
+**A Regra do Texto Translúcido sobre Fundo Escuro.** Texto secundário sobre um card de fundo Cobre/Navy (ex: `.cta-card p`, `.planos-hero-copy p`, placeholders de imagem) nunca usa um hex fixo — sempre `rgba(255,255,255, opacidade)` (tipicamente .65-.82 conforme a hierarquia). Isso garante que o texto continue harmonizando mesmo se a cor de fundo do tema mudar pelo painel. Corrigido nesta sessão: vários lugares usavam tons de azul fixos (`#c7d2de`, `#cfe0ee`, `#aebccb`, `#9fb3c4`) — resquício do tema navy antigo — substituídos por este padrão.
 
 ## Typography
 
@@ -125,11 +161,18 @@ Paleta restrita por design: dois acentos (cobre + seu tom claro) e uma escala ne
 **Character:** Uma única família sóbria (Poppins) carrega toda a hierarquia através de peso e tamanho, não de troca de fonte — a única variação tipográfica intencional é o nome da marca, que pode ganhar personalidade própria sem afetar a legibilidade do resto.
 
 ### Hierarchy
-- **Display** (700, 48px, line-height 1.15, letter-spacing -0.5px): título do hero (`<h1>`) — a única ocorrência desse tamanho na página.
-- **Headline** (700, 28-30px, line-height 1.25): títulos de seção (CTA final, overlay de Segmentos).
-- **Title** (700, 17px): nome da marca na navbar.
-- **Body** (400, 14.5-16px, line-height 1.6-1.7): parágrafos e descrições; usa `var(--muted)` como cor, nunca a cor de texto principal — o corpo do texto é sempre discreto frente aos títulos.
-- **Label** (600, 12-13px): badges/pills, rótulos de campo, texto de botão.
+- **Display** (700, 48px, line-height 1.15, letter-spacing -0.5px): título do hero (`<h1>`) em desktop.
+- **Display Small** (700, 38px, line-height 1.2): variante mobile do título do hero, e o `<h1>` do banner de Planos (que já nasce menor que o hero principal).
+- **Headline** (700, 30px, line-height 1.25; variante 28px em `.cta-card h2`/`.beneficios-titulo`): títulos de seção de destaque (Soluções, overlay de Segmentos, hero mobile).
+- **Headline Small** (700, 22-24px, line-height 1.25): subtítulos de bloco (título de cada card de Solução, título "Soluções para sua gestão" em mobile, preço do plano).
+- **Title** (700, 17px): nome da marca na navbar; também usado no nome do card de plano.
+- **Body** (400, 16px, line-height 1.6): parágrafo principal do hero — o único texto de corpo no tamanho "de leitura confortável".
+- **Body Small** (400, 14.5px, line-height 1.6-1.7): a maioria dos parágrafos secundários (descrições de seção, texto do CTA, cards de solução/benefício) — o tamanho de corpo mais comum no site.
+- **Label** (600, 12-13px, line-height 1.3-1.4): badges/pills, rótulos de campo, texto de botão, links de rodapé.
+
+Sempre em `var(--muted)`/Texto Suave para corpo e legendas — nunca a cor de texto principal (Grafite) fora de títulos.
+
+Um punhado de tamanhos isolados (19px no título do modal de sucesso, 26px no título da tabela de planos) não faz parte de uma escala — são ajustes locais de um único lugar cada, não recorrentes o bastante para virar token. Não generalizar esses valores para outros componentes.
 
 ### Named Rules
 **A Regra do Peso Único.** Toda ênfase tipográfica vem de tamanho e peso (700 vs 400/600), nunca de itálico ou de trocar a família de fonte no corpo do texto.
@@ -148,13 +191,14 @@ Sistema majoritariamente plano, com sombras suaves e difusas reservadas para ele
 - **Sombra de cartão** (`0 22-24px 45-50px rgba(8,20,33,.16-.18)`): cards e dropdowns em repouso.
 - **Sombra de modal** (`0 24px 50px rgba(8,20,33,.3)`): maior opacidade, para elementos acima de tudo (modais).
 - **Brilho do botão de marca** (`0 10px 22px -6px rgba(156,85,35,.4)`): sombra própria do Cobre Queimado em botões primários — a única sombra colorida fora do par navy.
+- **Véu de modal** (`background: rgba(8,20,33,.5)`): não é uma sombra, é o fundo escurecido atrás de um modal aberto — usa a mesma família de cor navy-tingida, só que como preenchimento de tela cheia em vez de `box-shadow`.
 
 ### Named Rules
-**A Regra da Sombra com Cor.** Nunca usar `rgba(0,0,0,…)` puro para sombra neste sistema; a sombra sempre herda o tom escuro da marca (navy) ou, no caso do botão primário, o próprio cobre.
+**A Regra da Sombra com Cor.** Nunca usar `rgba(0,0,0,…)` puro para sombra neste sistema; a sombra sempre herda o tom escuro da marca (navy) ou, no caso do botão primário, o próprio cobre. **Exceção sancionada:** o botão flutuante de WhatsApp (`#25d366`, verde de marca de terceiro, não deriva da paleta) mantém sombra neutra (`rgba(0,0,0,.2)`) — é um ícone universalmente reconhecido nesse padrão exato; tingir de cobre ficaria estranho sob o verde e quebraria o reconhecimento do ícone.
 
 ## Shapes
 
-Arredondamento generoso e consistente por escala de componente, nunca esquadrado: 10px em controles pequenos (inputs, botão base), 14-18px em superfícies médias (cards, botão CTA grande), 22-24px em cards grandes de destaque (CTA final, banner de planos), 999px/50% em pílulas e círculos (badges, ícones de avatar, botão de voltar-ao-topo). Bordas finas (1.5px, não 1px) em `Areia Clara` aparecem em inputs e cards com contorno — um pouco mais de peso que o padrão web usual, reforçando a sensação "desenhada", não default de framework.
+Arredondamento generoso e consistente por escala de componente, nunca esquadrado: 8-9px em elementos pequenos (ícones de ação, botão de fechar modal), 10-12px em controles (inputs, botão base, itens de dropdown), 14-18px em superfícies médias (cards, botão CTA grande), 20-24px em cards grandes de destaque (CTA final, banner de planos, card de formulário), 999px/50% em pílulas e círculos (badges, ícones de avatar, botão de voltar-ao-topo). Bordas finas (1.5px, não 1px) em `Areia Clara` aparecem em inputs e cards com contorno — um pouco mais de peso que o padrão web usual, reforçando a sensação "desenhada", não default de framework.
 
 ## Components
 

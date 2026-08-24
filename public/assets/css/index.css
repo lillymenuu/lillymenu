@@ -177,7 +177,7 @@ p{margin:0}
 .segmentos{position:relative;margin-bottom:60px}
 .segmentos-media{position:relative;height:420px;background:var(--navy-deep);overflow:hidden}
 .segmentos-media img{width:100%;height:100%;object-fit:cover}
-.segmentos-media-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#9fb3c4;font-size:14px;background:linear-gradient(160deg,var(--navy) 0%, var(--navy-deep) 100%)}
+.segmentos-media-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.65);font-size:14px;background:linear-gradient(160deg,var(--navy) 0%, var(--navy-deep) 100%)}
 .segmentos-overlay{position:absolute;inset:0;display:flex;align-items:flex-end;padding-bottom:90px}
 .segmentos-overlay h2{color:var(--text);font-size:30px;max-width:560px;line-height:1.25}
 .segmentos-card{background:#fff;border-radius:18px;box-shadow:0 24px 50px rgba(8,20,33,.16);padding:30px 36px;margin-top:-64px;position:relative;z-index:2}
@@ -191,7 +191,7 @@ p{margin:0}
 .cta-card-head{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:16px}
 .cta-card-head-text{flex:1;min-width:240px}
 .cta-card h2{font-size:28px;margin-bottom:12px}
-.cta-card p{color:#c7d2de;font-size:14.5px;line-height:1.6;max-width:520px;margin-bottom:30px}
+.cta-card p{color:rgba(255,255,255,.8);font-size:14.5px;line-height:1.6;max-width:520px;margin-bottom:30px}
 .cta-card-btn{flex-shrink:0;white-space:nowrap;min-width:260px}
 
 /* ── Botao chamativo reutilizavel (pulso + hover) ──
@@ -220,7 +220,7 @@ p{margin:0}
 .cta-item{display:flex;align-items:flex-start;gap:14px;flex:1;padding-right:24px}
 .cta-item-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .cta-item-title{font-weight:600;font-size:14.5px;margin-bottom:5px}
-.cta-item-text{font-size:13px;color:#aebccb;line-height:1.5}
+.cta-item-text{font-size:13px;color:rgba(255,255,255,.65);line-height:1.5}
 .cta-divider{width:1px;background:rgba(255,255,255,.14);align-self:stretch;margin:0 24px}
 
 /* ── Footer ── */
@@ -309,16 +309,16 @@ p{margin:0}
 .planos-hero-copy{padding:56px 50px;display:flex;flex-direction:column;justify-content:center;gap:18px}
 .clube-badge{display:inline-flex;align-items:center;gap:8px;color:#fff;font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;opacity:.9}
 .planos-hero-copy h1{color:#fff;font-size:38px;line-height:1.2}
-.planos-hero-copy p{color:#cfe0ee;font-size:15px;line-height:1.6;max-width:420px}
+.planos-hero-copy p{color:rgba(255,255,255,.82);font-size:15px;line-height:1.6;max-width:420px}
 .planos-hero-media{position:relative;min-height:320px}
 .planos-hero-media img{width:100%;height:100%;object-fit:cover}
-.planos-hero-placeholder{width:100%;height:100%;min-height:320px;display:flex;align-items:center;justify-content:center;color:#cfe0ee;font-size:13px;background:rgba(255,255,255,.06)}
+.planos-hero-placeholder{width:100%;height:100%;min-height:320px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.65);font-size:13px;background:rgba(255,255,255,.06)}
 
 .beneficios-section{padding:70px 0 40px}
 .beneficios-titulo{text-align:center;font-size:28px;color:var(--text);margin-bottom:36px}
 .beneficios-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:26px}
 .beneficio-card{background:var(--light-bg);border-radius:16px;padding:28px}
-.beneficio-icon{width:44px;height:44px;border-radius:10px;background:#e7e9ec;color:var(--text);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.beneficio-icon{width:44px;height:44px;border-radius:10px;background:var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
 .beneficio-card h3{font-size:17px;color:var(--text);margin-bottom:10px}
 .beneficio-card p{font-size:14px;line-height:1.6;color:var(--muted)}
 

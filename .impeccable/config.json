@@ -35,6 +35,72 @@
         ],
         "createdAt": "2026-08-24T23:28:37.878Z",
         "reason": "Agent: max-height transitions on small panels (.mobile-nav, .lead-extra-wrap) chosen deliberately this session for cross-browser reliability over grid-template-rows; low element count keeps jank risk negligible"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#25d366",
+        "createdAt": "2026-08-24T23:40:07.791Z",
+        "reason": "Agent: WhatsApp brand green, external third-party icon convention, not part of the LillyMenu palette by design"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(0,0,0,.2)",
+        "createdAt": "2026-08-24T23:40:07.929Z",
+        "reason": "Agent: shadow for the WhatsApp float button specifically - documented exception in DESIGN.md, tinting it copper would clash with the green"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(8,20,33,.5)",
+        "createdAt": "2026-08-24T23:41:57.231Z",
+        "reason": "Agent: documented in DESIGN.md Elevation as the modal scrim/veil pattern - same navy-tinted family, used as background fill not box-shadow"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "19px",
+        "createdAt": "2026-08-24T23:41:57.367Z",
+        "reason": "Agent: single-use local size for the cadastro-sucesso modal title, documented in DESIGN.md as an accepted one-off, not a recurring tier"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "26px",
+        "createdAt": "2026-08-24T23:41:57.515Z",
+        "reason": "Agent: single-use local size for the planos table title, documented in DESIGN.md as an accepted one-off"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "20px",
+        "createdAt": "2026-08-24T23:41:57.657Z",
+        "reason": "Agent: mobile-breakpoint-scaled variant of the headline-sm (24px) solucao-text h3, same element just at 640px"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "18px",
+        "createdAt": "2026-08-24T23:41:57.796Z",
+        "reason": "Agent: .btn-white-cta component font-size, documented explicitly in DESIGN.md Components > Buttons with the exact value"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "11px",
+        "createdAt": "2026-08-24T23:41:57.949Z",
+        "reason": "Agent: hero-tag mobile and plan-badge, small-label sibling of the 12px label-sm tier"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "28px",
+        "createdAt": "2026-08-24T23:42:54.660Z",
+        "reason": "Agent: minor variance of the 30px headline tier (.cta-card h2, .beneficios-titulo), documented in DESIGN.md prose"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "22px",
+        "createdAt": "2026-08-24T23:42:54.808Z",
+        "reason": "Agent: minor variance of the 24px headline-sm tier (segmentos-overlay h2 mobile, plan-preco), 2px off, not worth a separate tier"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "2px",
+        "createdAt": "2026-08-24T23:42:54.943Z",
+        "reason": "Agent: .nav-links a::after underline sweep bar - a decorative line accent, not a card/button shape"
       }
     ]
   }
