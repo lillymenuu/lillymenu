@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-24T00:00:00.000Z",
+  "generatedAt": "2026-08-25T00:00:00.000Z",
   "title": "Design System: LillyMenu",
   "extensions": {
     "colorMeta": {
@@ -9,22 +9,31 @@
       "soft-tint-bg": { "role": "secondary", "displayName": "Realce Suave (fundo)", "canonical": "#f5ede5", "tonalRamp": ["#3a2c1e", "#5c4530", "#7d5f45", "#a1815f", "#c4a482", "#ded0bc", "#efe6db", "#f5ede5"] },
       "soft-tint-text": { "role": "secondary", "displayName": "Realce Suave (texto)", "canonical": "#7A3F10", "tonalRamp": ["#1f1206", "#33200a", "#4d2f0d", "#63390d", "#7A3F10", "#9c5f2e", "#c08a5c", "#e0bb96"] },
       "paper-white": { "role": "neutral", "displayName": "Branco Papel", "canonical": "#faf9f7", "tonalRamp": ["#1a1917", "#38362f", "#585549", "#7c7868", "#a29d89", "#c9c4b0", "#e6e2d6", "#faf9f7"] },
+      "pure-white": { "role": "neutral", "displayName": "Branco Puro", "canonical": "#ffffff", "tonalRamp": ["#1a1a1a", "#3a3a3a", "#5c5c5c", "#807f7f", "#a6a5a5", "#cccccc", "#e6e6e6", "#ffffff"] },
       "ink-graphite": { "role": "neutral", "displayName": "Grafite Profundo", "canonical": "#1f2328", "tonalRamp": ["#08090a", "#141618", "#1f2328", "#3a3f46", "#585e66", "#7a8088", "#a3a8ae", "#d3d5d8"] },
       "muted-text": { "role": "neutral", "displayName": "Texto Suave", "canonical": "#5b6169", "tonalRamp": ["#17181a", "#2a2c2f", "#3e4145", "#4c4f54", "#5b6169", "#7d828a", "#a3a7ad", "#ccced2"] },
-      "sand-border": { "role": "neutral", "displayName": "Areia Clara", "canonical": "#ece7e0", "tonalRamp": ["#2c2820", "#4c4638", "#6c6350", "#8f8570", "#b3a996", "#d0cabf", "#e3ded6", "#ece7e0"] }
+      "sand-border": { "role": "neutral", "displayName": "Areia Clara", "canonical": "#ece7e0", "tonalRamp": ["#2c2820", "#4c4638", "#6c6350", "#8f8570", "#b3a996", "#d0cabf", "#e3ded6", "#ece7e0"] },
+      "state-success": { "role": "semantic", "displayName": "Sucesso", "canonical": "#16a34a", "tonalRamp": ["#052e16", "#0a5024", "#0f7a37", "#16a34a", "#3fbd6c", "#72d495", "#a6e8bf", "#d8f5e2"] },
+      "state-error": { "role": "semantic", "displayName": "Erro", "canonical": "#dc2626", "tonalRamp": ["#450a0a", "#7f1616", "#ad1e1e", "#dc2626", "#e75c5c", "#ef8f8f", "#f6c1c1", "#fbe2e2"] }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "Titulo do hero (h1) — unica ocorrencia desse tamanho na pagina." },
-      "headline": { "displayName": "Headline", "purpose": "Titulos de secao (CTA final, overlay de Segmentos)." },
-      "title": { "displayName": "Title", "purpose": "Nome da marca na navbar/rodape (usa --brand-font, configuravel por loja)." },
-      "body": { "displayName": "Body", "purpose": "Paragrafos e descricoes; sempre na cor muted, nunca na cor de texto principal." },
-      "label": { "displayName": "Label", "purpose": "Badges/pills, rotulos de campo, texto de botao." }
+      "display": { "displayName": "Display", "purpose": "Titulo do hero (h1) em desktop." },
+      "display-sm": { "displayName": "Display Small", "purpose": "Variante mobile do titulo do hero, e o h1 do banner de Planos." },
+      "headline": { "displayName": "Headline", "purpose": "Titulos de secao de destaque (Solucoes, overlay de Segmentos, hero mobile)." },
+      "headline-sm": { "displayName": "Headline Small", "purpose": "Subtitulos de bloco (titulo de card de Solucao, preco do plano)." },
+      "title": { "displayName": "Title", "purpose": "Nome da marca na navbar/rodape (usa --brand-font, configuravel por loja); tambem nome do card de plano." },
+      "body": { "displayName": "Body", "purpose": "Paragrafo principal do hero — unico texto de corpo no tamanho de leitura confortavel." },
+      "body-sm": { "displayName": "Body Small", "purpose": "Maioria dos paragrafos secundarios (CTA, cards de solucao/beneficio) — tamanho de corpo mais comum do site." },
+      "label": { "displayName": "Label", "purpose": "Badges/pills, rotulos de campo, texto de botao." },
+      "label-sm": { "displayName": "Label Small", "purpose": "Badges pequenos e pills compactos (ex: hero-tag, plan-badge)." }
     },
     "shadows": [
       { "name": "card-rest", "value": "0 22px 45px rgba(8,20,33,.16)", "purpose": "Cards e superficies flutuantes em repouso (ex: card de formulario, glow das secoes)." },
       { "name": "card-lifted", "value": "0 24px 50px rgba(8,20,33,.18)", "purpose": "Cards com maior destaque (ex: segmentos-card, dropdown aberto)." },
       { "name": "modal", "value": "0 24px 50px rgba(8,20,33,.3)", "purpose": "Modais e overlays acima de tudo — maior opacidade que os cards." },
-      { "name": "button-primary-glow", "value": "0 10px 22px -6px rgba(156,85,35,.4)", "purpose": "Sombra propria do botao primario (Cobre Queimado) — unica sombra tingida com a cor de marca em vez do navy." }
+      { "name": "button-primary-glow", "value": "0 10px 22px -6px rgba(156,85,35,.4)", "purpose": "Sombra propria do botao primario (Cobre Queimado) — unica sombra tingida com a cor de marca em vez do navy." },
+      { "name": "modal-scrim", "value": "background: rgba(8,20,33,.5)", "purpose": "Veu escurecido atras de um modal aberto — mesma familia navy-tingida, como preenchimento de tela cheia em vez de box-shadow." },
+      { "name": "whatsapp-float-exception", "value": "0 18px 30px rgba(0,0,0,.2)", "purpose": "Excecao sancionada: sombra neutra so no botao flutuante de WhatsApp (#25d366, cor de marca de terceiro) — tingir de cobre quebraria o reconhecimento do icone." }
     ],
     "motion": [
       { "name": "hover-lift", "value": "transform .15s ease", "purpose": "Todo .btn sobe 1px no hover — feedback padrao de qualquer botao." },
@@ -94,8 +103,9 @@
     ],
     "rules": [
       { "name": "A Regra dos Dois Tons", "body": "A folha de estilo expoe variaveis para azul, rosa e link separados, mas o tema em uso hoje os colapsa deliberadamente para apenas Cobre Queimado + Realce Suave. Nao introduzir uma terceira cor de acento so porque a variavel existe.", "section": "colors" },
+      { "name": "A Regra do Texto Translucido sobre Fundo Escuro", "body": "Texto secundario sobre um card de fundo Cobre/Navy nunca usa um hex fixo — sempre rgba(255,255,255, opacidade). Corrigido nesta sessao: varios lugares usavam tons de azul fixos (#c7d2de, #cfe0ee, #aebccb, #9fb3c4), resquicio do tema navy antigo.", "section": "colors" },
       { "name": "A Regra do Peso Unico", "body": "Toda enfase tipografica vem de tamanho e peso, nunca de italico ou de trocar a familia de fonte no corpo do texto.", "section": "typography" },
-      { "name": "A Regra da Sombra com Cor", "body": "Nunca usar rgba(0,0,0,…) puro para sombra neste sistema; a sombra sempre herda o tom escuro da marca (navy) ou, no botao primario, o proprio cobre.", "section": "elevation" }
+      { "name": "A Regra da Sombra com Cor", "body": "Nunca usar rgba(0,0,0,…) puro para sombra neste sistema; a sombra sempre herda o tom escuro da marca (navy) ou, no botao primario, o proprio cobre. Excecao sancionada: o botao de WhatsApp mantem sombra neutra por ser icone de marca de terceiro.", "section": "elevation" }
     ],
     "dos": [
       "Do usar Cobre Queimado como o unico acento de cor ativo; tudo o mais e neutro quente ou branco.",

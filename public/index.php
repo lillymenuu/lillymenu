@@ -562,28 +562,28 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
     </button>
     <form class="especialista-form" id="especialistaForm" autocomplete="off">
       <div class="lead-field">
-        <label>Seu nome <span class="req">*</span></label>
-        <input type="text" name="nome" required>
+        <label for="espNome">Seu nome <span class="req">*</span></label>
+        <input type="text" name="nome" id="espNome" required>
       </div>
       <div class="lead-field">
-        <label>E-mail <span class="req">*</span></label>
-        <input type="email" name="email" required>
+        <label for="espEmail">E-mail <span class="req">*</span></label>
+        <input type="email" name="email" id="espEmail" required>
       </div>
       <div class="lead-field">
-        <label>Telefone <span class="req">*</span></label>
+        <label for="espTelefone">Telefone <span class="req">*</span></label>
         <div class="phone-field">
           <span class="phone-prefix">BR <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 8l5 5 5-5"/></svg> +55</span>
-          <input type="text" name="telefone" class="js-phone-mask" required inputmode="tel" autocomplete="tel">
+          <input type="text" name="telefone" id="espTelefone" class="js-phone-mask" required inputmode="tel" autocomplete="tel">
         </div>
       </div>
       <div class="lead-field">
-        <label>Nome da empresa <span class="req">*</span></label>
-        <input type="text" name="empresa" required>
+        <label for="espEmpresa">Nome da empresa <span class="req">*</span></label>
+        <input type="text" name="empresa" id="espEmpresa" required>
       </div>
       <div class="lead-field">
-        <label>Qual seu faturamento mensal? <span class="req">*</span></label>
+        <label for="espFaturamentoBtn">Qual seu faturamento mensal? <span class="req">*</span></label>
         <div class="lead-dropdown" data-name="faturamento">
-          <button type="button" class="lead-drop-btn" aria-expanded="false">
+          <button type="button" class="lead-drop-btn" id="espFaturamentoBtn" aria-expanded="false">
             <span class="lead-drop-text">Selecionar</span>
             <span class="lead-drop-arrow"></span>
           </button>
@@ -596,9 +596,9 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
         </div>
       </div>
       <div class="lead-field">
-        <label>Modelo de Negocio</label>
+        <label for="espModeloBtn">Modelo de Negocio</label>
         <div class="lead-dropdown" data-name="modelo_negocio">
-          <button type="button" class="lead-drop-btn" aria-expanded="false">
+          <button type="button" class="lead-drop-btn" id="espModeloBtn" aria-expanded="false">
             <span class="lead-drop-text">Selecionar</span>
             <span class="lead-drop-arrow"></span>
           </button>
@@ -629,28 +629,28 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
     </button>
     <form class="cadastro-form" id="testeModal" autocomplete="off">
       <div class="lead-field">
-        <label>Nome <span class="req">*</span></label>
-        <input type="text" name="nome" required>
+        <label for="modalNome">Nome <span class="req">*</span></label>
+        <input type="text" name="nome" id="modalNome" required>
       </div>
       <div class="lead-field">
-        <label>E-mail <span class="req">*</span></label>
-        <input type="email" name="email" required>
+        <label for="modalEmail">E-mail <span class="req">*</span></label>
+        <input type="email" name="email" id="modalEmail" required>
       </div>
       <div class="lead-field">
-        <label>WhatsApp <span class="req">*</span></label>
+        <label for="modalContato">WhatsApp <span class="req">*</span></label>
         <div class="phone-field">
           <span class="phone-prefix">BR +55</span>
-          <input type="text" name="contato" class="js-phone-mask" required inputmode="tel" autocomplete="tel">
+          <input type="text" name="contato" id="modalContato" class="js-phone-mask" required inputmode="tel" autocomplete="tel">
         </div>
       </div>
       <div class="lead-field">
-        <label>Empresa <span class="req">*</span></label>
-        <input type="text" name="empresa" required>
+        <label for="modalEmpresa">Empresa <span class="req">*</span></label>
+        <input type="text" name="empresa" id="modalEmpresa" required>
       </div>
       <div class="lead-field">
-        <label>Escolha o seu plano <span class="req">*</span></label>
+        <label for="modalPlanoBtn">Escolha o seu plano <span class="req">*</span></label>
         <div class="lead-dropdown" data-name="plano">
-          <button type="button" class="lead-drop-btn" aria-expanded="false">
+          <button type="button" class="lead-drop-btn" id="modalPlanoBtn" aria-expanded="false">
             <span class="lead-drop-text">Selecionar</span>
             <span class="lead-drop-arrow"></span>
           </button>
@@ -664,21 +664,21 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
       </div>
       <div class="lead-row">
         <div class="lead-field">
-          <label>Senha <span class="req">*</span></label>
-          <input type="password" name="senha" required>
+          <label for="modalSenha">Senha <span class="req">*</span></label>
+          <input type="password" name="senha" id="modalSenha" required>
         </div>
         <div class="lead-field">
-          <label>Repita a senha <span class="req">*</span></label>
-          <input type="password" name="senha2" required>
+          <label for="modalSenha2">Repita a senha <span class="req">*</span></label>
+          <input type="password" name="senha2" id="modalSenha2" required>
         </div>
       </div>
       <div class="lead-row">
         <div class="lead-field">
-          <label>CNPJ ou CPF <span class="req">*</span></label>
+          <label for="leadCnpjModal">CNPJ ou CPF <span class="req">*</span></label>
           <input type="text" name="cnpj" id="leadCnpjModal" class="js-cnpj-mask" placeholder="CNPJ ou CPF" required inputmode="numeric">
         </div>
         <div class="lead-field">
-          <label>Endereço <span class="req">*</span></label>
+          <label for="leadAddressBtnModal">Endereço <span class="req">*</span></label>
           <button type="button" class="lead-address-btn" id="leadAddressBtnModal">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.1 7-11a7 7 0 10-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg>
             Informar endereço
@@ -686,9 +686,9 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
         </div>
       </div>
       <div class="lead-field">
-        <label>Faturamento mensal <span class="req">*</span></label>
+        <label for="modalFaturamentoBtn">Faturamento mensal <span class="req">*</span></label>
         <div class="lead-dropdown" data-name="faturamento">
-          <button type="button" class="lead-drop-btn" aria-expanded="false">
+          <button type="button" class="lead-drop-btn" id="modalFaturamentoBtn" aria-expanded="false">
             <span class="lead-drop-text">Selecionar</span>
             <span class="lead-drop-arrow"></span>
           </button>
@@ -701,9 +701,9 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
         </div>
       </div>
       <div class="lead-field">
-        <label>Qual o seu segmento</label>
+        <label for="modalSegmentoBtn">Qual o seu segmento</label>
         <div class="lead-dropdown" data-name="segmento">
-          <button type="button" class="lead-drop-btn" aria-expanded="false">
+          <button type="button" class="lead-drop-btn" id="modalSegmentoBtn" aria-expanded="false">
             <span class="lead-drop-text">Selecionar</span>
             <span class="lead-drop-arrow"></span>
           </button>
@@ -749,31 +749,31 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
     </div>
     <div class="lead-grid-inner">
       <div class="lead-field">
-        <label>CEP</label>
+        <label for="leadCepModal">CEP</label>
         <input type="text" name="cep" id="leadCepModal" form="testeModal" placeholder="00000-000" inputmode="numeric">
       </div>
       <div class="lead-field">
-        <label>Rua</label>
+        <label for="leadRuaModal">Rua</label>
         <input type="text" name="rua" id="leadRuaModal" form="testeModal">
       </div>
       <div class="lead-field">
-        <label>Numero</label>
+        <label for="leadNumeroModal">Numero</label>
         <input type="text" name="numero" id="leadNumeroModal" form="testeModal">
       </div>
       <div class="lead-field">
-        <label>Bairro</label>
+        <label for="leadBairroModal">Bairro</label>
         <input type="text" name="bairro" id="leadBairroModal" form="testeModal">
       </div>
       <div class="lead-field">
-        <label>Cidade</label>
+        <label for="leadCidadeModal">Cidade</label>
         <input type="text" name="cidade" id="leadCidadeModal" form="testeModal">
       </div>
       <div class="lead-field">
-        <label>Estado</label>
+        <label for="leadEstadoModal">Estado</label>
         <input type="text" name="estado" id="leadEstadoModal" form="testeModal" maxlength="2">
       </div>
       <div class="lead-field full">
-        <label>Complemento</label>
+        <label for="leadComplementoModal">Complemento</label>
         <input type="text" name="complemento" id="leadComplementoModal" form="testeModal">
       </div>
     </div>
