@@ -247,7 +247,7 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
       <span class="brand-title"><?= htmlspecialchars($brand) ?></span>
     </div>
     <nav class="nav-links">
-      <a href="https://lillymenu.com/public/home">Inicio</a>
+      <a href="https://lillymenu.com">Inicio</a>
       <a href="index.php#a-lilly">A <?= htmlspecialchars($brand) ?></a>
       <a href="index.php#solucoes">Solucoes</a>
       <a href="index.php#franquias">Franquias</a>
