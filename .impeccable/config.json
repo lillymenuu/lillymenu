@@ -1,0 +1,41 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "public/assets/css/index.css"
+        ],
+        "createdAt": "2026-08-24T23:28:37.429Z",
+        "reason": "Agent: verified false positive - .lead-drop-arrow is a chevron built from two rotated borders (border-right+border-bottom, rotate(45deg)), not a side-tab accent"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "public/assets/css/index.css"
+        ],
+        "createdAt": "2026-08-24T23:28:37.600Z",
+        "reason": "Agent: fixed by adding overflow:hidden to .plan-card so the border-top clips to the rounded corner; verified visually via screenshot, no square notch remains"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(.34, 1.56, .64, 1)",
+        "createdAt": "2026-08-24T23:28:37.744Z",
+        "reason": "Agent: audit-confirmed contained use - only the .brand-logo hover micro-interaction, not spread across the system"
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "public/assets/css/index.css"
+        ],
+        "createdAt": "2026-08-24T23:28:37.878Z",
+        "reason": "Agent: max-height transitions on small panels (.mobile-nav, .lead-extra-wrap) chosen deliberately this session for cross-browser reliability over grid-template-rows; low element count keeps jank risk negligible"
+      }
+    ]
+  }
+}

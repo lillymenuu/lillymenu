@@ -408,30 +408,30 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
     <div class="lead-card-glow"></div>
     <form class="lead-card" id="teste" autocomplete="off">
       <div class="lead-field">
-        <label><span data-field="lead_name_label"><?= htmlspecialchars($leadNameLabel) ?></span> <span class="req">*</span></label>
-        <input type="text" name="nome" required>
+        <label for="leadNome"><span data-field="lead_name_label"><?= htmlspecialchars($leadNameLabel) ?></span> <span class="req">*</span></label>
+        <input type="text" name="nome" id="leadNome" required>
       </div>
       <div class="lead-field">
-        <label><span data-field="lead_email_label"><?= htmlspecialchars($leadEmailLabel) ?></span> <span class="req">*</span></label>
-        <input type="email" name="email" required>
+        <label for="leadEmail"><span data-field="lead_email_label"><?= htmlspecialchars($leadEmailLabel) ?></span> <span class="req">*</span></label>
+        <input type="email" name="email" id="leadEmail" required>
       </div>
       <div class="lead-field">
-        <label><span data-field="lead_whatsapp_label"><?= htmlspecialchars($leadWhatsappLabel) ?></span> <span class="req">*</span></label>
+        <label for="leadWhatsapp"><span data-field="lead_whatsapp_label"><?= htmlspecialchars($leadWhatsappLabel) ?></span> <span class="req">*</span></label>
         <div class="phone-field">
           <span class="phone-prefix">BR +55</span>
           <input type="text" name="contato" id="leadWhatsapp" required inputmode="tel" autocomplete="tel">
         </div>
       </div>
       <div class="lead-field">
-        <label><span data-field="lead_company_label"><?= htmlspecialchars($leadCompanyLabel) ?></span> <span class="req">*</span></label>
-        <input type="text" name="empresa" required>
+        <label for="leadEmpresa"><span data-field="lead_company_label"><?= htmlspecialchars($leadCompanyLabel) ?></span> <span class="req">*</span></label>
+        <input type="text" name="empresa" id="leadEmpresa" required>
       </div>
       <div class="lead-extra-wrap" id="leadExtraWrap">
       <div class="lead-extra-inner">
       <div class="lead-field">
-        <label>Escolha o seu plano <span class="req">*</span></label>
+        <label for="leadPlanoBtn">Escolha o seu plano <span class="req">*</span></label>
         <div class="lead-dropdown" data-name="plano">
-          <button type="button" class="lead-drop-btn" aria-expanded="false">
+          <button type="button" class="lead-drop-btn" id="leadPlanoBtn" aria-expanded="false">
             <span class="lead-drop-text">Selecionar</span>
             <span class="lead-drop-arrow"></span>
           </button>
@@ -445,21 +445,21 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
       </div>
       <div class="lead-row">
         <div class="lead-field">
-          <label>Senha <span class="req">*</span></label>
-          <input type="password" name="senha" required>
+          <label for="leadSenha">Senha <span class="req">*</span></label>
+          <input type="password" name="senha" id="leadSenha" required>
         </div>
         <div class="lead-field">
-          <label>Repita a senha <span class="req">*</span></label>
-          <input type="password" name="senha2" required>
+          <label for="leadSenha2">Repita a senha <span class="req">*</span></label>
+          <input type="password" name="senha2" id="leadSenha2" required>
         </div>
       </div>
       <div class="lead-row">
         <div class="lead-field">
-          <label>CNPJ ou CPF <span class="req">*</span></label>
+          <label for="leadCnpj">CNPJ ou CPF <span class="req">*</span></label>
           <input type="text" name="cnpj" id="leadCnpj" placeholder="CNPJ ou CPF" required inputmode="numeric">
         </div>
         <div class="lead-field">
-          <label>Endereço <span class="req">*</span></label>
+          <label for="leadAddressBtn">Endereço <span class="req">*</span></label>
           <button type="button" class="lead-address-btn" id="leadAddressBtn">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.1 7-11a7 7 0 10-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg>
             Informar endereço
@@ -467,10 +467,10 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
         </div>
       </div>
       <div class="lead-field">
-        <label><span data-field="lead_revenue_label"><?= htmlspecialchars($leadRevenueLabel) ?></span> <span class="req">*</span></label>
+        <label for="leadFaturamentoBtn"><span data-field="lead_revenue_label"><?= htmlspecialchars($leadRevenueLabel) ?></span> <span class="req">*</span></label>
         <?php $revOptions = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string)$leadRevenueOptions)))); ?>
         <div class="lead-dropdown" data-name="faturamento">
-          <button type="button" class="lead-drop-btn" aria-expanded="false">
+          <button type="button" class="lead-drop-btn" id="leadFaturamentoBtn" aria-expanded="false">
             <span class="lead-drop-text"><?= htmlspecialchars($revOptions[0] ?? 'Selecionar') ?></span>
             <span class="lead-drop-arrow"></span>
           </button>
@@ -483,10 +483,10 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
         </div>
       </div>
       <div class="lead-field">
-        <label><span data-field="lead_segment_label"><?= htmlspecialchars($leadSegmentLabel) ?></span></label>
+        <label for="leadSegmentoBtn"><span data-field="lead_segment_label"><?= htmlspecialchars($leadSegmentLabel) ?></span></label>
         <?php $segOptions = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string)$leadSegmentOptions)))); ?>
         <div class="lead-dropdown" data-name="segmento">
-          <button type="button" class="lead-drop-btn" aria-expanded="false">
+          <button type="button" class="lead-drop-btn" id="leadSegmentoBtn" aria-expanded="false">
             <span class="lead-drop-text"><?= htmlspecialchars($segOptions[0] ?? 'Selecionar') ?></span>
             <span class="lead-drop-arrow"></span>
           </button>
@@ -521,31 +521,31 @@ $precisaBaseTag = strpos($reqPath, '/public') === false;
     </div>
     <div class="lead-grid-inner">
       <div class="lead-field">
-        <label>CEP</label>
+        <label for="leadCep">CEP</label>
         <input type="text" name="cep" id="leadCep" form="teste" placeholder="00000-000" inputmode="numeric">
       </div>
       <div class="lead-field">
-        <label>Rua</label>
+        <label for="leadRua">Rua</label>
         <input type="text" name="rua" id="leadRua" form="teste">
       </div>
       <div class="lead-field">
-        <label>Numero</label>
+        <label for="leadNumero">Numero</label>
         <input type="text" name="numero" id="leadNumero" form="teste">
       </div>
       <div class="lead-field">
-        <label>Bairro</label>
+        <label for="leadBairro">Bairro</label>
         <input type="text" name="bairro" id="leadBairro" form="teste">
       </div>
       <div class="lead-field">
-        <label>Cidade</label>
+        <label for="leadCidade">Cidade</label>
         <input type="text" name="cidade" id="leadCidade" form="teste">
       </div>
       <div class="lead-field">
-        <label>Estado</label>
+        <label for="leadEstado">Estado</label>
         <input type="text" name="estado" id="leadEstado" form="teste" maxlength="2">
       </div>
       <div class="lead-field full">
-        <label>Complemento</label>
+        <label for="leadComplemento">Complemento</label>
         <input type="text" name="complemento" id="leadComplemento" form="teste">
       </div>
     </div>
