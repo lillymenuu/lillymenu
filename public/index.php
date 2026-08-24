@@ -208,12 +208,21 @@ $themeLightBg = landing_get($conn, 'theme_light_bg', '#f4f6f8');
 $themeText = landing_get($conn, 'theme_text', '#16263a');
 $themeMuted = landing_get($conn, 'theme_muted', '#5b6b7a');
 $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
+
+// Quando acessado pela raiz do dominio (dominio.com/, sem "/public" na URL —
+// ver .htaccess: RewriteRule ^$ public/index.php), os caminhos relativos desta
+// pagina (./assets/..., ../admin/..., planos.php etc.) ficam um nivel rasos
+// demais, pois o navegador resolve relativo a URL visivel, nao ao arquivo
+// fisico. A <base> corrige isso sem precisar reescrever cada link.
+$reqPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+$precisaBaseTag = strpos($reqPath, '/public') === false;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<?php if ($precisaBaseTag): ?><base href="public/"><?php endif; ?>
 <title><?= htmlspecialchars($brand) ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -20,6 +20,9 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(admin/.+)$ $1.php [L,QSA]
 
+# Tela inicial do site (landing page): dominio.com/ -> public/index.php, sem mudar a URL
+RewriteRule ^$ public/index.php [L,QSA]
+
 # Tela inicial do site (landing page): /public/home -> /public/index.php
 RewriteRule ^public/home/?$ public/index.php [L,QSA]
 
