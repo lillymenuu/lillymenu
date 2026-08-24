@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-24T00:00:00.000Z",
+  "title": "Design System: LillyMenu",
+  "extensions": {
+    "colorMeta": {
+      "copper-primary": { "role": "primary", "displayName": "Cobre Queimado", "canonical": "#9C5523", "tonalRamp": ["#2c1810", "#4a290f", "#6a380f", "#8a4816", "#9C5523", "#b97a45", "#d6a578", "#efd3ba"] },
+      "copper-deep": { "role": "primary", "displayName": "Cobre Profundo", "canonical": "#7A3F10", "tonalRamp": ["#1f1206", "#33200a", "#4d2f0d", "#63390d", "#7A3F10", "#9c5f2e", "#c08a5c", "#e0bb96"] },
+      "soft-tint-bg": { "role": "secondary", "displayName": "Realce Suave (fundo)", "canonical": "#f5ede5", "tonalRamp": ["#3a2c1e", "#5c4530", "#7d5f45", "#a1815f", "#c4a482", "#ded0bc", "#efe6db", "#f5ede5"] },
+      "soft-tint-text": { "role": "secondary", "displayName": "Realce Suave (texto)", "canonical": "#7A3F10", "tonalRamp": ["#1f1206", "#33200a", "#4d2f0d", "#63390d", "#7A3F10", "#9c5f2e", "#c08a5c", "#e0bb96"] },
+      "paper-white": { "role": "neutral", "displayName": "Branco Papel", "canonical": "#faf9f7", "tonalRamp": ["#1a1917", "#38362f", "#585549", "#7c7868", "#a29d89", "#c9c4b0", "#e6e2d6", "#faf9f7"] },
+      "ink-graphite": { "role": "neutral", "displayName": "Grafite Profundo", "canonical": "#1f2328", "tonalRamp": ["#08090a", "#141618", "#1f2328", "#3a3f46", "#585e66", "#7a8088", "#a3a8ae", "#d3d5d8"] },
+      "muted-text": { "role": "neutral", "displayName": "Texto Suave", "canonical": "#5b6169", "tonalRamp": ["#17181a", "#2a2c2f", "#3e4145", "#4c4f54", "#5b6169", "#7d828a", "#a3a7ad", "#ccced2"] },
+      "sand-border": { "role": "neutral", "displayName": "Areia Clara", "canonical": "#ece7e0", "tonalRamp": ["#2c2820", "#4c4638", "#6c6350", "#8f8570", "#b3a996", "#d0cabf", "#e3ded6", "#ece7e0"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Titulo do hero (h1) — unica ocorrencia desse tamanho na pagina." },
+      "headline": { "displayName": "Headline", "purpose": "Titulos de secao (CTA final, overlay de Segmentos)." },
+      "title": { "displayName": "Title", "purpose": "Nome da marca na navbar/rodape (usa --brand-font, configuravel por loja)." },
+      "body": { "displayName": "Body", "purpose": "Paragrafos e descricoes; sempre na cor muted, nunca na cor de texto principal." },
+      "label": { "displayName": "Label", "purpose": "Badges/pills, rotulos de campo, texto de botao." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 22px 45px rgba(8,20,33,.16)", "purpose": "Cards e superficies flutuantes em repouso (ex: card de formulario, glow das secoes)." },
+      { "name": "card-lifted", "value": "0 24px 50px rgba(8,20,33,.18)", "purpose": "Cards com maior destaque (ex: segmentos-card, dropdown aberto)." },
+      { "name": "modal", "value": "0 24px 50px rgba(8,20,33,.3)", "purpose": "Modais e overlays acima de tudo — maior opacidade que os cards." },
+      { "name": "button-primary-glow", "value": "0 10px 22px -6px rgba(156,85,35,.4)", "purpose": "Sombra propria do botao primario (Cobre Queimado) — unica sombra tingida com a cor de marca em vez do navy." }
+    ],
+    "motion": [
+      { "name": "hover-lift", "value": "transform .15s ease", "purpose": "Todo .btn sobe 1px no hover — feedback padrao de qualquer botao." },
+      { "name": "cta-pulse", "value": "ctaBtnPulse 2.6s ease-in-out infinite", "purpose": "Anel de box-shadow pulsando pra fora — reservado para no maximo 1 CTA por tela (.btn-pulse)." },
+      { "name": "lead-card-glow-rotate", "value": "leadGlowRotate 7s linear infinite", "purpose": "Anel conic-gradient girando atras do card de cadastro — componente-assinatura, unico no sistema." },
+      { "name": "reveal-fade-up", "value": "reveal .6s ease forwards (via IntersectionObserver, classe .in-view)", "purpose": "Elementos com classe .reveal entram com fade+translateY ao rolar a pagina." },
+      { "name": "progressive-form-reveal", "value": "max-height 1.1s cubic-bezier(.22,.61,.36,1)", "purpose": "Campos extras do formulario de cadastro aparecem gradualmente ao preencher Nome da empresa." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "1024px" },
+      { "name": "menu-collapse", "value": "880px" },
+      { "name": "mobile", "value": "640px" },
+      { "name": "mobile-sm", "value": "480px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acao de conversao direta (Cadastre-se, Enviar). Fundo Cobre Queimado, sombra propria tingida.",
+      "html": "<button class=\"ds-btn-primary\">Cadastre-se</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; font-family: 'Poppins', sans-serif; background: var(--pink, #9C5523); color: #fff; box-shadow: 0 10px 22px -6px rgba(156,85,35,.4); transition: transform .15s ease, background .2s; } .ds-btn-primary:hover { background: var(--pink-dark, #7A3F10); transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--pink, #9C5523); outline-offset: 2px; }"
+    },
+    {
+      "name": "CTA Pulse Button",
+      "kind": "button",
+      "refersTo": "button-cta",
+      "description": "CTA branco de maior destaque com anel de pulso — reservado para 1 por tela, usado sobre fundos escuros/coloridos.",
+      "html": "<a class=\"ds-btn-cta-pulse\" href=\"#\">Falar agora</a>",
+      "css": ".ds-btn-cta-pulse { display: inline-flex; align-items: center; justify-content: center; padding: 22px 56px; min-width: 260px; font-size: 18px; font-weight: 800; font-family: 'Poppins', sans-serif; border-radius: 14px; background: #fff; color: var(--navy, #9C5523); border: none; cursor: pointer; text-decoration: none; --pulse-color: #fff; box-shadow: 0 0 0 0 color-mix(in srgb, var(--pulse-color) 55%, transparent); animation: ds-cta-pulse 2.6s ease-in-out infinite; transition: transform .15s ease, background .2s; } .ds-btn-cta-pulse:hover { background: var(--light-bg, #faf9f7); transform: translateY(-2px) scale(1.04); animation-play-state: paused; } @keyframes ds-cta-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pulse-color) 50%, transparent); } 70% { box-shadow: 0 0 0 18px color-mix(in srgb, var(--pulse-color) 0%, transparent); } 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pulse-color) 0%, transparent); } }"
+    },
+    {
+      "name": "Tag Pill",
+      "kind": "chip",
+      "refersTo": "tag-pill",
+      "description": "Badge/etiqueta de destaque (ex: badge do hero 'Sistema para Delivery e Restaurante').",
+      "html": "<span class=\"ds-tag-pill\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 9h18\"/></svg>Sistema completo de gestao</span>",
+      "css": ".ds-tag-pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; background: var(--blue-soft, #f5ede5); color: var(--blue-soft-text, #7A3F10); font-size: 12px; font-weight: 600; font-family: 'Poppins', sans-serif; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto padrao — borda 1.5px, cantos 10px.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Seu nome\">",
+      "css": ".ds-input { width: 100%; border: 1.5px solid var(--border, #ece7e0); border-radius: 10px; padding: 11px 14px; font-size: 14px; font-family: 'Poppins', sans-serif; color: var(--text, #1f2328); outline: none; transition: border-color .15s ease; } .ds-input:focus { border-color: var(--pink, #9C5523); }"
+    },
+    {
+      "name": "Signature Lead Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Card do formulario de cadastro com anel conic-gradient girando por tras — componente-assinatura do sistema, unico com esse tratamento.",
+      "html": "<div class=\"ds-lead-card-wrap\"><div class=\"ds-lead-card-glow\"></div><div class=\"ds-lead-card\">Formulario de cadastro</div></div>",
+      "css": ".ds-lead-card-wrap { position: relative; border-radius: 20px; overflow: hidden; width: 320px; height: 160px; } .ds-lead-card-glow { position: absolute; top: 50%; left: 50%; width: 180%; height: 180%; background: conic-gradient(from 0deg, var(--pink-dark, #7A3F10), var(--blue-soft, #f5ede5) 20%, var(--blue-btn, #f5ede5) 40%, var(--pink-dark, #7A3F10) 60%, var(--pink, #9C5523) 80%, var(--pink-dark, #7A3F10)); transform: translate(-50%,-50%) rotate(0deg); animation: ds-lead-glow-rotate 7s linear infinite; } .ds-lead-card { position: relative; z-index: 1; margin: 1.5px; background: #fff; border-radius: 18px; height: calc(100% - 3px); display: flex; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif; color: var(--text, #1f2328); font-weight: 600; } @keyframes ds-lead-glow-rotate { to { transform: translate(-50%,-50%) rotate(360deg); } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "O Balcão de Cobre",
+    "overview": "LillyMenu se apresenta como um balcao limpo e bem cuidado: fundo branco-papel que nunca compete com o conteudo, e um unico acento de cobre queimado que aparece exatamente onde precisa guiar a decisao do visitante — nunca em excesso. E um sistema de gestao de comida vendido como produto serio e profissional, nao como um app 'fofo' nem como um dashboard corporativo frio; a calidez vem da cor, nao de ilustracoes fofas ou linguagem casual. Uma direcao anterior (navy escuro + rosa + dourado, sombras pesadas, gradientes fortes) foi explicitamente testada e rejeitada nesta sessao em favor deste caminho minimalista. Essa rejeicao e uma decisao de produto confirmada, nao uma preferencia passageira.",
+    "keyCharacteristics": [
+      "Fundo branco-papel quase universal; cor entra como acento, nao como preenchimento.",
+      "Um unico par de acentos (cobre + seu tom claro) faz o trabalho que em outros sistemas levaria 4-5 cores.",
+      "Cantos generosamente arredondados em toda a hierarquia, de inputs (10px) a cards grandes (22px) e pilulas (999px).",
+      "Sombras tingidas (navy ou cobre), nunca cinza neutro.",
+      "Um unico CTA 'pulsa' por tela — o efeito de destaque e reservado, nao espalhado."
+    ],
+    "rules": [
+      { "name": "A Regra dos Dois Tons", "body": "A folha de estilo expoe variaveis para azul, rosa e link separados, mas o tema em uso hoje os colapsa deliberadamente para apenas Cobre Queimado + Realce Suave. Nao introduzir uma terceira cor de acento so porque a variavel existe.", "section": "colors" },
+      { "name": "A Regra do Peso Unico", "body": "Toda enfase tipografica vem de tamanho e peso, nunca de italico ou de trocar a familia de fonte no corpo do texto.", "section": "typography" },
+      { "name": "A Regra da Sombra com Cor", "body": "Nunca usar rgba(0,0,0,…) puro para sombra neste sistema; a sombra sempre herda o tom escuro da marca (navy) ou, no botao primario, o proprio cobre.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar Cobre Queimado como o unico acento de cor ativo; tudo o mais e neutro quente ou branco.",
+      "Do tingir toda sombra com o tom escuro da marca, nunca cinza puro.",
+      "Do arredondar generosamente (10px+) — esquadrado nao faz parte deste sistema.",
+      "Do reservar o efeito de pulso para no maximo um CTA por tela.",
+      "Do adaptar a cor do anel de pulso ao fundo (branco sobre fundo escuro, cor do botao sobre fundo claro)."
+    ],
+    "donts": [
+      "Don't reintroduzir a direcao visual escura/maximalista (navy solido + rosa + dourado, sombras pesadas) sem pedido explicito.",
+      "Don't adicionar uma terceira cor de acento so porque as variaveis de tema existem.",
+      "Don't tratar textos de prova social do hero como numero verificado — e copy de marketing.",
+      "Don't aplicar o anel de 'brilho vivo' giratorio em qualquer card alem do formulario de cadastro."
+    ]
+  }
+}
