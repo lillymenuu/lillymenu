@@ -192,29 +192,30 @@ p{margin:0}
 .cta-card-head-text{flex:1;min-width:240px}
 .cta-card h2{font-size:28px;margin-bottom:12px}
 .cta-card p{color:#c7d2de;font-size:14.5px;line-height:1.6;max-width:520px;margin-bottom:30px}
-.cta-card-btn{
-  flex-shrink:0;
-  background:#fff;
-  color:var(--navy);
-  white-space:nowrap;
-  padding:22px 56px;
-  min-width:260px;
-  font-size:18px;
-  font-weight:800;
-  border-radius:14px;
-  box-shadow:0 0 0 0 rgba(255,255,255,.55);
+.cta-card-btn{flex-shrink:0;white-space:nowrap;min-width:260px}
+
+/* ── Botao chamativo reutilizavel (pulso + hover) ──
+   --pulse-color define a cor do anel: branco por padrao (botoes claros sobre
+   fundo escuro/colorido); troque para a cor do proprio botao quando ele fica
+   sobre um fundo claro (ex: Cadastre-se na navbar branca), senao o anel
+   branco some contra o fundo. */
+.btn-pulse{
+  --pulse-color:#fff;
+  box-shadow:0 0 0 0 color-mix(in srgb, var(--pulse-color) 55%, transparent);
   animation:ctaBtnPulse 2.6s ease-in-out infinite;
 }
-.cta-card-btn:hover{
-  background:var(--light-bg);
-  transform:translateY(-2px) scale(1.04);
-  animation-play-state:paused;
-}
+.btn-pulse:hover{transform:translateY(-2px) scale(1.04);animation-play-state:paused}
+.nav-actions .btn-pulse,
+.mobile-nav-actions .btn-pulse{--pulse-color:var(--pink)}
 @keyframes ctaBtnPulse{
-  0%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}
-  70%{box-shadow:0 0 0 18px rgba(255,255,255,0)}
-  100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}
+  0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--pulse-color) 50%, transparent)}
+  70%{box-shadow:0 0 0 18px color-mix(in srgb, var(--pulse-color) 0%, transparent)}
+  100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--pulse-color) 0%, transparent)}
 }
+
+/* ── Botao branco "premium" reutilizavel (CTA sobre fundo escuro/colorido) ── */
+.btn-white-cta{background:#fff;color:var(--navy);padding:22px 56px;font-size:18px;font-weight:800;border-radius:14px}
+.btn-white-cta:hover{background:var(--light-bg)}
 .cta-items{display:flex;align-items:flex-start;gap:0;border-top:1px solid rgba(255,255,255,.14);padding-top:30px}
 .cta-item{display:flex;align-items:flex-start;gap:14px;flex:1;padding-right:24px}
 .cta-item-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}

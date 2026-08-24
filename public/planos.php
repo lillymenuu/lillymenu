@@ -289,7 +289,7 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
         </div>
         <h1><?= nl2br(htmlspecialchars($planosHeroTitulo)) ?></h1>
         <p><?= htmlspecialchars($planosHeroSubtitulo) ?></p>
-        <a class="btn btn-pink" href="<?= htmlspecialchars($planosHeroBotaoLink) ?>"><?= htmlspecialchars($planosHeroBotaoTexto) ?></a>
+        <a class="btn btn-white-cta btn-pulse" href="<?= htmlspecialchars($planosHeroBotaoLink) ?>"><?= htmlspecialchars($planosHeroBotaoTexto) ?></a>
       </div>
       <div class="planos-hero-media">
         <?php if ($planosHeroImagem): ?>
@@ -326,7 +326,7 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
         <span class="planos-cta-divider">|</span>
         <span><?= htmlspecialchars($planosCtaTexto) ?></span>
       </div>
-      <a class="btn btn-pink" href="<?= htmlspecialchars($planosCtaBotaoLink) ?>"><?= htmlspecialchars($planosCtaBotaoTexto) ?></a>
+      <a class="btn btn-white-cta btn-pulse" href="<?= htmlspecialchars($planosCtaBotaoLink) ?>"><?= htmlspecialchars($planosCtaBotaoTexto) ?></a>
     </div>
   </div>
 </section>

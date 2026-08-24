@@ -264,7 +264,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
     </nav>
     <div class="nav-actions">
       <a class="nav-access" href="<?= htmlspecialchars($navCtaSecondaryLink) ?>"><?= htmlspecialchars($navCtaSecondaryText) ?></a>
-      <button type="button" class="btn btn-pink" id="btnCadastreSe">Cadastre-se</button>
+      <button type="button" class="btn btn-pink btn-pulse" id="btnCadastreSe">Cadastre-se</button>
       
       <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
         <svg class="icon-burger" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -274,7 +274,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
     <div class="mobile-nav" id="mobileNav">
       <div class="mobile-nav-divider"></div>
       <div class="mobile-nav-actions">
-        <button type="button" class="mobile-nav-btn mobile-nav-btn--pink" id="btnCadastreSeMobile">Cadastre-se</button>
+        <button type="button" class="mobile-nav-btn mobile-nav-btn--pink btn-pulse" id="btnCadastreSeMobile">Cadastre-se</button>
        
         <a class="mobile-nav-btn mobile-nav-btn--gray" href="<?= htmlspecialchars($navCtaSecondaryLink) ?>"><?= htmlspecialchars($navCtaSecondaryText) ?> conta</a>
       </div>
@@ -834,7 +834,7 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
           <h2 data-field="cta_title"><?= htmlspecialchars($ctaTitle) ?></h2>
           <p data-field="cta_text"><?= htmlspecialchars($ctaText) ?></p>
         </div>
-        <a class="btn cta-card-btn" href="<?= htmlspecialchars($ctaButtonLink) ?>" data-field-href="cta_button_link" data-field="cta_button_text"><?= htmlspecialchars($ctaButtonText) ?></a>
+        <a class="btn cta-card-btn btn-white-cta btn-pulse" href="<?= htmlspecialchars($ctaButtonLink) ?>" data-field-href="cta_button_link" data-field="cta_button_text"><?= htmlspecialchars($ctaButtonText) ?></a>
       </div>
       <div class="cta-items">
         <?php foreach ($ctaItens as $i => $item): $n = $i + 1; ?>
