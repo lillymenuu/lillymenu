@@ -157,6 +157,7 @@ gerenciamentoSincronizarPlanosLanding($conn, $landingPlanos);
 // Uploads
 $uploads = [
   'logo_image' => 'logo_image',
+  'hero_bg_image' => 'hero_bg_image',
   'solucao1_imagem' => 'solucao1_imagem',
   'solucao2_imagem' => 'solucao2_imagem',
   'solucao3_imagem' => 'solucao3_imagem',

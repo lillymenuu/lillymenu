@@ -55,6 +55,7 @@ $landing = [
   'nav_cta_secondary_text' => landingGet($conn, 'nav_cta_secondary_text', 'Acessar'),
   'nav_cta_secondary_link' => landingGet($conn, 'nav_cta_secondary_link', '../admin/index.php'),
   'logo_image' => landingGet($conn, 'logo_image', ''),
+  'hero_bg_image' => landingGet($conn, 'hero_bg_image', ''),
   'nav_brand_font' => landingGet($conn, 'nav_brand_font', 'Poppins'),
   'nav_links_items' => landingGet($conn, 'nav_links_items', "Inicio|#inicio\nA {brand}|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos.php"),
 
@@ -782,6 +783,18 @@ $painelJsVer = filemtime(__DIR__ . '/assets/js/painel.js');
                 <?php endif; ?>
                 <div class="landing-size" data-size></div>
                 <input class="form-control" type="file" name="logo_image" accept="image/*">
+              </div>
+
+              <div class="landing-file" data-reco="2400x1350px">
+                <label class="form-label">Imagem de fundo - Hero (topo da pagina)</label>
+                <?php if (!empty($landing['hero_bg_image'])): ?>
+                  <img class="landing-preview" src="<?= htmlspecialchars($landing['hero_bg_image']) ?>" alt="Fundo do hero">
+                <?php else: ?>
+                  <div class="landing-placeholder">Sem imagem (usa o padrao de linhas gerado automaticamente)</div>
+                <?php endif; ?>
+                <div class="landing-size" data-size></div>
+                <input class="form-control" type="file" name="hero_bg_image" accept="image/*">
+                <div class="form-help">Se enviar uma imagem aqui, ela substitui o padrao de linhas decorativo. Prefira uma imagem clara/suave, pois o titulo e o formulario ficam por cima dela.</div>
               </div>
 
               <?php for ($n = 1; $n <= 5; $n++): ?>

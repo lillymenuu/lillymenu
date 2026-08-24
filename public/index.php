@@ -49,6 +49,7 @@ $navCtaPrimaryLink = landing_get($conn, 'nav_cta_primary_link', '#contato');
 $navCtaSecondaryText = landing_get($conn, 'nav_cta_secondary_text', 'Acessar');
 $navCtaSecondaryLink = landing_get($conn, 'nav_cta_secondary_link', '../admin/index.php');
 $logoImage = landing_get($conn, 'logo_image', '');
+$heroBgImage = landing_get($conn, 'hero_bg_image', '');
 
 $navBrandFont = landing_get($conn, 'nav_brand_font', 'Poppins');
 $navBrandFontsMap = [
@@ -288,6 +289,12 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
 </header>
 
 <section class="hero" id="inicio">
+  <div class="hero-bg-slot">
+  <?php if ($heroBgImage): ?>
+    <img src="<?= htmlspecialchars(landing_asset($heroBgImage)) ?>" alt="" data-media-slot="hero_bg_image">
+    <div class="hero-bg-overlay"></div>
+  <?php else: ?>
+  <div class="hero-network-wrap" data-media-slot="hero_bg_image">
   <svg class="hero-network" style="top:-55px; left:-70px;" width="780" height="640" viewBox="0 0 440 360" fill="none">
     <defs>
       <radialGradient id="heroNodeGlowA" cx="50%" cy="50%" r="50%">
@@ -354,6 +361,9 @@ $themeBorder = landing_get($conn, 'theme_border', '#e2e8ee');
     </g>
     <g fill="#9C5523"><circle cx="150" cy="30" r="5.2"/><circle cx="220" cy="160" r="5.2"/></g>
   </svg>
+  </div>
+  <?php endif; ?>
+  </div>
   <div class="container hero-grid">
     <div class="hero-copy">
       <div class="hero-tag">
