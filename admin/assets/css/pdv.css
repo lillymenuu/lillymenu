@@ -4787,16 +4787,34 @@ body.pdv-modal .btn-pdv-primary{
   margin-top:10px;
 }
 
-@media (max-width: 600px){
+@media (max-width: 991.98px){
+  /* Restaura o comportamento nativo do Bootstrap pras classes col-lg-8/
+     col-lg-4 (empilhar abaixo de 992px), que o display:flex sem
+     flex-wrap em #formPDV > .row estava anulando — inclui a faixa de
+     tablet em retrato (768px) onde o carrinho ficava com 157px de largura. */
+  body.pdv-modal #formPDV > .row{
+    flex-wrap:wrap;
+  }
   body.pdv-modal #formPDV > .row > .col-lg-8{
-    flex:0 0 58% !important;
-    max-width:58% !important;
-    width:58% !important;
+    flex:1 1 100% !important;
+    max-width:100% !important;
+    width:100% !important;
+    max-height:56%;
   }
   body.pdv-modal #formPDV > .row > .col-lg-4{
-    flex:0 0 42% !important;
-    max-width:42% !important;
-    width:42% !important;
+    flex:1 1 100% !important;
+    max-width:100% !important;
+    width:100% !important;
+    max-height:44%;
+    border-left:0;
+    border-top:1px solid #eaedf2;
+  }
+  /* Alvo de toque: 28-30px fica abaixo do minimo recomendado (44px) pra
+     um controle tocado dezenas de vezes por pedido. */
+  .pdv-qty-btn,
+  .pdv-product-card .pdv-qty-btn{
+    width:44px;
+    height:44px;
   }
 }
 
