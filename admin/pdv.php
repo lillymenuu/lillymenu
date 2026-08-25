@@ -559,7 +559,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                 </div>
                 <div class="pdv-search-row">
                   <div class="pdv-search-field">
-                    <label class="pdv-search-label">Pesquisa</label>
+                    <label class="pdv-search-label" for="produtoBusca">Pesquisa</label>
                     <div class="input-group pdv-search-input">
                       <span class="input-group-text"><i class="bi bi-search"></i></span>
                       <input type="text"
@@ -725,7 +725,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                 <div class="col-12">
                   <div class="pdv-type-row">
                     <div class="flex-grow-1">
-                      <label class="form-label">Tipo do pedido</label>
+                      <label class="form-label" for="tipoPedidoBtn">Tipo do pedido</label>
                       <div class="pdv-type-select<?= $modoModal ? ' use-native' : '' ?>" id="tipoPedidoSelect">
                         <button type="button" class="pdv-type-trigger" id="tipoPedidoBtn">
                           <span id="tipoPedidoLabel">Escolha o tipo do pedido</span>
@@ -748,7 +748,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                             </button>
                           <?php endif; ?>
                         </div>
-                        <select class="form-select pdv-native-select" name="tipo" id="tipoPedido"
+                        <select class="form-select pdv-native-select" name="tipo" id="tipoPedido" aria-label="Tipo do pedido"
                                 onchange="if(window.pdvHandleTipoChange){window.pdvHandleTipoChange(this);}var v=this.value;var d=document.getElementById('pdvSideDetails');if(d){d.classList.toggle('d-none',!v);}document.querySelectorAll('.pdv-retirada').forEach(function(el){el.classList.toggle('d-none',v==='entrega');});var ce=document.getElementById('cardEntregaInfo');if(ce){ce.classList.toggle('d-none',v!=='entrega');}">
                         <?php if ($usarPlaceholderTipo): ?>
                           <option value="" selected>Escolha o tipo do pedido</option>
@@ -849,16 +849,16 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                       </div>
                     </div>
                     <div class="pdv-client-toggle">
-                      <span>Cashback nesta compra?</span>
+                      <span id="cashbackClienteLabel">Cashback nesta compra?</span>
                       <div class="form-check form-switch m-0">
-                        <input class="form-check-input" type="checkbox" id="cashbackCliente" <?= ($cashbackAtivo && $cashbackPercentual > 0) ? '' : 'disabled' ?>>
+                        <input class="form-check-input" type="checkbox" id="cashbackCliente" aria-labelledby="cashbackClienteLabel" <?= ($cashbackAtivo && $cashbackPercentual > 0) ? '' : 'disabled' ?>>
                       </div>
                     </div>
                     <div class="pdv-client-note d-none" id="cashbackPreviewCliente"></div>
                     <div class="pdv-client-toggle d-none" id="cashbackUsoWrap">
                       <span id="cashbackUsoLabel">Usar cashback (R$ 0,00)</span>
                       <div class="form-check form-switch m-0">
-                        <input class="form-check-input" type="checkbox" id="cashbackUsar" disabled>
+                        <input class="form-check-input" type="checkbox" id="cashbackUsar" aria-labelledby="cashbackUsoLabel" disabled>
                       </div>
                     </div>
                     <div class="pdv-client-toggle is-soft<?= $clubePontosAtivo ? '' : ' d-none' ?>" id="pontosSaldoWrap">
@@ -896,7 +896,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                 </div>
 
                 <div class="col-12 d-none pdv-entrega" id="campoEndereco">
-                  <label class="form-label">Endereco</label>
+                  <label class="form-label" for="enderecoRua">Endereco</label>
                   <input type="text"
                          class="form-control"
                          id="enderecoRua"
@@ -904,7 +904,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                 </div>
 
                 <div class="col-6 d-none pdv-entrega" id="campoBairro">
-                  <label class="form-label">Bairro</label>
+                  <label class="form-label" for="enderecoBairro">Bairro</label>
                   <input type="text"
                          class="form-control"
                          id="enderecoBairro"
@@ -920,7 +920,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                 </div>
 
                 <div class="col-6 d-none pdv-entrega" id="campoCep">
-                  <label class="form-label">CEP</label>
+                  <label class="form-label" for="enderecoCep">CEP</label>
                   <input type="text"
                          class="form-control"
                          id="enderecoCep"
@@ -928,7 +928,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                 </div>
 
                 <div class="col-12 d-none pdv-entrega" id="campoComplemento">
-                  <label class="form-label">Complemento</label>
+                  <label class="form-label" for="enderecoComplemento">Complemento</label>
                   <input type="text"
                          class="form-control"
                          id="enderecoComplemento"
@@ -949,7 +949,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                 <input type="hidden" name="distancia_km" id="enderecoDistancia">
 
                 <div class="col-12 d-none pdv-payment-hidden" id="campoFormaPagamento">
-                  <label class="form-label">Forma de pagamento</label>
+                  <label class="form-label" for="formaPagamento">Forma de pagamento</label>
                   <select class="form-select" name="forma_pagamento" id="formaPagamento">
                     <option value="pix">Pix</option>
                     <option value="dinheiro">Dinheiro</option>
@@ -972,7 +972,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                 <div class="col-12 d-none pdv-payment-hidden" id="blocoSplit">
                   <div class="row g-2">
                     <div class="col-6">
-                      <label class="form-label">Forma 1</label>
+                      <label class="form-label" for="formaPagamento1">Forma 1</label>
                       <select class="form-select" id="formaPagamento1">
                         <option value="pix">Pix</option>
                         <option value="dinheiro">Dinheiro</option>
@@ -983,11 +983,11 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                       </select>
                     </div>
                     <div class="col-6">
-                      <label class="form-label">Valor 1</label>
+                      <label class="form-label" for="valorPagamento1">Valor 1</label>
                       <input type="number" step="0.01" class="form-control" id="valorPagamento1">
                     </div>
                     <div class="col-6">
-                      <label class="form-label">Forma 2</label>
+                      <label class="form-label" for="formaPagamento2">Forma 2</label>
                       <select class="form-select" id="formaPagamento2">
                         <option value="pix">Pix</option>
                         <option value="dinheiro">Dinheiro</option>
@@ -998,14 +998,14 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                       </select>
                     </div>
                     <div class="col-6">
-                      <label class="form-label">Valor 2</label>
+                      <label class="form-label" for="valorPagamento2">Valor 2</label>
                       <input type="number" step="0.01" class="form-control" id="valorPagamento2">
                     </div>
                   </div>
                 </div>
 
                 <div class="col-12 d-none pdv-payment-hidden" id="campoValorPago">
-                  <label class="form-label">Valor pago</label>
+                  <label class="form-label" for="trocoInput">Valor pago</label>
                   <input type="number" step="0.01" class="form-control" id="trocoInput" name="valor_pago">
                   <div class="form-text" id="trocoTexto">Troco: R$ 0,00</div>
                 </div>
@@ -1017,7 +1017,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                   <input type="hidden" name="cashback_usado" id="cashbackUsado" value="0">
 
                   <div class="col-12 d-none pdv-payment-hidden" id="campoTaxaMaquininha">
-                    <label class="form-label">Taxa maquininha (%)</label>
+                    <label class="form-label" for="taxaMaquininhaPercent">Taxa maquininha (%)</label>
                     <input type="number" step="0.01" class="form-control" id="taxaMaquininhaPercent" value="0">
                   </div>
                   <div class="col-12 d-none" id="avisoPermissaoDesconto">
@@ -1025,7 +1025,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                   </div>
 
                 <div class="col-12 d-none pdv-entrega" id="campoTaxa">
-                  <label class="form-label">Taxa de entrega</label>
+                  <label class="form-label" for="taxaEntrega">Taxa de entrega</label>
                   <input type="number" step="0.01" class="form-control" id="taxaEntrega" name="taxa_entrega" value="0.00">
                   <input type="hidden" name="taxa_editada" id="taxaEditada" value="0">
                   <div class="form-text" id="taxaSugestao"></div>
@@ -1043,7 +1043,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                   <p class="pdv-section-subtitle">Confira antes de finalizar.</p>
                 </div>
               </div>
-              <div class="pdv-summary-items" id="resumoItens">
+              <div class="pdv-summary-items" id="resumoItens" aria-live="polite" aria-relevant="additions removals text">
                 <div class="pdv-summary-empty"><i class="bi bi-box-seam"></i>Nenhum produto adicionado</div>
               </div>
               <input type="hidden" name="observacoes_cliente" id="observacoesCliente" value="">
@@ -1081,7 +1081,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
               <div class="summary-divider"></div>
               <div class="summary-line total">
                 <span>Total</span>
-                <span id="totalPedido">R$ 0,00</span>
+                <span id="totalPedido" aria-live="polite" aria-atomic="true">R$ 0,00</span>
               </div>
               <div class="pdv-cashback-summary d-none" id="cashbackResumoActionWrap">
                 <button type="button" class="pdv-cashback-summary-btn" id="cashbackResumoAction">
@@ -1341,9 +1341,9 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
 <div class="pdv-print-config-popover" id="pdvPrintConfigPopover">
   <div class="pdv-print-config-title">Configurações</div>
   <div class="pdv-print-config-row">
-    <span>Impressão automática</span>
+    <span id="pdvPrintAutoprintLabel">Impressão automática</span>
     <label class="pdv-print-config-toggle">
-      <input type="checkbox" id="pdvPrintAutoprintToggle">
+      <input type="checkbox" id="pdvPrintAutoprintToggle" aria-labelledby="pdvPrintAutoprintLabel">
       <span class="pdv-print-config-slider"></span>
     </label>
   </div>
@@ -1446,9 +1446,9 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
 
       <div class="modal-body pdv-client-modal-body">
         <div class="mb-3 pdv-client-inline-field">
-          <span class="pdv-client-inline-caption">Busque pelo cliente</span>
+          <span class="pdv-client-inline-caption" id="clienteModalBuscaLabel">Busque pelo cliente</span>
           <div class="pdv-client-select">
-            <input type="text" class="form-control" id="clienteModalBusca" placeholder="Busque por um cliente por número ou nome">
+            <input type="text" class="form-control" id="clienteModalBusca" aria-labelledby="clienteModalBuscaLabel" placeholder="Busque por um cliente por número ou nome">
             <button type="button" class="pdv-client-select-icon" id="clienteModalRecentesBtn" aria-label="Mostrar clientes recentes">
               <i class="bi bi-chevron-down"></i>
             </button>
@@ -1458,12 +1458,12 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
         <div class="pdv-client-divider"></div>
 
         <div class="mb-3 pdv-client-inline-field">
-          <span class="pdv-client-inline-caption">Número de contato</span>
+          <label class="pdv-client-inline-caption" for="clienteTelefone">Número de contato</label>
           <input type="text" class="form-control" id="clienteTelefone" placeholder="Ex.: (11) 9 8888-9999">
         </div>
 
         <div class="mb-3 pdv-client-inline-field">
-          <span class="pdv-client-inline-caption">Nome do cliente</span>
+          <label class="pdv-client-inline-caption" for="clienteNome">Nome do cliente</label>
           <input type="text" class="form-control" id="clienteNome" placeholder="">
         </div>
 
@@ -1514,11 +1514,11 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
       <div class="modal-body">
         <div id="caixaFormAbrir">
           <div class="mb-3">
-            <label class="form-label">Saldo inicial</label>
+            <label class="form-label" for="caixaSaldoInicial">Saldo inicial</label>
             <input type="number" step="0.01" class="form-control" id="caixaSaldoInicial" placeholder="0,00">
           </div>
           <div class="mb-3">
-            <label class="form-label">Observacoes</label>
+            <label class="form-label" for="caixaObsAbrir">Observacoes</label>
             <textarea class="form-control" id="caixaObsAbrir" rows="2" placeholder="Opcional"></textarea>
           </div>
         </div>
@@ -1528,15 +1528,15 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
             Caixa aberto em <span id="caixaAbertoEm">-</span>
           </div>
           <div class="mb-3">
-            <label class="form-label">Saldo inicial</label>
+            <label class="form-label" for="caixaSaldoInicialInfo">Saldo inicial</label>
             <input type="text" class="form-control" id="caixaSaldoInicialInfo" disabled>
           </div>
           <div class="mb-3">
-            <label class="form-label">Saldo final</label>
+            <label class="form-label" for="caixaSaldoFinal">Saldo final</label>
             <input type="number" step="0.01" class="form-control" id="caixaSaldoFinal" placeholder="0,00">
           </div>
           <div class="mb-3">
-            <label class="form-label">Observacoes</label>
+            <label class="form-label" for="caixaObsFechar">Observacoes</label>
             <textarea class="form-control" id="caixaObsFechar" rows="2" placeholder="Opcional"></textarea>
           </div>
         </div>
@@ -1601,8 +1601,9 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
       </div>
       <div class="modal-body pdv-delivery-body">
         <div class="mb-3 pdv-delivery-client-field">
-          <span class="pdv-delivery-client-caption">Busque pelo cliente</span>
+          <span class="pdv-delivery-client-caption" id="entregaClienteBuscaLabel">Busque pelo cliente</span>
           <input type="text" class="form-control pdv-delivery-input pdv-delivery-select" id="entregaClienteBusca"
+                 aria-labelledby="entregaClienteBuscaLabel"
                  placeholder="Pesquise por número ou nome">
           <button type="button" class="pdv-delivery-client-trigger" id="entregaClienteRecentesBtn" aria-label="Mostrar clientes recentes">
             <i class="bi bi-chevron-down"></i>
@@ -1611,48 +1612,48 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
         </div>
         <div class="pdv-delivery-section"></div>
         <div class="mb-3">
-          <label class="form-label">Numero de contato</label>
+          <label class="form-label" for="entregaClienteTelefone">Numero de contato</label>
           <input type="text" class="form-control pdv-delivery-input" id="entregaClienteTelefone"
                  placeholder="Ex.: (11) 9 8888-9999">
           <div class="invalid-feedback" id="entregaTelefoneErro"></div>
         </div>
         <div class="mb-3">
-          <label class="form-label">Nome do cliente</label>
+          <label class="form-label" for="entregaClienteNome">Nome do cliente</label>
           <input type="text" class="form-control pdv-delivery-input" id="entregaClienteNome"
                  placeholder="Ex.: Joao da Silva">
           <div class="invalid-feedback" id="entregaNomeErro"></div>
         </div>
         <div class="mb-3">
-          <label class="form-label">CEP</label>
+          <label class="form-label" for="entregaCepModal">CEP</label>
           <input type="text" class="form-control pdv-delivery-input" id="entregaCepModal"
                  placeholder="Ex.: 00000-000">
         </div>
         <div class="pdv-delivery-row mb-3">
           <div>
-            <label class="form-label">Rua/Avenida</label>
+            <label class="form-label" for="entregaRuaModal">Rua/Avenida</label>
             <input type="text" class="form-control pdv-delivery-input" id="entregaRuaModal"
                    placeholder="Ex.: Rua Oscar Freire">
           </div>
           <div>
-            <label class="form-label">Numero</label>
+            <label class="form-label" for="entregaNumeroModal">Numero</label>
             <input type="text" class="form-control pdv-delivery-input" id="entregaNumeroModal"
                    placeholder="Ex.: 44">
           </div>
         </div>
         <div class="pdv-delivery-row pdv-delivery-row--stack mb-3">
           <div>
-            <label class="form-label">Bairro</label>
+            <label class="form-label" for="entregaBairroModal">Bairro</label>
             <input type="text" class="form-control pdv-delivery-input" id="entregaBairroModal"
                    list="listaBairros" placeholder="Bairro">
           </div>
           <div>
-            <label class="form-label">Cidade</label>
+            <label class="form-label" for="entregaCidadeModal">Cidade</label>
             <input type="text" class="form-control pdv-delivery-input" id="entregaCidadeModal"
                    placeholder="Cidade">
           </div>
         </div>
         <div class="mb-3">
-          <label class="form-label">Complemento</label>
+          <label class="form-label" for="entregaComplementoModal">Complemento</label>
           <input type="text" class="form-control pdv-delivery-input" id="entregaComplementoModal"
                  placeholder="Apartamento, bloco, referencia">
         </div>
@@ -1660,15 +1661,15 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
       <div class="pdv-delivery-footer">
         <div class="pdv-delivery-tax" id="entregaTaxaInfo">
           <div class="pdv-delivery-tax-main">
-            <div class="text-muted small">Taxa de entrega</div>
+            <div class="text-muted small" id="entregaTaxaCaption">Taxa de entrega</div>
             <div class="pdv-delivery-tax-value" id="entregaTaxaLabel">R$ 0,00</div>
             <input type="number" step="0.01" class="form-control pdv-delivery-input d-none pdv-delivery-tax-input"
-                   id="entregaTaxaValor" placeholder="Taxa de entrega">
+                   id="entregaTaxaValor" aria-labelledby="entregaTaxaCaption" placeholder="Taxa de entrega">
           </div>
           <div class="pdv-delivery-switch">
-            <span>Editar taxa</span>
+            <span id="entregaTaxaEditarLabel">Editar taxa</span>
             <div class="form-check form-switch m-0">
-              <input class="form-check-input" type="checkbox" id="entregaTaxaEditar">
+              <input class="form-check-input" type="checkbox" id="entregaTaxaEditar" aria-labelledby="entregaTaxaEditarLabel">
             </div>
           </div>
         </div>
@@ -1691,7 +1692,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
       <div class="modal-body pdv-payment-body">
         <div class="mb-2">
           <input type="text" class="form-control pdv-payment-total" id="pagamentoValorTotal"
-                 inputmode="decimal" autocomplete="off" value="R$ 0,00">
+                 aria-label="Valor a pagar" inputmode="decimal" autocomplete="off" value="R$ 0,00">
         </div>
         <div class="pdv-payment-summary">
           Total do pedido <strong id="pagamentoTotalTexto">R$ 0,00</strong>
@@ -1741,18 +1742,18 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
         </div>
 
         <div class="pdv-payment-cash d-none" id="pagamentoDinheiroCampo">
-          <label class="form-label mt-3">Valor pago</label>
+          <label class="form-label mt-3" for="pagamentoValorPago">Valor pago</label>
           <input type="number" step="0.01" class="form-control" id="pagamentoValorPago" placeholder="0,00">
         </div>
 
         <div class="pdv-payment-split d-none" id="pagamentoSplit">
           <div class="pdv-payment-split-row" id="pagamentoSplitRow1">
             <div class="pdv-payment-split-label" id="pagamentoSplitLabel1">Forma 1</div>
-            <input type="number" step="0.01" class="pdv-payment-split-input" id="pagamentoSplitValor1" placeholder="0,00">
+            <input type="number" step="0.01" class="pdv-payment-split-input" id="pagamentoSplitValor1" aria-labelledby="pagamentoSplitLabel1" placeholder="0,00">
           </div>
           <div class="pdv-payment-split-row" id="pagamentoSplitRow2">
             <div class="pdv-payment-split-label" id="pagamentoSplitLabel2">Forma 2</div>
-            <input type="number" step="0.01" class="pdv-payment-split-input" id="pagamentoSplitValor2" placeholder="0,00">
+            <input type="number" step="0.01" class="pdv-payment-split-input" id="pagamentoSplitValor2" aria-labelledby="pagamentoSplitLabel2" placeholder="0,00">
           </div>
         </div>
 
@@ -1783,8 +1784,8 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
           <strong class="pdv-cashback-balance-value" id="cashbackModalSaldo">R$ 0,00</strong>
           <span class="pdv-cashback-balance-meta d-none" id="cashbackModalValidade"></span>
         </div>
-        <div class="pdv-cashback-question">Qual valor de cashback você deseja utilizar neste pedido?</div>
-                <input type="text" inputmode="decimal" class="form-control pdv-cashback-input" id="cashbackModalValor" placeholder="0,00" value="0,00">
+        <div class="pdv-cashback-question" id="cashbackModalValorLabel">Qual valor de cashback você deseja utilizar neste pedido?</div>
+                <input type="text" inputmode="decimal" class="form-control pdv-cashback-input" id="cashbackModalValor" aria-labelledby="cashbackModalValorLabel" placeholder="0,00" value="0,00">
         <div class="pdv-cashback-actions">
           <button type="button" class="pdv-cashback-confirm" id="cashbackModalUsar">Usar</button>
         </div>
@@ -1813,7 +1814,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
           </button>
         </div>
         <div class="mb-1">
-          <label class="form-label" style="font-size:.72rem;color:#6b7280;margin-bottom:4px">Valor do desconto</label>
+          <label class="form-label" for="descontoValorModal" style="font-size:.72rem;color:#6b7280;margin-bottom:4px">Valor do desconto</label>
           <input type="text" class="form-control" id="descontoValorModal"
                  inputmode="decimal" autocomplete="off" placeholder="R$ 0,00"
                  style="font-size:.88rem;height:40px;border-radius:10px">
@@ -1832,7 +1833,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
 </div>
 
 <div class="pdv-coupon-box d-none" aria-hidden="true">
-  <label class="form-label">Cupom de desconto</label>
+  <label class="form-label" for="cupomInput">Cupom de desconto</label>
   <div class="pdv-coupon-row">
     <input type="text" class="form-control" id="cupomInput" placeholder="Ex: TW5">
     <button type="button" class="pdv-coupon-btn" id="cupomAplicar">Aplicar</button>
@@ -1851,7 +1852,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
       </div>
       <div class="modal-body pdv-cash-body">
         <div class="mb-2">
-          <label class="form-label">Quantia recebida</label>
+          <label class="form-label" for="trocoValorInput">Quantia recebida</label>
           <input type="number" step="0.01" class="form-control pdv-cash-input" id="trocoValorInput" placeholder="0,00">
         </div>
         <div class="pdv-cash-total">
@@ -1897,7 +1898,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
       <div class="modal-body pdv-edit-body">
         <input type="hidden" id="editItemProdutoId">
         <div class="pdv-edit-obs-wrap">
-          <label class="pdv-edit-obs-label">Observações do cliente</label>
+          <label class="pdv-edit-obs-label" for="editItemObs">Observações do cliente</label>
           <input type="text" class="pdv-edit-obs-input" id="editItemObs" placeholder="Adicionar observação">
         </div>
         <div class="pdv-edit-qty">
@@ -1927,7 +1928,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
           <div class="pdv-edit-obs">Sem variações cadastradas para este item.</div>
         </div>
         <div class="mb-3">
-          <label class="form-label">Observações avançadas</label>
+          <label class="form-label" for="detItemObs">Observações avançadas</label>
           <textarea class="form-control pdv-edit-obs" id="detItemObs" rows="3"
                     placeholder="Ex: retirar cebola, ponto da carne"></textarea>
         </div>
@@ -1967,7 +1968,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
         <div class="pdv-variacao-search">
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control" id="variacaoBusca" placeholder="Procure por uma opcao">
+            <input type="text" class="form-control" id="variacaoBusca" aria-label="Procure por uma opcao" placeholder="Procure por uma opcao">
           </div>
         </div>
         <div class="pdv-extra-section d-none" id="extraSection">
@@ -1987,7 +1988,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
           <div class="pdv-extra-list" id="complementoItensLista"></div>
         </div>
         <div class="pdv-variacao-obs">
-          <input type="text" class="form-control" id="observacoesClienteModal" placeholder="Observacoes do cliente" maxlength="255">
+          <input type="text" class="form-control" id="observacoesClienteModal" aria-label="Observacoes do cliente" placeholder="Observacoes do cliente" maxlength="255">
         </div>
       </div>
       <div class="pdv-variacao-footer">
@@ -2023,7 +2024,7 @@ const cashbackPreviewCliente = document.getElementById('cashbackPreviewCliente')
       <div class="modal-body">
         <div class="pdv-combo-passos" id="comboPassosLista"></div>
         <div class="pdv-variacao-obs">
-          <input type="text" class="form-control" id="comboObs" placeholder="Observacoes do cliente" maxlength="255">
+          <input type="text" class="form-control" id="comboObs" aria-label="Observacoes do cliente" placeholder="Observacoes do cliente" maxlength="255">
         </div>
       </div>
       <div class="pdv-variacao-footer" style="justify-content:flex-end;">
