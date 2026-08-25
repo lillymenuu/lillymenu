@@ -101,6 +101,12 @@
         "value": "2px",
         "createdAt": "2026-08-24T23:42:54.943Z",
         "reason": "Agent: .nav-links a::after underline sweep bar - a decorative line accent, not a card/button shape"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "manrope",
+        "createdAt": "2026-08-25T00:45:00.302Z",
+        "reason": "Agent: documented in DESIGN.md Overview as admin/'s own Operate-mode typography, distinct from public/'s Poppins system - not drift"
       }
     ]
   }

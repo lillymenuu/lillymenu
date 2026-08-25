@@ -2698,13 +2698,13 @@ body.pdv-saving #modalPagamento{
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  background:#eff6ff;
+  background:#f5ede5;
   border-radius:12px;
   padding:10px 12px;
 }
 .pdv-payment-registered-pill{
-  background:#dbeafe;
-  color:#1d4ed8;
+  background:#ece7e0;
+  color:#7A3F10;
   border-radius:999px;
   font-size:.74rem;
   padding:4px 10px;
@@ -2722,8 +2722,8 @@ body.pdv-saving #modalPagamento{
   height:24px;
   border-radius:999px;
   border:0;
-  background:#bfdbfe;
-  color:#1d4ed8;
+  background:#ece7e0;
+  color:#7A3F10;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -4519,9 +4519,9 @@ body.pdv-modal #blocoAgendamento .pdv-retirada-title{
   line-height:1.2;
 }
 
-/* subtítulo Agendamento — azul */
+/* subtítulo Agendamento — cobre (era azul, fora do sistema) */
 body.pdv-modal #blocoAgendamento .pdv-retirada-subtitle{
-  color:#3b82f6;
+  color:#9C5523;
   font-size:.72rem;
   font-weight:400;
   margin-top:1px;
@@ -4880,8 +4880,8 @@ body.pdv-modal .btn-pdv-primary{
   padding:10px 12px;
 }
 .pdv-sync-item.is-sync{
-  border-color:#93c5fd;
-  background:#eff6ff;
+  border-color:#9C5523;
+  background:#f5ede5;
 }
 .pdv-sync-item.is-erro{
   border-color:#fca5a5;
@@ -4915,7 +4915,7 @@ body.pdv-modal .btn-pdv-primary{
   cursor:pointer;
 }
 .pdv-sync-retry{
-  background:#1d4ed8;
+  background:#9C5523;
   color:#fff;
 }
 .pdv-sync-discard{

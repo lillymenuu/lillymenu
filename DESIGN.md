@@ -113,6 +113,8 @@ components:
 
 ## Overview
 
+**Escopo:** este documento cobre a superfície pública (`public/`) — a landing, `planos.php` e o formulário de cadastro, modo **Persuade**. O painel administrativo (`admin/`, incluindo o PDV) é uma superfície **Operate** separada: usa a paleta cobre nos seus acentos (confirmado ao corrigir `admin/assets/css/pdv.css` nesta sessão), mas tem sua própria fonte — Manrope, carregada em `admin/pdv.php` e `admin/assets/css/dashboard.css` — que não faz parte do sistema Poppins abaixo. Isso é uma escolha tipográfica legítima (uma ferramenta de operação do dia a dia pode ter uma voz diferente de uma página de conversão), não deriva a corrigir; ela só nunca tinha sido documentada.
+
 **Creative North Star: "O Balcão de Cobre"**
 
 LillyMenu se apresenta como um balcão limpo e bem cuidado: fundo branco-papel que nunca compete com o conteúdo, e um único acento de cobre queimado que aparece exatamente onde precisa guiar a decisão do visitante — nunca em excesso. É um sistema de gestão de comida vendido como produto sério e profissional, não como um app "fofo" nem como um dashboard corporativo frio; a calidez vem da cor, não de ilustrações fofas ou linguagem casual.

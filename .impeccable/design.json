@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-25T00:00:00.000Z",
+  "generatedAt": "2026-08-25T12:00:00.000Z",
   "title": "Design System: LillyMenu",
   "extensions": {
     "colorMeta": {
@@ -93,6 +93,7 @@
   ],
   "narrative": {
     "northStar": "O Balcão de Cobre",
+    "scope": "Este documento cobre a superficie publica (public/) — landing, planos.php e o formulario de cadastro, modo Persuade. O painel administrativo (admin/, incluindo o PDV) e uma superficie Operate separada: usa a paleta cobre nos seus acentos, mas tem sua propria fonte (Manrope, carregada em admin/pdv.php e admin/assets/css/dashboard.css), fora do sistema Poppins abaixo. Escolha tipografica legitima, nao drift — so nunca tinha sido documentada.",
     "overview": "LillyMenu se apresenta como um balcao limpo e bem cuidado: fundo branco-papel que nunca compete com o conteudo, e um unico acento de cobre queimado que aparece exatamente onde precisa guiar a decisao do visitante — nunca em excesso. E um sistema de gestao de comida vendido como produto serio e profissional, nao como um app 'fofo' nem como um dashboard corporativo frio; a calidez vem da cor, nao de ilustracoes fofas ou linguagem casual. Uma direcao anterior (navy escuro + rosa + dourado, sombras pesadas, gradientes fortes) foi explicitamente testada e rejeitada nesta sessao em favor deste caminho minimalista. Essa rejeicao e uma decisao de produto confirmada, nao uma preferencia passageira.",
     "keyCharacteristics": [
       "Fundo branco-papel quase universal; cor entra como acento, nao como preenchimento.",
