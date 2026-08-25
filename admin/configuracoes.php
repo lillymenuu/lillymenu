@@ -1837,7 +1837,7 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
 
                     <div class="payment-field-group">
                       <label class="form-label" for="receberPedidosWhatsapp">Número do Whatsapp para receber pedidos</label>
-                      <input class="form-control" type="text" name="whatsapp_numero" id="receberPedidosWhatsapp" value="<?= htmlspecialchars($whatsapp_numero) ?>" placeholder="5511999999999">
+                      <input class="form-control" type="text" name="whatsapp_numero" id="receberPedidosWhatsapp" value="<?= htmlspecialchars($whatsapp_numero) ?>" placeholder="(11) 99999-9999" inputmode="tel">
                     </div>
                   </div>
                 <?php elseif ($card['id'] === 'horarios'): ?>
@@ -2165,10 +2165,8 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
               <?php elseif ($card['id'] === 'permissoes'): ?>
                 <button type="button" class="btn-diggy-primary" id="btnSalvarPermissao">Salvar</button>
               <?php else: ?>
-                <?php $semCancelar = ['horarios', 'loja-info', 'clube-pontos', 'receber-pedidos', 'tipos-pedidos', 'valor-minimo', 'pedidos-agendados']; ?>
-                <?php if ($card['id'] === 'menu-custom'): ?>
-                  <button type="button" class="btn-diggy-ghost" data-bs-dismiss="modal">Voltar</button>
-                <?php elseif (!in_array($card['id'], $semCancelar, true)): ?>
+                <?php $semCancelar = ['horarios', 'loja-info', 'clube-pontos', 'receber-pedidos', 'tipos-pedidos', 'valor-minimo', 'pedidos-agendados', 'menu-custom', 'formas-pagamento', 'cashback']; ?>
+                <?php if (!in_array($card['id'], $semCancelar, true)): ?>
                   <button type="button" class="btn-diggy-ghost" data-bs-dismiss="modal">Cancelar</button>
                 <?php endif; ?>
                 <?php if ($card['id'] === 'limpar-banco'): ?>

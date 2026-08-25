@@ -107,7 +107,7 @@ function entregaDisponivelAgora(PDO $conn): bool {
 }
 
 function gerarLinkWhatsApp(PDO $conn, array $pedido): string {
-  $numero = config($conn, 'whatsapp_numero');
+  $numero = preg_replace('/\D+/', '', (string) config($conn, 'whatsapp_numero'));
   $msgPad = config($conn, 'whatsapp_msg');
 
   $linhas = [];
@@ -123,5 +123,5 @@ function gerarLinkWhatsApp(PDO $conn, array $pedido): string {
   $linhas[] = "*Total:* R$ " . number_format($pedido['total'],2,',','.');
 
   $texto = urlencode(implode("\n", $linhas));
-  return "https://wa.me/{$numero}?text={$texto}";
+  return "https://wa.me/55{$numero}?text={$texto}";
 }
