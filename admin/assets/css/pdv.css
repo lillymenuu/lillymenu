@@ -4620,7 +4620,6 @@ body.pdv-modal .pdv-client-card .pdv-icon-btn i,
 body.pdv-modal .pdv-entrega-card .pdv-icon-btn i{
   font-size:.72rem;
 }
-body.pdv-modal .pdv-client-card .pdv-client-actions,
 body.pdv-modal .pdv-entrega-card .pdv-client-actions{
   gap:5px;
   align-self:flex-start;
