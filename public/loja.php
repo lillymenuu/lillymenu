@@ -1332,7 +1332,14 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
     </div>
     <div id="taxaInfoWrap" style="display:none;margin-top:4px">
       <div id="taxaInfoBox" style="background:#eff6ff;border-radius:10px;padding:10px 12px;font-size:.78rem;color:#1d4ed8"><i class="bi bi-bicycle"></i> <span id="taxaInfo"></span></div>
-      <div id="taxaBairroNaoAtendido" style="display:none;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;font-size:.78rem;color:#9a3412;margin-top:4px"><i class="bi bi-exclamation-triangle"></i> Bairro fora da área de entrega. Entre em contato conosco.</div>
+      <div id="taxaBairroNaoAtendido" style="display:none;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;font-size:.78rem;color:#9a3412;margin-top:4px">
+        <i class="bi bi-exclamation-triangle"></i> Bairro fora da área de entrega. Entre em contato conosco.
+        <?php if($wppNum): ?>
+        <a href="https://wa.me/55<?=$wppNum?>?text=<?=urlencode('Olá! Meu bairro não está na área de entrega cadastrada, gostaria de combinar a forma de entrega do meu pedido.')?>" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;color:#15803d;font-weight:600;text-decoration:none;font-size:.76rem">
+          <i class="bi bi-whatsapp"></i> Falar no WhatsApp
+        </a>
+        <?php endif; ?>
+      </div>
     </div>
     </div><!-- /endFormWrap -->
   </div>
