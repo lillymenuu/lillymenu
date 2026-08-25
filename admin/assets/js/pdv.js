@@ -2950,7 +2950,7 @@ produtoCards.forEach(card => {
       mostrarToast('Produto sem estoque.', 'warn');
       return;
     }
-    selecionarProdutoCard(card);
+    selecionarProdutoCard(card, true);
   });
 
   const minusBtn = card.querySelector('.pdv-qty-btn.minus');
