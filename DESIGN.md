@@ -13,6 +13,18 @@ colors:
   sand-border: "#ece7e0"
   state-success: "#16a34a"
   state-error: "#dc2626"
+  admin-slate-900: "#0f172a"
+  admin-gray-900: "#111827"
+  admin-slate-500: "#64748b"
+  admin-gray-500: "#6b7280"
+  admin-slate-400: "#94a3b8"
+  admin-slate-200: "#e2e8f0"
+  admin-gray-100: "#f3f4f6"
+  admin-success-bg: "#dcfce7"
+  admin-success-text: "#166534"
+  admin-warning-text: "#92400e"
+  admin-error-text: "#b91c1c"
+  admin-error-text-alt: "#be123c"
 typography:
   display:
     fontFamily: "Poppins, sans-serif"
@@ -60,6 +72,18 @@ typography:
     fontSize: "12px"
     fontWeight: 600
     lineHeight: 1.3
+  admin-body:
+    fontFamily: "Manrope, sans-serif"
+    fontSize: ".85rem"
+    fontWeight: 400
+  admin-label:
+    fontFamily: "Manrope, sans-serif"
+    fontSize: ".68rem"
+    fontWeight: 600
+  admin-label-sm:
+    fontFamily: "Manrope, sans-serif"
+    fontSize: ".65rem"
+    fontWeight: 600
 rounded:
   xs: "8px"
   xs2: "9px"
@@ -150,6 +174,22 @@ Paleta restrita por design: dois acentos (cobre + seu tom claro) e uma escala ne
 - **Sucesso** (`#16a34a`): mensagens de sucesso de formulário e check-marks de recurso incluso (ex: lista de features do plano). Verde convencional, não deriva da marca — reservado a feedback de estado.
 - **Erro** (`#dc2626`): mensagens de erro de formulário. Vermelho convencional, mesma lógica do Sucesso.
 
+### Admin (Operate) — Neutros
+Extraído de `admin/assets/css/pdv.css` e `dashboard.css` (772 usos escaneados, catalogados aqui os que aparecem 5+ vezes). É a paleta padrão Tailwind Slate/Gray — **não** deriva do Cobre Queimado; é a identidade própria do painel administrativo (ver Escopo, acima), consistente internamente, só nunca documentada.
+- **Ardósia 900** (`#0f172a`, 47 usos): texto principal do painel — o "quase preto" do admin, mais frio que o Grafite Profundo do site público.
+- **Cinza 900** (`#111827`, 60 usos): variante de texto principal, usada de forma intercambiável com Ardósia 900 nos diferentes componentes do PDV.
+- **Ardósia 500** (`#64748b`, 30 usos) / **Cinza 500** (`#6b7280`, 41 usos): texto secundário/legendas — os "Texto Suave" do admin.
+- **Ardósia 400** (`#94a3b8`, 24 usos): texto terciário/placeholder, o nível mais claro de texto ainda legível.
+- **Ardósia 200** (`#e2e8f0`, 22 usos): bordas e divisores.
+- **Cinza 100** (`#f3f4f6`, 21 usos): fundo de superfícies sutilmente destacadas (chips, linhas zebradas).
+- **Sombra de Ardósia** (`rgba(15,23,42,.06-.18)`, 28 usos combinados): mesma filosofia da "Regra da Sombra com Cor" do site público — sombras tingidas, nunca `rgba(0,0,0,…)` puro — só que tingidas de ardósia (cor de texto do admin) em vez de cobre.
+
+### Admin (Operate) — Semânticas
+Tailwind padrão, distintas (propositalmente, por enquanto) das semânticas do site público — trocar exigiria editar CSS, não só documentar:
+- **Sucesso** (fundo `#dcfce7` / texto `#166534`, 11 usos combinados).
+- **Aviso** (`#92400e`, 6 usos) — nível que o site público não tem (Sucesso/Erro só).
+- **Erro** (`#b91c1c` / `#be123c`, 12 usos combinados — duas variantes de vermelho usadas de forma intercambiável nos componentes; inconsistência menor, não corrigida aqui).
+
 ### Named Rules
 **A Regra dos Dois Tons.** A folha de estilo expõe variáveis para azul, rosa e link separados (`--blue-btn`, `--pink`, `--link`), mas o tema em uso hoje ("Minimalista") os colapsa deliberadamente para apenas Cobre Queimado + Realce Suave. Não usar a existência dessas variáveis como licença para introduzir uma terceira cor de acento — a restrição é a decisão de design, não uma lacuna a preencher.
 
@@ -175,6 +215,9 @@ Paleta restrita por design: dois acentos (cobre + seu tom claro) e uma escala ne
 Sempre em `var(--muted)`/Texto Suave para corpo e legendas — nunca a cor de texto principal (Grafite) fora de títulos.
 
 Um punhado de tamanhos isolados (19px no título do modal de sucesso, 26px no título da tabela de planos) não faz parte de uma escala — são ajustes locais de um único lugar cada, não recorrentes o bastante para virar token. Não generalizar esses valores para outros componentes.
+
+### Admin (Operate)
+Fonte própria: **Manrope** (`admin/pdv.php`, `dashboard.css`) — não é Poppins, ver Escopo no Overview. Escala real observada (top 3 tamanhos por frequência, de 24 valores únicos catalogados): **.85rem/400** (23 usos — corpo geral), **.68rem/600** (8 usos — rótulos), **.65rem/600** (9 usos — rótulos pequenos/badges). O restante são ajustes locais de baixa frequência, não extraídos.
 
 ### Named Rules
 **A Regra do Peso Único.** Toda ênfase tipográfica vem de tamanho e peso (700 vs 400/600), nunca de itálico ou de trocar a família de fonte no corpo do texto.
