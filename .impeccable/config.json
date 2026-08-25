@@ -107,6 +107,33 @@
         "value": "manrope",
         "createdAt": "2026-08-25T00:45:00.302Z",
         "reason": "Agent: documented in DESIGN.md Overview as admin/'s own Operate-mode typography, distinct from public/'s Poppins system - not drift"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.2rem",
+        "files": [
+          "admin/assets/css/configuracoes.css"
+        ],
+        "createdAt": "2026-08-25T21:31:02.991Z",
+        "reason": "Aumento deliberado do icone dos cards de configuracoes a pedido do usuario, para melhorar visibilidade"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1rem",
+        "files": [
+          "admin/assets/css/configuracoes.css"
+        ],
+        "createdAt": "2026-08-25T21:31:03.124Z",
+        "reason": "Aumento deliberado do titulo dos cards de configuracoes a pedido do usuario, para melhorar visibilidade"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".82rem",
+        "files": [
+          "admin/assets/css/configuracoes.css"
+        ],
+        "createdAt": "2026-08-25T21:31:03.258Z",
+        "reason": "Aumento deliberado da descricao dos cards de configuracoes a pedido do usuario, para melhorar visibilidade"
       }
     ]
   }

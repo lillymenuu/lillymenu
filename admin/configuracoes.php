@@ -552,12 +552,6 @@ $settingsSections = [
         'icon' => 'bi bi-credit-card-2-front',
         'title' => 'Formas de pagamento',
         'desc' => 'Defina meios aceitos e taxas.'
-      ],
-      [
-        'id' => 'pagamento-online',
-        'icon' => 'bi bi-credit-card-2-front',
-        'title' => 'Pagamento online',
-        'desc' => 'Configure meios de pagamento online.'
       ]
     ]
   ],
@@ -594,12 +588,6 @@ $settingsSections = [
         'desc' => 'Ative entrega, retirada e mesa.'
       ],
       [
-        'id' => 'configuracoes-pdv',
-        'icon' => 'bi bi-sliders2',
-        'title' => 'Configurações de PDV',
-        'desc' => 'Defina regras e integrações do PDV.'
-      ],
-      [
         'id' => 'numeracao',
         'icon' => 'bi bi-hash',
         'title' => 'Numeracao sequencial de pedidos',
@@ -616,12 +604,6 @@ $settingsSections = [
         'icon' => 'bi bi-calendar2-check',
         'title' => 'Pedidos agendados',
         'desc' => 'Ative e configure pedidos futuros.'
-      ],
-      [
-        'id' => 'validacao-pedido',
-        'icon' => 'bi bi-clipboard-check',
-        'title' => 'Validação de pedido',
-        'desc' => 'Regras de verificação e confirmação.'
       ],
       [
         'id' => 'taxa-entrega',
@@ -2183,9 +2165,10 @@ $impressorasConfigJsVer = filemtime(__DIR__ . '/assets/js/impressoras_config.js'
               <?php elseif ($card['id'] === 'permissoes'): ?>
                 <button type="button" class="btn-diggy-primary" id="btnSalvarPermissao">Salvar</button>
               <?php else: ?>
+                <?php $semCancelar = ['horarios', 'loja-info', 'clube-pontos', 'receber-pedidos', 'tipos-pedidos', 'valor-minimo', 'pedidos-agendados']; ?>
                 <?php if ($card['id'] === 'menu-custom'): ?>
                   <button type="button" class="btn-diggy-ghost" data-bs-dismiss="modal">Voltar</button>
-                <?php elseif ($card['id'] !== 'horarios' && $card['id'] !== 'loja-info'): ?>
+                <?php elseif (!in_array($card['id'], $semCancelar, true)): ?>
                   <button type="button" class="btn-diggy-ghost" data-bs-dismiss="modal">Cancelar</button>
                 <?php endif; ?>
                 <?php if ($card['id'] === 'limpar-banco'): ?>
