@@ -20,7 +20,7 @@
   border:0;
 }
 .promo-modal-dialog{
-  max-width:720px;
+  max-width:760px;
 }
 #modalPromo .modal-header{
   border-bottom:0;
@@ -33,10 +33,9 @@
   padding:0;
 }
 .promo-modal-side{
-  width:230px;
+  width:260px;
   flex-shrink:0;
-  background:#f8fafc;
-  padding:32px 22px;
+  padding:32px 20px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -64,8 +63,8 @@
   padding:0;
 }
 .promo-modal-thumb{
-  width:130px;
-  height:130px;
+  width:180px;
+  height:180px;
   border-radius:16px;
   display:flex;
   align-items:center;
