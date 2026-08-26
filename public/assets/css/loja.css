@@ -779,8 +779,8 @@ textarea.obs-field:focus{border-color:var(--brown)}
 .combo-opcao-info{flex:1;min-width:0}
 .combo-opcao-nome{font-size:.84rem;font-weight:400;color:#111;line-height:1.3}
 .combo-opcao-inc{font-size:.71rem;color:#b0b7c0;margin-top:1px}
-.combo-opcao-img{width:58px;height:58px;border-radius:10px;object-fit:cover;flex-shrink:0}
-.combo-opcao-img-ph{width:58px;height:58px;border-radius:10px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:1.1rem;flex-shrink:0}
+.combo-opcao-img{width:72px;height:72px;border-radius:12px;object-fit:cover;flex-shrink:0}
+.combo-opcao-img-ph{width:72px;height:72px;border-radius:12px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:1.3rem;flex-shrink:0}
 .combo-opcao-qty{display:flex;align-items:center;border:none;border-radius:8px;overflow:hidden;flex-shrink:0}
 .combo-opcao-qty .co-btn{width:28px;height:28px;border:0;background:#fff;color:#555;font-size:.85rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s}
 .combo-opcao-qty .co-btn:hover{background:#f5f5f5}

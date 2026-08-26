@@ -152,6 +152,15 @@
         ],
         "createdAt": "2026-08-26T22:03:03.208Z",
         "reason": "Icone de placeholder escalado proporcionalmente ao aumento da foto do produto (88px->130px) pedido pelo usuario"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.3rem",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-26T22:20:06.701Z",
+        "reason": "Icone de placeholder do combo escalado proporcionalmente ao aumento da imagem (58px->72px) pedido pelo usuario"
       }
     ]
   }

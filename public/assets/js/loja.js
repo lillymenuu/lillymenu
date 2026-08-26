@@ -839,7 +839,7 @@ function renderComboPassos(){
       const imgHtml=opc.imagem
         ?`<img class="combo-opcao-img" src="${_escH(opc.imagem)}" alt="" loading="lazy">`
         :`<div class="combo-opcao-img-ph"><i class="bi bi-image"></i></div>`;
-      return `<div class="combo-opcao-row${esgotado?' esgotado':''}">
+      return `<div class="combo-opcao-row${esgotado?' esgotado':''}" data-pi="${pi}" data-oi="${oi}">
         <div class="combo-opcao-info">
           <div class="combo-opcao-nome">${_escH(opc.nome)}</div>
           <div class="combo-opcao-inc">${esgotado?'<span class="badge-esgotado">Esgotado</span>':'Incluído no valor do combo.'}</div>
@@ -852,7 +852,7 @@ function renderComboPassos(){
         </div>
       </div>`;
     }).join('');
-    return `<div class="combo-passo">
+    return `<div class="combo-passo" data-pi="${pi}">
       <div class="combo-passo-header">
         <div class="combo-passo-titulo">${_escH(passo.nome)}${badge}</div>
         ${sub?`<div class="combo-passo-sub">${sub}</div>`:''}
@@ -862,6 +862,47 @@ function renderComboPassos(){
   }).join('');
   _validarComboBtn();
 }
+function _passoSatisfeito(passo){
+  const totalSel=passo.opcoes.reduce((s,o)=>s+o.qty,0);
+  if(passo.obrigatorio==1){
+    const min=Math.max(1,parseInt(passo.min_itens||1));
+    return totalSel>=min;
+  }
+  const max=parseInt(passo.max_itens||0);
+  return max>0 && totalSel>=max;
+}
+function _rolarProximoPassoCombo(piAtual){
+  if(!prodAtual||!prodAtual.passos)return;
+  for(let i=piAtual+1;i<prodAtual.passos.length;i++){
+    if(!_passoSatisfeito(prodAtual.passos[i])){
+      const el=document.querySelector(`.combo-passo[data-pi="${i}"]`);
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+      return;
+    }
+  }
+}
+/* Atualiza so o numero/estado dos botoes de cada opcao (sem recriar o HTML),
+   pra nao piscar as imagens do combo a cada clique de +/-. */
+function atualizarComboOpcoesDOM(){
+  if(!prodAtual||!prodAtual.passos)return;
+  prodAtual.passos.forEach((passo,pi)=>{
+    const max=parseInt(passo.max_itens||0);
+    const rep=passo.permite_repetir==1;
+    const totalSel=passo.opcoes.reduce((s,o)=>s+o.qty,0);
+    passo.opcoes.forEach((opc,oi)=>{
+      const row=document.querySelector(`.combo-opcao-row[data-pi="${pi}"][data-oi="${oi}"]`);
+      if(!row)return;
+      const podeAdd=!opc.esgotado&&(max===0||totalSel<max)&&(rep||opc.qty===0);
+      const podeSub=opc.qty>0;
+      const numEl=row.querySelector('.combo-opcao-qty-num');
+      if(numEl) numEl.textContent=opc.qty;
+      const btns=row.querySelectorAll('.co-btn');
+      if(btns[0]) btns[0].disabled=!podeSub;
+      if(btns[1]) btns[1].disabled=!podeAdd;
+    });
+  });
+  _validarComboBtn();
+}
 function comboQty(pi,oi,delta){
   if(!prodAtual||!prodAtual.passos)return;
   const passo=prodAtual.passos[pi];
@@ -869,6 +910,7 @@ function comboQty(pi,oi,delta){
   const max=parseInt(passo.max_itens||0);
   const rep=passo.permite_repetir==1;
   const totalSel=passo.opcoes.reduce((s,o)=>s+o.qty,0);
+  const satisfeitoAntes=_passoSatisfeito(passo);
   if(delta>0){
     if(opc.esgotado)return;
     if(max>0&&totalSel>=max)return;
@@ -878,16 +920,15 @@ function comboQty(pi,oi,delta){
     if(opc.qty<=0)return;
     opc.qty--;
   }
-  renderComboPassos();
+  atualizarComboOpcoesDOM();
+  if(delta>0 && !satisfeitoAntes && _passoSatisfeito(passo)){
+    _rolarProximoPassoCombo(pi);
+  }
 }
 function _validarComboBtn(){
   const btn=document.getElementById('pdAddBtn');
   if(!btn||!prodAtual||!prodAtual.passos)return;
-  const valido=prodAtual.passos.every(p=>{
-    if(p.obrigatorio!=1)return true;
-    const min=Math.max(1,parseInt(p.min_itens||1));
-    return p.opcoes.reduce((s,o)=>s+o.qty,0)>=min;
-  });
+  const valido=prodAtual.passos.every(p=>p.obrigatorio!=1||_passoSatisfeito(p));
   btn.disabled=!valido;
   btn.innerHTML=`Adicionar <span id="pdTotal">${fmtR(prodAtual.preco_final*prodAtual.q)}</span>`;
 }
