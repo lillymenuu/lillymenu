@@ -3315,3 +3315,48 @@ if(typeof PROMO_AUTO!=='undefined' && PROMO_AUTO){
   }
 }
 
+/* Carrossel de flyers da loja (imagens promocionais acima das categorias) */
+(function(){
+  const slider = document.getElementById('flyerSlider');
+  if(!slider) return;
+  const slides = slider.querySelectorAll('.flyer-slide');
+  const dots = document.querySelectorAll('#flyerDots .flyer-dot');
+  if(slides.length < 2) return;
+
+  let autoplayTimer = null;
+  let indiceAtual = 0;
+
+  function irPara(indice){
+    indiceAtual = (indice + slides.length) % slides.length;
+    slider.scrollTo({ left: slides[indiceAtual].offsetLeft, behavior: 'smooth' });
+  }
+
+  function atualizarDotsPorScroll(){
+    let maisProximo = 0, menorDist = Infinity;
+    slides.forEach((slide, i) => {
+      const dist = Math.abs(slide.offsetLeft - slider.scrollLeft);
+      if(dist < menorDist){ menorDist = dist; maisProximo = i; }
+    });
+    indiceAtual = maisProximo;
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === indiceAtual));
+  }
+
+  function pararAutoplay(){
+    if(autoplayTimer){ clearInterval(autoplayTimer); autoplayTimer = null; }
+  }
+  function iniciarAutoplay(){
+    pararAutoplay();
+    autoplayTimer = setInterval(() => irPara(indiceAtual + 1), 4000);
+  }
+
+  let scrollTimeout = null;
+  slider.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => { atualizarDotsPorScroll(); iniciarAutoplay(); }, 120);
+  }, { passive: true });
+
+  slider.addEventListener('pointerdown', pararAutoplay);
+
+  iniciarAutoplay();
+})();
+

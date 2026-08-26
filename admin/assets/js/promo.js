@@ -117,3 +117,89 @@
       });
   };
 })();
+
+(function () {
+  const modalEl = document.getElementById('modalFlyers');
+  if (!modalEl) return;
+
+  const msgEl = document.getElementById('flyerModalMsg');
+  const salvarBtn = document.getElementById('flyerSalvarBtn');
+  const atuais = Array.isArray(window.LOJA_FLYERS_ATUAIS) ? window.LOJA_FLYERS_ATUAIS : [];
+
+  const slots = [1, 2, 3].map((n) => ({
+    n,
+    preview: document.getElementById('flyerPreview' + n),
+    btn: document.getElementById('flyerBtn' + n),
+    input: document.getElementById('flyerInput' + n),
+    removerBtn: document.getElementById('flyerRemoverBtn' + n),
+    urlAtual: atuais[n - 1] || null,
+    base64Novo: null,
+    removido: false
+  }));
+
+  function preencherPreview(slot) {
+    if (slot.base64Novo) {
+      slot.preview.innerHTML = `<img src="${slot.base64Novo}" alt="">`;
+      slot.removerBtn.classList.remove('d-none');
+    } else if (slot.urlAtual && !slot.removido) {
+      slot.preview.innerHTML = `<img src="${slot.urlAtual}" alt="">`;
+      slot.removerBtn.classList.remove('d-none');
+    } else {
+      slot.preview.innerHTML = '<i class="bi bi-image"></i>';
+      slot.removerBtn.classList.add('d-none');
+    }
+  }
+
+  slots.forEach((slot) => {
+    preencherPreview(slot);
+
+    slot.btn?.addEventListener('click', () => slot.input?.click());
+
+    slot.input?.addEventListener('change', () => {
+      const file = slot.input.files && slot.input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        slot.base64Novo = ev.target?.result || null;
+        slot.removido = false;
+        preencherPreview(slot);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    slot.removerBtn?.addEventListener('click', () => {
+      slot.base64Novo = null;
+      slot.removido = true;
+      slot.input.value = '';
+      preencherPreview(slot);
+    });
+  });
+
+  window.salvarFlyers = function () {
+    msgEl.textContent = '';
+    salvarBtn.disabled = true;
+
+    const body = new FormData();
+    slots.forEach((slot) => {
+      if (slot.base64Novo) body.append(`flyer_${slot.n}_base64`, slot.base64Novo);
+      if (slot.removido) body.append(`flyer_${slot.n}_remover`, '1');
+    });
+
+    fetch('api/flyers_salvar.php', { method: 'POST', body })
+      .then((r) => r.json())
+      .then((data) => {
+        salvarBtn.disabled = false;
+        if (data.ok) {
+          window.location.reload();
+        } else {
+          msgEl.textContent = data.msg || 'Erro ao salvar o flyer.';
+          msgEl.className = 'promo-modal-msg error';
+        }
+      })
+      .catch(() => {
+        salvarBtn.disabled = false;
+        msgEl.textContent = 'Erro ao salvar o flyer.';
+        msgEl.className = 'promo-modal-msg error';
+      });
+  };
+})();

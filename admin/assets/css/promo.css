@@ -98,3 +98,25 @@
 .promo-modal-msg.error{
   color:#dc2626;
 }
+
+.flyer-modal-desc{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:12.5px;
+  line-height:1.5;
+  color:#64748b;
+  margin-bottom:18px;
+}
+.flyer-modal-desc strong{
+  color:#0f172a;
+}
+.flyer-field{
+  margin-bottom:14px;
+}
+.flyer-imagem-preview{
+  width:104px;
+  height:52px;
+  border-radius:10px;
+}

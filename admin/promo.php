@@ -7,6 +7,12 @@ require_once __DIR__ . '/helpers/config.php';
 
 $lojaId = (int) ($_SESSION['loja_id'] ?? 1);
 
+$lojaFlyers = json_decode((string) config($conn, 'loja_flyers', '[]'), true);
+if (!is_array($lojaFlyers)) {
+  $lojaFlyers = [];
+}
+$lojaFlyers = array_values(array_filter($lojaFlyers));
+
 $produtoColunas = $conn->query("SHOW COLUMNS FROM produtos")->fetchAll(PDO::FETCH_COLUMN, 0);
 foreach ([
   'preco_promocional' => "ALTER TABLE produtos ADD COLUMN preco_promocional DECIMAL(10,2) NULL DEFAULT NULL",
@@ -117,6 +123,11 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
         <p class="produtos-subtitle">
           Escolha um produto e coloque ele em promoção por tempo limitado
         </p>
+      </div>
+      <div class="produtos-actions">
+        <button type="button" class="btn btn-diggy-primary" data-bs-toggle="modal" data-bs-target="#modalFlyers">
+          <i class="bi bi-images"></i> Gerenciar flyer de loja
+        </button>
       </div>
     </div>
 
@@ -238,6 +249,45 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
   </div>
 </div>
 
+<!-- ══ MODAL: GERENCIAR FLYER DE LOJA ══ -->
+<div class="modal fade" id="modalFlyers" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content promo-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Gerenciar flyer de loja</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="flyer-modal-desc">
+          Essas imagens aparecem em um carrossel deslizante no topo do seu cardápio, acima das categorias. Você pode cadastrar até 3.
+          <br>
+          <strong>Dimensão recomendada: 1200 x 600px (proporção 2:1).</strong> Evite textos ou detalhes importantes muito perto das bordas — a imagem é recortada para preencher o espaço sem distorcer.
+        </div>
+
+        <?php for ($i = 1; $i <= 3; $i++): ?>
+          <div class="produto-field flyer-field">
+            <label class="form-label">Imagem <?= $i ?></label>
+            <div class="promo-imagem-row">
+              <div class="promo-imagem-preview flyer-imagem-preview" id="flyerPreview<?= $i ?>"><i class="bi bi-image"></i></div>
+              <div>
+                <button type="button" class="btn btn-diggy-ghost btn-sm" id="flyerBtn<?= $i ?>">Anexar imagem</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="flyerRemoverBtn<?= $i ?>">Remover</button>
+                <input type="file" id="flyerInput<?= $i ?>" accept="image/png,image/jpeg,image/webp" hidden>
+              </div>
+            </div>
+          </div>
+        <?php endfor; ?>
+        <div class="promo-modal-msg" id="flyerModalMsg"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-diggy-ghost" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-diggy-primary" id="flyerSalvarBtn" onclick="salvarFlyers()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>window.LOJA_FLYERS_ATUAIS = <?= json_encode($lojaFlyers, JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="./assets/js/promo.js?v=<?= $promoJsVer ?>"></script>
 </body>

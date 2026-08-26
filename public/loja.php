@@ -40,6 +40,9 @@ function fixImgPath(string $p): string {
 $descLoja    = cfg($conn,$lojaId,'loja_descricao','');
 $capaLoja    = fixImgPath(cfg($conn,$lojaId,'loja_capa',''));
 $perfilLoja  = fixImgPath(cfg($conn,$lojaId,'loja_perfil',''));
+$lojaFlyers  = json_decode((string) cfg($conn,$lojaId,'loja_flyers','[]'), true);
+if (!is_array($lojaFlyers)) { $lojaFlyers = []; }
+$lojaFlyers  = array_values(array_filter(array_map('fixImgPath', $lojaFlyers)));
 $taxaEntrega = (float)cfg($conn,$lojaId,'taxa_entrega',0);
 $pedidoMin   = (float)cfg($conn,$lojaId,'pedido_minimo',0);
 $pedidoMinEntregaAtivo  = cfg($conn,$lojaId,'pedido_minimo_entrega_ativo','0')==='1';
@@ -481,6 +484,24 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
   <i class="bi bi-megaphone-fill" id="profileAnnounceIcon"></i>
   <span id="profileAnnounceText"><?=htmlspecialchars($descLoja)?></span>
 </div>
+
+<!-- ══ FLYER SLIDER ══ -->
+<?php if($lojaFlyers): ?>
+<div class="flyer-slider-wrap">
+  <div class="flyer-slider" id="flyerSlider">
+    <?php foreach($lojaFlyers as $flyerImg): ?>
+      <div class="flyer-slide"><img src="<?=htmlspecialchars($flyerImg)?>" alt=""></div>
+    <?php endforeach; ?>
+  </div>
+  <?php if(count($lojaFlyers) > 1): ?>
+  <div class="flyer-dots" id="flyerDots">
+    <?php foreach($lojaFlyers as $i => $flyerImg): ?>
+      <span class="flyer-dot<?=$i===0?' active':''?>"></span>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
 
 <!-- ══ CATEGORIAS NAV ══ -->
 <?php if($categorias): ?>
