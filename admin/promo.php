@@ -120,7 +120,7 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
   <div class="produtos-page">
     <div class="produtos-header">
       <div>
-        <h1 class="produtos-title">Lance uma Promoção.</h1>
+        <h1 class="produtos-title">Lance uma Promoção</h1>
         <p class="produtos-subtitle">
           Escolha um produto e coloque ele em promoção por tempo limitado
         </p>
@@ -273,19 +273,24 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
           </label>
         </label>
 
-        <?php for ($i = 1; $i <= 3; $i++): ?>
-          <div class="produto-field flyer-field">
-            <label class="form-label">Imagem <?= $i ?></label>
-            <div class="promo-imagem-row">
-              <div class="promo-imagem-preview flyer-imagem-preview" id="flyerPreview<?= $i ?>"><i class="bi bi-image"></i></div>
-              <div>
-                <button type="button" class="btn btn-diggy-ghost btn-sm" id="flyerBtn<?= $i ?>">Anexar imagem</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="flyerRemoverBtn<?= $i ?>">Remover</button>
-                <input type="file" id="flyerInput<?= $i ?>" accept="image/png,image/jpeg,image/webp" hidden>
+        <div class="flyer-list" id="flyerList">
+          <?php for ($i = 1; $i <= 3; $i++): ?>
+            <div class="produto-field flyer-field">
+              <div class="flyer-drag-handle" draggable="true" title="Arraste para reordenar"><i class="bi bi-grip-vertical"></i></div>
+              <div class="flyer-field-body">
+                <label class="form-label flyer-field-label">Imagem <?= $i ?></label>
+                <div class="promo-imagem-row">
+                  <div class="promo-imagem-preview flyer-imagem-preview"><i class="bi bi-image"></i></div>
+                  <div>
+                    <button type="button" class="btn btn-diggy-ghost btn-sm flyer-anexar-btn">Anexar imagem</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm d-none flyer-remover-btn">Remover</button>
+                    <input type="file" class="flyer-file-input" accept="image/png,image/jpeg,image/webp" hidden>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        <?php endfor; ?>
+          <?php endfor; ?>
+        </div>
         <div class="promo-modal-msg" id="flyerModalMsg"></div>
       </div>
       <div class="modal-footer">

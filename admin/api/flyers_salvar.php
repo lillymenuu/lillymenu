@@ -21,32 +21,38 @@ $atuais = json_decode((string) $stmt->fetchColumn(), true);
 if (!is_array($atuais)) {
   $atuais = [];
 }
-/* normaliza pra sempre ter 3 posicoes (index 0,1,2), preenchendo com null onde nao ha imagem */
-$atuais = array_pad(array_slice($atuais, 0, 3), 3, null);
 
-$novos = $atuais;
-for ($i = 0; $i < 3; $i++) {
-  $n = $i + 1;
+/* Cada posicao enviada (na ordem escolhida no admin, apos possivel drag-and-drop)
+   diz o que deve existir ali: uma imagem nova (base64), uma imagem ja existente
+   que so mudou de posicao (url, validada contra a lista atual pra nao aceitar
+   url arbitraria), ou nada (removida / nunca preenchida). */
+$novos = [];
+for ($n = 1; $n <= 3; $n++) {
   $remover = ($_POST["flyer_{$n}_remover"] ?? '0') === '1';
   $base64 = trim((string) ($_POST["flyer_{$n}_base64"] ?? ''));
+  $urlExistente = trim((string) ($_POST["flyer_{$n}_url"] ?? ''));
 
   if ($remover) {
-    storage_delete($atuais[$i]);
-    $novos[$i] = null;
-  } elseif ($base64 !== '') {
+    continue;
+  }
+  if ($base64 !== '') {
     $salvo = storage_save_base64($base64, 'flyers', 'flyer', $lojaId);
     if ($salvo === null) {
       echo json_encode(['ok' => false, 'msg' => 'Imagem do flyer ' . $n . ' invalida (use JPG, PNG ou WebP).']);
       exit;
     }
-    if (!empty($atuais[$i])) {
-      storage_delete($atuais[$i]);
-    }
-    $novos[$i] = $salvo;
+    $novos[] = $salvo;
+  } elseif ($urlExistente !== '' && in_array($urlExistente, $atuais, true)) {
+    $novos[] = $urlExistente;
   }
 }
 
-$novos = array_values(array_filter($novos));
+/* remove do storage qualquer imagem antiga que nao sobreviveu (removida ou substituida) */
+foreach ($atuais as $antiga) {
+  if ($antiga && !in_array($antiga, $novos, true)) {
+    storage_delete($antiga);
+  }
+}
 
 $stmt = $conn->prepare("
   INSERT INTO configuracoes (loja_id, chave, valor)

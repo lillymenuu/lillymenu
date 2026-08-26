@@ -145,55 +145,99 @@ function toastSucessoTopo(msg) {
   const msgEl = document.getElementById('flyerModalMsg');
   const salvarBtn = document.getElementById('flyerSalvarBtn');
   const ativoToggle = document.getElementById('flyerAtivoToggle');
+  const listEl = document.getElementById('flyerList');
   const atuais = Array.isArray(window.LOJA_FLYERS_ATUAIS) ? window.LOJA_FLYERS_ATUAIS : [];
 
-  const slots = [1, 2, 3].map((n) => ({
-    n,
-    preview: document.getElementById('flyerPreview' + n),
-    btn: document.getElementById('flyerBtn' + n),
-    input: document.getElementById('flyerInput' + n),
-    removerBtn: document.getElementById('flyerRemoverBtn' + n),
-    urlAtual: atuais[n - 1] || null,
-    base64Novo: null,
-    removido: false
-  }));
+  function itens() {
+    return Array.from(listEl.querySelectorAll('.flyer-field'));
+  }
 
-  function preencherPreview(slot) {
-    if (slot.base64Novo) {
-      slot.preview.innerHTML = `<img src="${slot.base64Novo}" alt="">`;
-      slot.removerBtn.classList.remove('d-none');
-    } else if (slot.urlAtual && !slot.removido) {
-      slot.preview.innerHTML = `<img src="${slot.urlAtual}" alt="">`;
-      slot.removerBtn.classList.remove('d-none');
+  function estadoDe(wrapper) {
+    if (!wrapper._flyerState) {
+      wrapper._flyerState = { urlAtual: null, base64Novo: null, removido: false };
+    }
+    return wrapper._flyerState;
+  }
+
+  function preencherPreview(wrapper) {
+    const estado = estadoDe(wrapper);
+    const preview = wrapper.querySelector('.flyer-imagem-preview');
+    const removerBtn = wrapper.querySelector('.flyer-remover-btn');
+    if (estado.base64Novo) {
+      preview.innerHTML = `<img src="${estado.base64Novo}" alt="">`;
+      removerBtn.classList.remove('d-none');
+    } else if (estado.urlAtual && !estado.removido) {
+      preview.innerHTML = `<img src="${estado.urlAtual}" alt="">`;
+      removerBtn.classList.remove('d-none');
     } else {
-      slot.preview.innerHTML = '<i class="bi bi-image"></i>';
-      slot.removerBtn.classList.add('d-none');
+      preview.innerHTML = '<i class="bi bi-image"></i>';
+      removerBtn.classList.add('d-none');
     }
   }
 
-  slots.forEach((slot) => {
-    preencherPreview(slot);
+  function atualizarLabels() {
+    itens().forEach((wrapper, i) => {
+      wrapper.querySelector('.flyer-field-label').textContent = 'Imagem ' + (i + 1);
+    });
+  }
 
-    slot.btn?.addEventListener('click', () => slot.input?.click());
+  itens().forEach((wrapper, i) => {
+    estadoDe(wrapper).urlAtual = atuais[i] || null;
+    preencherPreview(wrapper);
 
-    slot.input?.addEventListener('change', () => {
-      const file = slot.input.files && slot.input.files[0];
+    const btn = wrapper.querySelector('.flyer-anexar-btn');
+    const input = wrapper.querySelector('.flyer-file-input');
+    const removerBtn = wrapper.querySelector('.flyer-remover-btn');
+    const handle = wrapper.querySelector('.flyer-drag-handle');
+
+    btn?.addEventListener('click', () => input?.click());
+
+    input?.addEventListener('change', () => {
+      const file = input.files && input.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        slot.base64Novo = ev.target?.result || null;
-        slot.removido = false;
-        preencherPreview(slot);
+        const estado = estadoDe(wrapper);
+        estado.base64Novo = ev.target?.result || null;
+        estado.removido = false;
+        preencherPreview(wrapper);
       };
       reader.readAsDataURL(file);
     });
 
-    slot.removerBtn?.addEventListener('click', () => {
-      slot.base64Novo = null;
-      slot.removido = true;
-      slot.input.value = '';
-      preencherPreview(slot);
+    removerBtn?.addEventListener('click', () => {
+      const estado = estadoDe(wrapper);
+      estado.base64Novo = null;
+      estado.removido = true;
+      input.value = '';
+      preencherPreview(wrapper);
     });
+
+    handle?.addEventListener('dragstart', (e) => {
+      wrapper.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+    });
+    handle?.addEventListener('dragend', () => {
+      wrapper.classList.remove('dragging');
+      atualizarLabels();
+    });
+  });
+
+  listEl?.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const dragging = listEl.querySelector('.flyer-field.dragging');
+    if (!dragging) return;
+    const proximo = itens().find((el) => {
+      if (el === dragging) return false;
+      const box = el.getBoundingClientRect();
+      return e.clientY < box.top + box.height / 2;
+    });
+    if (proximo) {
+      listEl.insertBefore(dragging, proximo);
+    } else {
+      listEl.appendChild(dragging);
+    }
   });
 
   ativoToggle?.addEventListener('change', () => {
@@ -227,9 +271,16 @@ function toastSucessoTopo(msg) {
     salvarBtn.disabled = true;
 
     const body = new FormData();
-    slots.forEach((slot) => {
-      if (slot.base64Novo) body.append(`flyer_${slot.n}_base64`, slot.base64Novo);
-      if (slot.removido) body.append(`flyer_${slot.n}_remover`, '1');
+    itens().forEach((wrapper, i) => {
+      const n = i + 1;
+      const estado = estadoDe(wrapper);
+      if (estado.removido) {
+        body.append(`flyer_${n}_remover`, '1');
+      } else if (estado.base64Novo) {
+        body.append(`flyer_${n}_base64`, estado.base64Novo);
+      } else if (estado.urlAtual) {
+        body.append(`flyer_${n}_url`, estado.urlAtual);
+      }
     });
 
     fetch('api/flyers_salvar.php', { method: 'POST', body })
@@ -238,13 +289,15 @@ function toastSucessoTopo(msg) {
         salvarBtn.disabled = false;
         if (data.ok) {
           const flyers = Array.isArray(data.flyers) ? data.flyers : [];
-          slots.forEach((slot, i) => {
-            slot.urlAtual = flyers[i] || null;
-            slot.base64Novo = null;
-            slot.removido = false;
-            slot.input.value = '';
-            preencherPreview(slot);
+          itens().forEach((wrapper, i) => {
+            const estado = estadoDe(wrapper);
+            estado.urlAtual = flyers[i] || null;
+            estado.base64Novo = null;
+            estado.removido = false;
+            wrapper.querySelector('.flyer-file-input').value = '';
+            preencherPreview(wrapper);
           });
+          atualizarLabels();
           bootstrap.Modal.getInstance(modalEl)?.hide();
           toastSucessoTopo('Slides salvos com sucesso');
         } else {
