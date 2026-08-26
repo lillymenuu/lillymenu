@@ -12,6 +12,7 @@ if (!is_array($lojaFlyers)) {
   $lojaFlyers = [];
 }
 $lojaFlyers = array_values(array_filter($lojaFlyers));
+$flyersAtivo = config($conn, 'loja_flyers_ativo', '1') === '1';
 
 $produtoColunas = $conn->query("SHOW COLUMNS FROM produtos")->fetchAll(PDO::FETCH_COLUMN, 0);
 foreach ([
@@ -264,6 +265,14 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
           <strong>Dimensão recomendada: 1200 x 300px (proporção 4:1).</strong> Evite textos ou detalhes importantes muito perto das bordas — a imagem é recortada para preencher o espaço sem distorcer.
         </div>
 
+        <label class="promo-toggle-row">
+          <span>Exibir slides no cardápio</span>
+          <label class="switch">
+            <input type="checkbox" id="flyerAtivoToggle" <?= $flyersAtivo ? 'checked' : '' ?>>
+            <span class="slider"></span>
+          </label>
+        </label>
+
         <?php for ($i = 1; $i <= 3; $i++): ?>
           <div class="produto-field flyer-field">
             <label class="form-label">Imagem <?= $i ?></label>
@@ -280,7 +289,6 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
         <div class="promo-modal-msg" id="flyerModalMsg"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-diggy-ghost" data-bs-dismiss="modal">Cancelar</button>
         <button type="button" class="btn btn-diggy-primary" id="flyerSalvarBtn" onclick="salvarFlyers()">Salvar</button>
       </div>
     </div>

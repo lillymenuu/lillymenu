@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/acesso_menu.php';
+require_once __DIR__ . '/../helpers/operacao.php';
 require_once __DIR__ . '/../../helpers/storage.php';
 
 header('Content-Type: application/json');
@@ -53,5 +54,7 @@ $stmt = $conn->prepare("
   ON DUPLICATE KEY UPDATE valor = VALUES(valor), loja_id = VALUES(loja_id)
 ");
 $stmt->execute([$lojaId, json_encode($novos, JSON_UNESCAPED_UNICODE)]);
+
+bumpCatalogoVersao($conn, $lojaId);
 
 echo json_encode(['ok' => true, 'flyers' => $novos]);
