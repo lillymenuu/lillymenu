@@ -82,6 +82,23 @@ try {
     $nomesCarrinho = $stmtNomes->fetchAll(PDO::FETCH_COLUMN, 0);
   }
 
+  /* Itens de combo usam o id da tabela "combos" (nao "produtos"), entao nao
+     da pra resolver o nome deles pelo lookup acima — o front manda o nome de
+     cada linha do carrinho direto, o que tambem cobre o historico de pedidos
+     (que grava o nome do combo em pedido_itens.produto_nome). */
+  $nomesCarrinhoRaw = $_GET['produtos_nomes'] ?? '';
+  if ($nomesCarrinhoRaw !== '') {
+    $decodificado = json_decode($nomesCarrinhoRaw, true);
+    if (is_array($decodificado)) {
+      foreach ($decodificado as $nome) {
+        if (is_string($nome) && $nome !== '') {
+          $nomesCarrinho[] = $nome;
+        }
+      }
+    }
+  }
+  $nomesCarrinho = array_values(array_unique($nomesCarrinho));
+
   /* 1) Tenta pelo historico real de pedidos: produtos que costumam ser
      comprados junto com o que ja esta no carrinho. */
   $nomesSugeridos = crossSellNomesPorFrequencia($conn, $lojaId, $nomesCarrinho);

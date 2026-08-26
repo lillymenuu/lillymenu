@@ -1239,17 +1239,25 @@ function renderCarrinho(){
   atualizarEstoqueCarrinho();
 }
 /* Busca o estoque atual dos produtos no carrinho — cobre tambem itens que
-   ja estavam salvos no localStorage antes dessa checagem existir */
+   ja estavam salvos no localStorage antes dessa checagem existir. Tambem busca
+   o estoque dos produtos usados como ingrediente dentro de combos (combosels),
+   pra dar pra limitar a quantidade do combo pelo estoque real deles. */
+let _estoqueLoteMap={}; // {produtoId: quantidade} — inclui itens normais e ingredientes de combo
 function atualizarEstoqueCarrinho(){
-  /* combos e resgates de pontos nao usam a tabela de estoque de produtos —
-     ficam de fora pra nao aplicar por engano o limite de um id coincidente */
+  /* combos nao tem estoque proprio (nao existe coluna de estoque pra combo) —
+     ficam de fora da checagem "item normal" pra nao aplicar por engano o limite
+     de um id coincidente, mas seus ingredientes (combosels) entram abaixo */
   const itensRastreaveis=carrinho.filter(i=>!i.combo && i.obs!=='[Resgate de pontos]');
-  const ids=[...new Set(itensRastreaveis.map(i=>i.id).filter(Boolean))];
+  const idsIngredientes=carrinho
+    .filter(i=>i.combo && Array.isArray(i.combosels))
+    .flatMap(i=>i.combosels.map(s=>s.id));
+  const ids=[...new Set([...itensRastreaveis.map(i=>i.id), ...idsIngredientes].filter(Boolean))];
   if(!ids.length) return;
   fetch(`api/estoque_lote.php?ids=${ids.join(',')}`)
     .then(r=>r.json())
     .then(d=>{
       if(!d.ok||!d.estoque) return;
+      _estoqueLoteMap=d.estoque;
       let mudou=false;
       itensRastreaveis.forEach(item=>{
         if(Object.prototype.hasOwnProperty.call(d.estoque,item.id)){
@@ -1261,11 +1269,27 @@ function atualizarEstoqueCarrinho(){
     })
     .catch(()=>{});
 }
+/* Quanto de um produto (por id) ja esta comprometido no carrinho — soma linhas
+   normais desse produto e o consumo dele como ingrediente dentro de combos. */
+function _consumoTotalNoCarrinho(id){
+  let total=0;
+  carrinho.forEach(item=>{
+    if(item.id===id && !item.combo) total+=item.q;
+    if(item.combo && Array.isArray(item.combosels)){
+      item.combosels.forEach(s=>{ if(s.id===id) total+=s.qtd*item.q; });
+    }
+  });
+  return total;
+}
 function carregarCrossSellSugestoes(){
   const wrap=document.getElementById('cartCrossSellWrap');
   if(!wrap) return;
-  const ids=carrinho.map(i=>i.id).filter(Boolean).join(',');
-  fetch(`api/cross_sell_sugestoes.php?produtos_ids=${ids}`)
+  /* itens de combo usam id da tabela "combos" (nao "produtos"), entao o
+     backend nao consegue resolver o nome deles so pelo id — manda o nome
+     de cada linha do carrinho tambem, pra funcionar mesmo com só combo. */
+  const ids=carrinho.filter(i=>!i.combo).map(i=>i.id).filter(Boolean).join(',');
+  const nomes=encodeURIComponent(JSON.stringify(carrinho.map(i=>i.n).filter(Boolean)));
+  fetch(`api/cross_sell_sugestoes.php?produtos_ids=${ids}&produtos_nomes=${nomes}`)
     .then(r=>r.json())
     .then(d=>{
       if(!d.ok||!d.ativo||!d.produtos||!d.produtos.length){wrap.innerHTML='';return;}
@@ -1488,6 +1512,17 @@ function altQ(i,d){
   if(d>0 && typeof item.estoque==='number' && _estoqueRestante(item.id,item.estoque)<d){
     toast('Quantidade do item indisponível no momento!','erro');
     return;
+  }
+  if(d>0 && item.combo && Array.isArray(item.combosels)){
+    for(const s of item.combosels){
+      const estoqueTotal=_estoqueLoteMap[s.id];
+      if(typeof estoqueTotal!=='number') continue;
+      const novoConsumo=_consumoTotalNoCarrinho(s.id)+s.qtd*d;
+      if(novoConsumo>estoqueTotal){
+        toast(`Estoque insuficiente de "${s.nome}" para aumentar esse combo.`,'erro');
+        return;
+      }
+    }
   }
   item.q+=d;
   if(item.q<=0){
