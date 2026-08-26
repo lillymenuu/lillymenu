@@ -77,6 +77,15 @@ try {
   }
   $estavaAtiva = !((int) ($atual['promo_desativado'] ?? 1));
 
+  /* so e permitido ter uma promocao ativa por vez na loja: ao ativar esta,
+     desativa qualquer outra que ainda estivesse ativa. */
+  if ($ativar) {
+    $conn->prepare("
+      UPDATE produtos SET promo_desativado = 1
+      WHERE loja_id = ? AND id != ? AND promo_desativado = 0
+    ")->execute([$lojaId, $produtoId]);
+  }
+
   $novaImagem = null;
   if ($promoImagemRemover) {
     removerImagemPromo($atual['promo_imagem'] ?? null);

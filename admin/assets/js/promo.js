@@ -118,6 +118,10 @@
   };
 })();
 
+window.avisoPromoBloqueada = function () {
+  toast('Desative a promoção ativa antes de ativar outra.');
+};
+
 function toast(msg) {
   const t = document.createElement('div');
   t.className = 'toast-custom';

@@ -41,6 +41,27 @@ try {
 } catch (Throwable $e) {
 }
 
+/* So e permitido ter uma promocao ativa por vez. Se sobrou mais de uma ativa
+   (dado de antes dessa regra existir), mantem so a mais recente e desativa o
+   resto — auto-correcao lazy, mesmo padrao da expiracao acima. */
+try {
+  $stmt = $conn->prepare("
+    SELECT id FROM produtos
+    WHERE loja_id = ? AND promo_desativado = 0 AND preco_promocional > 0
+    ORDER BY promo_inicio DESC, id DESC
+    LIMIT 1
+  ");
+  $stmt->execute([$lojaId]);
+  $manterPromoId = (int) $stmt->fetchColumn();
+  if ($manterPromoId > 0) {
+    $conn->prepare("
+      UPDATE produtos SET promo_desativado = 1
+      WHERE loja_id = ? AND id != ? AND promo_desativado = 0
+    ")->execute([$lojaId, $manterPromoId]);
+  }
+} catch (Throwable $e) {
+}
+
 $selectCampos = [
   'p.id', 'p.nome', 'p.preco', 'p.categoria_id', 'c.nome AS categoria',
   'p.preco_promocional', 'p.promo_desativado', 'p.promo_dias', 'p.promo_inicio',
@@ -73,6 +94,14 @@ foreach ($produtos as &$p) {
   }
 }
 unset($p);
+
+$idPromoAtiva = null;
+foreach ($produtos as $p) {
+  if ($p['em_promo']) {
+    $idPromoAtiva = (int) $p['id'];
+    break;
+  }
+}
 
 $grupos = [];
 $semCategoria = ['id' => 'sem', 'nome' => 'Sem categoria', 'produtos' => []];
@@ -159,7 +188,10 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
                 'promo_imagem' => $p['promo_imagem'],
               ], JSON_UNESCAPED_UNICODE), ENT_QUOTES);
             ?>
-            <article class="produto-card promo-item-card<?= $p['em_promo'] ? ' promo' : '' ?>" onclick="abrirPromoModal(<?= $pj ?>, this)">
+            <?php $bloqueado = $idPromoAtiva && $p['id'] != $idPromoAtiva; ?>
+            <article class="produto-card promo-item-card<?= $p['em_promo'] ? ' promo' : '' ?><?= $bloqueado ? ' promo-item-card--bloqueado' : '' ?>"
+              onclick="<?= $bloqueado ? 'avisoPromoBloqueada()' : 'abrirPromoModal(' . $pj . ', this)' ?>"
+              <?= $bloqueado ? 'title="Desative a promoção ativa para poder editar este produto."' : '' ?>>
               <div class="produto-thumb">
                 <?php if (!empty($p['imagem'])): ?>
                   <img src="<?= htmlspecialchars($p['imagem']) ?>" alt="">
@@ -192,58 +224,59 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
 
 <!-- ══ MODAL DE PROMOCAO ══ -->
 <div class="modal fade" id="modalPromo" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered promo-modal-dialog">
     <div class="modal-content promo-modal">
       <div class="modal-header">
         <h5 class="modal-title">Promoção do produto</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
-        <div class="promo-modal-produto">
+      <div class="modal-body promo-modal-body">
+        <div class="promo-modal-side">
           <div class="promo-modal-thumb" id="promoProdutoThumb"><i class="bi bi-image"></i></div>
-          <div>
-            <div class="promo-modal-nome" id="promoProdutoNome"></div>
-            <div class="promo-modal-preco-atual">Preço atual: <strong id="promoProdutoPreco"></strong></div>
-          </div>
+          <div class="promo-modal-nome" id="promoProdutoNome"></div>
+          <div class="promo-modal-preco-atual">Preço atual: <strong id="promoProdutoPreco"></strong></div>
+
+          <label class="promo-toggle-row">
+            <span>Ativar esta promoção</span>
+            <label class="switch">
+              <input type="checkbox" id="promoAtivarInput">
+              <span class="slider"></span>
+            </label>
+          </label>
         </div>
 
-        <label class="promo-toggle-row">
-          <span>Ativar esta promoção</span>
-          <label class="switch">
-            <input type="checkbox" id="promoAtivarInput">
-            <span class="slider"></span>
-          </label>
-        </label>
-
-        <div id="promoCamposAtivos">
-          <div class="produto-field">
-            <label class="form-label">Preço promocional</label>
-            <input type="text" class="form-control produto-input" id="promoPrecoInput" placeholder="R$ 0,00" inputmode="decimal">
-          </div>
-          <div class="produto-field">
-            <label class="form-label">Por quantos dias a promoção deve ficar ativa? (opcional)</label>
-            <input type="number" class="form-control produto-input" id="promoDiasInput" min="1" placeholder="Deixe em branco para não expirar automaticamente">
-          </div>
-          <div class="produto-field">
-            <label class="form-label">Descrição da promoção (opcional)</label>
-            <textarea class="form-control produto-textarea" id="promoDescricaoInput" rows="3" placeholder="Alguma informação extra sobre essa promoção..."></textarea>
-          </div>
-          <div class="produto-field">
-            <label class="form-label">Foto de propaganda (opcional)</label>
-            <div class="promo-imagem-row">
-              <div class="promo-imagem-preview" id="promoImagemPreview"><i class="bi bi-image"></i></div>
-              <div>
-                <button type="button" class="btn btn-diggy-ghost btn-sm" id="promoImagemBtn">Anexar foto</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="promoImagemRemoverBtn">Remover</button>
-                <input type="file" id="promoImagemInput" accept="image/png,image/jpeg,image/webp" hidden>
+        <div class="promo-modal-form">
+          <div id="promoCamposAtivos">
+            <div class="promo-form-row">
+              <div class="produto-field">
+                <label class="form-label">Preço promocional</label>
+                <input type="text" class="form-control produto-input" id="promoPrecoInput" placeholder="R$ 0,00" inputmode="decimal">
+              </div>
+              <div class="produto-field">
+                <label class="form-label">Dias ativos (opcional)</label>
+                <input type="number" class="form-control produto-input" id="promoDiasInput" min="1" placeholder="Sem expiração">
+              </div>
+            </div>
+            <div class="produto-field">
+              <label class="form-label">Descrição da promoção (opcional)</label>
+              <textarea class="form-control produto-textarea" id="promoDescricaoInput" rows="3" placeholder="Alguma informação extra sobre essa promoção..."></textarea>
+            </div>
+            <div class="produto-field">
+              <label class="form-label">Foto de propaganda (opcional)</label>
+              <div class="promo-imagem-row">
+                <div class="promo-imagem-preview" id="promoImagemPreview"><i class="bi bi-image"></i></div>
+                <div>
+                  <button type="button" class="btn btn-diggy-ghost btn-sm" id="promoImagemBtn">Anexar foto</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="promoImagemRemoverBtn">Remover</button>
+                  <input type="file" id="promoImagemInput" accept="image/png,image/jpeg,image/webp" hidden>
+                </div>
               </div>
             </div>
           </div>
+          <div class="promo-modal-msg" id="promoModalMsg"></div>
         </div>
-        <div class="promo-modal-msg" id="promoModalMsg"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-diggy-ghost" data-bs-dismiss="modal">Cancelar</button>
         <button type="button" class="btn btn-diggy-primary" id="promoSalvarBtn" onclick="salvarPromo()">Salvar</button>
       </div>
     </div>
