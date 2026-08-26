@@ -104,6 +104,7 @@
       .then((data) => {
         salvarBtn.disabled = false;
         if (data.ok) {
+          sessionStorage.setItem('promoToast', 'Promoção salva com sucesso');
           window.location.reload();
         } else {
           msgEl.textContent = data.msg || 'Erro ao salvar promoção.';
@@ -141,6 +142,17 @@ function toastSucessoTopo(msg) {
     setTimeout(() => t.remove(), 250);
   }, 2500);
 }
+
+/* Mensagem de sucesso guardada antes de um reload (ex.: salvar promoção
+   precisa recarregar a pagina inteira pra refletir o bloqueio dos outros
+   produtos, entao o toast e mostrado so depois, na proxima carga). */
+(function () {
+  const msg = sessionStorage.getItem('promoToast');
+  if (msg) {
+    sessionStorage.removeItem('promoToast');
+    toastSucessoTopo(msg);
+  }
+})();
 
 (function () {
   const modalEl = document.getElementById('modalFlyers');

@@ -134,6 +134,24 @@
         ],
         "createdAt": "2026-08-25T21:31:03.258Z",
         "reason": "Aumento deliberado da descricao dos cards de configuracoes a pedido do usuario, para melhorar visibilidade"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#cbd5e1",
+        "files": [
+          "admin/assets/css/promo.css"
+        ],
+        "createdAt": "2026-08-26T22:03:02.955Z",
+        "reason": "Reuso do mesmo cinza ja usado em .promo-imagem-preview neste arquivo para icone de placeholder, nao e cor nova"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "36px",
+        "files": [
+          "admin/assets/css/promo.css"
+        ],
+        "createdAt": "2026-08-26T22:03:03.208Z",
+        "reason": "Icone de placeholder escalado proporcionalmente ao aumento da foto do produto (88px->130px) pedido pelo usuario"
       }
     ]
   }
