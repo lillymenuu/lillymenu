@@ -254,7 +254,7 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content promo-modal">
       <div class="modal-header">
-        <h5 class="modal-title">Gerenciar flyer de loja</h5>
+        <h5 class="modal-title">Gerenciar slides de loja</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
