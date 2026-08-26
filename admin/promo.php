@@ -119,14 +119,14 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
   <div class="produtos-page">
     <div class="produtos-header">
       <div>
-        <h1 class="produtos-title">Promo</h1>
+        <h1 class="produtos-title">Lance uma Promoção.</h1>
         <p class="produtos-subtitle">
           Escolha um produto e coloque ele em promoção por tempo limitado
         </p>
       </div>
       <div class="produtos-actions">
         <button type="button" class="btn btn-diggy-primary" data-bs-toggle="modal" data-bs-target="#modalFlyers">
-          <i class="bi bi-images"></i> Gerenciar flyer de loja
+          <i class="bi bi-images"></i> Gerenciar slides de loja
         </button>
       </div>
     </div>
