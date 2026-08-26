@@ -261,7 +261,7 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
         <div class="flyer-modal-desc">
           Essas imagens aparecem em um carrossel deslizante no topo do seu cardápio, acima das categorias. Você pode cadastrar até 3.
           <br>
-          <strong>Dimensão recomendada: 1200 x 600px (proporção 2:1).</strong> Evite textos ou detalhes importantes muito perto das bordas — a imagem é recortada para preencher o espaço sem distorcer.
+          <strong>Dimensão recomendada: 1200 x 300px (proporção 4:1).</strong> Evite textos ou detalhes importantes muito perto das bordas — a imagem é recortada para preencher o espaço sem distorcer.
         </div>
 
         <?php for ($i = 1; $i <= 3; $i++): ?>
