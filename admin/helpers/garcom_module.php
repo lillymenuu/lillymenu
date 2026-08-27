@@ -71,6 +71,30 @@ if (!function_exists('garcomEnsureModule')) {
       } catch (Throwable $e) {
       }
     }
+
+    /* menu.modo_garcom e uma chave nova — niveis de permissao personalizados
+       salvos antes dela existir nunca vao te-la marcada, entao o item some do
+       menu pra quem usa esses niveis (mesmo em lojas que ja tinham acesso a
+       telas equivalentes). Concede automaticamente pra quem ja tinha acesso a
+       Motoboys (feature irmA mais proxima), sem mexer em niveis mais
+       restritos que nunca tiveram isso. */
+    if (garcomTableExists($conn, 'permissoes_niveis')) {
+      try {
+        $niveis = $conn->query("SELECT id, permissoes_json FROM permissoes_niveis")->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($niveis as $nivel) {
+          $permissoes = json_decode((string) $nivel['permissoes_json'], true);
+          if (!is_array($permissoes)) {
+            continue;
+          }
+          if (in_array('menu.motoboys', $permissoes, true) && !in_array('menu.modo_garcom', $permissoes, true)) {
+            $permissoes[] = 'menu.modo_garcom';
+            $conn->prepare("UPDATE permissoes_niveis SET permissoes_json = ? WHERE id = ?")
+              ->execute([json_encode(array_values($permissoes)), $nivel['id']]);
+          }
+        }
+      } catch (Throwable $e) {
+      }
+    }
   }
 }
 

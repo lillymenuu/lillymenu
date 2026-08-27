@@ -11,6 +11,8 @@ if (isset($_SESSION['admin_id'])) {
   if (!isset($conn)) {
     require_once __DIR__ . '/../../config/database.php';
   }
+  require_once __DIR__ . '/../helpers/garcom_module.php';
+  garcomEnsureModule($conn);
   try {
     $stmt = $conn->prepare("SHOW TABLES LIKE ?");
     $stmt->execute(['permissoes_niveis']);
