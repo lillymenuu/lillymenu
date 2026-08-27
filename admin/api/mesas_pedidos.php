@@ -25,7 +25,7 @@ $stmt = $conn->prepare("
   FROM pedidos p
   LEFT JOIN mesas m ON m.id = p.mesa_id AND m.loja_id = p.loja_id
   LEFT JOIN garcons g ON g.id = p.garcom_id AND g.loja_id = p.loja_id
-  WHERE p.loja_id = ? AND p.mesa_id IS NOT NULL
+  WHERE p.loja_id = ? AND p.mesa_id IS NOT NULL AND DATE(p.criado_em) = CURDATE()
   ORDER BY p.id DESC
   LIMIT 200
 ");

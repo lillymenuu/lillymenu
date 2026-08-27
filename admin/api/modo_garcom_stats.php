@@ -16,7 +16,7 @@ garcomEnsureModule($conn);
 
 $lojaId = (int) ($_SESSION['loja_id'] ?? 1);
 
-$stmt = $conn->prepare("SELECT COUNT(*) FROM pedidos WHERE loja_id = ? AND mesa_id IS NOT NULL AND status = 'pendente'");
+$stmt = $conn->prepare("SELECT COUNT(*) FROM pedidos WHERE loja_id = ? AND mesa_id IS NOT NULL AND status = 'pendente' AND DATE(criado_em) = CURDATE()");
 $stmt->execute([$lojaId]);
 $pedidosPendentes = (int) $stmt->fetchColumn();
 

@@ -278,6 +278,25 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
   </div>
 </div>
 
+<!-- ══ MODAL: CONFIRMAR NOVO CÓDIGO ══ -->
+<div class="modal fade" id="modalConfirmarCodigo" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content mg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Gerar novo código?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">Gerar um novo código vai invalidar o código atual desse garçom. Continuar?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-diggy-primary" id="mgConfirmarCodigoBtn">Gerar novo código</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="./assets/js/modo_garcom.js?v=<?= $mgJsVer ?>"></script>
 </body>

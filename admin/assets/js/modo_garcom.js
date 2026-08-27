@@ -98,26 +98,37 @@ function mgSalvarGarcom() {
     });
 }
 
+let mgGarcomCodigoPendenteBtn = null;
+
 document.querySelectorAll('[data-garcom-codigo]').forEach((btn) => {
   btn.addEventListener('click', () => {
-    const id = btn.dataset.garcomCodigo;
-    if (!confirm('Gerar um novo código vai invalidar o código atual desse garçom. Continuar?')) return;
-    btn.disabled = true;
-    fetch('api/garcons_gerar_codigo.php', { method: 'POST', body: new URLSearchParams({ id }) })
-      .then((r) => r.json())
-      .then((data) => {
-        btn.disabled = false;
-        if (data.ok) {
-          mgMostrarCodigo(data.codigo_acesso);
-        } else {
-          mgToast(data.msg || 'Erro ao gerar código.');
-        }
-      })
-      .catch(() => {
-        btn.disabled = false;
-        mgToast('Erro ao gerar código.');
-      });
+    mgGarcomCodigoPendenteBtn = btn;
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConfirmarCodigo'));
+    modal.show();
   });
+});
+
+document.getElementById('mgConfirmarCodigoBtn')?.addEventListener('click', () => {
+  const btn = mgGarcomCodigoPendenteBtn;
+  if (!btn) return;
+  const id = btn.dataset.garcomCodigo;
+  bootstrap.Modal.getInstance(document.getElementById('modalConfirmarCodigo'))?.hide();
+  btn.disabled = true;
+  fetch('api/garcons_gerar_codigo.php', { method: 'POST', body: new URLSearchParams({ id }) })
+    .then((r) => r.json())
+    .then((data) => {
+      btn.disabled = false;
+      if (data.ok) {
+        mgToast('Novo código gerado com sucesso!');
+        mgMostrarCodigo(data.codigo_acesso);
+      } else {
+        mgToast(data.msg || 'Erro ao gerar código.');
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      mgToast('Erro ao gerar código.');
+    });
 });
 
 document.querySelectorAll('[data-garcom-toggle]').forEach((input) => {
