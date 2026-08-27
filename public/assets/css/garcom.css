@@ -13,7 +13,7 @@ body.gc-body{
 /* ── Login (garcom_login.php) ── */
 body.gl-body{
   font-family:'Poppins',sans-serif;
-  background:linear-gradient(160deg,#2b1a0f,#0f172a);
+  background:#fff;
   min-height:100vh;
   display:flex;
   align-items:center;
