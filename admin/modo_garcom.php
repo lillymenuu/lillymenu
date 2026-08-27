@@ -103,15 +103,15 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
       </div>
       <div class="mg-hero-stats">
         <div class="mg-hero-stat">
-          <div class="mg-hero-stat-num"><?= $pedidosPendentesCount ?></div>
+          <div class="mg-hero-stat-num" id="mgStatPendentes"><?= $pedidosPendentesCount ?></div>
           <div class="mg-hero-stat-lbl">Pedidos pendentes</div>
         </div>
         <div class="mg-hero-stat">
-          <div class="mg-hero-stat-num"><?= $mesasAtivasCount ?></div>
+          <div class="mg-hero-stat-num" id="mgStatMesas"><?= $mesasAtivasCount ?></div>
           <div class="mg-hero-stat-lbl">Mesas ativas</div>
         </div>
         <div class="mg-hero-stat">
-          <div class="mg-hero-stat-num"><?= $garconsAtivosCount ?></div>
+          <div class="mg-hero-stat-num" id="mgStatGarcons"><?= $garconsAtivosCount ?></div>
           <div class="mg-hero-stat-lbl">Garçons ativos</div>
         </div>
       </div>
@@ -120,7 +120,7 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
     <div class="mg-tabs" role="tablist">
       <button type="button" class="mg-tab active" data-mg-tab="pedidos">
         <i class="bi bi-receipt"></i> Pedidos
-        <?php if ($pedidosPendentesCount > 0): ?><span class="mg-tab-badge"><?= $pedidosPendentesCount ?></span><?php endif; ?>
+        <span class="mg-tab-badge<?= $pedidosPendentesCount > 0 ? '' : ' d-none' ?>" id="mgTabBadge"><?= $pedidosPendentesCount ?></span>
       </button>
       <button type="button" class="mg-tab" data-mg-tab="mesas"><i class="bi bi-grid-3x3-gap"></i> Mesas</button>
       <button type="button" class="mg-tab" data-mg-tab="garcons"><i class="bi bi-person-badge"></i> Garçons</button>
@@ -181,7 +181,7 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
           <div class="mg-link-card-title">Link de acesso do garçom</div>
           <input type="text" id="mgLinkAcesso" value="<?= htmlspecialchars($garcomLoginUrl) ?>" readonly>
         </div>
-        <button type="button" class="btn-diggy-ghost" id="mgLinkCopiarBtn"><i class="bi bi-clipboard"></i> Copiar</button>
+        <button type="button" class="btn btn-outline-secondary" id="mgLinkCopiarBtn"><i class="bi bi-clipboard"></i> Copiar</button>
       </div>
 
       <?php if (!$garcons): ?>
@@ -195,7 +195,7 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
                 <div class="mg-garcom-nome"><?= htmlspecialchars($g['nome']) ?></div>
                 <div class="mg-garcom-email"><?= htmlspecialchars($g['email']) ?></div>
               </div>
-              <button type="button" class="btn-diggy-ghost btn-sm" data-garcom-codigo="<?= (int) $g['id'] ?>">Gerar novo código</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-garcom-codigo="<?= (int) $g['id'] ?>">Gerar novo código</button>
               <label class="mg-switch">
                 <input type="checkbox" data-garcom-toggle="<?= (int) $g['id'] ?>" <?= (int) $g['ativo'] === 1 ? 'checked' : '' ?>>
                 <span></span>

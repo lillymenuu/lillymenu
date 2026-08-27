@@ -375,6 +375,12 @@
   border-radius:20px;
   border:0;
 }
+.mg-modal .modal-header{
+  border-bottom:0;
+}
+.mg-modal .modal-footer{
+  border-top:0;
+}
 .mg-modal-msg{
   margin-top:10px;
   font-size:12px;

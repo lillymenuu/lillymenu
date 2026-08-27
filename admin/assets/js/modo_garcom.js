@@ -55,6 +55,8 @@ document.querySelectorAll('[data-mesa-toggle]').forEach((input) => {
         if (!data.ok) {
           input.checked = !input.checked;
           mgToast('Erro ao atualizar a mesa.');
+        } else {
+          carregarStatsMg();
         }
       })
       .catch(() => {
@@ -129,6 +131,8 @@ document.querySelectorAll('[data-garcom-toggle]').forEach((input) => {
         if (!data.ok) {
           input.checked = !input.checked;
           mgToast('Erro ao atualizar o garçom.');
+        } else {
+          carregarStatsMg();
         }
       })
       .catch(() => {
@@ -209,7 +213,7 @@ function renderPedidosMesa(pedidos) {
     return `<div class="mg-pedido-card" data-pedido-id="${p.id}">
       <div class="mg-pedido-mesa">${escapeHtmlMg(p.mesa_nome || '—')}</div>
       <div class="mg-pedido-info">
-        <div class="mg-pedido-titulo">Pedido #${p.id}${p.garcom_nome ? ' · ' + escapeHtmlMg(p.garcom_nome) : ''}</div>
+        <div class="mg-pedido-titulo">Pedido #${p.codigo}${p.garcom_nome ? ' · ' + escapeHtmlMg(p.garcom_nome) : ''}</div>
         <div class="mg-pedido-sub">${dataHora}</div>
       </div>
       <div class="mg-pedido-total">R$ ${Number(p.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
@@ -217,7 +221,7 @@ function renderPedidosMesa(pedidos) {
       <div class="mg-pedido-acoes">
         ${proximo ? `<button type="button" class="btn-diggy-primary btn-sm" onclick="mgAvancarPedido(${p.id},'${proximo}')">${proximoLabel}</button>` : ''}
         ${status === 'entrega' ? `<button type="button" class="btn-diggy-primary btn-sm" onclick="mgFinalizarPedido(${p.id})">Dar baixa</button>` : ''}
-        ${podeCancelar ? `<button type="button" class="btn-diggy-ghost btn-sm" onclick="mgCancelarPedido(${p.id})">Cancelar</button>` : ''}
+        ${podeCancelar ? `<button type="button" class="btn btn-outline-secondary btn-sm" onclick="mgCancelarPedido(${p.id})">Cancelar</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -233,7 +237,7 @@ function mgAvancarPedido(id, status) {
   fetch('api/pedidos_status.php', { method: 'POST', body: new URLSearchParams({ id, status }) })
     .then((r) => r.json())
     .then((data) => {
-      if (data.ok) carregarPedidosMesa();
+      if (data.ok) { carregarPedidosMesa(); carregarStatsMg(); }
       else mgToast('Erro ao atualizar o pedido.');
     })
     .catch(() => mgToast('Erro ao atualizar o pedido.'));
@@ -243,7 +247,7 @@ function mgFinalizarPedido(id) {
   fetch('api/pedidos_finalizar.php', { method: 'POST', body: new URLSearchParams({ id }) })
     .then((r) => r.json())
     .then((data) => {
-      if (data.ok) carregarPedidosMesa();
+      if (data.ok) { carregarPedidosMesa(); carregarStatsMg(); }
       else mgToast('Erro ao finalizar o pedido.');
     })
     .catch(() => mgToast('Erro ao finalizar o pedido.'));
@@ -254,14 +258,37 @@ function mgCancelarPedido(id) {
   fetch('api/pedidos_cancelar.php', { method: 'POST', body: new URLSearchParams({ id }) })
     .then((r) => r.json())
     .then((data) => {
-      if (data.ok) carregarPedidosMesa();
+      if (data.ok) { carregarPedidosMesa(); carregarStatsMg(); }
       else mgToast('Erro ao cancelar o pedido.');
     })
     .catch(() => mgToast('Erro ao cancelar o pedido.'));
 }
 
+/* ── Estatísticas do hero (pedidos pendentes / mesas ativas / garçons ativos) ── */
+function carregarStatsMg() {
+  fetch('api/modo_garcom_stats.php')
+    .then((r) => r.json())
+    .then((data) => {
+      if (!data.ok) return;
+      const pend = document.getElementById('mgStatPendentes');
+      const mesas = document.getElementById('mgStatMesas');
+      const garcons = document.getElementById('mgStatGarcons');
+      const badge = document.getElementById('mgTabBadge');
+      if (pend) pend.textContent = data.pedidos_pendentes;
+      if (mesas) mesas.textContent = data.mesas_ativas;
+      if (garcons) garcons.textContent = data.garcons_ativos;
+      if (badge) {
+        badge.textContent = data.pedidos_pendentes;
+        badge.classList.toggle('d-none', data.pedidos_pendentes <= 0);
+      }
+    })
+    .catch(() => {});
+}
+
 carregarPedidosMesa();
+carregarStatsMg();
 mgPedidosPollTimer = setInterval(() => {
   const painel = document.querySelector('.mg-panel[data-mg-panel="pedidos"]');
   if (painel && !painel.classList.contains('d-none')) carregarPedidosMesa();
+  carregarStatsMg();
 }, 15000);

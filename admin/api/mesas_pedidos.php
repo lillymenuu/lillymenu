@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/acesso_menu.php';
 require_once __DIR__ . '/../helpers/garcom_module.php';
+require_once __DIR__ . '/../../helpers/pedido_codigo.php';
 
 header('Content-Type: application/json');
 
@@ -30,5 +31,14 @@ $stmt = $conn->prepare("
 ");
 $stmt->execute([$lojaId]);
 $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+/* mesmo numero sequencial (com zeroing, se configurado) que admin/gestor_pedidos.php
+   ja mostra — sem isso o garcom via o id bruto do banco, bem maior e diferente
+   do numero que aparece pro resto da equipe. */
+$codigoBase = getPedidoCodigoBase($conn, $lojaId);
+foreach ($pedidos as &$p) {
+  $p['codigo'] = calcCodigoDisplay((int) $p['id'], $codigoBase);
+}
+unset($p);
 
 echo json_encode(['ok' => true, 'pedidos' => $pedidos]);
