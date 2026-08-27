@@ -21,7 +21,9 @@ $publicBaseHref = $protocol . $host . storage_base_absoluta() . '/public/';
 $lojaId = obterLojaIdDaRequisicao($conn);
 
 if (!isset($_SESSION['garcom_id']) || (int) ($_SESSION['garcom_loja_id'] ?? 0) !== $lojaId || $lojaId <= 0) {
-  header('Location: ' . $publicBaseHref . 'garcom_login.php' . ($lojaId > 0 ? '?loja_id=' . $lojaId : ''));
+  $lojaSlugRedirect = obterLojaSlug($conn, $lojaId);
+  $garcomLoginUrl = $lojaSlugRedirect !== '' ? $protocol . $host . storage_base_absoluta() . '/' . rawurlencode($lojaSlugRedirect) . '/garcom_login' : $publicBaseHref . 'garcom_login.php' . ($lojaId > 0 ? '?loja_id=' . $lojaId : '');
+  header('Location: ' . $garcomLoginUrl);
   exit;
 }
 

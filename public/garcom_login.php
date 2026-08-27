@@ -9,9 +9,11 @@ $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $publicBaseHref = $protocol . $host . storage_base_absoluta() . '/public/';
 
 $lojaId = obterLojaIdDaRequisicao($conn);
+$lojaSlug = obterLojaSlug($conn, $lojaId);
+$garcomUrl = $lojaSlug !== '' ? $protocol . $host . storage_base_absoluta() . '/' . rawurlencode($lojaSlug) . '/garcom' : $publicBaseHref . 'garcom.php?loja_id=' . $lojaId;
 
 if ($lojaId > 0 && isset($_SESSION['garcom_id']) && (int) ($_SESSION['garcom_loja_id'] ?? 0) === $lojaId) {
-  header('Location: ' . $publicBaseHref . 'garcom.php?loja_id=' . $lojaId);
+  header('Location: ' . $garcomUrl);
   exit;
 }
 
@@ -53,6 +55,7 @@ if ($lojaId > 0) {
 
     <form id="glForm" autocomplete="off">
       <input type="hidden" id="glLojaId" value="<?= (int) $lojaId ?>">
+      <input type="hidden" id="glGarcomUrl" value="<?= htmlspecialchars($garcomUrl) ?>">
       <div class="gl-field">
         <label for="glEmail">E-mail</label>
         <input type="email" id="glEmail" placeholder="seu@email.com" inputmode="email" autocapitalize="off">
@@ -88,7 +91,7 @@ document.getElementById('glForm').addEventListener('submit', function (e) {
     .then((r) => r.json())
     .then((data) => {
       if (data.ok) {
-        window.location.href = 'garcom.php?loja_id=' + lojaId;
+        window.location.href = document.getElementById('glGarcomUrl').value;
       } else {
         btn.disabled = false;
         btn.textContent = 'Entrar';

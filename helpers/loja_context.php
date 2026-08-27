@@ -63,3 +63,44 @@ function definirLojaIdSessao(PDO $conn): int {
   }
   return $lojaId;
 }
+
+/* Slug curto da loja (dominio.com/nomedaloja/...) a partir do loja_id —
+   caminho inverso de obterLojaIdDaRequisicao(). Mesma logica usada em
+   admin/modo_garcom.php pra montar o link de acesso do garcom: usa o slug
+   configurado em "Link customizado" (configuracoes.link_loja) e, se a loja
+   nunca customizou, cai no nome da loja normalizado. */
+function obterLojaSlug(PDO $conn, int $lojaId): string {
+  if ($lojaId <= 0) {
+    return '';
+  }
+  $stmt = $conn->prepare("SELECT chave, valor FROM configuracoes WHERE loja_id = ? AND chave IN ('nome_loja','link_loja')");
+  $stmt->execute([$lojaId]);
+  $nomeLojaCfg = '';
+  $linkLojaCfg = '';
+  foreach ($stmt as $r) {
+    if ($r['chave'] === 'nome_loja') {
+      $nomeLojaCfg = $r['valor'];
+    }
+    if ($r['chave'] === 'link_loja') {
+      $linkLojaCfg = $r['valor'];
+    }
+  }
+
+  $slug = '';
+  if ($linkLojaCfg) {
+    if (preg_match('#[?&]loja=([^&]+)#', $linkLojaCfg, $m)) {
+      $slug = urldecode($m[1]);
+    } elseif (preg_match('#/([^/?]+)/?$#', $linkLojaCfg, $m)) {
+      $slug = $m[1];
+    } else {
+      $slug = trim($linkLojaCfg, '/');
+    }
+    $slug = preg_replace('/\.php$/i', '', $slug);
+  }
+  if ($slug === '') {
+    $slug = mb_strtolower($nomeLojaCfg, 'UTF-8');
+    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+    $slug = trim($slug, '-');
+  }
+  return $slug;
+}
