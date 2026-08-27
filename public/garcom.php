@@ -8,16 +8,26 @@ function fixImgPath(string $p): string {
   return storage_url_absoluta($p);
 }
 
+/* Base absoluta pra /public/ — necessaria pq essa pagina tambem e acessada
+   via link curto reescrito (dominio.com/nomedaloja/garcom), onde qualquer
+   redirect ou link relativo (garcom_login.php, api/...) resolveria errado
+   partindo dessa URL "fake". Usada tanto no <base href> (resolve os assets/
+   fetch do lado do navegador) quanto nos header('Location:') abaixo (que o
+   <base> nao alcança, por ser side do servidor). */
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$publicBaseHref = $protocol . $host . storage_base_absoluta() . '/public/';
+
 $lojaId = obterLojaIdDaRequisicao($conn);
 
 if (!isset($_SESSION['garcom_id']) || (int) ($_SESSION['garcom_loja_id'] ?? 0) !== $lojaId || $lojaId <= 0) {
-  header('Location: garcom_login.php' . ($lojaId > 0 ? '?loja_id=' . $lojaId : ''));
+  header('Location: ' . $publicBaseHref . 'garcom_login.php' . ($lojaId > 0 ? '?loja_id=' . $lojaId : ''));
   exit;
 }
 
 $garcomNome = $_SESSION['garcom_nome'] ?? 'Garçom';
 
-$stmt = $conn->prepare("SELECT chave, valor FROM configuracoes WHERE loja_id = ? AND chave IN ('nome_loja','loja_perfil')");
+$stmt = $conn->prepare("SELECT chave, valor FROM configuracoes WHERE loja_id = ? AND chave IN ('nome_loja','loja_perfil','pagamento_dinheiro_ativo','pagamento_pix_ativo','pagamento_credito_ativo','pagamento_debito_ativo')");
 $stmt->execute([$lojaId]);
 $cfgLoja = [];
 foreach ($stmt as $r) {
@@ -25,6 +35,10 @@ foreach ($stmt as $r) {
 }
 $nomeLoja = $cfgLoja['nome_loja'] ?? 'Loja';
 $perfilLoja = !empty($cfgLoja['loja_perfil']) ? fixImgPath($cfgLoja['loja_perfil']) : '';
+$dinAtivo = ($cfgLoja['pagamento_dinheiro_ativo'] ?? '1') === '1';
+$pixAtivo = ($cfgLoja['pagamento_pix_ativo'] ?? '1') === '1';
+$credAtivo = ($cfgLoja['pagamento_credito_ativo'] ?? '1') === '1';
+$debAtivo = ($cfgLoja['pagamento_debito_ativo'] ?? '1') === '1';
 
 $stmt = $conn->prepare("SELECT id, nome FROM mesas WHERE loja_id = ? AND ativo = 1 ORDER BY nome");
 $stmt->execute([$lojaId]);
@@ -119,6 +133,7 @@ $garcomJsVer = filemtime(__DIR__ . '/assets/js/garcom.js');
 <meta charset="UTF-8">
 <title>Modo Garçom — <?= htmlspecialchars($nomeLoja) ?></title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<base href="<?= htmlspecialchars($publicBaseHref) ?>">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="./assets/css/loja.css?v=<?= $cssVer ?>" rel="stylesheet">
@@ -141,6 +156,13 @@ $garcomJsVer = filemtime(__DIR__ . '/assets/js/garcom.js');
   </div>
 </div>
 
+<!-- ══ NAVEGAÇÃO: NOVO PEDIDO / PEDIDOS ABERTOS ══ -->
+<div class="gc-nav-tabs">
+  <button type="button" class="gc-nav-tab active" id="gcNavPedir" onclick="gcTrocarView('pedir')"><i class="bi bi-plus-circle"></i> Novo pedido</button>
+  <button type="button" class="gc-nav-tab" id="gcNavAbertos" onclick="gcTrocarView('abertos')"><i class="bi bi-receipt"></i> Pedidos abertos <span class="gc-nav-badge d-none" id="gcAbertosBadge">0</span></button>
+</div>
+
+<div id="gcViewPedir">
 <!-- ══ TELA: ESCOLHER MESA ══ -->
 <div class="gc-mesas-screen" id="gcMesasScreen">
   <h1 class="gc-mesas-title">Qual mesa você está atendendo?</h1>
@@ -210,6 +232,14 @@ $garcomJsVer = filemtime(__DIR__ . '/assets/js/garcom.js');
     <span class="gc-cart-bar-total" id="gcCartTotal">R$ 0,00</span>
   </button>
 </div>
+</div><!-- /gcViewPedir -->
+
+<!-- ══ TELA: PEDIDOS ABERTOS ══ -->
+<div class="gc-abertos-screen d-none" id="gcViewAbertos">
+  <div class="gc-abertos-lista" id="gcAbertosLista">
+    <div class="gc-mesas-empty"><i class="bi bi-hourglass-split"></i> Carregando pedidos...</div>
+  </div>
+</div>
 
 <!-- ══ SHEET: CARRINHO ══ -->
 <div class="sheet" id="gcCartSheet">
@@ -219,7 +249,10 @@ $garcomJsVer = filemtime(__DIR__ . '/assets/js/garcom.js');
     <span class="sheet-head-title">Pedido da mesa</span>
     <span></span>
   </div>
-  <div class="sheet-body" id="gcCartBody"></div>
+  <div class="sheet-body">
+    <div id="gcCartBody"></div>
+    <div id="gcPaySection"></div>
+  </div>
   <div class="sheet-footer" id="gcCartFooter" style="display:none">
     <div class="cart-footer-total">
       <div class="cart-footer-info">
@@ -277,7 +310,11 @@ $garcomJsVer = filemtime(__DIR__ . '/assets/js/garcom.js');
 <script>
 window.CFG = {
   lojaId: <?= (int) $lojaId ?>,
-  nomeLoja: <?= json_encode($nomeLoja, JSON_UNESCAPED_UNICODE) ?>
+  nomeLoja: <?= json_encode($nomeLoja, JSON_UNESCAPED_UNICODE) ?>,
+  dinAtivo: <?= $dinAtivo ? 'true' : 'false' ?>,
+  pixAtivo: <?= $pixAtivo ? 'true' : 'false' ?>,
+  credAtivo: <?= $credAtivo ? 'true' : 'false' ?>,
+  debAtivo: <?= $debAtivo ? 'true' : 'false' ?>
 };
 </script>
 <script src="./assets/js/garcom.js?v=<?= $garcomJsVer ?>"></script>

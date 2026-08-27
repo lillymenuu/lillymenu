@@ -1,20 +1,33 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../helpers/storage.php';
 require_once __DIR__ . '/../helpers/loja_context.php';
+
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$publicBaseHref = $protocol . $host . storage_base_absoluta() . '/public/';
 
 $lojaId = obterLojaIdDaRequisicao($conn);
 
 if ($lojaId > 0 && isset($_SESSION['garcom_id']) && (int) ($_SESSION['garcom_loja_id'] ?? 0) === $lojaId) {
-  header('Location: garcom.php?loja_id=' . $lojaId);
+  header('Location: ' . $publicBaseHref . 'garcom.php?loja_id=' . $lojaId);
   exit;
 }
 
 $nomeLoja = 'Cardápio';
+$perfilLoja = '';
 if ($lojaId > 0) {
-  $stmt = $conn->prepare("SELECT valor FROM configuracoes WHERE loja_id = ? AND chave = 'nome_loja' LIMIT 1");
+  $stmt = $conn->prepare("SELECT chave, valor FROM configuracoes WHERE loja_id = ? AND chave IN ('nome_loja','loja_perfil')");
   $stmt->execute([$lojaId]);
-  $nomeLoja = $stmt->fetchColumn() ?: $nomeLoja;
+  foreach ($stmt as $r) {
+    if ($r['chave'] === 'nome_loja' && $r['valor'] !== '') {
+      $nomeLoja = $r['valor'];
+    }
+    if ($r['chave'] === 'loja_perfil' && $r['valor'] !== '') {
+      $perfilLoja = storage_url_absoluta($r['valor']);
+    }
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -23,12 +36,18 @@ if ($lojaId > 0) {
 <meta charset="UTF-8">
 <title>Acesso do garçom — <?= htmlspecialchars($nomeLoja) ?></title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<base href="<?= htmlspecialchars($publicBaseHref) ?>">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="./assets/css/garcom.css?v=<?= filemtime(__DIR__ . '/assets/css/garcom.css') ?>" rel="stylesheet">
 </head>
 <body class="gl-body">
   <div class="gl-card">
-    <div class="gl-icon"><i class="bi bi-person-badge"></i></div>
+    <?php if ($perfilLoja): ?>
+      <img class="gl-logo" src="<?= htmlspecialchars($perfilLoja) ?>" alt="">
+    <?php else: ?>
+      <div class="gl-icon"><i class="bi bi-person-badge"></i></div>
+    <?php endif; ?>
     <h1 class="gl-title">Acesso do garçom</h1>
     <p class="gl-sub"><?= htmlspecialchars($nomeLoja) ?></p>
 
@@ -47,7 +66,6 @@ if ($lojaId > 0) {
     </form>
   </div>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <script>
 document.getElementById('glForm').addEventListener('submit', function (e) {
   e.preventDefault();

@@ -39,14 +39,36 @@ $pedidosPendentesCount = (int) $stmt->fetchColumn();
 $mesasAtivasCount = count(array_filter($mesas, fn($m) => (int) $m['ativo'] === 1));
 $garconsAtivosCount = count(array_filter($garcons, fn($g) => (int) $g['ativo'] === 1));
 
-/* Link de acesso do garcom — resolve a mesma "base do app" que o admin roda,
-   pra funcionar tanto em localhost/subpasta quanto em producao. */
+/* Link de acesso do garcom — curto, no mesmo formato do link do cardapio
+   (dominio.com/nomedaloja/garcom_login), resolvido pelo .htaccess. Usa o
+   mesmo slug configurado em "Link customizado" (Configuracoes > Loja); se a
+   loja nunca customizou, cai no mesmo fallback que loja.php ja usa (nome da
+   loja normalizado), garantindo que o link sempre resolva. */
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $posAdmin = strrpos($scriptName, '/admin/');
 $appBase = $posAdmin !== false ? substr($scriptName, 0, $posAdmin) : '';
-$garcomLoginUrl = $protocol . $host . $appBase . '/public/garcom_login.php?loja_id=' . $lojaId;
+
+$nomeLojaCfg = config($conn, 'nome_loja', '');
+$linkLojaCfg = config($conn, 'link_loja', '');
+$lojaLinkSlug = '';
+if ($linkLojaCfg) {
+  if (preg_match('#[?&]loja=([^&]+)#', $linkLojaCfg, $m)) {
+    $lojaLinkSlug = urldecode($m[1]);
+  } elseif (preg_match('#/([^/?]+)/?$#', $linkLojaCfg, $m)) {
+    $lojaLinkSlug = $m[1];
+  } else {
+    $lojaLinkSlug = trim($linkLojaCfg, '/');
+  }
+  $lojaLinkSlug = preg_replace('/\.php$/i', '', $lojaLinkSlug);
+}
+if ($lojaLinkSlug === '') {
+  $lojaLinkSlug = mb_strtolower($nomeLojaCfg, 'UTF-8');
+  $lojaLinkSlug = preg_replace('/[^a-z0-9]+/', '-', $lojaLinkSlug);
+  $lojaLinkSlug = trim($lojaLinkSlug, '-');
+}
+$garcomLoginUrl = $protocol . $host . $appBase . '/' . rawurlencode($lojaLinkSlug) . '/garcom_login';
 
 $cssVer = filemtime(__DIR__ . '/assets/css/dashboard.css');
 $mgCssVer = filemtime(__DIR__ . '/assets/css/modo_garcom.css');

@@ -29,6 +29,17 @@ RewriteRule ^public/home/?$ public/index.php [L,QSA]
 # Formato antigo, mantido por compatibilidade com links ja compartilhados
 RewriteRule ^lilly/([^/]+)/?$ public/loja.php?loja=$1 [L,QSA]
 
+# Modo Garcom: link curto pro garcom (dominio.com/nomedaloja/garcom_login e
+# .../garcom, apos o login) — precisa vir ANTES do formato curto de 1 segmento
+# abaixo, senao "nomedaloja/garcom_login" seria interpretado como uma loja
+# chamada "nomedaloja/garcom_login" (o rewrite para no primeiro [L] que bater).
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9_.-]+)/garcom_login/?$ public/garcom_login.php?loja=$1 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-zA-Z0-9_.-]+)/garcom/?$ public/garcom.php?loja=$1 [L,QSA]
+
 # Formato curto: dominio.com/nomedaloja -> so entra se nao for um arquivo/pasta real do projeto
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

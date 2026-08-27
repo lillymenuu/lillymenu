@@ -3,6 +3,9 @@ let mesaAtualId = null;
 let mesaAtualNome = '';
 let carrinho = [];
 let prodAtual = null;
+let formaPagamento = null;
+let trocoPrecisa = false;
+let trocoVal = 0;
 const _estoqueConhecido = {}; // {produtoId: quantidade} — alimentado conforme os produtos/combos vao sendo abertos
 
 function fmtR(v) {
@@ -26,11 +29,61 @@ function _escH(s) {
   return div.innerHTML;
 }
 
+/* ── Navegação entre "Novo pedido" e "Pedidos abertos" ── */
+let gcAbertosPollTimer = null;
+function gcTrocarView(view) {
+  document.getElementById('gcNavPedir').classList.toggle('active', view === 'pedir');
+  document.getElementById('gcNavAbertos').classList.toggle('active', view === 'abertos');
+  document.getElementById('gcViewPedir').classList.toggle('d-none', view !== 'pedir');
+  document.getElementById('gcViewAbertos').classList.toggle('d-none', view !== 'abertos');
+  if (view === 'abertos') gcCarregarAbertos();
+}
+function gcCarregarAbertos() {
+  fetch('api/garcom_pedidos_abertos.php')
+    .then((r) => r.json())
+    .then((data) => {
+      if (!data.ok) return;
+      gcRenderAbertos(data.pedidos || []);
+    })
+    .catch(() => {});
+}
+function gcRenderAbertos(pedidos) {
+  const badge = document.getElementById('gcAbertosBadge');
+  badge.textContent = pedidos.length;
+  badge.classList.toggle('d-none', !pedidos.length);
+  const wrap = document.getElementById('gcAbertosLista');
+  if (!pedidos.length) {
+    wrap.innerHTML = '<div class="gc-mesas-empty"><i class="bi bi-receipt"></i> Nenhum pedido em aberto no momento.</div>';
+    return;
+  }
+  const statusLabel = { pendente: 'Pendente', aceito: 'Aceito', preparando: 'Preparando', entrega: 'Pronto' };
+  wrap.innerHTML = pedidos.map((p) => {
+    const hora = p.criado_em ? new Date(p.criado_em.replace(' ', 'T')).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    return `<div class="gc-aberto-card">
+      <div class="gc-aberto-mesa">${_escH(p.mesa_nome || '—')}</div>
+      <div class="gc-aberto-info">
+        <div class="gc-aberto-titulo">Pedido #${p.id} · ${hora}</div>
+        <div class="gc-aberto-itens">${_escH(p.itens_resumo || '')}</div>
+      </div>
+      <div class="gc-aberto-right">
+        <div class="gc-aberto-total">${fmtR(p.total)}</div>
+        <span class="gc-status-pill gc-status-${p.status}">${statusLabel[p.status] || p.status}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+setInterval(() => {
+  if (!document.getElementById('gcViewAbertos').classList.contains('d-none')) gcCarregarAbertos();
+}, 15000);
+
 /* ── Mesas ── */
 function gcEscolherMesa(id, nome) {
   mesaAtualId = id;
   mesaAtualNome = nome;
   carrinho = [];
+  formaPagamento = null;
+  trocoPrecisa = false;
+  trocoVal = 0;
   document.getElementById('gcMesasScreen').classList.add('d-none');
   document.getElementById('gcCardapioScreen').classList.remove('d-none');
   document.getElementById('gcTrocarMesaBtn').classList.remove('d-none');
@@ -305,6 +358,7 @@ function gcAtualizarCartBar() {
 }
 function gcAbrirCarrinho() {
   gcRenderCarrinho();
+  gcRenderFormaPagamento();
   gcAbrirSheet('gcCartSheet');
 }
 function gcRenderCarrinho() {
@@ -313,6 +367,7 @@ function gcRenderCarrinho() {
   if (!carrinho.length) {
     body.innerHTML = '<div class="cart-empty"><i class="bi bi-bag"></i>Nenhum item</div>';
     footer.style.display = 'none';
+    document.getElementById('gcPaySection').innerHTML = '';
     return;
   }
   footer.style.display = '';
@@ -358,16 +413,99 @@ function gcAltQ(i, d) {
   gcAtualizarCartBar();
 }
 
+/* ── Forma de pagamento ── */
+function gcRenderFormaPagamento() {
+  const wrap = document.getElementById('gcPaySection');
+  if (!wrap || !carrinho.length) return;
+  let html = '<div class="gc-pay-title">Forma de pagamento</div><div class="pay-grid">';
+  if (CFG.pixAtivo) {
+    html += `<div class="pay-opt${formaPagamento === 'pix' ? ' active' : ''}" onclick="gcSelPag('pix')">
+      <div class="pay-opt-body"><div class="pay-opt-name">Pix</div></div>
+      <div class="pay-opt-dot"><i class="bi bi-check-lg pay-opt-dot-check"></i></div>
+    </div>`;
+  }
+  if (CFG.dinAtivo) {
+    html += `<div class="pay-opt${formaPagamento === 'dinheiro' ? ' active' : ''}" onclick="gcSelPag('dinheiro')">
+      <div class="pay-opt-body"><div class="pay-opt-name">Dinheiro</div></div>
+      <div class="pay-opt-dot"><i class="bi bi-check-lg pay-opt-dot-check"></i></div>
+    </div>
+    <div id="gcTrocoWrap" class="${formaPagamento === 'dinheiro' ? '' : 'd-none'}" style="background:#f9fafb;border-radius:12px;padding:12px 14px;margin-top:2px;border:1px solid #e5e7eb">
+      <div style="font-size:.8rem;font-weight:600;margin-bottom:8px">Precisa de troco?</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button type="button" id="gcBtnTrocoSim" onclick="gcSetTroco(true)" style="flex:1;border:1.5px solid #e5e7eb;background:#fff;border-radius:10px;padding:8px;font-size:.82rem;font-weight:600;font-family:inherit">Sim</button>
+        <button type="button" id="gcBtnTrocoNao" onclick="gcSetTroco(false)" style="flex:1;border:1.5px solid #e5e7eb;background:#fff;border-radius:10px;padding:8px;font-size:.82rem;font-weight:600;font-family:inherit">Não</button>
+      </div>
+      <div id="gcTrocoValorWrap" class="${trocoPrecisa ? '' : 'd-none'}">
+        <div style="font-size:.76rem;color:#6b7280;margin-bottom:4px">Troco para quanto?</div>
+        <input type="text" id="gcTrocoValor" inputmode="decimal" placeholder="Ex: 50,00" value="${trocoVal ? String(trocoVal).replace('.', ',') : ''}" oninput="gcMaskTrocoValor(this)" style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:.86rem;font-family:inherit;background:#fff;outline:none">
+      </div>
+    </div>`;
+  }
+  if (CFG.credAtivo) {
+    html += `<div class="pay-opt${formaPagamento === 'credito' ? ' active' : ''}" onclick="gcSelPag('credito')">
+      <div class="pay-opt-body"><div class="pay-opt-name">Cartão de crédito</div></div>
+      <div class="pay-opt-dot"><i class="bi bi-check-lg pay-opt-dot-check"></i></div>
+    </div>`;
+  }
+  if (CFG.debAtivo) {
+    html += `<div class="pay-opt${formaPagamento === 'debito' ? ' active' : ''}" onclick="gcSelPag('debito')">
+      <div class="pay-opt-body"><div class="pay-opt-name">Cartão de débito</div></div>
+      <div class="pay-opt-dot"><i class="bi bi-check-lg pay-opt-dot-check"></i></div>
+    </div>`;
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+function gcSelPag(t) {
+  formaPagamento = t;
+  trocoPrecisa = false;
+  trocoVal = 0;
+  gcRenderFormaPagamento();
+}
+function gcSetTroco(sim) {
+  trocoPrecisa = sim;
+  const btnS = document.getElementById('gcBtnTrocoSim');
+  const btnN = document.getElementById('gcBtnTrocoNao');
+  const vw = document.getElementById('gcTrocoValorWrap');
+  if (btnS) btnS.style.cssText += (sim ? ';background:#f0fdf4;border-color:#86efac;color:#16a34a' : ';background:#fff;border-color:#e5e7eb;color:#111');
+  if (btnN) btnN.style.cssText += (sim ? ';background:#fff;border-color:#e5e7eb;color:#111' : ';background:#fff7ed;border-color:#fed7aa;color:#9a3412');
+  if (vw) vw.classList.toggle('d-none', !sim);
+  if (!sim) {
+    const tv = document.getElementById('gcTrocoValor');
+    if (tv) tv.value = '';
+    trocoVal = 0;
+  }
+}
+function gcMaskTrocoValor(el) {
+  let v = el.value.replace(/[^\d,\.]/g, '');
+  const parts = v.split(/[,\.]/);
+  if (parts.length > 2) v = parts[0] + ',' + parts.slice(1).join('').slice(0, 2);
+  else if (parts.length === 2) v = parts[0] + ',' + (parts[1] || '').slice(0, 2);
+  el.value = v;
+  trocoVal = parseFloat(v.replace(/\./g, '').replace(',', '.')) || 0;
+}
+
 /* ── Enviar pedido ── */
 function gcEnviarPedido() {
   if (!mesaAtualId || !carrinho.length) return;
+  if (!formaPagamento) {
+    gcToast('Escolha a forma de pagamento.');
+    return;
+  }
   const btn = document.getElementById('gcEnviarBtn');
   btn.disabled = true;
   btn.textContent = 'Enviando...';
   fetch('api/garcom_pedido_criar.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ loja_id: CFG.lojaId, mesa_id: mesaAtualId, itens: carrinho })
+    body: JSON.stringify({
+      loja_id: CFG.lojaId,
+      mesa_id: mesaAtualId,
+      itens: carrinho,
+      forma_pagamento: formaPagamento,
+      troco_solicitado: formaPagamento === 'dinheiro' && trocoPrecisa,
+      troco_valor: trocoVal
+    })
   })
     .then((r) => r.json())
     .then((data) => {
@@ -378,6 +516,9 @@ function gcEnviarPedido() {
         document.getElementById('gcConfirmSub').textContent = mesaAtualNome + ' · ' + fmtR(carrinho.reduce((s, i) => s + i.p * i.q, 0));
         document.getElementById('gcConfirmOverlay').classList.add('show');
         carrinho = [];
+        formaPagamento = null;
+        trocoPrecisa = false;
+        trocoVal = 0;
         gcAtualizarCartBar();
       } else {
         gcToast(data.msg || 'Erro ao enviar o pedido.');

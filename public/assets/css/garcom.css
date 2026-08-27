@@ -42,6 +42,15 @@ body.gl-body{
   justify-content:center;
   margin:0 auto 16px;
 }
+.gl-logo{
+  width:64px;
+  height:64px;
+  border-radius:18px;
+  object-fit:cover;
+  margin:0 auto 16px;
+  display:block;
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
 .gl-title{font-size:1.25rem;font-weight:700;color:#111;margin:0}
 .gl-sub{font-size:.85rem;color:#888;margin:4px 0 24px}
 .gl-field{text-align:left;margin-bottom:14px}
@@ -104,6 +113,52 @@ body.gl-body{
   width:38px;height:38px;border-radius:50%;background:#f3f4f6;color:#555;
   display:flex;align-items:center;justify-content:center;font-size:1.05rem;text-decoration:none;
 }
+
+/* ── Navegação: novo pedido / pedidos abertos ── */
+.gc-nav-tabs{
+  position:sticky;top:63px;z-index:110;
+  display:flex;gap:8px;background:#fff;border-bottom:1px solid #eee;
+  padding:10px 16px;
+}
+.gc-nav-tab{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  background:#f7f7f8;border:0;border-radius:999px;padding:11px 14px;
+  font-size:.82rem;font-weight:700;color:#888;font-family:inherit;cursor:pointer;
+}
+.gc-nav-tab.active{background:var(--gc-brown);color:#fff}
+.gc-nav-badge{
+  background:#fff;color:var(--gc-brown);border-radius:999px;min-width:18px;height:18px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;padding:0 5px;
+}
+.gc-nav-tab.active .gc-nav-badge{background:rgba(255,255,255,.25);color:#fff}
+
+/* ── Pedidos abertos ── */
+.gc-abertos-screen{padding:16px;max-width:680px;margin:0 auto 90px}
+.gc-abertos-lista{display:flex;flex-direction:column;gap:10px}
+.gc-aberto-card{
+  background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+}
+.gc-aberto-mesa{
+  background:#f3f4f6;color:#111;border-radius:10px;padding:8px 12px;
+  font-size:.8rem;font-weight:800;flex-shrink:0;text-align:center;
+}
+.gc-aberto-info{flex:1;min-width:0}
+.gc-aberto-titulo{font-size:.82rem;font-weight:700;color:#111}
+.gc-aberto-itens{font-size:.74rem;color:#888;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gc-aberto-right{text-align:right;flex-shrink:0}
+.gc-aberto-total{font-size:.84rem;font-weight:800;color:#111;margin-bottom:4px}
+.gc-status-pill{
+  font-size:.64rem;font-weight:700;border-radius:999px;padding:3px 9px;
+  text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;
+}
+.gc-status-pendente{background:#fef3c7;color:#92400e}
+.gc-status-aceito{background:#dbeafe;color:#1d4ed8}
+.gc-status-preparando{background:#e0e7ff;color:#4338ca}
+.gc-status-entrega{background:#dcfce7;color:#166534}
+
+/* ── Forma de pagamento (no carrinho) ── */
+.gc-pay-title{font-size:.82rem;font-weight:700;color:#111;margin:16px 0 10px}
 
 /* ── Tela: mesas ── */
 .gc-mesas-screen{padding:28px 20px 60px;max-width:680px;margin:0 auto}

@@ -23,6 +23,9 @@ if (!is_array($dados)) {
 $lojaId = (int) ($dados['loja_id'] ?? 0);
 $mesaId = (int) ($dados['mesa_id'] ?? 0);
 $itens = is_array($dados['itens'] ?? null) ? $dados['itens'] : [];
+$formaPagamento = trim((string) ($dados['forma_pagamento'] ?? ''));
+$trocoSolicitado = !empty($dados['troco_solicitado']);
+$trocoValor = (float) ($dados['troco_valor'] ?? 0);
 
 if (!isset($_SESSION['garcom_id']) || (int) ($_SESSION['garcom_loja_id'] ?? 0) !== $lojaId) {
   http_response_code(401);
@@ -33,6 +36,11 @@ $garcomId = (int) $_SESSION['garcom_id'];
 
 if ($lojaId <= 0 || $mesaId <= 0 || !$itens) {
   echo json_encode(['ok' => false, 'msg' => 'Selecione a mesa e adicione ao menos um item.']);
+  exit;
+}
+$formasValidas = ['dinheiro', 'pix', 'credito', 'debito'];
+if (!in_array($formaPagamento, $formasValidas, true)) {
+  echo json_encode(['ok' => false, 'msg' => 'Escolha a forma de pagamento.']);
   exit;
 }
 
@@ -99,7 +107,7 @@ try {
 
   $cols = $conn->query("SHOW COLUMNS FROM pedidos")->fetchAll(PDO::FETCH_COLUMN, 0);
   $fields = ['cliente_id', 'mesa_id', 'garcom_id', 'forma_pagamento', 'total', 'status', 'loja_id', 'criado_em'];
-  $values = [$clienteId, $mesaId, $garcomId, 'consumo_local', $subtotal, 'pendente', $lojaId, date('Y-m-d H:i:s')];
+  $values = [$clienteId, $mesaId, $garcomId, $formaPagamento, $subtotal, 'pendente', $lojaId, date('Y-m-d H:i:s')];
   if (in_array('tipo', $cols, true)) {
     $fields[] = 'tipo';
     $values[] = 'mesa';
@@ -111,6 +119,10 @@ try {
   if (in_array('origem', $cols, true)) {
     $fields[] = 'origem';
     $values[] = 'garcom';
+  }
+  if (in_array('troco', $cols, true) && $formaPagamento === 'dinheiro' && $trocoSolicitado && $trocoValor > 0) {
+    $fields[] = 'troco';
+    $values[] = $trocoValor;
   }
 
   $ph = implode(',', array_fill(0, count($fields), '?'));

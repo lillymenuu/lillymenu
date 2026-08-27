@@ -503,6 +503,114 @@
         ],
         "createdAt": "2026-08-27T15:56:35.543Z",
         "reason": "Reaproveita o mesmo badge Obrigatorio ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f0fdf4",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T16:59:15.418Z",
+        "reason": "Reaproveita o mesmo botao Sim/Nao de troco ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#86efac",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T16:59:15.557Z",
+        "reason": "Reaproveita o mesmo botao Sim/Nao de troco ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#111",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T16:59:15.699Z",
+        "reason": "Reaproveita o mesmo botao Sim/Nao de troco ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff7ed",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T16:59:32.306Z",
+        "reason": "Reaproveita o mesmo botao Sim/Nao de troco ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fed7aa",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T16:59:32.452Z",
+        "reason": "Reaproveita o mesmo botao Sim/Nao de troco ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#9a3412",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T16:59:32.594Z",
+        "reason": "Reaproveita o mesmo botao Sim/Nao de troco ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fef3c7",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T17:23:39.700Z",
+        "reason": "Mesma paleta de status de pedido ja usada em admin/assets/css/modo_garcom.css, pra consistencia entre as duas telas"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#dbeafe",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T17:23:39.837Z",
+        "reason": "Mesma paleta de status de pedido ja usada em admin/assets/css/modo_garcom.css, pra consistencia entre as duas telas"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#1d4ed8",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T17:23:39.982Z",
+        "reason": "Mesma paleta de status de pedido ja usada em admin/assets/css/modo_garcom.css, pra consistencia entre as duas telas"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e0e7ff",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T17:23:40.117Z",
+        "reason": "Mesma paleta de status de pedido ja usada em admin/assets/css/modo_garcom.css, pra consistencia entre as duas telas"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#4338ca",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T17:23:40.276Z",
+        "reason": "Mesma paleta de status de pedido ja usada em admin/assets/css/modo_garcom.css, pra consistencia entre as duas telas"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(0,0,0,.15)",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T17:25:42.472Z",
+        "reason": "Sombra sutil sob a logo da loja na tela de login do garcom"
       }
     ]
   }
