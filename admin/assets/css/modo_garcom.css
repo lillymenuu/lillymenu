@@ -288,6 +288,17 @@
   color:#0f172a;
   background:#fff;
 }
+.mg-link-copy-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:40px;
+  height:40px;
+  padding:0;
+  border-radius:12px;
+  font-size:1rem;
+  flex-shrink:0;
+}
 .mg-garcons-lista{
   display:flex;
   flex-direction:column;

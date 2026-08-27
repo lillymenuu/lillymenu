@@ -181,7 +181,7 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
           <div class="mg-link-card-title">Link de acesso do garçom</div>
           <input type="text" id="mgLinkAcesso" value="<?= htmlspecialchars($garcomLoginUrl) ?>" readonly>
         </div>
-        <button type="button" class="btn btn-outline-secondary" id="mgLinkCopiarBtn"><i class="bi bi-clipboard"></i> Copiar</button>
+        <button type="button" class="btn btn-outline-secondary mg-link-copy-btn" id="mgLinkCopiarBtn" title="Copiar link" aria-label="Copiar link"><i class="bi bi-clipboard"></i></button>
       </div>
 
       <?php if (!$garcons): ?>
