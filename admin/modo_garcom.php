@@ -290,7 +290,7 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
         <p class="mb-0">Gerar um novo código vai invalidar o código atual desse garçom. Continuar?</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+       
         <button type="button" class="btn-diggy-primary" id="mgConfirmarCodigoBtn">Gerar novo código</button>
       </div>
     </div>
