@@ -200,6 +200,7 @@ $mostrarOrcamentos = $menuPode('menu.orcamentos') && $planoPode('menu.orcamentos
 $mostrarControleCaixa = $menuPode('menu.controle_caixa') && $planoPode('menu.controle_caixa');
 $mostrarControleFiado = $menuPode('menu.controle_fiado') && $planoPode('menu.controle_fiado');
 $mostrarMotoboys = $menuPode('menu.motoboys') && $planoPode('menu.motoboys');
+$mostrarModoGarcom = $menuPode('menu.modo_garcom') && $planoPode('menu.modo_garcom');
 $mostrarEntradaSaida = false;
 $mostrarMateriaPrima = false;
 $mostrarMateriaPrimaControle = false;
@@ -234,7 +235,7 @@ $secControle = $mostrarEntradaSaida || $mostrarMateriaPrimaControleControl;
 $secFinanceiro = $mostrarFinanceiro;
 $secRelatorios = $mostrarRelatorios || $mostrarFidelidade || $mostrarCrossSellRelatorio;
 $secMonitorar = $mostrarWhatsLilly || $mostrarListaTransmissao;
-$secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotoboys || $mostrarCupons || $mostrarConfiguracoes || $mostrarCrossSellConfig || $mostrarLojas || $mostrarGerenciamento;
+$secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotoboys || $mostrarModoGarcom || $mostrarCupons || $mostrarConfiguracoes || $mostrarCrossSellConfig || $mostrarLojas || $mostrarGerenciamento;
 ?>
 
 <script>
@@ -934,6 +935,15 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
             <a href="motoboys" class="<?= $rota=='motoboys.php'?'active':'' ?>">
               <i class="bi bi-bicycle"></i>
               <span>Motoboys</span>
+            </a>
+          </li>
+        <?php endif; ?>
+
+        <?php if ($mostrarModoGarcom): ?>
+          <li>
+            <a href="modo_garcom" class="<?= $rota=='modo_garcom.php'?'active':'' ?>">
+              <i class="bi bi-person-badge"></i>
+              <span>Modo Garçom</span>
             </a>
           </li>
         <?php endif; ?>

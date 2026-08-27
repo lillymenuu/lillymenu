@@ -34,6 +34,7 @@ $permsMenu = [
   'menu.controle_fiado',
   'menu.financeiro',
   'menu.motoboys',
+  'menu.modo_garcom',
   'menu.cupons',
   'menu.whatslilly',
   'menu.lista_transmissao',
@@ -775,6 +776,7 @@ function perfilLabel($perfil){
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.controle_fiado">Controle de fiado</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.financeiro">Financeiro</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.motoboys">Motoboys</label>
+              <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.modo_garcom">Modo Garcom</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.cupons">Cupons</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.whatslilly">WhatsLilly</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.lista_transmissao">Lista de Transmissao</label>

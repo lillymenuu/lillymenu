@@ -161,6 +161,348 @@
         ],
         "createdAt": "2026-08-26T22:20:06.701Z",
         "reason": "Icone de placeholder do combo escalado proporcionalmente ao aumento da imagem (58px->72px) pedido pelo usuario"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#1e293b",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:17.974Z",
+        "reason": "Gradiente do hero premium da nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#cbd5e1",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:18.121Z",
+        "reason": "Texto secundario sobre fundo escuro do hero da nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff7f0",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:18.267Z",
+        "reason": "Tonalidade clara da cor de marca (#9C5523) usada em destaques da nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fef3c7",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:18.403Z",
+        "reason": "Paleta de status dos pedidos de mesa (pendente/aceito/preparando/entrega), nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#dbeafe",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:18.538Z",
+        "reason": "Paleta de status dos pedidos de mesa, nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#1d4ed8",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:18.687Z",
+        "reason": "Paleta de status dos pedidos de mesa, nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e0e7ff",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:18.823Z",
+        "reason": "Paleta de status dos pedidos de mesa, nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#4338ca",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:18.959Z",
+        "reason": "Paleta de status dos pedidos de mesa, nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff7ed",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:19.092Z",
+        "reason": "Reaproveita o mesmo aviso amber ja usado em promo.css"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fed7aa",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:19.270Z",
+        "reason": "Reaproveita o mesmo aviso amber ja usado em promo.css"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#9a3412",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:19.402Z",
+        "reason": "Reaproveita o mesmo aviso amber ja usado em promo.css"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.4rem",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:33.565Z",
+        "reason": "Numero grande de estatistica no hero da nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.8rem",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:33.762Z",
+        "reason": "Icone do estado vazio, nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".94rem",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:33.897Z",
+        "reason": "Titulo de card de mesa, nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.1rem",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:34.030Z",
+        "reason": "Icone do card de link de acesso, nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "2rem",
+        "files": [
+          "admin/assets/css/modo_garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:49:34.166Z",
+        "reason": "Codigo de acesso exibido em destaque no modal, nova tela Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(0,0,0,.3)",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:02.107Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#111",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:02.266Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#888",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:02.408Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#555",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:02.546Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#eee",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:02.681Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff7f0",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:02.818Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f0d9c2",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:02.950Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#999",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:03.082Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ddd",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:03.217Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#666",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:03.349Z",
+        "reason": "Reaproveita a paleta neutra ja usada em loja.css, tela nova do Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.6rem",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:12.984Z",
+        "reason": "Hierarquia tipografica dedicada da nova tela touch-first do Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.25rem",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:13.128Z",
+        "reason": "Hierarquia tipografica dedicada da nova tela touch-first do Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".95rem",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:13.274Z",
+        "reason": "Hierarquia tipografica dedicada da nova tela touch-first do Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.15rem",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:13.427Z",
+        "reason": "Hierarquia tipografica dedicada da nova tela touch-first do Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "2rem",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:13.589Z",
+        "reason": "Hierarquia tipografica dedicada da nova tela touch-first do Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.4rem",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:13.725Z",
+        "reason": "Hierarquia tipografica dedicada da nova tela touch-first do Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".6rem",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:13.860Z",
+        "reason": "Hierarquia tipografica dedicada da nova tela touch-first do Modo Garcom"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.8rem",
+        "files": [
+          "public/assets/css/garcom.css"
+        ],
+        "createdAt": "2026-08-27T15:55:13.999Z",
+        "reason": "Hierarquia tipografica dedicada da nova tela touch-first do Modo Garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#9ca3af",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T15:56:35.080Z",
+        "reason": "Reaproveita o mesmo texto de carregando ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff3cd",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T15:56:35.265Z",
+        "reason": "Reaproveita o mesmo badge Obrigatorio ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#b45309",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T15:56:35.408Z",
+        "reason": "Reaproveita o mesmo badge Obrigatorio ja usado em loja.js"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "4px",
+        "files": [
+          "public/assets/js/garcom.js"
+        ],
+        "createdAt": "2026-08-27T15:56:35.543Z",
+        "reason": "Reaproveita o mesmo badge Obrigatorio ja usado em loja.js"
       }
     ]
   }
