@@ -692,6 +692,15 @@
         ],
         "createdAt": "2026-08-28T22:23:59.693Z",
         "reason": "Reused from loja.css's existing type scale (already used elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "2rem",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:40:32.449Z",
+        "reason": "Matches this file's own established convention for image-placeholder icon size, already used 86 times elsewhere in loja.css (e.g. .destaque-img-ph, .product-row-img-ph)"
       }
     ]
   }
