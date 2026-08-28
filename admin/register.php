@@ -37,7 +37,7 @@ $usuario = trim($_POST['usuario'] ?? '');
 $senha = $_POST['senha'] ?? '';
 
 if (!$lojaNome || !$email || !$usuario || !$senha) {
-  header("Location: index.php?erro=1");
+  header("Location: login?erro=1");
   exit;
 }
 
@@ -58,7 +58,7 @@ $stmt = $conn->prepare(
 $stmt->execute([$usuario, $email]);
 
 if ($stmt->fetch()) {
-  header("Location: index.php?erro=1");
+  header("Location: login?erro=1");
   exit;
 }
 
@@ -120,9 +120,9 @@ try {
   $conn->commit();
 } catch (Exception $e) {
   $conn->rollBack();
-  header("Location: index.php?erro=1");
+  header("Location: login?erro=1");
   exit;
 }
 
-header("Location: index.php?ok=1");
+header("Location: login?ok=1");
 exit;

@@ -55,5 +55,5 @@ if ($admin && password_verify($senha, $admin['senha'])) {
   exit;
 }
 
-header("Location: index.php?erro=1");
+header("Location: login?erro=1");
 exit;

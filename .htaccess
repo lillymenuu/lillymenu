@@ -16,6 +16,11 @@
 
 RewriteEngine On
 
+# Login do admin: /admin/login -> admin/index.php (nome do arquivo real
+# nao bate com a URL curta, entao precisa de regra propria antes da generica
+# abaixo, que so reescreve quando admin/<nome-da-url>.php existe).
+RewriteRule ^admin/login/?$ admin/index.php [L,QSA]
+
 # Paginas do admin/superadmin sem .php visivel na URL (ex: /admin/dashboard -> admin/dashboard.php)
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(admin/.+)$ $1.php [L,QSA]

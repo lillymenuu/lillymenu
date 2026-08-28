@@ -13,7 +13,7 @@ header('Pragma: no-cache');
 header('X-LiteSpeed-Cache-Control: no-cache');
 
 if (!isset($_SESSION['admin_id'])) {
-  header("Location: index.php");
+  header("Location: login");
   exit;
 }
 

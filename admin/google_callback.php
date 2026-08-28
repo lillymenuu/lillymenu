@@ -11,13 +11,13 @@ $state = $_GET['state'] ?? '';
 $code = $_GET['code'] ?? '';
 
 if (!googleOauthConfigurado() || $code === '' || $state === '' || !hash_equals($stateEsperado, $state)) {
-  header("Location: index.php?erro=google_falha");
+  header("Location: login?erro=google_falha");
   exit;
 }
 
 $token = googleOauthTrocarCodigoPorToken($code);
 if (!$token || empty($token['access_token'])) {
-  header("Location: index.php?erro=google_falha");
+  header("Location: login?erro=google_falha");
   exit;
 }
 
@@ -27,7 +27,7 @@ $googleId = trim((string) ($perfil['sub'] ?? ''));
 $emailVerificado = (bool) ($perfil['email_verified'] ?? false);
 
 if ($email === '' || $googleId === '' || !$emailVerificado) {
-  header("Location: index.php?erro=google_falha");
+  header("Location: login?erro=google_falha");
   exit;
 }
 
@@ -56,7 +56,7 @@ try {
 }
 
 if (!$admin) {
-  header("Location: index.php?erro=google_sem_conta");
+  header("Location: login?erro=google_sem_conta");
   exit;
 }
 

@@ -47,7 +47,7 @@ $brand = landing_get($conn, 'brand', 'Lilly Menu');
 $navCtaPrimaryText = landing_get($conn, 'nav_cta_primary_text', 'Falar com especialista');
 $navCtaPrimaryLink = landing_get($conn, 'nav_cta_primary_link', '#contato');
 $navCtaSecondaryText = landing_get($conn, 'nav_cta_secondary_text', 'Acessar');
-$navCtaSecondaryLink = landing_get($conn, 'nav_cta_secondary_link', '../admin/index.php');
+$navCtaSecondaryLink = landing_get($conn, 'nav_cta_secondary_link', '../admin/login');
 $logoImage = landing_get($conn, 'logo_image', '');
 $heroBgImage = landing_get($conn, 'hero_bg_image', '');
 

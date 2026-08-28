@@ -329,7 +329,7 @@ try {
 
   $conn->commit();
 
-  $linkAcesso = 'https://lillymenu.com/admin/index.php';
+  $linkAcesso = 'https://lillymenu.com/admin/login';
   $assuntoBoasVindas = 'Seu acesso ao LillyMenu esta liberado!';
   $corpoBoasVindas = '
 <!DOCTYPE html>

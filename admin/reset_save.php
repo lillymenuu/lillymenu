@@ -11,5 +11,5 @@ $stmt = $conn->prepare(
 );
 $stmt->execute([$senha, $token]);
 
-header("Location: index.php?ok=1");
+header("Location: login?ok=1");
 exit;

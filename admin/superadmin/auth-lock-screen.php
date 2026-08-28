@@ -5,7 +5,7 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/../../helpers/storage.php';
 
 if (!isset($_SESSION['admin_id'])) {
-  header('Location: ../index.php');
+  header('Location: ../login');
   exit;
 }
 
