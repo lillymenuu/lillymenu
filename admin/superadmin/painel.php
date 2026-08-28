@@ -57,7 +57,7 @@ $landing = [
   'logo_image' => landingGet($conn, 'logo_image', ''),
   'hero_bg_image' => landingGet($conn, 'hero_bg_image', ''),
   'nav_brand_font' => landingGet($conn, 'nav_brand_font', 'Poppins'),
-  'nav_links_items' => landingGet($conn, 'nav_links_items', "Inicio|#inicio\nA {brand}|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos.php"),
+  'nav_links_items' => landingGet($conn, 'nav_links_items', "Inicio|#inicio\nA {brand}|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos"),
 
   'hero_badge' => landingGet($conn, 'hero_badge', 'Sistema completo de gestao'),
   'hero_title' => landingGet($conn, 'hero_title', 'O jeito mais facil de gerenciar o seu negocio'),
@@ -118,7 +118,7 @@ $landing = [
   'footer_social_linkedin' => landingGet($conn, 'footer_social_linkedin', '#'),
   'footer_social_youtube' => landingGet($conn, 'footer_social_youtube', '#'),
   'footer_menu_titulo' => landingGet($conn, 'footer_menu_titulo', 'Menu'),
-  'footer_menu_items' => landingGet($conn, 'footer_menu_items', "Sobre nos|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos.php"),
+  'footer_menu_items' => landingGet($conn, 'footer_menu_items', "Sobre nos|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos"),
   'footer_para_voce_titulo' => landingGet($conn, 'footer_para_voce_titulo', 'Para voce'),
   'footer_para_voce_items' => landingGet($conn, 'footer_para_voce_items', "Blog|#\n{brand} Podcast|#\nDownload do App|#\nTermos de uso|#\nPolitica de privacidade|#\nTermos de Delivery|#\nTermos Clube de Cupons|#"),
 

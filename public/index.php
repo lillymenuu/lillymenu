@@ -66,7 +66,7 @@ if (!isset($navBrandFontsMap[$navBrandFont])) {
   $navBrandFont = 'Poppins';
 }
 
-$navLinksItensRaw = landing_get($conn, 'nav_links_items', "Inicio|#inicio\nA {brand}|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos.php");
+$navLinksItensRaw = landing_get($conn, 'nav_links_items', "Inicio|#inicio\nA {brand}|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos");
 $navLinksItens = footer_parse_links(str_replace('{brand}', $brand, $navLinksItensRaw));
 
 /* ── Hero ── */
@@ -180,7 +180,7 @@ function footer_parse_links(string $raw): array {
 }
 
 $footerMenuTitulo = landing_get($conn, 'footer_menu_titulo', 'Menu');
-$footerMenuItensRaw = landing_get($conn, 'footer_menu_items', "Sobre nos|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos.php");
+$footerMenuItensRaw = landing_get($conn, 'footer_menu_items', "Sobre nos|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos");
 $footerMenuItens = footer_parse_links($footerMenuItensRaw);
 
 $footerParaVoceTitulo = landing_get($conn, 'footer_para_voce_titulo', 'Para voce');

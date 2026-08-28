@@ -25,6 +25,10 @@ RewriteRule ^admin/login/?$ admin/index.php [L,QSA]
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(admin/.+)$ $1.php [L,QSA]
 
+# Paginas publicas sem .php visivel na URL (ex: /public/planos -> public/planos.php)
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(public/.+)$ $1.php [L,QSA]
+
 # Tela inicial do site (landing page): dominio.com/ -> public/index.php, sem mudar a URL
 RewriteRule ^$ public/index.php [L,QSA]
 

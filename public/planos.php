@@ -109,7 +109,7 @@ function footer_parse_links(string $raw): array {
 }
 
 $footerMenuTitulo = landing_get($conn, 'footer_menu_titulo', 'Menu');
-$footerMenuItensRaw = landing_get($conn, 'footer_menu_items', "Sobre nos|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos.php");
+$footerMenuItensRaw = landing_get($conn, 'footer_menu_items', "Sobre nos|#a-lilly\nSolucoes|#solucoes\nFranquias|#franquias\nPlanos|planos");
 $footerMenuItens = footer_parse_links($footerMenuItensRaw);
 
 $footerParaVoceTitulo = landing_get($conn, 'footer_para_voce_titulo', 'Para voce');
@@ -251,7 +251,7 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
       <a href="index.php#a-lilly">A <?= htmlspecialchars($brand) ?></a>
       <a href="index.php#solucoes">Solucoes</a>
       <a href="index.php#franquias">Franquias</a>
-      <a href="planos.php" class="active">Planos</a>
+      <a href="planos" class="active">Planos</a>
     </nav>
     <div class="nav-actions">
       <a class="nav-access" href="<?= htmlspecialchars($navCtaSecondaryLink) ?>"><?= htmlspecialchars($navCtaSecondaryText) ?></a>
@@ -272,7 +272,7 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
         <a href="index.php#a-lilly">A <?= htmlspecialchars($brand) ?></a>
         <a href="index.php#solucoes">Solucoes</a>
         <a href="index.php#franquias">Franquias</a>
-        <a href="planos.php">Planos</a>
+        <a href="planos">Planos</a>
       </div>
     </div>
     <div class="menu-backdrop" id="menuBackdrop"></div>
