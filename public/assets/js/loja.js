@@ -1321,6 +1321,71 @@ function adicionarSugestaoCrossSell(id,nome,preco,imagem,estoque){
   else carrinho.push({id,n:nome,p:preco,img:imagem||'',q:1,crossSell:true,estoque:temEstoque?estoque:undefined});
   salvar();uiAtualizar();renderCarrinho();toastCart(nome);
 }
+
+/* ── Peça novamente (repete o último pedido do cliente, se identificado por telefone) ── */
+let _pecaNovamenteItens=[];
+function carregarPecaNovamente(){
+  const wrap=document.getElementById('pecaNovamenteWrap');
+  if(!wrap) return;
+  const tel=(localStorage.getItem('lc_tel')||'').replace(/\D/g,'');
+  if(tel.length<10) return;
+  fetch(`api/pedido_ultimo.php?tel=${encodeURIComponent(tel)}&loja_id=${CFG.lojaId}`)
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.ok||!d.pedido||!d.itens||!d.itens.length){wrap.innerHTML='';return;}
+      _pecaNovamenteItens=d.itens;
+      const primeiraImg=d.itens.find(i=>i.imagem)?.imagem||'';
+      const resumo=d.itens.length===1
+        ? `<b>${d.itens[0].qtd}</b> ${d.itens[0].nome}`
+        : `${d.itens[0].nome} <b>+${d.itens.length-1} ${d.itens.length-1===1?'item':'itens'}</b>`;
+      const totalPedido=d.itens.reduce((s,i)=>s+i.preco*i.qtd,0);
+      wrap.innerHTML=`
+        <div class="section-title">Peça novamente</div>
+        <div class="peca-novamente">
+          <div class="peca-novamente-card">
+            ${primeiraImg?`<img class="peca-novamente-img" src="${primeiraImg}" alt="">`:`<div class="peca-novamente-img-ph"><i class="bi bi-bag-check"></i></div>`}
+            <div class="peca-novamente-info">
+              <div class="peca-novamente-nome">${resumo}</div>
+              <div class="peca-novamente-preco">${fmtR(totalPedido)}</div>
+            </div>
+            <button class="peca-novamente-btn" id="pecaNovamenteBtn" onclick="pedirNovamente()">Pedir novamente</button>
+          </div>
+        </div>`;
+    })
+    .catch(()=>{wrap.innerHTML='';});
+}
+function pedirNovamente(){
+  if(!_pecaNovamenteItens.length) return;
+  const btn=document.getElementById('pecaNovamenteBtn');
+  if(btn){btn.disabled=true;btn.textContent='Adicionando...';}
+  let adicionados=0,indisponiveis=0;
+  _pecaNovamenteItens.forEach(item=>{
+    if(item.tipo==='combo'){
+      const obs='[combo]\n'+item.combosels.map(s=>s.nome+(s.qtd>1?' x'+s.qtd:'')).join('\n');
+      const idx=carrinho.findIndex(i=>i.id===item.id&&i.obs===obs);
+      if(idx>=0) carrinho[idx].q+=item.qtd;
+      else carrinho.push({id:item.id,n:item.nome,p:item.preco,img:item.imagem,q:item.qtd,obs,combosels:item.combosels,combo:true});
+      adicionados++;
+    } else {
+      const restante=_estoqueRestante(item.id,item.estoque);
+      if(restante<1){indisponiveis++;return;}
+      const qtd=Math.min(item.qtd,restante);
+      const idx=carrinho.findIndex(i=>i.id===item.id&&!i.obs);
+      if(idx>=0) carrinho[idx].q+=qtd;
+      else carrinho.push({id:item.id,n:item.nome,p:item.preco,img:item.imagem,q:qtd,estoque:item.estoque});
+      adicionados++;
+    }
+  });
+  if(btn){btn.disabled=false;btn.textContent='Pedir novamente';}
+  if(adicionados>0){
+    salvar();uiAtualizar();renderCarrinho();
+    toast(indisponiveis>0?`Itens adicionados! ${indisponiveis} item(ns) sem estoque no momento.`:'Itens do seu último pedido adicionados ao carrinho!');
+    abrirSheet('cartSheet');
+  } else {
+    toast('Os itens desse pedido não estão disponíveis no momento.','erro');
+  }
+}
+
 let cupomAplicado=null; // {codigo, tipo, desconto, valor}
 async function toggleCupons(){
   const body=document.getElementById('cuponsBody');
@@ -3156,6 +3221,7 @@ function toastCart(nome){
 }
 
 uiAtualizar();
+carregarPecaNovamente();
 
 /* Scroll para o topo ao carregar */
 window.scrollTo({top:0,behavior:'instant'});

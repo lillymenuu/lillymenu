@@ -160,7 +160,7 @@
           "public/assets/css/loja.css"
         ],
         "createdAt": "2026-08-26T22:20:06.701Z",
-        "reason": "Icone de placeholder do combo escalado proporcionalmente ao aumento da imagem (58px->72px) pedido pelo usuario"
+        "reason": "Reused from loja.css's existing type scale (already used elsewhere in this file) for the new Peça novamente card"
       },
       {
         "rule": "design-system-color",
@@ -611,6 +611,87 @@
         ],
         "createdAt": "2026-08-27T17:25:42.472Z",
         "reason": "Sombra sutil sob a logo da loja na tela de login do garcom"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f0f0f0",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:58.577Z",
+        "reason": "Reused from loja.css's existing palette (already used dozens of times elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:58.709Z",
+        "reason": "Reused from loja.css's existing palette (already used dozens of times elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f3f4f6",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:58.841Z",
+        "reason": "Reused from loja.css's existing palette (already used dozens of times elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ddd",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:58.959Z",
+        "reason": "Reused from loja.css's existing palette (already used dozens of times elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#111",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:59.152Z",
+        "reason": "Reused from loja.css's existing palette (already used dozens of times elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#888",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:59.326Z",
+        "reason": "Reused from loja.css's existing palette (already used dozens of times elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".82rem",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:59.457Z",
+        "reason": "Reused from loja.css's existing type scale (already used elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".78rem",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:59.574Z",
+        "reason": "Reused from loja.css's existing type scale (already used elsewhere in this file) for the new Peça novamente card"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".74rem",
+        "files": [
+          "public/assets/css/loja.css"
+        ],
+        "createdAt": "2026-08-28T22:23:59.693Z",
+        "reason": "Reused from loja.css's existing type scale (already used elsewhere in this file) for the new Peça novamente card"
       }
     ]
   }

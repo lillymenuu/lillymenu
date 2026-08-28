@@ -527,6 +527,9 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 <div class="no-result" id="noResult"><i class="bi bi-search" style="font-size:1.8rem;display:block;margin-bottom:8px;opacity:.3"></i>Nenhum produto encontrado</div>
 <?php endif; ?>
 
+<!-- ══ PEÇA NOVAMENTE ══ -->
+<div id="pecaNovamenteWrap"></div>
+
 <!-- ══ DESTAQUES (promoção e combos) ══ -->
 <?php if($destaques): ?>
 <div class="section-title">Destaques</div>

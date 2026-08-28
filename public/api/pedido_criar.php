@@ -214,6 +214,11 @@ try {
   if (!$temCrossSell) {
     try { $conn->exec("ALTER TABLE pedido_itens ADD COLUMN cross_sell TINYINT(1) NOT NULL DEFAULT 0"); $temCrossSell = true; } catch (Exception $e2) {}
   }
+  if (!$temProdutoId) {
+    /* sem essa coluna, "Peça novamente" (public/api/pedido_ultimo.php) não
+       consegue religar o item a um produto/combo real — só ao nome salvo. */
+    try { $conn->exec("ALTER TABLE pedido_itens ADD COLUMN produto_id INT NULL"); $temProdutoId = true; } catch (Exception $e2) {}
+  }
 
   foreach ($itens as $item) {
     $nomeItem  = trim($item['nome'] ?? '');

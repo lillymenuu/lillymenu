@@ -134,6 +134,9 @@ try {
   $itensCols = $conn->query("SHOW COLUMNS FROM pedido_itens")->fetchAll(PDO::FETCH_COLUMN, 0);
   $temProdutoId = in_array('produto_id', $itensCols, true);
   $temObsItem = in_array('observacoes', $itensCols, true);
+  if (!$temProdutoId) {
+    try { $conn->exec("ALTER TABLE pedido_itens ADD COLUMN produto_id INT NULL"); $temProdutoId = true; } catch (Throwable $e2) {}
+  }
 
   foreach ($itens as $item) {
     $nomeItem = trim((string) ($item['n'] ?? ''));
