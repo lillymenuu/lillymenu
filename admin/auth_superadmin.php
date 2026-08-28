@@ -21,5 +21,5 @@ if ($admin && password_verify($senha, $admin['senha'])) {
   exit;
 }
 
-header("Location: superadmin_login.php?erro=1");
+header("Location: superadmin_login?erro=1");
 exit;
