@@ -136,6 +136,7 @@ async function entrarAuth(){
       return;
     }
     _authCliente=d.cliente;
+    carregarPecaNovamente();
     /* fechar modal com animação suave */
     const overlay=document.getElementById('authModalOverlay');
     const modal=document.getElementById('authModal');
@@ -1322,13 +1323,14 @@ function adicionarSugestaoCrossSell(id,nome,preco,imagem,estoque){
   salvar();uiAtualizar();renderCarrinho();toastCart(nome);
 }
 
-/* ── Peça novamente (repete o último pedido do cliente, se identificado por telefone) ── */
+/* ── Peça novamente (repete o último pedido do cliente — só aparece depois que
+   ele se identifica pelo telefone via "Pedidos"/"Pontos", igual ao cashback) ── */
 let _pecaNovamenteItens=[];
 function carregarPecaNovamente(){
   const wrap=document.getElementById('pecaNovamenteWrap');
   if(!wrap) return;
-  const tel=(localStorage.getItem('lc_tel')||'').replace(/\D/g,'');
-  if(tel.length<10) return;
+  const tel=(_authCliente?.telefone||'').replace(/\D/g,'');
+  if(tel.length<10){wrap.innerHTML='';return;}
   fetch(`api/pedido_ultimo.php?tel=${encodeURIComponent(tel)}&loja_id=${CFG.lojaId}`)
     .then(r=>r.json())
     .then(d=>{
@@ -3221,7 +3223,6 @@ function toastCart(nome){
 }
 
 uiAtualizar();
-carregarPecaNovamente();
 
 /* Scroll para o topo ao carregar */
 window.scrollTo({top:0,behavior:'instant'});
