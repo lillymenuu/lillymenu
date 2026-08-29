@@ -1362,21 +1362,24 @@ function pedirNovamente(){
   if(btn){btn.disabled=true;btn.textContent='Adicionando...';}
   let adicionados=0,indisponiveis=0;
   _pecaNovamenteItens.forEach(item=>{
-    if(item.tipo==='combo'){
-      const obs='[combo]\n'+item.combosels.map(s=>s.nome+(s.qtd>1?' x'+s.qtd:'')).join('\n');
-      const idx=carrinho.findIndex(i=>i.id===item.id&&i.obs===obs);
-      if(idx>=0) carrinho[idx].q+=item.qtd;
-      else carrinho.push({id:item.id,n:item.nome,p:item.preco,img:item.imagem,q:item.qtd,obs,combosels:item.combosels,combo:true});
-      adicionados++;
-    } else {
-      const restante=_estoqueRestante(item.id,item.estoque);
-      if(restante<1){indisponiveis++;return;}
-      const qtd=Math.min(item.qtd,restante);
-      const idx=carrinho.findIndex(i=>i.id===item.id&&!i.obs);
-      if(idx>=0) carrinho[idx].q+=qtd;
-      else carrinho.push({id:item.id,n:item.nome,p:item.preco,img:item.imagem,q:qtd,estoque:item.estoque});
-      adicionados++;
-    }
+    try{
+      if(item.tipo==='combo'){
+        if(!item.combosels||!item.combosels.length){indisponiveis++;return;}
+        const obs='[combo]\n'+item.combosels.map(s=>s.nome+(s.qtd>1?' x'+s.qtd:'')).join('\n');
+        const idx=carrinho.findIndex(i=>i.id===item.id&&i.obs===obs);
+        if(idx>=0) carrinho[idx].q+=item.qtd;
+        else carrinho.push({id:item.id,n:item.nome,p:item.preco,img:item.imagem,q:item.qtd,obs,combosels:item.combosels,combo:true});
+        adicionados++;
+      } else {
+        const restante=_estoqueRestante(item.id,item.estoque);
+        if(restante<1){indisponiveis++;return;}
+        const qtd=Math.min(item.qtd,restante);
+        const idx=carrinho.findIndex(i=>i.id===item.id&&!i.obs);
+        if(idx>=0) carrinho[idx].q+=qtd;
+        else carrinho.push({id:item.id,n:item.nome,p:item.preco,img:item.imagem,q:qtd,estoque:item.estoque});
+        adicionados++;
+      }
+    }catch(e){indisponiveis++;}
   });
   if(adicionados>0){
     /* fica desabilitado — é pra adicionar uma vez só; clicar de novo duplicaria os itens no carrinho */
