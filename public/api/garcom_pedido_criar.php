@@ -101,6 +101,13 @@ foreach ($itens as $item) {
   $subtotal += (float) ($item['p'] ?? 0) * max(1, (int) ($item['q'] ?? 1));
 }
 
+/* DDL deve rodar ANTES da transação — DDL causa implicit commit no MySQL,
+   o que faria o $conn->commit() explicito abaixo falhar com "There is no
+   active transaction" (mesmo bug corrigido em public/api/pedido_criar.php). */
+if (!in_array('produto_id', $conn->query("SHOW COLUMNS FROM pedido_itens")->fetchAll(PDO::FETCH_COLUMN, 0), true)) {
+  try { $conn->exec("ALTER TABLE pedido_itens ADD COLUMN produto_id INT NULL"); } catch (Throwable $e2) {}
+}
+
 try {
   $conn->beginTransaction();
 
@@ -134,9 +141,6 @@ try {
   $itensCols = $conn->query("SHOW COLUMNS FROM pedido_itens")->fetchAll(PDO::FETCH_COLUMN, 0);
   $temProdutoId = in_array('produto_id', $itensCols, true);
   $temObsItem = in_array('observacoes', $itensCols, true);
-  if (!$temProdutoId) {
-    try { $conn->exec("ALTER TABLE pedido_itens ADD COLUMN produto_id INT NULL"); $temProdutoId = true; } catch (Throwable $e2) {}
-  }
 
   foreach ($itens as $item) {
     $nomeItem = trim((string) ($item['n'] ?? ''));

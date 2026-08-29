@@ -656,6 +656,9 @@ $pedidoColunas = $conn->query("SHOW COLUMNS FROM pedidos")->fetchAll(PDO::FETCH_
 $temObsCliente = in_array('observacoes_cliente', $pedidoColunas, true);
 $temCashbackValor = in_array('cashback_valor', $pedidoColunas, true);
 $temCashbackUsado = in_array('cashback_usado', $pedidoColunas, true);
+if (!$temCashbackUsado) {
+  try { $conn->exec("ALTER TABLE pedidos ADD COLUMN cashback_usado DECIMAL(10,2) NOT NULL DEFAULT 0"); $temCashbackUsado = true; } catch (Exception $e2) {}
+}
 $temCashbackPercentual = in_array('cashback_percentual', $pedidoColunas, true);
 $temCashbackExpiraEm = in_array('cashback_expira_em', $pedidoColunas, true);
 $temCashbackExpira = in_array('cashback_expira', $pedidoColunas, true);

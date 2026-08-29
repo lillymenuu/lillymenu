@@ -14,11 +14,24 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   echo json_encode(['ok'=>false,'msg'=>'Método inválido']); exit;
 }
 
-// DDL deve rodar ANTES da transação — DDL causa implicit commit no MySQL
+// DDL deve rodar ANTES da transação — DDL causa implicit commit no MySQL. Uma
+// ALTER TABLE disparada DENTRO da transação (como já aconteceu aqui antes)
+// encerra a transação sem avisar; o $conn->commit() explícito mais abaixo
+// então falha com "There is no active transaction" e derruba o resto do
+// fluxo — incluindo o débito de cashback, que só roda depois do commit.
 try {
   $colOrigem = $conn->query("SHOW COLUMNS FROM pedidos LIKE 'origem'")->fetch(PDO::FETCH_ASSOC);
   if (!$colOrigem) {
     $conn->exec("ALTER TABLE pedidos ADD COLUMN origem VARCHAR(20) NULL AFTER status");
+  }
+  if (!$conn->query("SHOW COLUMNS FROM pedidos LIKE 'cashback_usado'")->fetch(PDO::FETCH_ASSOC)) {
+    $conn->exec("ALTER TABLE pedidos ADD COLUMN cashback_usado DECIMAL(10,2) NOT NULL DEFAULT 0");
+  }
+  if (!$conn->query("SHOW COLUMNS FROM pedido_itens LIKE 'cross_sell'")->fetch(PDO::FETCH_ASSOC)) {
+    $conn->exec("ALTER TABLE pedido_itens ADD COLUMN cross_sell TINYINT(1) NOT NULL DEFAULT 0");
+  }
+  if (!$conn->query("SHOW COLUMNS FROM pedido_itens LIKE 'produto_id'")->fetch(PDO::FETCH_ASSOC)) {
+    $conn->exec("ALTER TABLE pedido_itens ADD COLUMN produto_id INT NULL");
   }
 } catch (Exception $e) {
 }
@@ -207,18 +220,11 @@ try {
   }
 
   /* ── Itens ── */
+  /* cross_sell/produto_id já garantidas no bloco de DDL pré-transação, no topo do arquivo */
   $colsItens    = $conn->query("SHOW COLUMNS FROM pedido_itens")->fetchAll(PDO::FETCH_COLUMN,0);
   $temProdutoId = in_array('produto_id',$colsItens);
   $temObsItem   = in_array('observacoes',$colsItens);
   $temCrossSell = in_array('cross_sell',$colsItens);
-  if (!$temCrossSell) {
-    try { $conn->exec("ALTER TABLE pedido_itens ADD COLUMN cross_sell TINYINT(1) NOT NULL DEFAULT 0"); $temCrossSell = true; } catch (Exception $e2) {}
-  }
-  if (!$temProdutoId) {
-    /* sem essa coluna, "Peça novamente" (public/api/pedido_ultimo.php) não
-       consegue religar o item a um produto/combo real — só ao nome salvo. */
-    try { $conn->exec("ALTER TABLE pedido_itens ADD COLUMN produto_id INT NULL"); $temProdutoId = true; } catch (Exception $e2) {}
-  }
 
   foreach ($itens as $item) {
     $nomeItem  = trim($item['nome'] ?? '');
@@ -555,6 +561,14 @@ try {
   echo json_encode(['ok'=>true,'id'=>$pedidoId,'codigo'=>$codigoDisplay,'token'=>$token]);
 
 } catch (Exception $e) {
-  $conn->rollBack();
+  /* so faz rollback se a transacao principal (linha ~146-277) ainda estiver aberta —
+     uma excecao ocorrida DEPOIS do commit (ex: nos blocos de cashback/pontos/whatsapp,
+     que rodam apos o pedido ja estar salvo) nao tem mais transacao pra desfazer; chamar
+     rollBack() as cegas nesse caso lanca "There is no active transaction" e derruba a
+     resposta inteira com um fatal nao tratado — o pedido ja tinha sido criado, mas o
+     cliente nunca recebia o {"ok":true}, e nada do que rodou depois do commit (cashback
+     usado, pontos, notificacao) ficava registrado no log pra investigar depois. */
+  error_log('pedido_criar.php: '.$e->getMessage().' em '.$e->getFile().':'.$e->getLine());
+  if ($conn->inTransaction()) { $conn->rollBack(); }
   echo json_encode(['ok'=>false,'msg'=>'Erro interno: '.$e->getMessage()]);
 }
