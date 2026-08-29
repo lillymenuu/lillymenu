@@ -771,9 +771,12 @@ textarea.obs-field:focus{border-color:var(--brown)}
   100%{box-shadow:0 0 0 0 rgba(123,92,62,0)}
 }
 
-/* Desktop: modal um pouco maior, com espaço pra respirar (era mais estreito que no mobile) */
+/* Desktop: modal um pouco maior, com espaço pra respirar (era mais estreito que no mobile).
+   max-height mais alto que o teto de 80vh anterior — nesse ponto o conteudo (foto 4:5 +
+   texto + botao) as vezes passava da altura disponivel e sobrava barra de rolagem lateral,
+   deixando o modal com cara desproporcional no desktop. */
 @media(min-width:900px){
-  .prod-modal.promo-mode{max-width:380px;max-height:80vh}
+  .prod-modal.promo-mode{max-width:380px;max-height:98vh}
 }
 
 /* ── Modal de produto: variante "sheet" (tela cheia, sobe suavemente de baixo) ── */
