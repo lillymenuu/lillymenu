@@ -723,14 +723,14 @@ textarea.obs-field:focus{border-color:var(--brown)}
 .prod-modal.promo-mode{
   top:50%;left:50%;bottom:auto;right:auto;
   transform:translate(-50%,-50%) scale(.94);
-  width:calc(100% - 32px);max-width:420px;
+  width:calc(100% - 32px);max-width:360px;
   height:auto;max-height:88vh;
-  border-radius:20px;
+  border-radius:22px;
   box-shadow:0 24px 60px rgba(0,0,0,.35);
   display:grid;
-  grid-template-columns:minmax(0,1fr) 152px;
-  grid-template-rows:auto auto;
-  grid-template-areas:"img img" "info footer";
+  grid-template-columns:1fr;
+  grid-template-rows:auto auto auto;
+  grid-template-areas:"img" "info" "footer";
   overflow-x:hidden;
   overflow-y:auto;
 }
@@ -745,23 +745,27 @@ textarea.obs-field:focus{border-color:var(--brown)}
 .prod-modal.promo-mode .prod-modal-img-ph{position:absolute;inset:0;border-radius:0;min-height:0;font-size:4rem}
 .prod-modal.promo-mode .prod-modal-ver-maior{display:none}
 
-.prod-modal.promo-mode .prod-modal-info{grid-area:info;display:flex;flex-direction:column;justify-content:center;gap:1px;padding:5px 6px 5px 16px;overflow:hidden;min-width:0}
+.prod-modal.promo-mode .prod-modal-info{grid-area:info;display:flex;flex-direction:column;gap:6px;padding:18px 20px 4px;overflow:visible;min-width:0}
 .prod-modal.promo-mode .prod-modal-pts{display:none}
-.prod-modal.promo-mode .prod-modal-nome{font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.prod-modal.promo-mode .prod-modal-desc{font-size:.65rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-.prod-modal.promo-mode .prod-modal-preco{font-size:.75rem}
+.prod-modal.promo-mode .prod-modal-nome{font-size:1.05rem;font-weight:800;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
+.prod-modal.promo-mode .prod-modal-desc{font-size:.82rem;color:#777;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.prod-modal.promo-mode .prod-modal-preco{font-size:.9rem;display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px}
+.prod-modal.promo-mode .prod-modal-preco-old{font-size:.82rem}
+.prod-modal.promo-mode .prod-modal-preco-final{font-size:1.35rem;color:var(--brown)}
+.prod-modal.promo-mode .badge-promo{font-size:.68rem;padding:2px 7px;border-radius:6px}
 
 .prod-modal.promo-mode #pdQtdMinimaAviso,
 .prod-modal.promo-mode .combo-section,
 .prod-modal.promo-mode .prod-modal-obs{display:none}
 
 .prod-modal.promo-mode .prod-modal-qty{display:none}
-.prod-modal.promo-mode .prod-modal-footer{grid-area:footer;padding:5px 16px 5px 6px;border-top:0;min-width:0;align-items:center}
-.prod-modal.promo-mode .prod-modal-add{width:100%;font-size:.74rem;line-height:1.2;padding:10px 8px;white-space:nowrap;text-align:center;border-radius:12px}
+.prod-modal.promo-mode .prod-modal-footer{grid-area:footer;padding:16px 20px 20px;border-top:0;min-width:0;align-items:center}
+.prod-modal.promo-mode .prod-modal-add{width:100%;font-size:.92rem;line-height:1.2;padding:14px 16px;white-space:nowrap;text-align:center;border-radius:13px;box-shadow:0 10px 22px -6px rgba(123,92,62,.45);transition:background .15s,transform .15s,box-shadow .15s}
+.prod-modal.promo-mode .prod-modal-add:hover{transform:translateY(-1px);box-shadow:0 12px 26px -6px rgba(123,92,62,.55)}
 
-/* Desktop: modal um pouco menor, pra caber inteiro na tela sem barra de rolagem */
+/* Desktop: modal um pouco maior, com espaço pra respirar (era mais estreito que no mobile) */
 @media(min-width:900px){
-  .prod-modal.promo-mode{max-width:320px;max-height:80vh}
+  .prod-modal.promo-mode{max-width:380px;max-height:80vh}
 }
 
 /* ── Modal de produto: variante "sheet" (tela cheia, sobe suavemente de baixo) ── */
