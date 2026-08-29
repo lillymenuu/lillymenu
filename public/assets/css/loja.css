@@ -760,8 +760,16 @@ textarea.obs-field:focus{border-color:var(--brown)}
 
 .prod-modal.promo-mode .prod-modal-qty{display:none}
 .prod-modal.promo-mode .prod-modal-footer{grid-area:footer;padding:16px 20px 20px;border-top:0;min-width:0;align-items:center}
-.prod-modal.promo-mode .prod-modal-add{width:100%;font-size:.92rem;line-height:1.2;padding:14px 16px;white-space:nowrap;text-align:center;border-radius:13px;box-shadow:0 10px 22px -6px rgba(123,92,62,.45);transition:background .15s,transform .15s,box-shadow .15s}
-.prod-modal.promo-mode .prod-modal-add:hover{transform:translateY(-1px);box-shadow:0 12px 26px -6px rgba(123,92,62,.55)}
+/* Mesmo anel pulsante do botão "Quero assinar" (public/planos.php, .btn-pulse),
+   reproduzido aqui com o token de cor do cardápio (--brown) — index.css não é
+   carregado nesta página, então a regra é replicada em vez de importada. */
+.prod-modal.promo-mode .prod-modal-add{width:100%;font-size:.92rem;line-height:1.2;padding:14px 16px;white-space:nowrap;text-align:center;border-radius:13px;box-shadow:0 0 0 0 rgba(123,92,62,.5);animation:promoAddPulse 2.6s ease-in-out infinite;transition:background .15s,transform .15s}
+.prod-modal.promo-mode .prod-modal-add:hover{transform:translateY(-1px);animation-play-state:paused}
+@keyframes promoAddPulse{
+  0%{box-shadow:0 0 0 0 rgba(123,92,62,.5)}
+  70%{box-shadow:0 0 0 18px rgba(123,92,62,0)}
+  100%{box-shadow:0 0 0 0 rgba(123,92,62,0)}
+}
 
 /* Desktop: modal um pouco maior, com espaço pra respirar (era mais estreito que no mobile) */
 @media(min-width:900px){
