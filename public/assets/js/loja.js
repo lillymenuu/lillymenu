@@ -1349,8 +1349,8 @@ function carregarPecaNovamente(){
             <div class="peca-novamente-info">
               <div class="peca-novamente-nome">${resumo}</div>
               <div class="peca-novamente-preco">${fmtR(totalPedido)}</div>
+              <button class="peca-novamente-btn" id="pecaNovamenteBtn" onclick="pedirNovamente()">Pedir novamente</button>
             </div>
-            <button class="peca-novamente-btn" id="pecaNovamenteBtn" onclick="pedirNovamente()">Pedir novamente</button>
           </div>
         </div>`;
     })
@@ -1378,12 +1378,14 @@ function pedirNovamente(){
       adicionados++;
     }
   });
-  if(btn){btn.disabled=false;btn.textContent='Pedir novamente';}
   if(adicionados>0){
+    /* fica desabilitado — é pra adicionar uma vez só; clicar de novo duplicaria os itens no carrinho */
+    if(btn){btn.disabled=true;btn.innerHTML='<i class="bi bi-check2"></i> Adicionado';}
     salvar();uiAtualizar();renderCarrinho();
     toast(indisponiveis>0?`Itens adicionados! ${indisponiveis} item(ns) sem estoque no momento.`:'Itens do seu último pedido adicionados ao carrinho!');
     abrirSheet('cartSheet');
   } else {
+    if(btn){btn.disabled=false;btn.textContent='Pedir novamente';}
     toast('Os itens desse pedido não estão disponíveis no momento.','erro');
   }
 }
