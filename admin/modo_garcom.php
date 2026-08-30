@@ -137,7 +137,7 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
     <div class="mg-panel d-none" data-mg-panel="mesas">
       <div class="mg-panel-head">
         <div class="mg-panel-head-text">Toque em uma mesa pra ativar/desativar. Mesas desativadas não aparecem pro garçom.</div>
-        <button type="button" class="btn-diggy-primary" data-bs-toggle="modal" data-bs-target="#modalMesa">
+        <button type="button" class="btn-diggy-primary" id="mgNovaMesaBtn" data-bs-toggle="modal" data-bs-target="#modalMesa">
           <i class="bi bi-plus-lg"></i> Nova mesa
         </button>
       </div>
@@ -160,6 +160,14 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
               <?php else: ?>
                 <div class="mg-mesa-card-flag mg-mesa-card-flag--livre"><i class="bi bi-check2"></i> Livre</div>
               <?php endif; ?>
+              <div class="mg-mesa-card-actions">
+                <button type="button" class="mg-icon-btn" data-mesa-editar="<?= (int) $m['id'] ?>" data-mesa-nome="<?= htmlspecialchars($m['nome']) ?>" title="Editar mesa" aria-label="Editar mesa">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="mg-icon-btn mg-icon-btn--danger" data-mesa-excluir="<?= (int) $m['id'] ?>" data-mesa-excluir-nome="<?= htmlspecialchars($m['nome']) ?>" title="Excluir mesa" aria-label="Excluir mesa">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
             </div>
           <?php endforeach; ?>
         </div>
@@ -196,10 +204,10 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
                 <div class="mg-garcom-email"><?= htmlspecialchars($g['email']) ?></div>
               </div>
               <button type="button" class="btn btn-outline-secondary btn-sm" data-garcom-codigo="<?= (int) $g['id'] ?>">Gerar novo código</button>
-              <button type="button" class="mg-garcom-icon-btn" data-garcom-editar="<?= (int) $g['id'] ?>" data-garcom-nome="<?= htmlspecialchars($g['nome']) ?>" data-garcom-email="<?= htmlspecialchars($g['email']) ?>" title="Editar garçom" aria-label="Editar garçom">
+              <button type="button" class="mg-icon-btn" data-garcom-editar="<?= (int) $g['id'] ?>" data-garcom-nome="<?= htmlspecialchars($g['nome']) ?>" data-garcom-email="<?= htmlspecialchars($g['email']) ?>" title="Editar garçom" aria-label="Editar garçom">
                 <i class="bi bi-pencil"></i>
               </button>
-              <button type="button" class="mg-garcom-icon-btn mg-garcom-icon-btn--danger" data-garcom-excluir="<?= (int) $g['id'] ?>" data-garcom-excluir-nome="<?= htmlspecialchars($g['nome']) ?>" title="Excluir garçom" aria-label="Excluir garçom">
+              <button type="button" class="mg-icon-btn mg-icon-btn--danger" data-garcom-excluir="<?= (int) $g['id'] ?>" data-garcom-excluir-nome="<?= htmlspecialchars($g['nome']) ?>" title="Excluir garçom" aria-label="Excluir garçom">
                 <i class="bi bi-trash"></i>
               </button>
               <label class="mg-switch">
@@ -222,10 +230,11 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content mg-modal">
       <div class="modal-header">
-        <h5 class="modal-title">Nova mesa</h5>
+        <h5 class="modal-title" id="modalMesaTitle">Nova mesa</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <input type="hidden" id="mesaIdInput" value="">
         <div class="produto-field">
           <label class="form-label">Nome da mesa</label>
           <input type="text" class="form-control produto-input" id="mesaNomeInput" placeholder="Ex.: Mesa 1, Varanda 2...">
@@ -318,6 +327,25 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="button" class="btn-diggy-danger" id="mgConfirmarExcluirGarcomBtn">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CONFIRMAR EXCLUSÃO DE MESA ══ -->
+<div class="modal fade" id="modalExcluirMesa" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content mg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Excluir mesa?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">Excluir <strong id="mgExcluirMesaNome"></strong>? Essa ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-diggy-danger" id="mgConfirmarExcluirMesaBtn">Excluir</button>
       </div>
     </div>
   </div>

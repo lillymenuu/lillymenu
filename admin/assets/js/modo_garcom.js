@@ -18,7 +18,57 @@ function mgToast(msg) {
 }
 
 /* ── Mesas ── */
+document.getElementById('mgNovaMesaBtn')?.addEventListener('click', () => {
+  document.getElementById('mesaIdInput').value = '';
+  document.getElementById('mesaNomeInput').value = '';
+  document.getElementById('mesaModalMsg').textContent = '';
+  document.getElementById('modalMesaTitle').textContent = 'Nova mesa';
+});
+
+document.querySelectorAll('[data-mesa-editar]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.getElementById('mesaIdInput').value = btn.dataset.mesaEditar;
+    document.getElementById('mesaNomeInput').value = btn.dataset.mesaNome || '';
+    document.getElementById('mesaModalMsg').textContent = '';
+    document.getElementById('modalMesaTitle').textContent = 'Editar mesa';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalMesa')).show();
+  });
+});
+
+let mgMesaExcluirPendenteBtn = null;
+
+document.querySelectorAll('[data-mesa-excluir]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    mgMesaExcluirPendenteBtn = btn;
+    document.getElementById('mgExcluirMesaNome').textContent = btn.dataset.mesaExcluirNome || 'esta mesa';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExcluirMesa')).show();
+  });
+});
+
+document.getElementById('mgConfirmarExcluirMesaBtn')?.addEventListener('click', () => {
+  const btn = mgMesaExcluirPendenteBtn;
+  if (!btn) return;
+  const id = btn.dataset.mesaExcluir;
+  bootstrap.Modal.getInstance(document.getElementById('modalExcluirMesa'))?.hide();
+  btn.disabled = true;
+  fetch('api/mesas_excluir.php', { method: 'POST', body: new URLSearchParams({ id }) })
+    .then((r) => r.json())
+    .then((data) => {
+      if (data.ok) {
+        window.location.reload();
+      } else {
+        btn.disabled = false;
+        mgToast(data.msg || 'Erro ao excluir mesa.');
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      mgToast('Erro ao excluir mesa.');
+    });
+});
+
 function mgSalvarMesa() {
+  const id = document.getElementById('mesaIdInput').value || '';
   const nome = (document.getElementById('mesaNomeInput').value || '').trim();
   const msgEl = document.getElementById('mesaModalMsg');
   const btn = document.getElementById('mesaSalvarBtn');
@@ -28,7 +78,9 @@ function mgSalvarMesa() {
   }
   msgEl.textContent = '';
   btn.disabled = true;
-  fetch('api/mesas_salvar.php', { method: 'POST', body: new URLSearchParams({ nome }) })
+  const params = { nome };
+  if (id) params.id = id;
+  fetch('api/mesas_salvar.php', { method: 'POST', body: new URLSearchParams(params) })
     .then((r) => r.json())
     .then((data) => {
       btn.disabled = false;

@@ -242,6 +242,11 @@
 .mg-mesa-card-flag--livre{
   color:#166534;
 }
+.mg-mesa-card-actions{
+  display:flex;
+  gap:6px;
+  margin-top:2px;
+}
 
 /* ── Garçons ── */
 .mg-link-card{
@@ -343,7 +348,7 @@
 }
 
 /* ── Switch (liga/desliga) ── */
-.mg-garcom-icon-btn{
+.mg-icon-btn{
   display:flex;
   align-items:center;
   justify-content:center;
@@ -357,11 +362,11 @@
   flex-shrink:0;
   transition:background .15s,color .15s,border-color .15s;
 }
-.mg-garcom-icon-btn:hover{
+.mg-icon-btn:hover{
   background:#f1f5f9;
   color:#0f172a;
 }
-.mg-garcom-icon-btn--danger:hover{
+.mg-icon-btn--danger:hover{
   background:#fef2f2;
   color:#dc2626;
   border-color:#fecaca;
