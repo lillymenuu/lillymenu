@@ -512,6 +512,24 @@ function badgeTipoPedido(tipo){
   return { label: tipo || 'Outro', className: 'retirada' };
 }
 
+function numerosPaginacao(atual, total){
+  const vizinhanca = 1;
+  const paginas = [];
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= atual - vizinhanca && i <= atual + vizinhanca)) {
+      paginas.push(i);
+    }
+  }
+  const comReticencias = [];
+  let anterior = 0;
+  paginas.forEach(i => {
+    if (anterior && i - anterior > 1) comReticencias.push('...');
+    comReticencias.push(i);
+    anterior = i;
+  });
+  return comReticencias;
+}
+
 function renderPedidos(pedidos, paginas){
   if (!clientePedidosLista || !clientePedidosPaginacao) return;
   if (!pedidos || pedidos.length === 0) {
@@ -548,9 +566,13 @@ function renderPedidos(pedidos, paginas){
   const nextDisabled = clientePedidosPagina >= pages;
   let html = '';
   html += `<button type="button" ${prevDisabled ? 'disabled' : ''} data-page="${clientePedidosPagina - 1}">&lt;</button>`;
-  for (let i = 1; i <= pages; i++) {
-    html += `<button type="button" class="${i === clientePedidosPagina ? 'active' : ''}" data-page="${i}">${i}</button>`;
-  }
+  numerosPaginacao(clientePedidosPagina, pages).forEach(item => {
+    if (item === '...') {
+      html += `<span class="cliente-pedidos-pagination-dots">...</span>`;
+    } else {
+      html += `<button type="button" class="${item === clientePedidosPagina ? 'active' : ''}" data-page="${item}">${item}</button>`;
+    }
+  });
   html += `<button type="button" ${nextDisabled ? 'disabled' : ''} data-page="${clientePedidosPagina + 1}">&gt;</button>`;
   clientePedidosPaginacao.innerHTML = html;
 }

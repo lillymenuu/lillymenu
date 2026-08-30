@@ -846,19 +846,17 @@
 .pedido-badge.mesa{background:#ecfdf3;color:#15803d;border:1px solid #bbf7d0}
 .cliente-pedido-resumo{font-size:.8rem;color:#7c8aa0;margin-bottom:6px}
 .cliente-pedido-total{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600}
-.cliente-pedidos-pagination{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:8px}
+.cliente-pedidos-pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px}
 .cliente-pedidos-pagination button{
   border:0;
   background:#f3f4f6;
   color:#6b7280;
   border-radius:999px;
-  padding:2px 6px;
-  min-width:22px;
-  height:22px;
-  font-size:.72rem;
-  line-height:1;
+  padding:6px 10px;
+  min-width:32px;
 }
 .cliente-pedidos-pagination button.active{background:#6d28d9;color:#fff}
+.cliente-pedidos-pagination span.cliente-pedidos-pagination-dots{color:#9ca3af;padding:0 2px;font-size:.85rem}
 .cliente-pedidos-vazio{
   background:#fff;
   border:1px dashed #e5e7eb;
