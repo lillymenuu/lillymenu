@@ -343,6 +343,29 @@
 }
 
 /* ── Switch (liga/desliga) ── */
+.mg-garcom-icon-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  padding:0;
+  border:1px solid #e2e8f0;
+  border-radius:10px;
+  background:#fff;
+  color:#64748b;
+  flex-shrink:0;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.mg-garcom-icon-btn:hover{
+  background:#f1f5f9;
+  color:#0f172a;
+}
+.mg-garcom-icon-btn--danger:hover{
+  background:#fef2f2;
+  color:#dc2626;
+  border-color:#fecaca;
+}
 .mg-switch{
   position:relative;
   display:inline-block;

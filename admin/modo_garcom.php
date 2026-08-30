@@ -170,7 +170,7 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
     <div class="mg-panel d-none" data-mg-panel="garcons">
       <div class="mg-panel-head">
         <div class="mg-panel-head-text">Compartilhe o link de acesso com a equipe — cada garçom entra com o próprio e-mail e código.</div>
-        <button type="button" class="btn-diggy-primary" data-bs-toggle="modal" data-bs-target="#modalGarcom">
+        <button type="button" class="btn-diggy-primary" id="mgNovoGarcomBtn" data-bs-toggle="modal" data-bs-target="#modalGarcom">
           <i class="bi bi-plus-lg"></i> Novo garçom
         </button>
       </div>
@@ -196,6 +196,12 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
                 <div class="mg-garcom-email"><?= htmlspecialchars($g['email']) ?></div>
               </div>
               <button type="button" class="btn btn-outline-secondary btn-sm" data-garcom-codigo="<?= (int) $g['id'] ?>">Gerar novo código</button>
+              <button type="button" class="mg-garcom-icon-btn" data-garcom-editar="<?= (int) $g['id'] ?>" data-garcom-nome="<?= htmlspecialchars($g['nome']) ?>" data-garcom-email="<?= htmlspecialchars($g['email']) ?>" title="Editar garçom" aria-label="Editar garçom">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button type="button" class="mg-garcom-icon-btn mg-garcom-icon-btn--danger" data-garcom-excluir="<?= (int) $g['id'] ?>" data-garcom-excluir-nome="<?= htmlspecialchars($g['nome']) ?>" title="Excluir garçom" aria-label="Excluir garçom">
+                <i class="bi bi-trash"></i>
+              </button>
               <label class="mg-switch">
                 <input type="checkbox" data-garcom-toggle="<?= (int) $g['id'] ?>" <?= (int) $g['ativo'] === 1 ? 'checked' : '' ?>>
                 <span></span>
@@ -238,10 +244,11 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content mg-modal">
       <div class="modal-header">
-        <h5 class="modal-title">Novo garçom</h5>
+        <h5 class="modal-title" id="modalGarcomTitle">Novo garçom</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <input type="hidden" id="garcomIdInput" value="">
         <div class="produto-field">
           <label class="form-label">Nome</label>
           <input type="text" class="form-control produto-input" id="garcomNomeInput" placeholder="Nome do garçom">

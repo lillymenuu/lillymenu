@@ -70,7 +70,52 @@ document.querySelectorAll('[data-mesa-toggle]').forEach((input) => {
 });
 
 /* ── Garçons ── */
+document.getElementById('mgNovoGarcomBtn')?.addEventListener('click', () => {
+  document.getElementById('garcomIdInput').value = '';
+  document.getElementById('garcomNomeInput').value = '';
+  document.getElementById('garcomEmailInput').value = '';
+  document.getElementById('garcomModalMsg').textContent = '';
+  document.getElementById('modalGarcomTitle').textContent = 'Novo garçom';
+  document.getElementById('garcomSalvarBtn').textContent = 'Salvar e gerar código';
+});
+
+document.querySelectorAll('[data-garcom-editar]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.getElementById('garcomIdInput').value = btn.dataset.garcomEditar;
+    document.getElementById('garcomNomeInput').value = btn.dataset.garcomNome || '';
+    document.getElementById('garcomEmailInput').value = btn.dataset.garcomEmail || '';
+    document.getElementById('garcomModalMsg').textContent = '';
+    document.getElementById('modalGarcomTitle').textContent = 'Editar garçom';
+    document.getElementById('garcomSalvarBtn').textContent = 'Salvar alterações';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalGarcom')).show();
+  });
+});
+
+document.querySelectorAll('[data-garcom-excluir]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const nome = btn.dataset.garcomExcluirNome || 'este garçom';
+    if (!confirm(`Excluir ${nome}? Essa ação não pode ser desfeita.`)) return;
+    const id = btn.dataset.garcomExcluir;
+    btn.disabled = true;
+    fetch('api/garcons_excluir.php', { method: 'POST', body: new URLSearchParams({ id }) })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) {
+          window.location.reload();
+        } else {
+          btn.disabled = false;
+          mgToast(data.msg || 'Erro ao excluir garçom.');
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        mgToast('Erro ao excluir garçom.');
+      });
+  });
+});
+
 function mgSalvarGarcom() {
+  const id = document.getElementById('garcomIdInput').value || '';
   const nome = (document.getElementById('garcomNomeInput').value || '').trim();
   const email = (document.getElementById('garcomEmailInput').value || '').trim();
   const msgEl = document.getElementById('garcomModalMsg');
@@ -81,13 +126,20 @@ function mgSalvarGarcom() {
   }
   msgEl.textContent = '';
   btn.disabled = true;
-  fetch('api/garcons_salvar.php', { method: 'POST', body: new URLSearchParams({ nome, email }) })
+  const params = { nome, email };
+  if (id) params.id = id;
+  fetch('api/garcons_salvar.php', { method: 'POST', body: new URLSearchParams(params) })
     .then((r) => r.json())
     .then((data) => {
       btn.disabled = false;
       if (data.ok) {
         bootstrap.Modal.getInstance(document.getElementById('modalGarcom'))?.hide();
-        mgMostrarCodigo(data.codigo_acesso, () => window.location.reload());
+        if (data.codigo_acesso) {
+          mgMostrarCodigo(data.codigo_acesso, () => window.location.reload());
+        } else {
+          mgToast('Garçom atualizado com sucesso!');
+          window.location.reload();
+        }
       } else {
         msgEl.textContent = data.msg || 'Erro ao salvar garçom.';
       }
