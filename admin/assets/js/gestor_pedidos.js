@@ -804,39 +804,42 @@ if (modalPedidoMotoboyEl) {
     document.body.classList.remove('motoboy-linking-open');
   });
 }
-if (modalPedidoAlertaMotoboyEl) {
-  /* Reset amarrado ao evento do próprio Bootstrap (não só ao código que chama
-     .show()) — garante que o valor real do campo esteja vazio sempre que o
-     modal realmente ficar visível. Confirmado ao vivo, em duas rodadas: setar
-     .value/.selectedIndex E o atributo "selected" de cada <option> deixava o
-     VALOR real do campo correto (o botão Vincular já rejeitava certo por
-     "nenhum motoboy selecionado"), mas o TEXTO pintado na tela continuava
-     preso no motoboy da vez anterior — um <select> nativo, depois que o
-     usuário já escolheu uma opção com a UI nativa do navegador, pode não
-     repintar o texto exibido mesmo com o DOM 100% correto (bug de paint do
-     próprio motor do navegador, não do nosso código). A única forma
-     confiável de forçar o repaint é descartar o elemento e colocar um novo
-     no lugar — por isso o reset agora clona o <select> (já com o valor certo
-     no clone) e substitui o antigo, em vez de só mudar propriedades nele. */
-  const resetAlertaMotoboy = () => {
-    if (pedidoAlertaMotoboySelect) {
-      Array.from(pedidoAlertaMotoboySelect.options).forEach((opt) => {
-        const vazio = opt.value === '';
-        opt.selected = vazio;
-        if (vazio) opt.setAttribute('selected', 'selected');
-        else opt.removeAttribute('selected');
-      });
-      pedidoAlertaMotoboySelect.selectedIndex = 0;
-      pedidoAlertaMotoboySelect.classList.remove('erro');
-      const clone = pedidoAlertaMotoboySelect.cloneNode(true);
-      pedidoAlertaMotoboySelect.replaceWith(clone);
-      pedidoAlertaMotoboySelect = clone;
-    }
-    if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
-    if (pedidoAlertaVincularMotoboy) pedidoAlertaVincularMotoboy.disabled = false;
-  };
-  modalPedidoAlertaMotoboyEl.addEventListener('show.bs.modal', resetAlertaMotoboy);
-  modalPedidoAlertaMotoboyEl.addEventListener('shown.bs.modal', resetAlertaMotoboy);
+/* Reset do campo de motoboy do modal de alerta — chamado SÓ uma vez, em
+   atualizarStatus(), ANTES de modalPedidoAlertaMotoboy.show(). Confirmado ao
+   vivo, em rodadas sucessivas de teste:
+   1) Só mudar .value/.selectedIndex deixava o VALOR real do campo correto,
+      mas o TEXTO pintado na tela continuava preso no motoboy escolhido da
+      vez anterior — um <select> nativo, depois que o usuário já escolheu uma
+      opção pela UI nativa do navegador, pode não repintar o texto exibido
+      mesmo com o DOM 100% correto (bug de paint do motor do navegador, não
+      do nosso código). A correção é descartar o elemento e pôr um clone no
+      lugar — clone nunca foi pintado, então não carrega nenhum estado visual
+      preso.
+   2) Rodar esse reset DEPOIS que o modal aparece (shown.bs.modal) parecia
+      mais seguro à primeira vista, mas abre uma janela de corrida: se o
+      usuário escolhe um motoboy ANTES da transição terminar, esse reset
+      tardio troca o elemento de novo e descarta a escolha dele — o campo
+      fica mostrando o motoboy escolhido, mas o Vincular lê o valor vazio do
+      clone novo por baixo. Por isso o reset roda uma vez só, cedo, com o
+      modal ainda fechado — nesse momento é fisicamente impossível o usuário
+      já ter interagido, e quando o modal aparece na tela o clone já é o
+      elemento "de sempre" (nunca pintado com outro valor), então some
+      qualquer chance de paint preso. */
+function resetAlertaMotoboySelect(){
+  if (!pedidoAlertaMotoboySelect) return;
+  Array.from(pedidoAlertaMotoboySelect.options).forEach((opt) => {
+    const vazio = opt.value === '';
+    opt.selected = vazio;
+    if (vazio) opt.setAttribute('selected', 'selected');
+    else opt.removeAttribute('selected');
+  });
+  pedidoAlertaMotoboySelect.selectedIndex = 0;
+  pedidoAlertaMotoboySelect.classList.remove('erro');
+  const clone = pedidoAlertaMotoboySelect.cloneNode(true);
+  pedidoAlertaMotoboySelect.replaceWith(clone);
+  pedidoAlertaMotoboySelect = clone;
+  if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
+  if (pedidoAlertaVincularMotoboy) pedidoAlertaVincularMotoboy.disabled = false;
 }
 function tempoDesde(dataStr){
   if (!dataStr) return '-';
@@ -1208,13 +1211,7 @@ function atualizarStatus(id,s){
     modalPedidoAlertaMotoboy
   ) {
     pedidoAguardandoVinculoEntrega = Number(id || 0);
-    if (pedidoAlertaMotoboySelect) {
-      pedidoAlertaMotoboySelect.value = '';
-      pedidoAlertaMotoboySelect.selectedIndex = 0;
-      pedidoAlertaMotoboySelect.classList.remove('erro');
-    }
-    if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
-    if (pedidoAlertaVincularMotoboy) pedidoAlertaVincularMotoboy.disabled = false;
+    resetAlertaMotoboySelect();
     modalPedidoAlertaMotoboy.show();
     return;
   }
