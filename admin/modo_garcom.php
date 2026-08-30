@@ -297,8 +297,27 @@ $mgJsVer = filemtime(__DIR__ . '/assets/js/modo_garcom.js');
         <p class="mb-0">Gerar um novo código vai invalidar o código atual desse garçom. Continuar?</p>
       </div>
       <div class="modal-footer">
-       
+
         <button type="button" class="btn-diggy-primary" id="mgConfirmarCodigoBtn">Gerar novo código</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CONFIRMAR EXCLUSÃO DE GARÇOM ══ -->
+<div class="modal fade" id="modalExcluirGarcom" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content mg-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Excluir garçom?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">Excluir <strong id="mgExcluirGarcomNome"></strong>? Essa ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-diggy-danger" id="mgConfirmarExcluirGarcomBtn">Excluir</button>
       </div>
     </div>
   </div>

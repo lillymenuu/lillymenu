@@ -91,27 +91,36 @@ document.querySelectorAll('[data-garcom-editar]').forEach((btn) => {
   });
 });
 
+let mgGarcomExcluirPendenteBtn = null;
+
 document.querySelectorAll('[data-garcom-excluir]').forEach((btn) => {
   btn.addEventListener('click', () => {
-    const nome = btn.dataset.garcomExcluirNome || 'este garçom';
-    if (!confirm(`Excluir ${nome}? Essa ação não pode ser desfeita.`)) return;
-    const id = btn.dataset.garcomExcluir;
-    btn.disabled = true;
-    fetch('api/garcons_excluir.php', { method: 'POST', body: new URLSearchParams({ id }) })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.ok) {
-          window.location.reload();
-        } else {
-          btn.disabled = false;
-          mgToast(data.msg || 'Erro ao excluir garçom.');
-        }
-      })
-      .catch(() => {
-        btn.disabled = false;
-        mgToast('Erro ao excluir garçom.');
-      });
+    mgGarcomExcluirPendenteBtn = btn;
+    document.getElementById('mgExcluirGarcomNome').textContent = btn.dataset.garcomExcluirNome || 'este garçom';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExcluirGarcom')).show();
   });
+});
+
+document.getElementById('mgConfirmarExcluirGarcomBtn')?.addEventListener('click', () => {
+  const btn = mgGarcomExcluirPendenteBtn;
+  if (!btn) return;
+  const id = btn.dataset.garcomExcluir;
+  bootstrap.Modal.getInstance(document.getElementById('modalExcluirGarcom'))?.hide();
+  btn.disabled = true;
+  fetch('api/garcons_excluir.php', { method: 'POST', body: new URLSearchParams({ id }) })
+    .then((r) => r.json())
+    .then((data) => {
+      if (data.ok) {
+        window.location.reload();
+      } else {
+        btn.disabled = false;
+        mgToast(data.msg || 'Erro ao excluir garçom.');
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      mgToast('Erro ao excluir garçom.');
+    });
 });
 
 function mgSalvarGarcom() {
