@@ -112,6 +112,7 @@ const pedidoMotoboySalvar = document.getElementById('pedidoMotoboySalvar');
 const pedidoAlertaContinuarSemMotoboy = document.getElementById('pedidoAlertaContinuarSemMotoboy');
 const pedidoAlertaVincularMotoboy = document.getElementById('pedidoAlertaVincularMotoboy');
 const pedidoAlertaMotoboySelect = document.getElementById('pedidoAlertaMotoboySelect');
+const pedidoAlertaMotoboyErro = document.getElementById('pedidoAlertaMotoboyErro');
 let pedidoAguardandoVinculoEntrega = null;
 
 const modalClientePerfilEl = document.getElementById('modalClientePerfil');
@@ -1175,7 +1176,11 @@ function atualizarStatus(id,s){
     pedidoAguardandoVinculoEntrega = Number(id || 0);
     if (pedidoAlertaMotoboySelect) {
       pedidoAlertaMotoboySelect.value = '';
+      pedidoAlertaMotoboySelect.selectedIndex = 0;
+      pedidoAlertaMotoboySelect.classList.remove('erro');
     }
+    if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
+    if (pedidoAlertaVincularMotoboy) pedidoAlertaVincularMotoboy.disabled = false;
     modalPedidoAlertaMotoboy.show();
     return;
   }
@@ -1617,10 +1622,26 @@ if (pedidoAlertaContinuarSemMotoboy) {
 
 if (pedidoAlertaVincularMotoboy) {
   pedidoAlertaVincularMotoboy.addEventListener('click', () => {
-    if (!pedidoAguardandoVinculoEntrega) return;
+    if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
+    pedidoAlertaMotoboySelect?.classList.remove('erro');
+    if (!pedidoAguardandoVinculoEntrega) {
+      /* estado interno perdeu a referência do pedido (ex: modal reaberto sem
+         passar por atualizarStatus()) — fecha em vez de ficar sem reagir. */
+      if (modalPedidoAlertaMotoboy) modalPedidoAlertaMotoboy.hide();
+      return;
+    }
     const pedidoId = Number(pedidoAguardandoVinculoEntrega || 0);
     const motoboyId = Number(pedidoAlertaMotoboySelect?.value || 0);
-    if (!pedidoId || !motoboyId) return;
+    if (!pedidoId) return;
+    if (!motoboyId) {
+      /* antes falhava em silêncio (parecia botão travado) — agora avisa o motivo */
+      if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.remove('d-none');
+      pedidoAlertaMotoboySelect?.classList.add('erro');
+      pedidoAlertaMotoboySelect?.focus();
+      return;
+    }
+    if (pedidoAlertaVincularMotoboy.disabled) return; /* evita duplo-clique disparar duas vezes */
+    pedidoAlertaVincularMotoboy.disabled = true;
     const body = new URLSearchParams({
       action: 'bind',
       pedido_id: String(pedidoId),
@@ -1631,7 +1652,14 @@ if (pedidoAlertaVincularMotoboy) {
       headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
       body
     }).then(r => r.json()).then(res => {
-      if (!res || !res.ok) return;
+      if (!res || !res.ok) {
+        pedidoAlertaVincularMotoboy.disabled = false;
+        if (pedidoAlertaMotoboyErro) {
+          pedidoAlertaMotoboyErro.textContent = (res && res.msg) || 'Não foi possível vincular o motoboy. Tente novamente.';
+          pedidoAlertaMotoboyErro.classList.remove('d-none');
+        }
+        return;
+      }
       const motoboyNome = res.motoboy_nome || '';
       if (Array.isArray(pedidosCache)) {
         pedidosCache = pedidosCache.map((pedidoItem) => {
@@ -1654,7 +1682,13 @@ if (pedidoAlertaVincularMotoboy) {
       if (pedidoDetalheAtual && Number(pedidoDetalheAtual) === pedidoId) {
         abrirModalPedidoDetalhe(pedidoId);
       }
-    }).catch(() => {});
+    }).catch(() => {
+      pedidoAlertaVincularMotoboy.disabled = false;
+      if (pedidoAlertaMotoboyErro) {
+        pedidoAlertaMotoboyErro.textContent = 'Erro de conexão. Tente novamente.';
+        pedidoAlertaMotoboyErro.classList.remove('d-none');
+      }
+    });
   });
 }
 

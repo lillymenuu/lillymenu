@@ -284,6 +284,7 @@ try {
               </option>
             <?php endforeach; ?>
           </select>
+          <div class="pedido-alerta-erro d-none" id="pedidoAlertaMotoboyErro">Selecione um motoboy para vincular.</div>
         </div>
       </div>
       <div class="modal-footer">

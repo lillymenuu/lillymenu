@@ -701,6 +701,15 @@
         ],
         "createdAt": "2026-08-28T22:40:32.449Z",
         "reason": "Matches this file's own established convention for image-placeholder icon size, already used 86 times elsewhere in loja.css (e.g. .destaque-img-ph, .product-row-img-ph)"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e11d48",
+        "files": [
+          "admin/assets/css/gestor_pedidos.css"
+        ],
+        "createdAt": "2026-08-30T18:31:20.702Z",
+        "reason": "Reused from this same modal's own existing danger/error accent (.pedido-alerta-modal .btn-soft, already in the file before this edit) for the new inline validation message on the motoboy select"
       }
     ]
   }
