@@ -536,9 +536,10 @@ textarea.obs-field:focus{border-color:var(--brown)}
 .cb-card-btn.cb-pulse{animation:cbBtnPulse 2.6s ease-in-out infinite}
 .cb-card-btn.cb-pulse:hover{transform:translateY(-1px);animation-play-state:paused}
 @keyframes cbBtnPulse{
-  0%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}
+  0%{box-shadow:0 0 0 0 rgba(22,163,74,.65);transform:scale(1)}
+  50%{transform:scale(1.035)}
   70%{box-shadow:0 0 0 12px rgba(22,163,74,0)}
-  100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}
+  100%{box-shadow:0 0 0 0 rgba(22,163,74,0);transform:scale(1)}
 }
 
 /* ── Tela de sucesso animada ── */
@@ -786,12 +787,16 @@ textarea.obs-field:focus{border-color:var(--brown)}
 /* Mesmo anel pulsante do botão "Quero assinar" (public/planos.php, .btn-pulse),
    reproduzido aqui com o token de cor do cardápio (--brown) — index.css não é
    carregado nesta página, então a regra é replicada em vez de importada. */
-.prod-modal.promo-mode .prod-modal-add{width:100%;font-size:.92rem;line-height:1.2;padding:14px 16px;white-space:nowrap;text-align:center;border-radius:13px;box-shadow:0 0 0 0 rgba(123,92,62,.5);animation:promoAddPulse 2.6s ease-in-out infinite;transition:background .15s,transform .15s}
+.prod-modal.promo-mode .prod-modal-add{width:100%;font-size:.92rem;line-height:1.2;padding:14px 16px;white-space:nowrap;text-align:center;border-radius:13px;box-shadow:0 0 0 0 rgba(123,92,62,.7);animation:promoAddPulse 2.6s ease-in-out infinite;transition:background .15s,transform .15s}
 .prod-modal.promo-mode .prod-modal-add:hover{transform:translateY(-1px);animation-play-state:paused}
+/* Anel + leve "respiração" de escala — o anel sozinho (marrom sobre fundo
+   claro) ficava sutil demais pra notar; a escala garante que o pulso seja
+   percebido mesmo quando o anel se confunde com o fundo. */
 @keyframes promoAddPulse{
-  0%{box-shadow:0 0 0 0 rgba(123,92,62,.5)}
+  0%{box-shadow:0 0 0 0 rgba(123,92,62,.7);transform:scale(1)}
+  50%{transform:scale(1.035)}
   70%{box-shadow:0 0 0 18px rgba(123,92,62,0)}
-  100%{box-shadow:0 0 0 0 rgba(123,92,62,0)}
+  100%{box-shadow:0 0 0 0 rgba(123,92,62,0);transform:scale(1)}
 }
 
 /* Desktop: modal um pouco maior, com espaço pra respirar (era mais estreito que no mobile).
