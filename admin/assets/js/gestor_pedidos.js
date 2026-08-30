@@ -804,6 +804,20 @@ if (modalPedidoMotoboyEl) {
     document.body.classList.remove('motoboy-linking-open');
   });
 }
+if (modalPedidoAlertaMotoboyEl) {
+  /* Reset amarrado ao evento do próprio Bootstrap (não só ao código que chama
+     .show()) — garante que o campo apareça vazio sempre que o modal realmente
+     ficar visível, mesmo se algo tiver deixado um valor preso nele antes. */
+  modalPedidoAlertaMotoboyEl.addEventListener('show.bs.modal', () => {
+    if (pedidoAlertaMotoboySelect) {
+      pedidoAlertaMotoboySelect.selectedIndex = 0;
+      pedidoAlertaMotoboySelect.value = '';
+      pedidoAlertaMotoboySelect.classList.remove('erro');
+    }
+    if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
+    if (pedidoAlertaVincularMotoboy) pedidoAlertaVincularMotoboy.disabled = false;
+  });
+}
 function tempoDesde(dataStr){
   if (!dataStr) return '-';
   const data = new Date(normalizarData(dataStr));
