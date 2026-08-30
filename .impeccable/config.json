@@ -710,6 +710,21 @@
         ],
         "createdAt": "2026-08-30T18:31:20.702Z",
         "reason": "Reused from this same modal's own existing danger/error accent (.pedido-alerta-modal .btn-soft, already in the file before this edit) for the new inline validation message on the motoboy select"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#374151",
+        "createdAt": "2026-08-30T20:00:33.756Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#555",
+        "createdAt": "2026-08-30T20:00:33.891Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#666",
+        "createdAt": "2026-08-30T20:00:34.043Z"
       }
     ]
   }
