@@ -262,11 +262,12 @@ function renderBenefitCards(){
     const txt=cashbackUsando&&cashbackDescontado>0
       ?`<div class="cart-benefit-title">Você está utilizando ${fmtR(cashbackDescontado)}</div><div class="cart-benefit-sub">${_cbValidade?'Saldo válido até '+_cbValidade:''}</div>`
       :`<div class="cart-benefit-title">Cashback disponível de ${fmtR(cashbackSaldo)}</div><div class="cart-benefit-sub">${_cbValidade?'Saldo válido até '+_cbValidade:''}</div>`;
-    const btnTxt=cashbackUsando&&cashbackDescontado>0?'Alterar':'Usar';
+    const usando=cashbackUsando&&cashbackDescontado>0;
+    const btnTxt=usando?'Alterar':'Usar';
     html+=`<div class="cart-benefit-card cashback">
       <div class="cart-benefit-icon"><i class="bi bi-cash-coin"></i></div>
       <div class="cart-benefit-info">${txt}</div>
-      <button class="cart-benefit-btn" onclick="abrirCashbackModal()">${btnTxt}</button>
+      <button class="cart-benefit-btn${usando?'':' cb-pulse'}" onclick="abrirCashbackModal()">${btnTxt}</button>
     </div>`;
   }
   if(CFG.clubePontosAtivo && _authCliente && _pontosSaldo>0 && CFG.agendDeliveryAtivo!==undefined){
@@ -375,11 +376,13 @@ function atualizarBotaoCashbackContato(){
   if(cashbackUsando && cashbackDescontado>0){
     btn.textContent='Remover';
     btn.style.background='#dc2626';
+    btn.classList.remove('cb-pulse');
     if(lbl) lbl.textContent='Usando cashback';
     if(valEl) valEl.textContent=`- ${fmtR(cashbackDescontado)} de ${fmtR(cashbackSaldo)}`;
   } else {
     btn.textContent='Usar';
     btn.style.background='#16a34a';
+    btn.classList.add('cb-pulse');
     if(lbl) lbl.textContent='Cashback disponível';
     if(valEl) valEl.textContent=fmtR(cashbackSaldo);
   }
@@ -1208,6 +1211,7 @@ function renderCarrinho(){
     }).join('')}
     <div id="cartCrossSellWrap"></div>
     ${renderBenefitCards()}
+    ${CFG.cuponsAtivo?`
     <div class="cupons-section">
       <button class="cupons-toggle" id="cuponsToggle" onclick="toggleCupons()">
         <span><i class="bi bi-ticket-perforated" style="margin-right:6px"></i>Cupons</span>
@@ -1216,7 +1220,7 @@ function renderCarrinho(){
       <div class="cupons-body" id="cuponsBody">
         <div style="font-size:.8rem;color:#aaa">Toque para ver cupons disponíveis.</div>
       </div>
-    </div>`;
+    </div>`:''}`;
   const sub=carrinho.reduce((s,i)=>s+i.p*i.q,0);
   const cnt=carrinho.reduce((s,i)=>s+i.q,0);
   const cntTxt=cnt===1?'1 item':cnt+' itens';
@@ -2137,6 +2141,7 @@ function irStep(n){
   /* oculta tudo */
   if(footerStep1) footerStep1.style.display='none';
   if(footerBreakdown) footerBreakdown.style.display='none';
+  if(btnProx) btnProx.classList.remove('pulse-cta');
   if(n===4){
     if(foot) foot.style.display='none';
     setTimeout(lancarParticulas, 400);
@@ -2159,7 +2164,7 @@ function irStep(n){
     if(footerBreakdown) footerBreakdown.style.display='';
     const bd=calcBreakdown();
     atualizarChkBreakdown(bd);
-    if(btnProx){btnProx.textContent='Enviar pedido';btnProx.disabled=false;btnProx.style.opacity='1';}
+    if(btnProx){btnProx.textContent='Enviar pedido';btnProx.disabled=false;btnProx.style.opacity='1';btnProx.classList.add('pulse-cta');}
     marcarStepConcluido(3);
     renderStepsBar(4); /* Resumo */
     renderResumo(bd);
@@ -2271,7 +2276,7 @@ function renderResumo(bd){
       <div style="font-size:.82rem;font-weight:600;color:#15803d"><i class="bi bi-cash-coin" style="margin-right:6px"></i>Você está utilizando ${fmtR(bd.cbUsar)}</div>
       <button class="resumo-edit-btn" onclick="abrirCashbackModal()">Alterar</button>
     </div>`:''}
-    <div class="resumo-section" style="border-bottom:0">
+    ${(CFG.cuponsAtivo||cupomAplicado)?`<div class="resumo-section" style="border-bottom:0">
       <button class="cupons-toggle" id="resumoCuponsToggle" onclick="toggleResumoCupons()">
         <span><i class="bi bi-ticket-perforated" style="margin-right:6px"></i>Cupons</span>
         <i class="bi bi-chevron-down chevron"></i>
@@ -2285,7 +2290,7 @@ function renderResumo(bd){
           <button class="cart-footer-btn" onclick="aplicarCupomResumo()">Aplicar</button>
         </div>`}
       </div>
-    </div>
+    </div>`:''}
     <div class="resumo-termos">Ao enviar seu pedido, você concorda com os <a href="javascript:;">Termos de Serviço e Política de Uso de Dados</a> do estabelecimento.</div>
   `;
 }
@@ -2464,7 +2469,7 @@ async function enviar(){
   _ultimoAgendSlot=agendamento.slot||'';
   _ultimoNome=(_authCliente?.nome||document.getElementById('cNome')?.value||localStorage.getItem('lc_nome')||'').trim();
   _ultimoTel=(_authCliente?.telefone||document.getElementById('cTel')?.value||localStorage.getItem('lc_tel')||'').trim();
-  const btn=document.getElementById('btnProx'); btn.disabled=true; btn.textContent='Enviando...';
+  const btn=document.getElementById('btnProx'); btn.disabled=true; btn.textContent='Enviando...'; btn.classList.remove('pulse-cta');
   const tel=(document.getElementById('cTel')?.value||'').replace(/\D/g,'');
   const isEntrega=tipoPed==='entrega'||tipoPed==='entrega_agendada';
   const end=isEntrega?(endResumoData?.addr||''):'';
@@ -2484,7 +2489,7 @@ async function enviar(){
   try{
     const res=await fetch('api/pedido_criar.php',{method:'POST',body});
     const d=await res.json();
-    if(!d.ok){toast(d.msg||'Erro');btn.disabled=false;btn.textContent='Confirmar pedido';return;}
+    if(!d.ok){toast(d.msg||'Erro');btn.disabled=false;btn.textContent='Confirmar pedido';btn.classList.add('pulse-cta');return;}
     /* salvar pedido no histórico local */
     const hist=JSON.parse(localStorage.getItem('lc_hist_'+CFG.lojaId)||'[]');
     const agendEntry=agendamento.slot?{data:agendamento.data?.toISOString().slice(0,10),slot:agendamento.slot}:null;
@@ -2506,7 +2511,7 @@ async function enviar(){
         :`Pronto em ${CFG.tRetMin}–${CFG.tRetMax} min`);
     document.getElementById('confTempo').textContent=tempoTxt;
     if(pagPed==='pix'&&CFG.pixChave){document.getElementById('pixBoxConf').classList.remove('d-none'); document.getElementById('pixChaveConf').textContent=CFG.pixChave;}
-  }catch(e){toast('Erro de conexão');btn.disabled=false;btn.textContent='Confirmar pedido';}
+  }catch(e){toast('Erro de conexão');btn.disabled=false;btn.textContent='Confirmar pedido';btn.classList.add('pulse-cta');}
 }
 function resetEstadoPedido(){
   tipoPed='';pagPed='';endResumoData=null;agendamento={data:null,diaSemana:null,slot:null};cupomAplicado=null;

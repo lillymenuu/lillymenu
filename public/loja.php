@@ -106,6 +106,19 @@ if (!preg_match('/^#[0-9a-fA-F]{6}$/', $temaCorMenu)) {
 $cashbackPct   = (float)cfg($conn,$lojaId,'cashback_percentual',0);
 $cashbackAtivo = cfg($conn,$lojaId,'cashback_ativo','0')==='1';
 
+/* Cupons não têm um switch geral em admin/cupons.php — "habilitado" aqui
+   significa existir pelo menos 1 cupom ativo cadastrado pra essa loja; sem
+   isso o campo de cupom no carrinho/resumo fica escondido (não faz sentido
+   mostrar pro cliente digitar um código quando não existe nenhum). */
+$cuponsAtivo = false;
+try {
+  if ($conn->query("SHOW TABLES LIKE 'cupons'")->fetchColumn()) {
+    $stmtCup = $conn->prepare("SELECT COUNT(*) FROM cupons WHERE loja_id=? AND ativo=1");
+    $stmtCup->execute([$lojaId]);
+    $cuponsAtivo = (int)$stmtCup->fetchColumn() > 0;
+  }
+} catch (Exception $e) {}
+
 /* Média de avaliações reais dos clientes */
 $avaliacaoMedia = 0.0;
 $avaliacaoTotal = 0;
@@ -363,6 +376,7 @@ $cfgJS=json_encode(['lojaId'=>$lojaId,'nomeLoja'=>$nomeLoja,'lojaPerfil'=>$perfi
 'pedidoMinEntregaAtivo'=>$pedidoMinEntregaAtivo,'pedidoMinEntrega'=>$pedidoMinEntrega,
 'pedidoMinRetiradaAtivo'=>$pedidoMinRetiradaAtivo,'pedidoMinRetirada'=>$pedidoMinRetirada,
 'clubePontosAtivo'=>$clubePontosAtivo,
+'cuponsAtivo'=>$cuponsAtivo,
 'catalogoVersao'=>cfg($conn,$lojaId,'catalogo_versao',''),
 'geoAtivo'=>cfg($conn,0,'saas_nominatim_ativo','1')==='1',
 'pausaAtivaFim'=>$pausaAtivaFim,
@@ -1032,13 +1046,13 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
            oninput="maskTelContact(this);verificarBeneficiosContato(this.value)"
            autocomplete="tel" inputmode="tel">
     <!-- Cashback disponível no contato -->
-    <div id="contactCashbackWrap" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 14px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <div id="contactCashbackWrap" class="cb-card" style="display:none">
+      <div class="cb-card-row">
         <div>
-          <div style="font-size:.68rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.04em" id="contactCashbackLbl">Cashback disponível</div>
-          <div id="contactCashbackValor" style="font-size:.95rem;font-weight:800;color:#15803d"></div>
+          <div class="cb-card-label" id="contactCashbackLbl">Cashback disponível</div>
+          <div class="cb-card-valor" id="contactCashbackValor"></div>
         </div>
-        <button id="contactCashbackBtn" onclick="toggleCashbackContato()" style="background:#16a34a;color:#fff;border:0;border-radius:8px;padding:7px 16px;font-size:.78rem;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap">Usar</button>
+        <button id="contactCashbackBtn" class="cb-card-btn cb-pulse" onclick="toggleCashbackContato()">Usar</button>
       </div>
     </div>
   </div>

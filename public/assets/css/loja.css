@@ -519,9 +519,27 @@ textarea.obs-field:focus{border-color:var(--brown)}
 .cart-benefit-info{flex:1;min-width:0}
 .cart-benefit-title{font-size:.82rem;font-weight:600;color:#111}
 .cart-benefit-sub{font-size:.72rem;color:#888;margin-top:1px}
-.cart-benefit-btn{border:0;border-radius:8px;padding:7px 14px;font-size:.78rem;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.cart-benefit-btn{border:0;border-radius:8px;padding:7px 14px;font-size:.78rem;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:transform .15s}
 .cart-benefit-card.cashback .cart-benefit-btn{background:#16a34a;color:#fff}
 .cart-benefit-card.pontos .cart-benefit-btn{background:#b45309;color:#fff}
+.cart-benefit-card.cashback .cart-benefit-btn.cb-pulse{animation:cbBtnPulse 2.6s ease-in-out infinite}
+.cart-benefit-card.cashback .cart-benefit-btn.cb-pulse:hover{transform:translateY(-1px);animation-play-state:paused}
+
+/* ── Cashback disponível (passo Contato) — mesmo cartão verde, mais elegante:
+   sombra sutil tingida de verde e o botão "Usar" com o mesmo anel pulsante
+   do resto do fluxo, pra chamar atenção sem parecer um alerta comum. ── */
+.cb-card{background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:13px 15px;margin-bottom:10px;box-shadow:0 4px 14px rgba(22,163,74,.1)}
+.cb-card-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cb-card-label{font-size:.68rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em}
+.cb-card-valor{font-size:1rem;font-weight:800;color:#15803d;margin-top:2px}
+.cb-card-btn{background:#16a34a;color:#fff;border:0;border-radius:9px;padding:8px 18px;font-size:.8rem;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;transition:background .15s,transform .15s}
+.cb-card-btn.cb-pulse{animation:cbBtnPulse 2.6s ease-in-out infinite}
+.cb-card-btn.cb-pulse:hover{transform:translateY(-1px);animation-play-state:paused}
+@keyframes cbBtnPulse{
+  0%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}
+  70%{box-shadow:0 0 0 12px rgba(22,163,74,0)}
+  100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}
+}
 
 /* ── Tela de sucesso animada ── */
 @keyframes fadeSlideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
@@ -679,6 +697,11 @@ textarea.obs-field:focus{border-color:var(--brown)}
 .cart-footer-btn{background:var(--brown);color:#fff;border:0;border-radius:10px;padding:12px 24px;font-size:.86rem;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;transition:background .15s}
 .cart-footer-btn:hover{background:#5c4230}
 .cart-footer-btn:disabled{background:#c0a88a;cursor:not-allowed}
+/* Mesmo anel pulsante do "Adicionar" do modal de promoção — usado só no
+   "Enviar pedido" do Resumo (irStep(5) liga/desliga a classe conforme o
+   passo), pra chamar atenção pro botão final sem pulsar em todo "Continuar". */
+.cart-footer-btn.pulse-cta{animation:promoAddPulse 2.6s ease-in-out infinite}
+.cart-footer-btn.pulse-cta:hover{animation-play-state:paused}
 .cart-footer-toggle{width:36px;height:36px;border-radius:50%;border:0;background:#f3f4f6;color:#555;display:flex;align-items:center;justify-content:center;font-size:.85rem;cursor:pointer;flex-shrink:0;transition:background .15s}
 .cart-footer-toggle:hover{background:#e5e7eb}
 
