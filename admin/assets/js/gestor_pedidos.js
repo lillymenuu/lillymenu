@@ -111,7 +111,7 @@ const pedidoMotoboySelect = document.getElementById('pedidoMotoboySelect');
 const pedidoMotoboySalvar = document.getElementById('pedidoMotoboySalvar');
 const pedidoAlertaContinuarSemMotoboy = document.getElementById('pedidoAlertaContinuarSemMotoboy');
 const pedidoAlertaVincularMotoboy = document.getElementById('pedidoAlertaVincularMotoboy');
-const pedidoAlertaMotoboySelect = document.getElementById('pedidoAlertaMotoboySelect');
+let pedidoAlertaMotoboySelect = document.getElementById('pedidoAlertaMotoboySelect');
 const pedidoAlertaMotoboyErro = document.getElementById('pedidoAlertaMotoboyErro');
 let pedidoAguardandoVinculoEntrega = null;
 
@@ -806,17 +806,37 @@ if (modalPedidoMotoboyEl) {
 }
 if (modalPedidoAlertaMotoboyEl) {
   /* Reset amarrado ao evento do próprio Bootstrap (não só ao código que chama
-     .show()) — garante que o campo apareça vazio sempre que o modal realmente
-     ficar visível, mesmo se algo tiver deixado um valor preso nele antes. */
-  modalPedidoAlertaMotoboyEl.addEventListener('show.bs.modal', () => {
+     .show()) — garante que o valor real do campo esteja vazio sempre que o
+     modal realmente ficar visível. Confirmado ao vivo, em duas rodadas: setar
+     .value/.selectedIndex E o atributo "selected" de cada <option> deixava o
+     VALOR real do campo correto (o botão Vincular já rejeitava certo por
+     "nenhum motoboy selecionado"), mas o TEXTO pintado na tela continuava
+     preso no motoboy da vez anterior — um <select> nativo, depois que o
+     usuário já escolheu uma opção com a UI nativa do navegador, pode não
+     repintar o texto exibido mesmo com o DOM 100% correto (bug de paint do
+     próprio motor do navegador, não do nosso código). A única forma
+     confiável de forçar o repaint é descartar o elemento e colocar um novo
+     no lugar — por isso o reset agora clona o <select> (já com o valor certo
+     no clone) e substitui o antigo, em vez de só mudar propriedades nele. */
+  const resetAlertaMotoboy = () => {
     if (pedidoAlertaMotoboySelect) {
+      Array.from(pedidoAlertaMotoboySelect.options).forEach((opt) => {
+        const vazio = opt.value === '';
+        opt.selected = vazio;
+        if (vazio) opt.setAttribute('selected', 'selected');
+        else opt.removeAttribute('selected');
+      });
       pedidoAlertaMotoboySelect.selectedIndex = 0;
-      pedidoAlertaMotoboySelect.value = '';
       pedidoAlertaMotoboySelect.classList.remove('erro');
+      const clone = pedidoAlertaMotoboySelect.cloneNode(true);
+      pedidoAlertaMotoboySelect.replaceWith(clone);
+      pedidoAlertaMotoboySelect = clone;
     }
     if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
     if (pedidoAlertaVincularMotoboy) pedidoAlertaVincularMotoboy.disabled = false;
-  });
+  };
+  modalPedidoAlertaMotoboyEl.addEventListener('show.bs.modal', resetAlertaMotoboy);
+  modalPedidoAlertaMotoboyEl.addEventListener('shown.bs.modal', resetAlertaMotoboy);
 }
 function tempoDesde(dataStr){
   if (!dataStr) return '-';
