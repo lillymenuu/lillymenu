@@ -33,6 +33,37 @@ if ($linkLoja) $slug = trim(parse_url($linkLoja, PHP_URL_PATH) ?? '', '/');
 if (!$slug) { $slug = mb_strtolower($nomeLoja,'UTF-8'); $slug = preg_replace('/[^a-z0-9]+/','-',$slug); $slug=trim($slug,'-'); }
 if (!isset($_GET['loja']) && $slug) { header("Location: loja.php?loja=".urlencode($slug)); exit; }
 
+/* URL curta e canônica da loja (dominio.com/nomedaloja) — usada no lugar de
+   location.pathname (JS) pra montar o link enviado no WhatsApp do pedido:
+   dependendo de como o cliente chegou na página (acesso direto a loja.php,
+   link antigo com .php, etc.), location.pathname podia refletir uma URL
+   "feia"/desatualizada em vez do slug limpo. Calculada aqui, no servidor,
+   fica sempre correta independente da URL que o navegador está mostrando.
+   Usa só o ÚLTIMO segmento do link_loja salvo — algumas lojas (ex: T&W)
+   ainda têm o formato antigo "/lilly/nomedaloja" salvo, e o "$slug" acima
+   preserva esse prefixo (correto pro redirect de compatibilidade da linha
+   34); aqui a extração é a mesma já usada em admin/modo_garcom.php pro
+   mesmo fim — sempre o link curto de 1 segmento, nunca o prefixo antigo. */
+$lojaLinkSlugCurto = '';
+if ($linkLoja) {
+  if (preg_match('#[?&]loja=([^&]+)#', $linkLoja, $mSlug)) {
+    $lojaLinkSlugCurto = urldecode($mSlug[1]);
+  } elseif (preg_match('#/([^/?]+)/?$#', $linkLoja, $mSlug)) {
+    $lojaLinkSlugCurto = $mSlug[1];
+  } else {
+    $lojaLinkSlugCurto = trim($linkLoja, '/');
+  }
+  $lojaLinkSlugCurto = preg_replace('/\.php$/i', '', $lojaLinkSlugCurto);
+}
+if ($lojaLinkSlugCurto === '') {
+  $lojaLinkSlugCurto = mb_strtolower($nomeLoja, 'UTF-8');
+  $lojaLinkSlugCurto = preg_replace('/[^a-z0-9]+/', '-', $lojaLinkSlugCurto);
+  $lojaLinkSlugCurto = trim($lojaLinkSlugCurto, '-');
+}
+$_lojaUrlProtocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+$_lojaUrlHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$lojaCanonicalUrl = $lojaLinkSlugCurto ? ($_lojaUrlProtocolo . $_lojaUrlHost . storage_base_absoluta() . '/' . rawurlencode($lojaLinkSlugCurto)) : '';
+
 function fixImgPath(string $p): string {
   return storage_url_absoluta($p);
 }
@@ -377,6 +408,7 @@ $cfgJS=json_encode(['lojaId'=>$lojaId,'nomeLoja'=>$nomeLoja,'lojaPerfil'=>$perfi
 'pedidoMinRetiradaAtivo'=>$pedidoMinRetiradaAtivo,'pedidoMinRetirada'=>$pedidoMinRetirada,
 'clubePontosAtivo'=>$clubePontosAtivo,
 'cuponsAtivo'=>$cuponsAtivo,
+'lojaCanonicalUrl'=>$lojaCanonicalUrl,
 'catalogoVersao'=>cfg($conn,$lojaId,'catalogo_versao',''),
 'geoAtivo'=>cfg($conn,0,'saas_nominatim_ativo','1')==='1',
 'pausaAtivaFim'=>$pausaAtivaFim,

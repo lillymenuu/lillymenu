@@ -2593,8 +2593,11 @@ function enviarWppPedido(){
     return l;
   }).join('\n');
 
-  /* link de acompanhamento */
-  const lojaUrl = location.origin + location.pathname + location.search;
+  /* link de acompanhamento — vem pronto do servidor (CFG.lojaCanonicalUrl),
+     não de location.pathname: essa depende de como o cliente chegou na
+     página e podia refletir uma URL "feia" (ex: com .php) em vez do link
+     curto e limpo da loja. */
+  const lojaUrl = CFG.lojaCanonicalUrl || (location.origin + location.pathname + location.search);
 
   /* monta mensagem */
   const L = []; // linhas
