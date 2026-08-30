@@ -750,6 +750,11 @@
         "rule": "design-system-color",
         "value": "#fecaca",
         "createdAt": "2026-08-30T20:08:46.689Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#9ca3af",
+        "createdAt": "2026-08-30T20:12:14.288Z"
       }
     ]
   }
