@@ -398,6 +398,19 @@ $_bd = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 <title><?=htmlspecialchars($nomeLoja)?> — Cardápio</title>
 <link rel="shortcut icon" href="../admin/assets/img/favicon_store.png">
 <link rel="icon" type="image/png" href="../admin/assets/img/favicon_store.png">
+<?php
+/* Open Graph — sem isso, links da loja (ex: enviados pelo WhatsApp após o
+   pedido, em enviarWppPedido() em loja.js) mostravam o preview com o ícone
+   genérico do sistema em vez da logo da própria loja, porque não havia
+   nenhuma tag og:image pra o WhatsApp/redes sociais usarem ao gerar a
+   prévia do link — sem elas, cai no favicon (o mesmo pra todas as lojas). */
+$ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_store.png');
+?>
+<meta property="og:type" content="website">
+<meta property="og:title" content="<?=htmlspecialchars($nomeLoja)?> — Cardápio">
+<meta property="og:description" content="Confira o cardápio digital e faça seu pedido em <?=htmlspecialchars($nomeLoja)?>.">
+<meta property="og:image" content="<?=htmlspecialchars($ogImagem)?>">
+<meta property="og:url" content="<?= htmlspecialchars($_bp . $_bh . $_bd) ?>">
 <meta name="theme-color" content="<?= htmlspecialchars($temaCorMenu) ?>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
