@@ -1665,8 +1665,17 @@ if (pedidoAlertaVincularMotoboy) {
     const motoboyId = Number(pedidoAlertaMotoboySelect?.value || 0);
     if (!pedidoId) return;
     if (!motoboyId) {
-      /* antes falhava em silêncio (parecia botão travado) — agora avisa o motivo */
-      if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.remove('d-none');
+      /* antes falhava em silêncio (parecia botão travado) — agora avisa o motivo.
+         Texto de diagnóstico TEMPORÁRIO anexado (remover depois de identificar
+         a causa raiz definitiva) — ajuda a saber exatamente o que o campo
+         estava lendo no momento do clique, sem precisar abrir o console. */
+      if (pedidoAlertaMotoboyErro) {
+        const domSelect = document.getElementById('pedidoAlertaMotoboySelect');
+        const referenciaBate = domSelect === pedidoAlertaMotoboySelect;
+        const textoVisivel = pedidoAlertaMotoboySelect?.options[pedidoAlertaMotoboySelect.selectedIndex]?.text || '(nenhum)';
+        pedidoAlertaMotoboyErro.textContent = `Selecione um motoboy para vincular. [diag: valor="${pedidoAlertaMotoboySelect?.value}" texto="${textoVisivel}" refOk=${referenciaBate}]`;
+        pedidoAlertaMotoboyErro.classList.remove('d-none');
+      }
       pedidoAlertaMotoboySelect?.classList.add('erro');
       pedidoAlertaMotoboySelect?.focus();
       return;
