@@ -263,7 +263,13 @@ try {
   </div>
 </div>
 
-<div class="modal fade pedido-alerta-modal" id="modalPedidoAlertaMotoboy" tabindex="-1" aria-hidden="true">
+<!-- Sem "fade" de propósito: a animação de abrir (transform/opacity) causava
+     um bug de repintura no Chrome/Edge onde o <select> de motoboy ficava
+     "fotografado" com a opção escolhida na vez anterior, mesmo com o valor
+     real do campo correto por baixo — confirmado com diagnóstico ao vivo.
+     Sem a transição, não existe a janela de composição de camada que causa
+     esse travamento visual; o modal só aparece/some na hora, sem zoom. -->
+<div class="modal pedido-alerta-modal" id="modalPedidoAlertaMotoboy" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
