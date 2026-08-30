@@ -804,62 +804,56 @@ if (modalPedidoMotoboyEl) {
     document.body.classList.remove('motoboy-linking-open');
   });
 }
-/* Reset do campo de motoboy do modal de alerta — chamado SÓ uma vez, em
-   atualizarStatus(), ANTES de modalPedidoAlertaMotoboy.show(). Confirmado ao
-   vivo, em rodadas sucessivas de teste:
-   1) Só mudar .value/.selectedIndex deixava o VALOR real do campo correto,
-      mas o TEXTO pintado na tela continuava preso no motoboy escolhido da
-      vez anterior — um <select> nativo, depois que o usuário já escolheu uma
-      opção pela UI nativa do navegador, pode não repintar o texto exibido
-      mesmo com o DOM 100% correto (bug de paint do motor do navegador, não
-      do nosso código). A correção é descartar o elemento e pôr um clone no
-      lugar — clone nunca foi pintado, então não carrega nenhum estado visual
-      preso.
-   2) Rodar esse reset DEPOIS que o modal aparece (shown.bs.modal) parecia
-      mais seguro à primeira vista, mas abre uma janela de corrida: se o
-      usuário escolhe um motoboy ANTES da transição terminar, esse reset
-      tardio troca o elemento de novo e descarta a escolha dele — o campo
-      fica mostrando o motoboy escolhido, mas o Vincular lê o valor vazio do
-      clone novo por baixo. Por isso o reset roda uma vez só, cedo, com o
-      modal ainda fechado — nesse momento é fisicamente impossível o usuário
-      já ter interagido, e quando o modal aparece na tela o clone já é o
-      elemento "de sempre" (nunca pintado com outro valor), então some
-      qualquer chance de paint preso. */
+/* Reset do campo de motoboy do modal de alerta. Tentativas anteriores (mudar
+   .value/.selectedIndex; clonar o <select>, em vários momentos diferentes;
+   remover a animação do modal inteira; reconstruir via innerHTML; forçar
+   display:none->reflow->'') não resolveram de forma definitiva — a caixa
+   fechada do <select> às vezes continua desenhando a opção escolhida da vez
+   anterior, mesmo com o valor real do campo comprovadamente correto por
+   baixo (confirmado ao vivo, repetidas vezes).
+
+   Pista que faltava: o OUTRO modal de motoboy deste sistema (abrirModalMotoboy
+   / preencherMotoboys, logo acima) TAMBÉM anima com fade e NUNCA teve esse
+   bug — ou seja, a animação nunca foi a causa. A diferença real é que aquele
+   modal reconstrói o <select> DUAS vezes: uma na hora (síncrono, com os dados
+   já em cache) e outra de novo pouco depois, quando uma chamada de rede
+   (fetch) termina — nesse momento o modal já está visível há alguns
+   milissegundos. É essa SEGUNDA reconstrução, com o modal já pintado na
+   tela, que aparentemente é o que garante o repaint correto — não a técnica
+   em si (innerHTML), que essa função já usava sem sucesso sozinha. Por isso
+   o reset abaixo roda duas vezes: uma vez já (síncrono) e outra de novo um
+   instante depois (setTimeout), reproduzindo o mesmo padrão de tempo do
+   modal que nunca teve esse problema. */
 function resetAlertaMotoboySelect(){
   if (!pedidoAlertaMotoboySelect) return;
-  Array.from(pedidoAlertaMotoboySelect.options).forEach((opt) => {
-    const vazio = opt.value === '';
-    opt.selected = vazio;
-    if (vazio) opt.setAttribute('selected', 'selected');
-    else opt.removeAttribute('selected');
+  const itens = Array.isArray(motoboysDisponiveis) ? motoboysDisponiveis : [];
+  const options = ['<option value="" selected>Selecione um motoboy</option>'];
+  itens.forEach(item => {
+    options.push(`<option value="${item.id}">${String(item.nome || '')}  -  ${String(item.whatsapp || '')}</option>`);
   });
-  pedidoAlertaMotoboySelect.selectedIndex = 0;
+  pedidoAlertaMotoboySelect.innerHTML = options.join('');
+  pedidoAlertaMotoboySelect.value = '';
   pedidoAlertaMotoboySelect.classList.remove('erro');
-  const clone = pedidoAlertaMotoboySelect.cloneNode(true);
-  pedidoAlertaMotoboySelect.replaceWith(clone);
-  pedidoAlertaMotoboySelect = clone;
+
+  /* Este <select> é convertido num dropdown customizado por buildCustomSelect
+     (admin/partials/sidebar.php), que renderiza uma vez e nunca se resincroniza
+     sozinho depois (pula selects com data-custom-built="1"). Sem desfazer e
+     reconstruir o wrapper aqui, o texto exibido fica travado na última opção
+     que o usuário clicou, mesmo com o <select> real já correto — mesmo bug já
+     resolvido em impressoras_config.js (atualizarSelectCustomizado). */
+  const wrapper = pedidoAlertaMotoboySelect.closest('.custom-select');
+  if (wrapper && wrapper.parentElement) {
+    wrapper.parentElement.insertBefore(pedidoAlertaMotoboySelect, wrapper);
+    wrapper.remove();
+  }
+  pedidoAlertaMotoboySelect.style.display = '';
+  delete pedidoAlertaMotoboySelect.dataset.customBuilt;
+  if (typeof window.refreshCustomSelects === 'function') {
+    window.refreshCustomSelects(document);
+  }
+
   if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
   if (pedidoAlertaVincularMotoboy) pedidoAlertaVincularMotoboy.disabled = false;
-}
-if (modalPedidoAlertaMotoboyEl) {
-  /* Confirmado com diagnóstico ao vivo (print do usuário): mesmo com o clone
-     rodando ANTES do modal abrir, o texto pintado na tela ainda ficava preso
-     no motoboy anterior — mas o valor real do campo estava 100% correto
-     (value="", texto real="Selecione um motoboy", refOk=true). Ou seja, o
-     problema nunca foi o dado — é o Chrome/Edge cacheando o conteúdo visual
-     do modal como um "retrato" congelado enquanto ele anima (transform/
-     opacity), e o <select> some fisicamente antes desse retrato existir. A
-     correção robusta: repintar de novo quando a animação termina de vez
-     (shown.bs.modal) — só que, dessa vez, SÓ se o campo ainda estiver vazio
-     nesse momento, pra nunca apagar uma escolha real que o usuário já tenha
-     feito enquanto a animação ainda rodava. */
-  modalPedidoAlertaMotoboyEl.addEventListener('shown.bs.modal', () => {
-    if (pedidoAlertaMotoboySelect && pedidoAlertaMotoboySelect.value === '') {
-      const clone = pedidoAlertaMotoboySelect.cloneNode(true);
-      pedidoAlertaMotoboySelect.replaceWith(clone);
-      pedidoAlertaMotoboySelect = clone;
-    }
-  });
 }
 function tempoDesde(dataStr){
   if (!dataStr) return '-';
