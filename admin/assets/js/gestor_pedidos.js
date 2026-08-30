@@ -841,6 +841,26 @@ function resetAlertaMotoboySelect(){
   if (pedidoAlertaMotoboyErro) pedidoAlertaMotoboyErro.classList.add('d-none');
   if (pedidoAlertaVincularMotoboy) pedidoAlertaVincularMotoboy.disabled = false;
 }
+if (modalPedidoAlertaMotoboyEl) {
+  /* Confirmado com diagnóstico ao vivo (print do usuário): mesmo com o clone
+     rodando ANTES do modal abrir, o texto pintado na tela ainda ficava preso
+     no motoboy anterior — mas o valor real do campo estava 100% correto
+     (value="", texto real="Selecione um motoboy", refOk=true). Ou seja, o
+     problema nunca foi o dado — é o Chrome/Edge cacheando o conteúdo visual
+     do modal como um "retrato" congelado enquanto ele anima (transform/
+     opacity), e o <select> some fisicamente antes desse retrato existir. A
+     correção robusta: repintar de novo quando a animação termina de vez
+     (shown.bs.modal) — só que, dessa vez, SÓ se o campo ainda estiver vazio
+     nesse momento, pra nunca apagar uma escolha real que o usuário já tenha
+     feito enquanto a animação ainda rodava. */
+  modalPedidoAlertaMotoboyEl.addEventListener('shown.bs.modal', () => {
+    if (pedidoAlertaMotoboySelect && pedidoAlertaMotoboySelect.value === '') {
+      const clone = pedidoAlertaMotoboySelect.cloneNode(true);
+      pedidoAlertaMotoboySelect.replaceWith(clone);
+      pedidoAlertaMotoboySelect = clone;
+    }
+  });
+}
 function tempoDesde(dataStr){
   if (!dataStr) return '-';
   const data = new Date(normalizarData(dataStr));
@@ -1665,15 +1685,9 @@ if (pedidoAlertaVincularMotoboy) {
     const motoboyId = Number(pedidoAlertaMotoboySelect?.value || 0);
     if (!pedidoId) return;
     if (!motoboyId) {
-      /* antes falhava em silêncio (parecia botão travado) — agora avisa o motivo.
-         Texto de diagnóstico TEMPORÁRIO anexado (remover depois de identificar
-         a causa raiz definitiva) — ajuda a saber exatamente o que o campo
-         estava lendo no momento do clique, sem precisar abrir o console. */
+      /* antes falhava em silêncio (parecia botão travado) — agora avisa o motivo */
       if (pedidoAlertaMotoboyErro) {
-        const domSelect = document.getElementById('pedidoAlertaMotoboySelect');
-        const referenciaBate = domSelect === pedidoAlertaMotoboySelect;
-        const textoVisivel = pedidoAlertaMotoboySelect?.options[pedidoAlertaMotoboySelect.selectedIndex]?.text || '(nenhum)';
-        pedidoAlertaMotoboyErro.textContent = `Selecione um motoboy para vincular. [diag: valor="${pedidoAlertaMotoboySelect?.value}" texto="${textoVisivel}" refOk=${referenciaBate}]`;
+        pedidoAlertaMotoboyErro.textContent = 'Selecione um motoboy para vincular.';
         pedidoAlertaMotoboyErro.classList.remove('d-none');
       }
       pedidoAlertaMotoboySelect?.classList.add('erro');
