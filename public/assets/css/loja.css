@@ -124,6 +124,18 @@ button{font-family:inherit;cursor:pointer}
 .badge-esgotado{font-size:.62rem;font-weight:700;background:#dc2626;color:#fff;border-radius:4px;padding:1px 5px;text-transform:uppercase;letter-spacing:.03em}
 .destaque-name{font-size:.78rem;color:#444;line-height:1.3;margin-top:2px}
 
+/* ── Lista de promoções (modal, 2-4 produtos) ── */
+.promo-lista-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;cursor:pointer;transition:background .15s}
+.promo-lista-item:hover{background:#f9fafb}
+.promo-lista-item+.promo-lista-item{margin-top:2px}
+.promo-lista-thumb{width:60px;height:60px;border-radius:10px;object-fit:cover;background:#f3f4f6;flex-shrink:0}
+.promo-lista-thumb-ph{display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#ddd}
+.promo-lista-info{min-width:0;flex:1}
+.promo-lista-nome{font-size:.85rem;font-weight:600;color:#111;line-height:1.25;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.promo-lista-precos{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.promo-lista-old{font-size:.72rem;color:#999;text-decoration:line-through}
+.promo-lista-final{font-size:.86rem;font-weight:700;color:#222}
+
 /* ── Produto row ── */
 .cat-section{max-width:680px;margin:0 auto}
 .cat-section-title{font-size:.95rem;font-weight:700;padding:12px 16px 4px}

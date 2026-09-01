@@ -349,6 +349,11 @@ $destaques=[];
 foreach($produtosPorCat as $ps) foreach($ps as $p) if($p['em_promo']) $destaques[]=$p;
 foreach($combosPorCat as $cs) foreach($cs as $c) $destaques[]=$c;
 
+/* Produtos em promocao (so produtos simples, combo nao entra em Promo) — usado
+   pelo icone "Promo" da bottom-nav e pelo modal de lista/auto-popup abaixo. */
+$produtosEmPromo=[];
+foreach($produtosPorCat as $ps) foreach($ps as $p) if($p['em_promo']) $produtosEmPromo[]=$p;
+
 /* Produto em promocao com foto/descricao de propaganda: exibido automaticamente ao entrar na loja */
 $promoAutoPopup=null;
 foreach($produtosPorCat as $ps){
@@ -717,6 +722,11 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
     <i class="bi bi-currency-dollar"></i>Pontos
   </button>
   <?php endif; ?>
+  <?php if ($produtosEmPromo): ?>
+  <button class="nav-btn" id="navPromo" onclick="abrirPromoNav()">
+    <i class="bi bi-megaphone"></i>Promo
+  </button>
+  <?php endif; ?>
   <button class="nav-btn" id="navPedidos" onclick="mostrarTab('pedidos')" style="position:relative">
     <span style="position:relative;display:inline-flex;align-items:center;justify-content:center">
       <i class="bi bi-bag"></i>
@@ -1037,6 +1047,19 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
   </div>
   <div class="prod-modal-footer" style="justify-content:center">
     <button class="prod-modal-add" onclick="confirmarIdentCupom()">Continuar</button>
+  </div>
+</div>
+
+<!-- ══ MODAL PROMOÇÕES (2-4 produtos em promoção) ══ -->
+<div class="prod-modal-overlay" id="promoListaOverlay" onclick="fecharPromoListaModal()"></div>
+<div class="prod-modal" id="promoListaModal" style="max-width:420px">
+  <button class="prod-modal-close" onclick="fecharPromoListaModal()"><i class="bi bi-x"></i></button>
+  <div class="prod-modal-scroll">
+    <div style="padding:22px 20px 10px">
+      <div style="font-size:.95rem;font-weight:700;color:#111;margin-bottom:2px">Promoções</div>
+      <div style="font-size:.8rem;color:#888;margin-bottom:14px">Toque num produto para ver mais e adicionar ao carrinho.</div>
+      <div id="promoListaBody"></div>
+    </div>
   </div>
 </div>
 
@@ -1664,6 +1687,23 @@ const PROMO_AUTO = <?= $promoAutoPopup ? json_encode([
   'promo_imagem'=>$promoAutoPopup['promo_imagem']??null,
   'promo_descricao'=>$promoAutoPopup['promo_descricao']??null,
 ], JSON_UNESCAPED_UNICODE) : 'null' ?>;
+const PRODUTOS_PROMO = <?= json_encode(array_map(fn($p)=>[
+  'id'=>$p['id'],
+  'nome'=>$p['nome'],
+  'descricao'=>$p['descricao']??'',
+  'preco_base'=>$p['preco_base'],
+  'preco_final'=>$p['preco_final'],
+  'em_promo'=>true,
+  'desc_pct'=>$p['desc_pct'],
+  'imagem'=>$p['imagem'],
+  'quantidade_minima'=>(int)($p['quantidade_minima']??0),
+  'pontos_ganho'=>(int)($p['pontos_ganho']??0),
+  'tem_variacoes'=>(int)($p['tem_variacoes']??0),
+  'promo_imagem'=>$p['promo_imagem']??null,
+  'promo_descricao'=>$p['promo_descricao']??null,
+  'estoque'=>(int)($p['estoque']??0),
+  'esgotado'=>!empty($p['esgotado']),
+], $produtosEmPromo), JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="./assets/js/loja.js?v=<?= $lojaJsVer ?>"></script>
 </body>

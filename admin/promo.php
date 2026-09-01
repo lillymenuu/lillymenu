@@ -41,23 +41,25 @@ try {
 } catch (Throwable $e) {
 }
 
-/* So e permitido ter uma promocao ativa por vez. Se sobrou mais de uma ativa
-   (dado de antes dessa regra existir), mantem so a mais recente e desativa o
-   resto — auto-correcao lazy, mesmo padrao da expiracao acima. */
+/* Ate 4 promocoes ativas ao mesmo tempo. Se sobrou mais que isso (dado de
+   antes dessa regra existir, ou de uma corrida rara), mantem as 4 mais
+   recentes e desativa o resto — auto-correcao lazy, mesmo padrao da
+   expiracao acima. */
 try {
   $stmt = $conn->prepare("
     SELECT id FROM produtos
     WHERE loja_id = ? AND promo_desativado = 0 AND preco_promocional > 0
     ORDER BY promo_inicio DESC, id DESC
-    LIMIT 1
+    LIMIT 4
   ");
   $stmt->execute([$lojaId]);
-  $manterPromoId = (int) $stmt->fetchColumn();
-  if ($manterPromoId > 0) {
+  $manterPromoIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+  if ($manterPromoIds) {
+    $placeholders = implode(',', array_fill(0, count($manterPromoIds), '?'));
     $conn->prepare("
       UPDATE produtos SET promo_desativado = 1
-      WHERE loja_id = ? AND id != ? AND promo_desativado = 0
-    ")->execute([$lojaId, $manterPromoId]);
+      WHERE loja_id = ? AND promo_desativado = 0 AND id NOT IN ($placeholders)
+    ")->execute([$lojaId, ...$manterPromoIds]);
   }
 } catch (Throwable $e) {
 }
@@ -95,13 +97,14 @@ foreach ($produtos as &$p) {
 }
 unset($p);
 
-$idPromoAtiva = null;
+$LIMITE_PROMOS_ATIVAS = 4;
+$idsPromoAtiva = [];
 foreach ($produtos as $p) {
   if ($p['em_promo']) {
-    $idPromoAtiva = (int) $p['id'];
-    break;
+    $idsPromoAtiva[] = (int) $p['id'];
   }
 }
+$limiteAtingido = count($idsPromoAtiva) >= $LIMITE_PROMOS_ATIVAS;
 
 $grupos = [];
 $semCategoria = ['id' => 'sem', 'nome' => 'Sem categoria', 'produtos' => []];
@@ -151,7 +154,7 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
       <div>
         <h1 class="produtos-title">Lance uma Promoção</h1>
         <p class="produtos-subtitle">
-          Escolha um produto e coloque ele em promoção por tempo limitado
+          Escolha até 4 produtos para colocar em promoção por tempo limitado (<?= count($idsPromoAtiva) ?>/<?= $LIMITE_PROMOS_ATIVAS ?> ativos)
         </p>
       </div>
       <div class="produtos-actions">
@@ -188,10 +191,10 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
                 'promo_imagem' => $p['promo_imagem'],
               ], JSON_UNESCAPED_UNICODE), ENT_QUOTES);
             ?>
-            <?php $bloqueado = $idPromoAtiva && $p['id'] != $idPromoAtiva; ?>
+            <?php $bloqueado = $limiteAtingido && !$p['em_promo']; ?>
             <article class="produto-card promo-item-card<?= $p['em_promo'] ? ' promo' : '' ?><?= $bloqueado ? ' promo-item-card--bloqueado' : '' ?>"
               onclick="<?= $bloqueado ? 'avisoPromoBloqueada()' : 'abrirPromoModal(' . $pj . ', this)' ?>"
-              <?= $bloqueado ? 'title="Desative a promoção ativa para poder editar este produto."' : '' ?>>
+              <?= $bloqueado ? 'title="Você já tem 4 produtos em promoção. Desative um para editar este."' : '' ?>>
               <div class="produto-thumb">
                 <?php if (!empty($p['imagem'])): ?>
                   <img src="<?= htmlspecialchars($p['imagem']) ?>" alt="">

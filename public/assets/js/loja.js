@@ -1536,6 +1536,41 @@ function fecharCupomListModal(){
   document.getElementById('cupomListOverlay').classList.remove('show');
   document.getElementById('cupomListModal').classList.remove('show');
 }
+
+/* ── Promoções (ícone "Promo" da bottom-nav + auto-popup ao entrar na loja) ──
+   1 produto: abre direto o modal de detalhe (comportamento de sempre).
+   2-4 produtos: abre a lista abaixo; tocar num item abre o modal de detalhe. */
+function abrirPromoNav(){
+  if(!Array.isArray(PRODUTOS_PROMO) || !PRODUTOS_PROMO.length) return;
+  if(PRODUTOS_PROMO.length===1) abrirProduto(PRODUTOS_PROMO[0].id, PRODUTOS_PROMO[0]);
+  else abrirPromoListaModal();
+}
+function abrirProdutoPromoLista(id){
+  fecharPromoListaModal();
+  const p=PRODUTOS_PROMO.find(x=>x.id===id);
+  if(p) abrirProduto(id,p);
+}
+function abrirPromoListaModal(){
+  const body=document.getElementById('promoListaBody');
+  body.innerHTML=PRODUTOS_PROMO.map(p=>`
+    <div class="promo-lista-item" onclick="abrirProdutoPromoLista(${p.id})">
+      ${p.imagem?`<img class="promo-lista-thumb" src="${p.imagem}" alt="">`:'<div class="promo-lista-thumb promo-lista-thumb-ph"><i class="bi bi-image"></i></div>'}
+      <div class="promo-lista-info">
+        <div class="promo-lista-nome">${p.nome}</div>
+        <div class="promo-lista-precos">
+          <span class="promo-lista-old">${fmtR(p.preco_base)}</span>
+          <span class="promo-lista-final">${fmtR(p.preco_final)}</span>
+          <span class="badge-promo">-${p.desc_pct}%</span>
+        </div>
+      </div>
+    </div>`).join('');
+  document.getElementById('promoListaOverlay').classList.add('show');
+  document.getElementById('promoListaModal').classList.add('show');
+}
+function fecharPromoListaModal(){
+  document.getElementById('promoListaOverlay').classList.remove('show');
+  document.getElementById('promoListaModal').classList.remove('show');
+}
 async function usarCupomBanner(codigo){
   await aplicarCupom(codigo);
   setTimeout(fecharCupomListModal,900);
@@ -3461,9 +3496,19 @@ function _aplicarEstoqueLojaNoCard(id, esgotado){
 }
 setInterval(_atualizarEstoqueLojaPoll, 15000);
 
-/* Popup automatico do produto em promocao (foto/descricao de propaganda), so na
-   primeira vez que o cliente entra na tela nessa sessao do navegador */
-if(typeof PROMO_AUTO!=='undefined' && PROMO_AUTO){
+/* Popup automatico de promocao, so na primeira vez que o cliente entra na tela
+   nessa sessao do navegador. Com 1 produto (e foto/descricao de propaganda
+   configurada) abre direto o modal de detalhe, como sempre. Com 2-4 produtos
+   em promocao abre a lista — reaparece se o conjunto de produtos em promocao
+   mudar, pois a chave de sessao inclui os ids. */
+if(Array.isArray(PRODUTOS_PROMO) && PRODUTOS_PROMO.length>=2){
+  const _idsOrdenados=PRODUTOS_PROMO.map(p=>p.id).sort((a,b)=>a-b).join('-');
+  const _promoListaVistoKey='promo_lista_visto_'+CFG.lojaId+'_'+_idsOrdenados;
+  if(!sessionStorage.getItem(_promoListaVistoKey)){
+    sessionStorage.setItem(_promoListaVistoKey,'1');
+    setTimeout(abrirPromoListaModal, 600);
+  }
+} else if(typeof PROMO_AUTO!=='undefined' && PROMO_AUTO){
   const _promoVistoKey='promo_visto_'+CFG.lojaId+'_'+PROMO_AUTO.id;
   if(!sessionStorage.getItem(_promoVistoKey)){
     sessionStorage.setItem(_promoVistoKey,'1');

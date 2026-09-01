@@ -120,7 +120,7 @@
 })();
 
 window.avisoPromoBloqueada = function () {
-  toast('Desative a promoção ativa antes de ativar outra.');
+  toast('Você já tem 4 produtos em promoção. Desative um para ativar outro.');
 };
 
 function toast(msg) {

@@ -77,13 +77,20 @@ try {
   }
   $estavaAtiva = !((int) ($atual['promo_desativado'] ?? 1));
 
-  /* so e permitido ter uma promocao ativa por vez na loja: ao ativar esta,
-     desativa qualquer outra que ainda estivesse ativa. */
-  if ($ativar) {
-    $conn->prepare("
-      UPDATE produtos SET promo_desativado = 1
+  /* ate 4 promocoes ativas ao mesmo tempo na loja. Ao ativar uma nova (que
+     ainda nao estava ativa), recusa se o limite ja foi atingido em vez de
+     desativar as outras silenciosamente. */
+  if ($ativar && !$estavaAtiva) {
+    $stmtCont = $conn->prepare("
+      SELECT COUNT(*) FROM produtos
       WHERE loja_id = ? AND id != ? AND promo_desativado = 0
-    ")->execute([$lojaId, $produtoId]);
+    ");
+    $stmtCont->execute([$lojaId, $produtoId]);
+    if ((int) $stmtCont->fetchColumn() >= 4) {
+      $conn->rollBack();
+      echo json_encode(['ok' => false, 'msg' => 'Você já tem 4 produtos em promoção. Desative um para ativar este.']);
+      exit;
+    }
   }
 
   $novaImagem = null;
