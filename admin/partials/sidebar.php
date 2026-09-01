@@ -1030,7 +1030,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
     <div class="loja-info-modal" role="dialog" aria-modal="true" aria-label="Informações da loja">
       <button type="button" class="loja-info-close" id="lojaInfoClose" aria-label="Fechar">×</button>
       <div class="loja-info-titlebar">
-        <h3>Informacoes da loja</h3>
+        <h3>Informações da loja</h3>
       </div>
       <?php if (!empty($lojaCapa)): ?>
         <div class="loja-info-banner">
