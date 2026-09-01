@@ -384,8 +384,8 @@ body.dash-diggy .topbar{
 
 body.dash-diggy .sidebar{
   width:221px;
-  background:#ffffff;
-  color:#0f172a;
+  background:var(--brand);
+  color:#ffffff;
   border-right:1px solid #e5e7eb;
   padding:0 16px;
   display:flex;
@@ -439,12 +439,13 @@ body.dash-diggy .brand-title{
 }
 body.dash-diggy .brand-subtitle{
   font-size:10px;
-  color:#64748b;
+  color:rgba(255,255,255,.7);
   white-space:nowrap;
 }
 
 body.dash-diggy .sidebar-store{
   background:#ffffff;
+  color:#0f172a;
   border:1px solid #e2e8f0;
   border-radius:16px;
   padding:12px;
@@ -701,6 +702,7 @@ body.dash-diggy .store-toggle .form-check-input:focus{
 
 body.dash-diggy .sidebar-plan{
   background:#ecfdf3;
+  color:#0f172a;
   border:1px solid #bbf7d0;
   border-radius:16px;
   padding:12px;
@@ -733,7 +735,7 @@ body.dash-diggy .sidebar-section-title{
   font-size:11px;
   text-transform:uppercase;
   letter-spacing:.12em;
-  color:#94a3b8;
+  color:rgba(255,255,255,.65);
   margin:18px 0 10px;
 }
 body.dash-diggy .sidebar-menu{
@@ -752,19 +754,19 @@ body.dash-diggy .sidebar-menu a{
   min-height:30px;
   border-radius:10px;
   text-decoration:none;
-  color:#0f172a;
+  color:#ffffff;
   background:transparent;
   border:1px solid transparent;
   font-size:12px;
 }
 body.dash-diggy .sidebar-menu a:hover{
-  background:#f1f5f9;
-  border-color:#e2e8f0;
+  background:rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.22);
 }
 body.dash-diggy .sidebar-menu a.active{
-  background:#f1f5f9;
-  border-color:#e2e8f0;
-  color:#0f172a;
+  background:#ffffff;
+  border-color:#ffffff;
+  color:var(--brand);
 }
 
 body.dash-diggy .sidebar-user{
@@ -775,6 +777,7 @@ body.dash-diggy .sidebar-user{
   padding:12px;
   border-radius:16px;
   background:#f8fafc;
+  color:#0f172a;
   border:1px solid #e2e8f0;
 }
 body.dash-diggy .user-avatar{
