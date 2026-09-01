@@ -764,6 +764,11 @@ body.dash-diggy .sidebar-menu a{
 body.dash-diggy .sidebar-menu a:hover{
   background:rgba(255,255,255,.14);
   border-color:rgba(255,255,255,.22);
+}
+/* So desloca no hover com a sidebar expandida — recolhida, o link vira o
+   ancestral "transformado" mais proximo, o que quebra o position:fixed do
+   tooltip (::after, mais abaixo) bem no momento em que ele precisa aparecer. */
+body.dash-diggy .sidebar:not(.collapsed) .sidebar-menu a:hover{
   transform:translateX(2px);
 }
 body.dash-diggy .sidebar-menu a.active{
