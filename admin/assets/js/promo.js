@@ -8,6 +8,7 @@
   const ativarInput = document.getElementById('promoAtivarInput');
   const precoInput = document.getElementById('promoPrecoInput');
   const diasInput = document.getElementById('promoDiasInput');
+  const etiquetaInput = document.getElementById('promoEtiquetaInput');
   const descInput = document.getElementById('promoDescricaoInput');
   const imagemPreview = document.getElementById('promoImagemPreview');
   const imagemBtn = document.getElementById('promoImagemBtn');
@@ -34,6 +35,7 @@
     ativarInput.checked = !!d.em_promo;
     precoInput.value = d.preco_promocional ? Number(d.preco_promocional).toFixed(2).replace('.', ',') : '';
     diasInput.value = d.promo_dias || '';
+    etiquetaInput.value = d.promo_etiqueta || '';
     descInput.value = d.promo_descricao || '';
 
     if (d.promo_imagem) {
@@ -95,6 +97,7 @@
     body.append('ativar', ativar ? '1' : '0');
     body.append('preco_promocional', precoInput.value.trim());
     body.append('promo_dias', diasInput.value.trim());
+    body.append('promo_etiqueta', etiquetaInput.value);
     body.append('promo_descricao', descInput.value.trim());
     if (imagemBase64Nova) body.append('promo_imagem_base64', imagemBase64Nova);
     if (imagemRemovida) body.append('promo_imagem_remover', '1');

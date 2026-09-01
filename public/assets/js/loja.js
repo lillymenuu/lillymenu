@@ -1550,20 +1550,26 @@ function abrirProdutoPromoLista(id){
   const p=PRODUTOS_PROMO.find(x=>x.id===id);
   if(p) abrirProduto(id,p);
 }
+const PROMO_ETIQUETA_LABEL={recomendado:'Recomendado',mais_pedido:'Mais pedido',novidade:'Novidade',edicao_limitada:'Edição limitada'};
 function abrirPromoListaModal(){
   const body=document.getElementById('promoListaBody');
-  body.innerHTML=PRODUTOS_PROMO.map(p=>`
+  body.innerHTML=PRODUTOS_PROMO.map(p=>{
+    const etiquetaLabel=PROMO_ETIQUETA_LABEL[p.promo_etiqueta];
+    return `
     <div class="promo-lista-item" onclick="abrirProdutoPromoLista(${p.id})">
-      ${p.imagem?`<img class="promo-lista-thumb" src="${p.imagem}" alt="">`:'<div class="promo-lista-thumb promo-lista-thumb-ph"><i class="bi bi-image"></i></div>'}
       <div class="promo-lista-info">
+        ${etiquetaLabel?`<span class="promo-lista-etiqueta promo-lista-etiqueta--${p.promo_etiqueta}">${etiquetaLabel}</span>`:''}
         <div class="promo-lista-nome">${p.nome}</div>
+        ${p.descricao?`<div class="promo-lista-desc">${p.descricao}</div>`:''}
         <div class="promo-lista-precos">
           <span class="promo-lista-old">${fmtR(p.preco_base)}</span>
           <span class="promo-lista-final">${fmtR(p.preco_final)}</span>
-          <span class="badge-promo">-${p.desc_pct}%</span>
+          <span class="promo-lista-desconto">-${p.desc_pct}%</span>
         </div>
       </div>
-    </div>`).join('');
+      ${p.imagem?`<img class="promo-lista-thumb" src="${p.imagem}" alt="">`:'<div class="promo-lista-thumb promo-lista-thumb-ph"><i class="bi bi-image"></i></div>'}
+    </div>`;
+  }).join('');
   document.getElementById('promoListaOverlay').classList.add('show');
   document.getElementById('promoListaModal').classList.add('show');
 }

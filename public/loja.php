@@ -236,6 +236,7 @@ $temImg     = in_array('imagem',$cols);
 $temProm    = in_array('preco_promocional',$cols)&&in_array('promo_desativado',$cols);
 $temPromoDur= in_array('promo_dias',$cols)&&in_array('promo_inicio',$cols);
 $temPromoExtra= in_array('promo_imagem',$cols)&&in_array('promo_descricao',$cols);
+$temPromoEtiqueta= in_array('promo_etiqueta',$cols);
 $temQtdMin  = in_array('quantidade_minima',$cols);
 $temPtGanho = in_array('pontos_ganho',$cols);
 $temDiasCol = in_array('dias_semana',$cols);
@@ -246,6 +247,7 @@ $si =$temImg    ?', p.imagem':'';
 $sp =$temProm   ?', p.preco_promocional, p.promo_desativado':'';
 $spd=$temPromoDur?', p.promo_dias, p.promo_inicio':'';
 $spe=$temPromoExtra?', p.promo_imagem, p.promo_descricao':'';
+$spet=$temPromoEtiqueta?', p.promo_etiqueta':'';
 $sqm=$temQtdMin ?', p.quantidade_minima':'';
 $spg=$temPtGanho?', p.pontos_ganho':'';
 $sds=$temDiasCol?', p.dias_semana':'';
@@ -272,7 +274,7 @@ $_categoriaDisponivelAgora=function($cat) use ($_diaHoje,$_horaAgora){
 $produtosPorCat=[];
 foreach($categorias as $cat){
   if(!$_categoriaDisponivelAgora($cat)) continue;
-  $s=$conn->prepare("SELECT p.id,p.nome,p.descricao,p.preco{$si}{$sp}{$spd}{$spe}{$sqm}{$spg}{$sds}{$shi}{$shf}{$svr},IFNULL(e.quantidade,0) AS estoque FROM produtos p LEFT JOIN estoque e ON e.produto_id=p.id AND e.loja_id=p.loja_id WHERE p.categoria_id=? AND p.ativo=1 AND p.loja_id=? ORDER BY p.ordem IS NULL,p.ordem,p.nome");
+  $s=$conn->prepare("SELECT p.id,p.nome,p.descricao,p.preco{$si}{$sp}{$spd}{$spe}{$spet}{$sqm}{$spg}{$sds}{$shi}{$shf}{$svr},IFNULL(e.quantidade,0) AS estoque FROM produtos p LEFT JOIN estoque e ON e.produto_id=p.id AND e.loja_id=p.loja_id WHERE p.categoria_id=? AND p.ativo=1 AND p.loja_id=? ORDER BY p.ordem IS NULL,p.ordem,p.nome");
   $s->execute([$cat['id'],$lojaId]);
   $prods=$s->fetchAll(PDO::FETCH_ASSOC);
   if($prods){
@@ -1052,14 +1054,13 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
 
 <!-- ══ MODAL PROMOÇÕES (2-4 produtos em promoção) ══ -->
 <div class="prod-modal-overlay" id="promoListaOverlay" onclick="fecharPromoListaModal()"></div>
-<div class="prod-modal" id="promoListaModal" style="max-width:420px">
-  <button class="prod-modal-close" onclick="fecharPromoListaModal()"><i class="bi bi-x"></i></button>
+<div class="prod-modal promo-lista-modal" id="promoListaModal">
+  <div class="promo-lista-head">
+    <div class="promo-lista-head-title">Promoções</div>
+    <button class="promo-lista-close" onclick="fecharPromoListaModal()"><i class="bi bi-x"></i></button>
+  </div>
   <div class="prod-modal-scroll">
-    <div style="padding:22px 20px 10px">
-      <div style="font-size:.95rem;font-weight:700;color:#111;margin-bottom:2px">Promoções</div>
-      <div style="font-size:.8rem;color:#888;margin-bottom:14px">Toque num produto para ver mais e adicionar ao carrinho.</div>
-      <div id="promoListaBody"></div>
-    </div>
+    <div class="promo-lista-list" id="promoListaBody"></div>
   </div>
 </div>
 
@@ -1701,6 +1702,7 @@ const PRODUTOS_PROMO = <?= json_encode(array_map(fn($p)=>[
   'tem_variacoes'=>(int)($p['tem_variacoes']??0),
   'promo_imagem'=>$p['promo_imagem']??null,
   'promo_descricao'=>$p['promo_descricao']??null,
+  'promo_etiqueta'=>$p['promo_etiqueta']??null,
   'estoque'=>(int)($p['estoque']??0),
   'esgotado'=>!empty($p['esgotado']),
 ], $produtosEmPromo), JSON_UNESCAPED_UNICODE) ?>;

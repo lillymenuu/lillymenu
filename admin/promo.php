@@ -22,6 +22,7 @@ foreach ([
   'promo_inicio'      => "ALTER TABLE produtos ADD COLUMN promo_inicio DATE NULL DEFAULT NULL",
   'promo_imagem'      => "ALTER TABLE produtos ADD COLUMN promo_imagem VARCHAR(255) NULL DEFAULT NULL",
   'promo_descricao'   => "ALTER TABLE produtos ADD COLUMN promo_descricao TEXT NULL DEFAULT NULL",
+  'promo_etiqueta'    => "ALTER TABLE produtos ADD COLUMN promo_etiqueta VARCHAR(30) NULL DEFAULT NULL",
 ] as $coluna => $ddl) {
   if (!in_array($coluna, $produtoColunas, true)) {
     try { $conn->exec($ddl); $produtoColunas[] = $coluna; } catch (Throwable $e) {}
@@ -67,7 +68,7 @@ try {
 $selectCampos = [
   'p.id', 'p.nome', 'p.preco', 'p.categoria_id', 'c.nome AS categoria',
   'p.preco_promocional', 'p.promo_desativado', 'p.promo_dias', 'p.promo_inicio',
-  'p.promo_imagem', 'p.promo_descricao',
+  'p.promo_imagem', 'p.promo_descricao', 'p.promo_etiqueta',
 ];
 if ($temImagem) {
   $selectCampos[] = 'p.imagem';
@@ -96,6 +97,15 @@ foreach ($produtos as &$p) {
   }
 }
 unset($p);
+
+/* Etiqueta opcional de destaque, mostrada no card aqui e na lista de promoções
+   do cardápio publico (loja.php) — mesmas chaves usadas em promo_salvar.php. */
+$ETIQUETAS_PROMO = [
+  'recomendado'     => 'Recomendado',
+  'mais_pedido'     => 'Mais pedido',
+  'novidade'        => 'Novidade',
+  'edicao_limitada' => 'Edição limitada',
+];
 
 $LIMITE_PROMOS_ATIVAS = 4;
 $idsPromoAtiva = [];
@@ -189,6 +199,7 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
                 'promo_dias' => $p['promo_dias'],
                 'promo_descricao' => $p['promo_descricao'],
                 'promo_imagem' => $p['promo_imagem'],
+                'promo_etiqueta' => $p['promo_etiqueta'] ?? null,
               ], JSON_UNESCAPED_UNICODE), ENT_QUOTES);
             ?>
             <?php $bloqueado = $limiteAtingido && !$p['em_promo']; ?>
@@ -196,6 +207,9 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
               onclick="<?= $bloqueado ? 'avisoPromoBloqueada()' : 'abrirPromoModal(' . $pj . ', this)' ?>"
               <?= $bloqueado ? 'title="Você já tem 4 produtos em promoção. Desative um para editar este."' : '' ?>>
               <div class="produto-thumb">
+                <?php if ($p['em_promo'] && !empty($p['promo_etiqueta']) && isset($ETIQUETAS_PROMO[$p['promo_etiqueta']])): ?>
+                  <span class="promo-etiqueta-badge promo-etiqueta-badge--<?= htmlspecialchars($p['promo_etiqueta']) ?>"><?= htmlspecialchars($ETIQUETAS_PROMO[$p['promo_etiqueta']]) ?></span>
+                <?php endif; ?>
                 <?php if (!empty($p['imagem'])): ?>
                   <img src="<?= htmlspecialchars($p['imagem']) ?>" alt="">
                 <?php else: ?>
@@ -259,6 +273,15 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
                 <label class="form-label">Dias ativos (opcional)</label>
                 <input type="number" class="form-control produto-input" id="promoDiasInput" min="1" placeholder="Sem expiração">
               </div>
+            </div>
+            <div class="produto-field">
+              <label class="form-label">Etiqueta de destaque (opcional)</label>
+              <select class="form-control produto-input native-select" id="promoEtiquetaInput">
+                <option value="">Sem etiqueta</option>
+                <?php foreach ($ETIQUETAS_PROMO as $chave => $rotulo): ?>
+                  <option value="<?= htmlspecialchars($chave) ?>"><?= htmlspecialchars($rotulo) ?></option>
+                <?php endforeach; ?>
+              </select>
             </div>
             <div class="produto-field">
               <label class="form-label">Descrição da promoção (opcional)</label>

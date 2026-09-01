@@ -14,6 +14,24 @@
   transform:none;
   box-shadow:none;
 }
+.promo-item-card .produto-thumb{position:relative}
+.promo-etiqueta-badge{
+  position:absolute;
+  top:7px;
+  left:7px;
+  z-index:1;
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  padding:3px 8px;
+  border-radius:999px;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+}
+.promo-etiqueta-badge--recomendado{background:#2563eb}
+.promo-etiqueta-badge--mais_pedido{background:#f59e0b}
+.promo-etiqueta-badge--novidade{background:#16a34a}
+.promo-etiqueta-badge--edicao_limitada{background:#9333ea}
 
 .promo-modal{
   border-radius:20px;

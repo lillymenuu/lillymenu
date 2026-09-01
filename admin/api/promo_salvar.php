@@ -21,6 +21,9 @@ $promoDiasRaw = trim((string) ($_POST['promo_dias'] ?? ''));
 $promoDescricao = trim((string) ($_POST['promo_descricao'] ?? ''));
 $promoImagemBase64 = trim((string) ($_POST['promo_imagem_base64'] ?? ''));
 $promoImagemRemover = ($_POST['promo_imagem_remover'] ?? '0') === '1';
+$promoEtiquetaRaw = trim((string) ($_POST['promo_etiqueta'] ?? ''));
+$promoEtiquetasValidas = ['recomendado', 'mais_pedido', 'novidade', 'edicao_limitada'];
+$promoEtiqueta = in_array($promoEtiquetaRaw, $promoEtiquetasValidas, true) ? $promoEtiquetaRaw : null;
 
 if ($produtoId <= 0) {
   echo json_encode(['ok' => false, 'msg' => 'Produto invalido.']);
@@ -62,6 +65,9 @@ if (!in_array('promo_imagem', $colunas, true)) {
 }
 if (!in_array('promo_descricao', $colunas, true)) {
   try { $conn->exec("ALTER TABLE produtos ADD COLUMN promo_descricao TEXT NULL DEFAULT NULL"); } catch (Throwable $e) {}
+}
+if (!in_array('promo_etiqueta', $colunas, true)) {
+  try { $conn->exec("ALTER TABLE produtos ADD COLUMN promo_etiqueta VARCHAR(30) NULL DEFAULT NULL"); } catch (Throwable $e) {}
 }
 
 try {
@@ -108,8 +114,8 @@ try {
     }
   }
 
-  $sets = ['preco_promocional = ?', 'promo_desativado = ?', 'promo_dias = ?', 'promo_descricao = ?'];
-  $params = [$precoPromocional, $ativar ? 0 : 1, $promoDias, $promoDescricao];
+  $sets = ['preco_promocional = ?', 'promo_desativado = ?', 'promo_dias = ?', 'promo_descricao = ?', 'promo_etiqueta = ?'];
+  $params = [$precoPromocional, $ativar ? 0 : 1, $promoDias, $promoDescricao, $promoEtiqueta];
 
   if ($ativar && !$estavaAtiva) {
     $sets[] = 'promo_inicio = ?';
