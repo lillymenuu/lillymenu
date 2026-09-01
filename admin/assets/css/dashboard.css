@@ -384,9 +384,10 @@ body.dash-diggy .topbar{
 
 body.dash-diggy .sidebar{
   width:221px;
-  background:var(--brand);
+  background-color:var(--brand);
+  background-image:radial-gradient(130% 55% at 12% 0%, rgba(255,255,255,.16), transparent 60%), linear-gradient(190deg, var(--brand) 0%, #7A3F10 100%);
   color:#ffffff;
-  border-right:1px solid #e5e7eb;
+  box-shadow:6px 0 32px rgba(122,63,16,.24);
   padding:0 16px;
   display:flex;
   flex-direction:column;
@@ -758,15 +759,18 @@ body.dash-diggy .sidebar-menu a{
   background:transparent;
   border:1px solid transparent;
   font-size:12px;
+  transition:background .15s ease, border-color .15s ease, transform .15s ease;
 }
 body.dash-diggy .sidebar-menu a:hover{
   background:rgba(255,255,255,.14);
   border-color:rgba(255,255,255,.22);
+  transform:translateX(2px);
 }
 body.dash-diggy .sidebar-menu a.active{
   background:#ffffff;
   border-color:#ffffff;
   color:var(--brand);
+  box-shadow:0 6px 16px rgba(122,63,16,.35);
 }
 
 body.dash-diggy .sidebar-user{
@@ -1127,6 +1131,19 @@ body.dash-diggy .menu-sair{
   place-items:center;
   color:#64748b;
   padding:0;
+  transition:background .15s ease, border-color .15s ease, color .15s ease;
+}
+body.dash-diggy .sidebar-collapse{
+  border-color:rgba(255,255,255,.28);
+  background:rgba(255,255,255,.14);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  color:#ffffff;
+}
+body.dash-diggy .sidebar-collapse:hover{
+  background:rgba(255,255,255,.24);
+  border-color:rgba(255,255,255,.4);
+  color:#ffffff;
 }
 .sidebar-collapse i{
   width:18px;
