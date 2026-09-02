@@ -726,7 +726,7 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
   <?php endif; ?>
   <?php if ($produtosEmPromo): ?>
   <button class="nav-btn" id="navPromo" onclick="abrirPromoNav()">
-    <i class="bi bi-megaphone"></i>Promo
+    <i class="bi bi-gift"></i>Promo
   </button>
   <?php endif; ?>
   <button class="nav-btn" id="navPedidos" onclick="mostrarTab('pedidos')" style="position:relative">
