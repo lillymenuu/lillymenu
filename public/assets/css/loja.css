@@ -262,7 +262,7 @@ button{font-family:inherit;cursor:pointer}
 /* ── Bottom nav ── */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:680px;background:#fff;border-top:1px solid #eee;box-shadow:0 -6px 20px rgba(0,0,0,.07);display:flex;z-index:210}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 10px;font-size:.62rem;font-weight:700;color:#aaa;border:0;background:transparent;gap:2px;cursor:pointer;letter-spacing:.02em}
-.nav-btn.active{color:#222;font-weight:700}
+.nav-btn.active{color:var(--brown);font-weight:700}
 .nav-btn i{font-size:1.25rem}
 .nav-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--pink);color:#fff;font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
 

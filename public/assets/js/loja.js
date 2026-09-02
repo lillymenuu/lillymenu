@@ -742,6 +742,7 @@ function fecharProdModal(){
   _modal.classList.remove('show');
   document.getElementById('pdImgWrap')?.closest('.prod-modal-top')?.classList.remove('img-expanded');
   document.body.style.overflow='';
+  marcarNavPromoAtivo(false);
   const comboSec=document.getElementById('pdComboSection');
   if(comboSec){comboSec.style.display='none';comboSec.innerHTML='';}
   /* So limpa o "modo" (combo/promo) depois que a animacao de fechar termina,
@@ -1540,8 +1541,12 @@ function fecharCupomListModal(){
 /* ── Promoções (ícone "Promo" da bottom-nav + auto-popup ao entrar na loja) ──
    1 produto: abre direto o modal de detalhe (comportamento de sempre).
    2-6 produtos: abre a lista abaixo; tocar num item abre o modal de detalhe. */
+function marcarNavPromoAtivo(ativo){
+  document.getElementById('navPromo')?.classList.toggle('active', ativo);
+}
 function abrirPromoNav(){
   if(!Array.isArray(PRODUTOS_PROMO) || !PRODUTOS_PROMO.length) return;
+  marcarNavPromoAtivo(true);
   if(PRODUTOS_PROMO.length===1) abrirProduto(PRODUTOS_PROMO[0].id, PRODUTOS_PROMO[0]);
   else abrirPromoListaModal();
 }
@@ -1573,11 +1578,13 @@ function abrirPromoListaModal(){
   document.getElementById('promoListaOverlay').classList.add('show');
   document.getElementById('promoListaModal').classList.add('show');
   document.body.style.overflow='hidden';
+  marcarNavPromoAtivo(true);
 }
 function fecharPromoListaModal(){
   document.getElementById('promoListaOverlay').classList.remove('show');
   document.getElementById('promoListaModal').classList.remove('show');
   document.body.style.overflow='';
+  marcarNavPromoAtivo(false);
 }
 async function usarCupomBanner(codigo){
   await aplicarCupom(codigo);
@@ -3520,7 +3527,7 @@ if(Array.isArray(PRODUTOS_PROMO) && PRODUTOS_PROMO.length>=2){
   const _promoVistoKey='promo_visto_'+CFG.lojaId+'_'+PROMO_AUTO.id;
   if(!sessionStorage.getItem(_promoVistoKey)){
     sessionStorage.setItem(_promoVistoKey,'1');
-    setTimeout(()=>{ abrirProduto(PROMO_AUTO.id, PROMO_AUTO); }, 600);
+    setTimeout(()=>{ marcarNavPromoAtivo(true); abrirProduto(PROMO_AUTO.id, PROMO_AUTO); }, 600);
   }
 }
 
