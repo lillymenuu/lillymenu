@@ -764,7 +764,7 @@ function montarTextoAgendamento(tipo, agendamentoRaw){
 
 function iconeTipoPedido(tipo){
   const valor = (tipo || '').toLowerCase();
-  if (valor === 'entrega') return 'bi-truck';
+  if (valor === 'entrega') return 'bi-scooter';
   if (valor === 'retirada') return 'bi-bag';
   return 'bi-shop';
 }
