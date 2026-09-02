@@ -144,13 +144,13 @@
 }
 .card-pedido-row.card-pedido-row--top{align-items:flex-start}
 .card-pedido-endereco{
-  display:flex;align-items:center;gap:6px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
   border:1px solid #9C5523;border-radius:7px;
   padding:4px 6px;margin:2px 0 4px;
 }
 .card-pedido-endereco i.bi-geo-alt{color:#9C5523;font-size:.72rem;flex-shrink:0}
 .card-pedido-endereco span{
-  flex:1;min-width:0;font-size:.66rem;color:#7A3F10;
+  flex:0 1 auto;min-width:0;font-size:.66rem;color:#7A3F10;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .card-pedido-payment-list{display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:0}
