@@ -1199,13 +1199,12 @@ function cardPedido(p){
     ? `<div class="card-pedido-endereco">
         <i class="bi bi-geo-alt"></i>
         <span title="${enderecoResumido.replace(/"/g,'&quot;')}">${enderecoResumido}</span>
-        <span class="card-pedido-endereco-icon"><i class="bi bi-bicycle"></i></span>
       </div>`
     : '';
 
   d.innerHTML = `
     <div class="card-pedido-header">
-      <div class="card-pedido-id">${tipo === 'entrega' ? '<i class="bi bi-bicycle"></i>' : ''}Pedido ${codigoPedido}</div>
+      <div class="card-pedido-id">${tipo === 'entrega' ? '<i class="bi bi-scooter"></i>' : ''}Pedido ${codigoPedido}</div>
       <div class="card-pedido-tools">
         <button class="card-icon-btn" type="button" title="Imprimir" onclick="event.stopPropagation();imprimirPedidoCard(${p.id},this)">
           <i class="bi bi-printer"></i>
