@@ -1572,10 +1572,12 @@ function abrirPromoListaModal(){
   }).join('');
   document.getElementById('promoListaOverlay').classList.add('show');
   document.getElementById('promoListaModal').classList.add('show');
+  document.body.style.overflow='hidden';
 }
 function fecharPromoListaModal(){
   document.getElementById('promoListaOverlay').classList.remove('show');
   document.getElementById('promoListaModal').classList.remove('show');
+  document.body.style.overflow='';
 }
 async function usarCupomBanner(codigo){
   await aplicarCupom(codigo);
