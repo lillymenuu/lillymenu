@@ -1545,9 +1545,9 @@ function marcarNavPromoAtivo(ativo){
   document.getElementById('navPromo')?.classList.toggle('active', ativo);
 }
 function abrirPromoNav(){
-  if(!Array.isArray(PRODUTOS_PROMO) || !PRODUTOS_PROMO.length) return;
+  const itens = Array.isArray(PRODUTOS_PROMO) ? PRODUTOS_PROMO : [];
   marcarNavPromoAtivo(true);
-  if(PRODUTOS_PROMO.length===1) abrirProduto(PRODUTOS_PROMO[0].id, PRODUTOS_PROMO[0]);
+  if(itens.length===1) abrirProduto(itens[0].id, itens[0]);
   else abrirPromoListaModal();
 }
 function abrirProdutoPromoLista(id){
@@ -1558,7 +1558,20 @@ function abrirProdutoPromoLista(id){
 const PROMO_ETIQUETA_LABEL={recomendado:'Recomendado',mais_pedido:'Mais pedido',novidade:'Novidade',edicao_limitada:'Edição limitada'};
 function abrirPromoListaModal(){
   const body=document.getElementById('promoListaBody');
-  body.innerHTML=PRODUTOS_PROMO.map(p=>{
+  const itens=Array.isArray(PRODUTOS_PROMO)?PRODUTOS_PROMO:[];
+  if(!itens.length){
+    body.innerHTML=`
+      <div class="promo-lista-vazio">
+        <div class="promo-lista-vazio-icone"><i class="bi bi-search"></i></div>
+        <div class="promo-lista-vazio-texto">Nenhuma promoção<br>encontrada</div>
+      </div>`;
+    document.getElementById('promoListaOverlay').classList.add('show');
+    document.getElementById('promoListaModal').classList.add('show');
+    document.body.style.overflow='hidden';
+    marcarNavPromoAtivo(true);
+    return;
+  }
+  body.innerHTML=itens.map(p=>{
     const etiquetaLabel=PROMO_ETIQUETA_LABEL[p.promo_etiqueta];
     return `
     <div class="promo-lista-item" onclick="abrirProdutoPromoLista(${p.id})">

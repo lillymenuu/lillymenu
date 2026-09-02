@@ -724,11 +724,9 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
     <i class="bi bi-currency-dollar"></i>Pontos
   </button>
   <?php endif; ?>
-  <?php if ($produtosEmPromo): ?>
   <button class="nav-btn" id="navPromo" onclick="abrirPromoNav()">
     <i class="bi bi-gift"></i>Promo
   </button>
-  <?php endif; ?>
   <button class="nav-btn" id="navPedidos" onclick="mostrarTab('pedidos')" style="position:relative">
     <span style="position:relative;display:inline-flex;align-items:center;justify-content:center">
       <i class="bi bi-bag"></i>
