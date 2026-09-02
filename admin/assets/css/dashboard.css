@@ -398,7 +398,7 @@ body.dash-diggy .sidebar{
   overflow-x:hidden;
   z-index:100;
   flex-shrink:0;
-  transition:width .3s ease, background .25s ease, box-shadow .25s ease;
+  transition:background .25s ease, box-shadow .25s ease;
 }
 /* Recolhida, a sidebar vira a cor padrao do sistema (cobre) — aberta ela
    fica branca, como o resto do painel. */
