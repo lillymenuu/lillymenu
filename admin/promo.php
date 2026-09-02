@@ -7,6 +7,10 @@ require_once __DIR__ . '/helpers/config.php';
 
 $lojaId = (int) ($_SESSION['loja_id'] ?? 1);
 
+/* Numero maximo de produtos em promocao simultanea — usado tanto na
+   auto-correcao lazy abaixo quanto na contagem/bloqueio mais adiante. */
+$LIMITE_PROMOS_ATIVAS = 6;
+
 $lojaFlyers = json_decode((string) config($conn, 'loja_flyers', '[]'), true);
 if (!is_array($lojaFlyers)) {
   $lojaFlyers = [];
@@ -42,16 +46,16 @@ try {
 } catch (Throwable $e) {
 }
 
-/* Ate 4 promocoes ativas ao mesmo tempo. Se sobrou mais que isso (dado de
-   antes dessa regra existir, ou de uma corrida rara), mantem as 4 mais
-   recentes e desativa o resto — auto-correcao lazy, mesmo padrao da
-   expiracao acima. */
+/* Ate $LIMITE_PROMOS_ATIVAS promocoes ativas ao mesmo tempo. Se sobrou mais
+   que isso (dado de antes dessa regra existir, ou de uma corrida rara),
+   mantem as mais recentes e desativa o resto — auto-correcao lazy, mesmo
+   padrao da expiracao acima. */
 try {
   $stmt = $conn->prepare("
     SELECT id FROM produtos
     WHERE loja_id = ? AND promo_desativado = 0 AND preco_promocional > 0
     ORDER BY promo_inicio DESC, id DESC
-    LIMIT 4
+    LIMIT " . (int) $LIMITE_PROMOS_ATIVAS . "
   ");
   $stmt->execute([$lojaId]);
   $manterPromoIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -107,7 +111,6 @@ $ETIQUETAS_PROMO = [
   'edicao_limitada' => 'Edição limitada',
 ];
 
-$LIMITE_PROMOS_ATIVAS = 4;
 $idsPromoAtiva = [];
 foreach ($produtos as $p) {
   if ($p['em_promo']) {
@@ -164,7 +167,7 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
       <div>
         <h1 class="produtos-title">Lance uma Promoção</h1>
         <p class="produtos-subtitle">
-          Escolha até 4 produtos para colocar em promoção por tempo limitado (<?= count($idsPromoAtiva) ?>/<?= $LIMITE_PROMOS_ATIVAS ?> ativos)
+          Escolha até <?= $LIMITE_PROMOS_ATIVAS ?> produtos para colocar em promoção por tempo limitado (<?= count($idsPromoAtiva) ?>/<?= $LIMITE_PROMOS_ATIVAS ?> ativos)
         </p>
       </div>
       <div class="produtos-actions">
@@ -205,7 +208,7 @@ $promoJsVer = filemtime(__DIR__ . '/assets/js/promo.js');
             <?php $bloqueado = $limiteAtingido && !$p['em_promo']; ?>
             <article class="produto-card promo-item-card<?= $p['em_promo'] ? ' promo' : '' ?><?= $bloqueado ? ' promo-item-card--bloqueado' : '' ?>"
               onclick="<?= $bloqueado ? 'avisoPromoBloqueada()' : 'abrirPromoModal(' . $pj . ', this)' ?>"
-              <?= $bloqueado ? 'title="Você já tem 4 produtos em promoção. Desative um para editar este."' : '' ?>>
+              <?= $bloqueado ? 'title="Você já tem ' . (int) $LIMITE_PROMOS_ATIVAS . ' produtos em promoção. Desative um para editar este."' : '' ?>>
               <div class="produto-thumb">
                 <?php if ($p['em_promo'] && !empty($p['promo_etiqueta']) && isset($ETIQUETAS_PROMO[$p['promo_etiqueta']])): ?>
                   <span class="promo-etiqueta-badge promo-etiqueta-badge--<?= htmlspecialchars($p['promo_etiqueta']) ?>"><?= htmlspecialchars($ETIQUETAS_PROMO[$p['promo_etiqueta']]) ?></span>

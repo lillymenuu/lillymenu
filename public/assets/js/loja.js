@@ -1539,7 +1539,7 @@ function fecharCupomListModal(){
 
 /* ── Promoções (ícone "Promo" da bottom-nav + auto-popup ao entrar na loja) ──
    1 produto: abre direto o modal de detalhe (comportamento de sempre).
-   2-4 produtos: abre a lista abaixo; tocar num item abre o modal de detalhe. */
+   2-6 produtos: abre a lista abaixo; tocar num item abre o modal de detalhe. */
 function abrirPromoNav(){
   if(!Array.isArray(PRODUTOS_PROMO) || !PRODUTOS_PROMO.length) return;
   if(PRODUTOS_PROMO.length===1) abrirProduto(PRODUTOS_PROMO[0].id, PRODUTOS_PROMO[0]);
@@ -3504,7 +3504,7 @@ setInterval(_atualizarEstoqueLojaPoll, 15000);
 
 /* Popup automatico de promocao, so na primeira vez que o cliente entra na tela
    nessa sessao do navegador. Com 1 produto (e foto/descricao de propaganda
-   configurada) abre direto o modal de detalhe, como sempre. Com 2-4 produtos
+   configurada) abre direto o modal de detalhe, como sempre. Com 2-6 produtos
    em promocao abre a lista — reaparece se o conjunto de produtos em promocao
    mudar, pois a chave de sessao inclui os ids. */
 if(Array.isArray(PRODUTOS_PROMO) && PRODUTOS_PROMO.length>=2){

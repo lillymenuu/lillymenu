@@ -13,6 +13,9 @@ if (!acessoMenuPermitido($conn, 'menu.promo')) {
   exit;
 }
 
+/* Mesmo limite usado em admin/promo.php. */
+define('LIMITE_PROMOS_ATIVAS', 6);
+
 $lojaId = (int) ($_SESSION['loja_id'] ?? 1);
 $produtoId = (int) ($_POST['produto_id'] ?? 0);
 $ativar = isset($_POST['ativar']) ? (int) $_POST['ativar'] : 0;
@@ -83,18 +86,18 @@ try {
   }
   $estavaAtiva = !((int) ($atual['promo_desativado'] ?? 1));
 
-  /* ate 4 promocoes ativas ao mesmo tempo na loja. Ao ativar uma nova (que
-     ainda nao estava ativa), recusa se o limite ja foi atingido em vez de
-     desativar as outras silenciosamente. */
+  /* ate LIMITE_PROMOS_ATIVAS promocoes ativas ao mesmo tempo na loja. Ao
+     ativar uma nova (que ainda nao estava ativa), recusa se o limite ja foi
+     atingido em vez de desativar as outras silenciosamente. */
   if ($ativar && !$estavaAtiva) {
     $stmtCont = $conn->prepare("
       SELECT COUNT(*) FROM produtos
       WHERE loja_id = ? AND id != ? AND promo_desativado = 0
     ");
     $stmtCont->execute([$lojaId, $produtoId]);
-    if ((int) $stmtCont->fetchColumn() >= 4) {
+    if ((int) $stmtCont->fetchColumn() >= LIMITE_PROMOS_ATIVAS) {
       $conn->rollBack();
-      echo json_encode(['ok' => false, 'msg' => 'Você já tem 4 produtos em promoção. Desative um para ativar este.']);
+      echo json_encode(['ok' => false, 'msg' => 'Você já tem ' . LIMITE_PROMOS_ATIVAS . ' produtos em promoção. Desative um para ativar este.']);
       exit;
     }
   }

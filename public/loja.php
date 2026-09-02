@@ -1052,7 +1052,7 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
   </div>
 </div>
 
-<!-- ══ MODAL PROMOÇÕES (2-4 produtos em promoção) ══ -->
+<!-- ══ MODAL PROMOÇÕES (2-6 produtos em promoção) ══ -->
 <div class="prod-modal-overlay" id="promoListaOverlay" onclick="fecharPromoListaModal()"></div>
 <div class="prod-modal promo-lista-modal" id="promoListaModal">
   <div class="promo-lista-head">
