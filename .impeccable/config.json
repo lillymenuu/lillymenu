@@ -775,6 +775,16 @@
         "rule": "design-system-color",
         "value": "#16a34a",
         "createdAt": "2026-09-01T22:50:46.064Z"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "4px",
+        "createdAt": "2026-09-02T21:59:16.932Z"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".6rem",
+        "createdAt": "2026-09-02T21:59:17.082Z"
       }
     ]
   }

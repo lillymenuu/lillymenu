@@ -719,6 +719,20 @@ function limparEnderecoAgendamento(endereco){
   return endereco.replace(/\s*\|?\s*Agendamento:.*$/i, '').trim();
 }
 
+/* Endereco completo salvo no pedido junta rua+numero,complemento,bairro,
+   cidade/UF,CEP separados por ", " (ver confirmarEndereco em loja.js) — aqui
+   so interessa rua, numero e bairro pro card do kanban, sem cidade/CEP. */
+function enderecoResumidoCard(enderecoCompleto){
+  const limpo = limparEnderecoAgendamento(enderecoCompleto || '');
+  if (!limpo) return '';
+  const partes = limpo.split(',').map(s => s.trim()).filter(Boolean);
+  const rua = partes[0] || '';
+  const numero = partes[1] || '';
+  const bairro = partes[2] || '';
+  const ruaNumero = [rua, numero].filter(Boolean).join(', ');
+  return [ruaNumero, bairro].filter(Boolean).join(' - ');
+}
+
 function montarTextoAgendamento(tipo, agendamentoRaw){
   if (!agendamentoRaw) return '';
   const agendamentoData = new Date(normalizarData(agendamentoRaw));
@@ -1180,10 +1194,18 @@ function cardPedido(p){
     : '';
 
   const isLoja = ['loja','online','site'].includes(String(p.origem||'').toLowerCase());
+  const enderecoResumido = tipo === 'entrega' ? enderecoResumidoCard(p.endereco_entrega || p.endereco || '') : '';
+  const enderecoHtml = enderecoResumido
+    ? `<div class="card-pedido-endereco">
+        <i class="bi bi-geo-alt"></i>
+        <span title="${enderecoResumido.replace(/"/g,'&quot;')}">${enderecoResumido}</span>
+        <span class="card-pedido-endereco-icon"><i class="bi bi-bicycle"></i></span>
+      </div>`
+    : '';
 
   d.innerHTML = `
     <div class="card-pedido-header">
-      <div class="card-pedido-id">Pedido ${codigoPedido}</div>
+      <div class="card-pedido-id">${tipo === 'entrega' ? '<i class="bi bi-bicycle"></i>' : ''}Pedido ${codigoPedido}</div>
       <div class="card-pedido-tools">
         <button class="card-icon-btn" type="button" title="Imprimir" onclick="event.stopPropagation();imprimirPedidoCard(${p.id},this)">
           <i class="bi bi-printer"></i>
@@ -1204,6 +1226,7 @@ function cardPedido(p){
         <span class="value" style="font-weight:600">${p.nome}</span>
         <span class="value" style="color:#6b7280">${telefone}</span>
       </div>
+      ${enderecoHtml}
       <div class="card-pedido-row">
         <span class="label">Total</span>
         <span class="value">${total}</span>
