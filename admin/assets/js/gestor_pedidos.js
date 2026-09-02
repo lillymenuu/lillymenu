@@ -719,12 +719,25 @@ function limparEnderecoAgendamento(endereco){
   return endereco.replace(/\s*\|?\s*Agendamento:.*$/i, '').trim();
 }
 
-/* Endereco completo salvo no pedido junta rua+numero,complemento,bairro,
-   cidade/UF,CEP separados por ", " (ver confirmarEndereco em loja.js) — aqui
-   so interessa rua, numero e bairro pro card do kanban, sem cidade/CEP. */
+/* Endereco completo salvo no pedido tem dois formatos possiveis, dependendo
+   de onde o pedido foi criado:
+   - Checkout publico (confirmarEndereco em loja.js): "Rua X, 123, Bairro,
+     Cidade/UF, CEP ..." — tudo junto por virgula, sem rotulo.
+   - PDV do admin (pdv.js): "Rua X, 123 | Bairro: Y | Cidade: Z | CEP: ... |
+     Complemento: ..." — separado por "|", com rotulo em cada parte.
+   Aqui so interessa rua, numero e bairro pro card do kanban. */
 function enderecoResumidoCard(enderecoCompleto){
   const limpo = limparEnderecoAgendamento(enderecoCompleto || '');
   if (!limpo) return '';
+
+  if (limpo.includes('|')) {
+    const segmentos = limpo.split('|').map(s => s.trim()).filter(Boolean);
+    const ruaNumero = segmentos[0] || '';
+    const bairroSeg = segmentos.find(s => /^bairro:/i.test(s));
+    const bairro = bairroSeg ? bairroSeg.replace(/^bairro:\s*/i, '').trim() : '';
+    return [ruaNumero, bairro].filter(Boolean).join(' - ');
+  }
+
   const partes = limpo.split(',').map(s => s.trim()).filter(Boolean);
   const rua = partes[0] || '';
   const numero = partes[1] || '';
