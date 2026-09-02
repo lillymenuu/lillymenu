@@ -91,7 +91,8 @@
 .card-pedido.dragging{opacity:.4}
 .card-pedido-header{display:flex;align-items:center;justify-content:space-between;gap:4px}
 .card-pedido-id{font-size:.76rem;font-weight:500;color:#374151}
-.card-pedido-id i.bi-scooter{color:#9C5523;margin-right:4px}
+.card-pedido-id i.bi-scooter,
+.card-pedido-id i.bi-shop{color:#9C5523;margin-right:4px}
 .card-pedido-tools{display:flex;align-items:center;gap:4px}
 .card-icon-btn{
   border:1px solid #e5e7eb;background:#fff;border-radius:6px;

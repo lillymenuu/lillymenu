@@ -1216,7 +1216,7 @@ function cardPedido(p){
 
   d.innerHTML = `
     <div class="card-pedido-header">
-      <div class="card-pedido-id">${tipo === 'entrega' ? '<i class="bi bi-scooter"></i>' : ''}Pedido ${codigoPedido}</div>
+      <div class="card-pedido-id">${tipo === 'entrega' ? '<i class="bi bi-scooter"></i>' : tipo === 'retirada' ? '<i class="bi bi-shop"></i>' : ''}Pedido ${codigoPedido}</div>
       <div class="card-pedido-tools">
         <button class="card-icon-btn" type="button" title="Imprimir" onclick="event.stopPropagation();imprimirPedidoCard(${p.id},this)">
           <i class="bi bi-printer"></i>
