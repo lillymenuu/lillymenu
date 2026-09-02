@@ -1102,7 +1102,6 @@ function cardPedido(p){
 
   const tipo = (p.tipo || 'retirada').toLowerCase();
   const tipoUpper = tipo.toUpperCase();
-  const tipoIcon = iconeTipoPedido(tipo);
   const tipoClasse = ['entrega','retirada','mesa'].includes(tipo) ? tipo : 'outro';
   const horaPedido = formatarHora(p.criado_em);
   const referenciaTempo = p.status_em || p.criado_em;
@@ -1228,7 +1227,6 @@ function cardPedido(p){
       </div>
     </div>
     <div class="card-pedido-tipo ${tipoClasse}">
-      <i class="bi ${tipoIcon}"></i>
       ${tipoUpper}
     </div>
     ${isLoja?'<div class="card-badge-site"><i class="bi bi-shop"></i> Pedido feito pela loja</div>':''}
@@ -1972,7 +1970,6 @@ function criarCardBuscaPedido(p){
 
   const tipo = (p.tipo || 'retirada').toLowerCase();
   const tipoUpper = tipo.toUpperCase();
-  const tipoIcon = iconeTipoPedido(tipo);
   const tipoClasse = ['entrega','retirada','mesa'].includes(tipo) ? tipo : 'outro';
   const horaPedido = formatarHora(p.criado_em);
   const telefone = p.telefone || '-';
@@ -1988,7 +1985,6 @@ function criarCardBuscaPedido(p){
       </span>
     </div>
     <div class="card-pedido-tipo ${tipoClasse}">
-      <i class="bi ${tipoIcon}"></i>
       ${tipoUpper}
     </div>
     <div class="card-pedido-info">
