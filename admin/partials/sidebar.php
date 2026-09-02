@@ -785,7 +785,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
     <?php endif; ?>
 
     <?php if ($secRelatorios): ?>
-      <div class="sidebar-section-title">Relatorios</div>
+      <div class="sidebar-section-title">Relatórios</div>
       <ul class="sidebar-menu">
         <?php if ($mostrarRelatorios): ?>
           <li>
