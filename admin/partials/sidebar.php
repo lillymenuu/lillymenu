@@ -764,7 +764,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php if ($mostrarPromo): ?>
           <li>
             <a href="promo" class="<?= $rota=='promo.php'?'active':'' ?>">
-              <i class="bi bi-megaphone"></i>
+              <i class="bi bi-gift"></i>
               <span>Promo</span>
             </a>
           </li>
