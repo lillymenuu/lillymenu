@@ -250,7 +250,11 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
 </script>
 
 <script>
-  (function(){
+  /* O elemento #trialWarning só existe bem mais abaixo no HTML (dentro de
+     <main>, perto do final do arquivo) — rodar isso direto aqui, sem
+     esperar o DOM terminar de ser parseado, sempre encontrava o elemento
+     como null e saia sem nunca prender o listener do botão de fechar. */
+  document.addEventListener('DOMContentLoaded', function(){
     const warn = document.getElementById('trialWarning');
     if (!warn) return;
     const dismissed = localStorage.getItem('trialWhatsappDismissed');
@@ -265,7 +269,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         localStorage.setItem('trialWhatsappDismissed','1');
       });
     }
-  })();
+  });
 </script>
 
 <style>
@@ -2358,10 +2362,10 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
     <div class="trial-warning" id="trialWarning">
       <div>
         <strong>Seu trial expira em <?= htmlspecialchars((string)($_SESSION['trial_whatsapp_dias'] ?? '')) ?> dia(s).</strong>
-        <div>Entre em contato via WhatsApp para suporte.</div>
+        <div>Renove agora para continuar usando o sistema sem interrupções.</div>
       </div>
       <div class="trial-actions">
-        <a class="trial-btn" href="<?= htmlspecialchars((string)$_SESSION['trial_whatsapp_link']) ?>" target="_blank" rel="noopener">Enviar WhatsApp</a>
+        <a class="trial-btn" href="plan-details">Renovar</a>
         <button class="trial-close" type="button" data-dismiss-trial>×</button>
       </div>
     </div>
