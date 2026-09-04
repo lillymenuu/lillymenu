@@ -188,6 +188,7 @@ foreach ($combos as $combo) {
 
 $variacoesPorProduto = [];
 $variacoesCountPorProduto = [];
+$variacoesMinPrecoPorProduto = [];
 if ($temVariacoesCol && $produtos && tabelaExistePdv($conn, 'produto_variacoes')) {
   $ids = array_values(array_unique(array_map(static fn($p) => (int) $p['id'], $produtos)));
   if ($ids) {
@@ -201,13 +202,20 @@ if ($temVariacoesCol && $produtos && tabelaExistePdv($conn, 'produto_variacoes')
     $stmtVars->execute(array_merge([$lojaId], $ids));
     foreach ($stmtVars->fetchAll(PDO::FETCH_ASSOC) as $row) {
       $pid = (int) $row['produto_id'];
+      $precoVariacao = (float) $row['preco'];
       $variacoesPorProduto[$pid][] = [
         'id' => (int) $row['id'],
         'tamanho' => $row['tamanho'],
         'cor' => $row['cor'],
-        'preco' => (float) $row['preco'],
+        'preco' => $precoVariacao,
       ];
       $variacoesCountPorProduto[$pid] = ($variacoesCountPorProduto[$pid] ?? 0) + 1;
+      /* O preco base do produto (produtos.preco) costuma ficar zerado quando
+         ele tem variacoes — quem define o preco de verdade e cada variacao.
+         Usa a mais barata como preco de exibicao no card, em vez de R$ 0,00. */
+      $variacoesMinPrecoPorProduto[$pid] = isset($variacoesMinPrecoPorProduto[$pid])
+        ? min($variacoesMinPrecoPorProduto[$pid], $precoVariacao)
+        : $precoVariacao;
     }
   }
 }
@@ -598,13 +606,18 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                     <div class="pdv-category-title" id="pdvCategoriaTitulo">Todos</div>
                     <div class="pdv-products-grid pdv-view-grid" id="pdvProductsGrid">
                       <?php foreach($produtos as $p): ?>
-                        <div class="pdv-product-card<?= ($p['em_promocao'] ?? 0) ? ' promo' : '' ?><?= (!empty($p['tem_variacoes']) && (int) $p['tem_variacoes'] === 1) ? ' has-variacoes' : '' ?>"
+                        <?php
+                          $temVariacoesCard = !empty($p['tem_variacoes']) && (int) $p['tem_variacoes'] === 1;
+                          $precoMinVariacaoCard = $variacoesMinPrecoPorProduto[(int) $p['id']] ?? null;
+                          $precoExibicaoCard = ($temVariacoesCard && $precoMinVariacaoCard !== null) ? $precoMinVariacaoCard : $p['preco'];
+                        ?>
+                        <div class="pdv-product-card<?= ($p['em_promocao'] ?? 0) ? ' promo' : '' ?><?= $temVariacoesCard ? ' has-variacoes' : '' ?>"
                              role="button" tabindex="0"
                              data-id="<?= $p['id'] ?>"
                              data-grupo="<?= (int) ($p['grupo_id'] ?? 0) ?>"
                              data-nome="<?= htmlspecialchars($p['nome']) ?>"
-                             data-preco="<?= $p['preco'] ?>"
-                             data-variacoes="<?= (!empty($p['tem_variacoes']) && (int) $p['tem_variacoes'] === 1) ? 1 : 0 ?>"
+                             data-preco="<?= $precoExibicaoCard ?>"
+                             data-variacoes="<?= $temVariacoesCard ? 1 : 0 ?>"
                              data-variacoes-count="<?= (int) ($variacoesCountPorProduto[(int) $p['id']] ?? 0) ?>"
                              data-variacoes-json='<?= htmlspecialchars(json_encode($variacoesPorProduto[(int) $p['id']] ?? []), ENT_QUOTES, "UTF-8") ?>'
                              data-pontos-ganho="<?= $temPontosGanho ? (int) ($p['pontos_ganho'] ?? 0) : 0 ?>"
@@ -631,7 +644,7 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                                 <span class="pdv-product-price-old">R$ <?= number_format($p['preco_base'],2,',','.') ?></span>
                                 <span class="pdv-product-price-new">R$ <?= number_format($p['preco'],2,',','.') ?></span>
                               <?php else: ?>
-                                <span>R$ <?= number_format($p['preco'],2,',','.') ?></span>
+                                <span><?= $temVariacoesCard ? 'A partir de ' : '' ?>R$ <?= number_format($precoExibicaoCard,2,',','.') ?></span>
                               <?php endif; ?>
                               <?php if ($clubePontosAtivo && $temPontosCusto && (int) ($p['pontos_custo'] ?? 0) > 0): ?>
                                 <button type="button"

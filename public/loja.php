@@ -271,6 +271,21 @@ $_categoriaDisponivelAgora=function($cat) use ($_diaHoje,$_horaAgora){
   return true;
 };
 
+/* produtos.preco costuma ficar zerado/irrelevante quando o produto tem
+   variacoes — quem define o preco de verdade e cada variacao. Busca a mais
+   barata de cada produto de uma vez so, pra usar como preco de exibicao
+   (grid, destaques, carrinho) em vez de R$ 0,00. */
+$variacoesMinPrecoPorProduto=[];
+if($temVariacoesCol){
+  try{
+    $stmtVarMin=$conn->prepare("SELECT produto_id, MIN(preco) AS preco_min FROM produto_variacoes WHERE loja_id=? AND ativo=1 GROUP BY produto_id");
+    $stmtVarMin->execute([$lojaId]);
+    foreach($stmtVarMin->fetchAll(PDO::FETCH_ASSOC) as $row){
+      $variacoesMinPrecoPorProduto[(int)$row['produto_id']]=(float)$row['preco_min'];
+    }
+  }catch(Throwable $e){}
+}
+
 $produtosPorCat=[];
 foreach($categorias as $cat){
   if(!$_categoriaDisponivelAgora($cat)) continue;
@@ -283,6 +298,9 @@ foreach($categorias as $cat){
       $pr['promo_imagem']=!empty($pr['promo_imagem'])?fixImgPath($pr['promo_imagem']):null;
       $pr['preco_base']=(float)$pr['preco'];
       $pr['tem_variacoes']=(!empty($pr['tem_variacoes'])&&(int)$pr['tem_variacoes']===1)?1:0;
+      if($pr['tem_variacoes'] && isset($variacoesMinPrecoPorProduto[(int)$pr['id']])){
+        $pr['preco_base']=$variacoesMinPrecoPorProduto[(int)$pr['id']];
+      }
       $pr['estoque']=(int)$pr['estoque'];
       $pr['esgotado']=$pr['estoque']<=0;
       $promoExpirada=false;
@@ -642,7 +660,7 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
               <?php if($p['em_promo']): ?>
                 <span class="product-row-old">R$ <?=number_format($p['preco_base'],2,',','.')?></span>
               <?php endif; ?>
-              <span class="product-row-price">R$ <?=number_format($p['preco_final'],2,',','.')?></span>
+              <span class="product-row-price"><?=!empty($p['tem_variacoes'])?'A partir de ':''?>R$ <?=number_format($p['preco_final'],2,',','.')?></span>
             </div>
           </div>
           <div class="product-row-right" id="prow-<?=$p['id']?>">
