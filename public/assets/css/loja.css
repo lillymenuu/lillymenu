@@ -843,12 +843,17 @@ textarea.obs-field:focus{border-color:var(--brown)}
   100%{box-shadow:0 0 0 0 rgba(123,92,62,0);transform:scale(1)}
 }
 
-/* Desktop: modal um pouco maior, com espaço pra respirar (era mais estreito que no mobile).
+/* Desktop: 380px ficava quase do mesmo tamanho do mobile (360px), bem menor
+   que o modal de produto normal (660px) — abrir um produto pela lista de
+   Promoções (ou pelo auto-popup) parecia "outro site" comparado ao resto do
+   cardápio. Não faz sentido igualar aos 660px (o layout é um cartão vertical
+   único — foto 4:5 em cima, texto embaixo — não a divisão lado a lado do
+   modal normal), mas precisa de um tamanho que combine com o resto.
    max-height mais alto que o teto de 80vh anterior — nesse ponto o conteudo (foto 4:5 +
    texto + botao) as vezes passava da altura disponivel e sobrava barra de rolagem lateral,
    deixando o modal com cara desproporcional no desktop. */
 @media(min-width:900px){
-  .prod-modal.promo-mode{max-width:380px;max-height:98vh}
+  .prod-modal.promo-mode{max-width:460px;max-height:92vh}
 }
 
 /* ── Modal de produto: variante "sheet" (tela cheia, sobe suavemente de baixo) ── */
