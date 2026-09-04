@@ -711,8 +711,8 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
               <div class="produto-variacoes-panel d-none" id="produtoVariacoesPanel">
                 <div class="produto-variacoes-head">
                   <div>
-                    <h6>Precos e variações</h6>
-                    <p>Adicione tamanhos, cores ou precos diferentes para este produto.</p>
+                    <h6>Preços e variações</h6>
+                    <p>Adicione tamanhos, cores ou preços diferentes para este produto.</p>
                     <div class="produto-variacoes-resumo" id="variacoesResumo">Nenhuma variacao cadastrada.</div>
                   </div>
                   <button type="button" class="btn btn-diggy-primary btn-sm" id="btnGerenciarVariacoes">
@@ -987,8 +987,8 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
     <div class="modal-content">
       <div class="modal-header border-0">
         <div>
-          <div class="produto-section-title">Variacoes do produto</div>
-          <div class="produto-section-desc">Cadastre tamanhos, cores e precos para usar no pedido.</div>
+          <div class="produto-section-title">Variações do produto</div>
+          <div class="produto-section-desc">Cadastre tamanhos, cores e preços para usar no pedido.</div>
         </div>
         <div class="produto-variacao-tools">
           <button type="button" class="produto-variacao-tool-btn" id="btnAddVariacaoModal" aria-label="Adicionar variacao">
@@ -1001,7 +1001,7 @@ $produtosJsVer = filemtime(__DIR__ . '/assets/js/produtos.js');
         <div class="produto-variacao-list" id="variacoesModalLista"></div>
       </div>
       <div class="modal-footer border-0">
-        <button type="button" class="btn btn-diggy-primary" id="btnSalvarVariacoes">Salvar variacoes</button>
+        <button type="button" class="btn btn-diggy-primary" id="btnSalvarVariacoes">Salvar variações</button>
       </div>
     </div>
   </div>
