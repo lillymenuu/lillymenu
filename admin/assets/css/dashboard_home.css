@@ -4,6 +4,12 @@
   body.dash-diggy .content { margin-left:0 !important; padding:0 !important; }
   body.dash-diggy .dash-page { margin-left:221px; padding:10px 32px 40px; transition:margin-left .3s ease; }
   body.dash-diggy.sidebar-collapsed .dash-page { margin-left:68px; }
+  /* O aviso de trial (vindo de sidebar.php) fica FORA do .dash-page — a
+     linha acima zera a margem de .content pro layout full-bleed dessa
+     pagina, mas sem essa margem o aviso passa a ficar embaixo da sidebar
+     fixa em vez de comecar depois dela, como em qualquer outra tela do admin. */
+  body.dash-diggy #trialWarning { margin-left:221px !important; margin-right:32px !important; transition:margin-left .3s ease; }
+  body.dash-diggy.sidebar-collapsed #trialWarning { margin-left:68px !important; }
   .dash-verse{
     background:#ffffff;
     border:1px solid #e5e7eb;
