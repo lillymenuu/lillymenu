@@ -296,10 +296,15 @@ foreach($categorias as $cat){
     foreach($prods as &$pr){
       $pr['imagem']=fixImgPath($pr['imagem']??'');
       $pr['promo_imagem']=!empty($pr['promo_imagem'])?fixImgPath($pr['promo_imagem']):null;
+      $pr['preco_produto']=(float)$pr['preco'];
       $pr['preco_base']=(float)$pr['preco'];
       $pr['tem_variacoes']=(!empty($pr['tem_variacoes'])&&(int)$pr['tem_variacoes']===1)?1:0;
       if($pr['tem_variacoes'] && isset($variacoesMinPrecoPorProduto[(int)$pr['id']])){
-        $pr['preco_base']=$variacoesMinPrecoPorProduto[(int)$pr['id']];
+        /* A variacao pode ser um "tamanho" com preco proprio (base=0, variacao=95)
+           ou um adicional/opcao sobre o produto (base=14.99, variacao=0) — soma os
+           dois em vez de descartar o preco base, senao produtos com opcoes de preco
+           zero (ex.: "ketchup", "sem molho") ficam com preco em branco. */
+        $pr['preco_base']=$pr['preco_base']+$variacoesMinPrecoPorProduto[(int)$pr['id']];
       }
       $pr['estoque']=(int)$pr['estoque'];
       $pr['esgotado']=$pr['estoque']<=0;
@@ -620,7 +625,7 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
 <div class="destaques-scroll">
   <?php foreach($destaques as $p): ?>
     <?php $isCombo = ($p['tipo'] ?? '') === 'combo'; ?>
-    <div class="destaque-card"<?=$isCombo?'':' data-produto-id="'.(int)$p['id'].'"'?> onclick="abrirProduto(<?=$p['id']?>,<?=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'tipo'=>$isCombo?'combo':'produto','promo_imagem'=>$isCombo?null:($p['promo_imagem']??null),'promo_descricao'=>$isCombo?null:($p['promo_descricao']??null),'estoque'=>$isCombo?null:(int)($p['estoque']??0),'esgotado'=>!$isCombo&&!empty($p['esgotado'])]),ENT_QUOTES)?>)">
+    <div class="destaque-card"<?=$isCombo?'':' data-produto-id="'.(int)$p['id'].'"'?> onclick="abrirProduto(<?=$p['id']?>,<?=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_produto'=>$p['preco_produto']??$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'tipo'=>$isCombo?'combo':'produto','promo_imagem'=>$isCombo?null:($p['promo_imagem']??null),'promo_descricao'=>$isCombo?null:($p['promo_descricao']??null),'estoque'=>$isCombo?null:(int)($p['estoque']??0),'esgotado'=>!$isCombo&&!empty($p['esgotado'])]),ENT_QUOTES)?>)">
       <?php if($p['imagem']): ?>
         <img class="destaque-img" src="<?=htmlspecialchars($p['imagem'])?>" alt="" loading="lazy">
       <?php else: ?>
@@ -649,7 +654,7 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
       <div class="cat-section-title"><?=htmlspecialchars($cat['nome'])?></div>
       <div class="cat-produtos">
       <?php foreach($prods as $p): ?>
-        <?php $pj=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'promo_imagem'=>$p['promo_imagem']??null,'promo_descricao'=>$p['promo_descricao']??null,'estoque'=>(int)($p['estoque']??0),'esgotado'=>!empty($p['esgotado'])]),ENT_QUOTES); ?>
+        <?php $pj=htmlspecialchars(json_encode(['id'=>$p['id'],'nome'=>$p['nome'],'descricao'=>$p['descricao']??'','preco_base'=>$p['preco_base'],'preco_produto'=>$p['preco_produto']??$p['preco_base'],'preco_final'=>$p['preco_final'],'em_promo'=>$p['em_promo'],'desc_pct'=>$p['desc_pct'],'imagem'=>$p['imagem'],'quantidade_minima'=>(int)($p['quantidade_minima']??0),'pontos_ganho'=>(int)($p['pontos_ganho']??0),'tem_variacoes'=>(int)($p['tem_variacoes']??0),'promo_imagem'=>$p['promo_imagem']??null,'promo_descricao'=>$p['promo_descricao']??null,'estoque'=>(int)($p['estoque']??0),'esgotado'=>!empty($p['esgotado'])]),ENT_QUOTES); ?>
         <div class="product-row<?=!empty($p['esgotado'])?' esgotado':''?>" data-produto-id="<?=(int)$p['id']?>" onclick="abrirProduto(<?=$p['id']?>,<?=$pj?>)">
           <div class="product-row-info">
             <div class="product-row-name"><?=htmlspecialchars($p['nome'])?></div>
@@ -1709,6 +1714,7 @@ const PRODUTOS_PROMO = <?= json_encode(array_map(fn($p)=>[
   'nome'=>$p['nome'],
   'descricao'=>$p['descricao']??'',
   'preco_base'=>$p['preco_base'],
+  'preco_produto'=>$p['preco_produto']??$p['preco_base'],
   'preco_final'=>$p['preco_final'],
   'em_promo'=>true,
   'desc_pct'=>$p['desc_pct'],

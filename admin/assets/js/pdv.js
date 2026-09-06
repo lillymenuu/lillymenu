@@ -1988,7 +1988,8 @@ function vincularControlesVariacao(){
         }
       } else {
         const extrasValor = extrasSelecionados.reduce((s, e) => s + e.preco, 0);
-        const precoBase = variacaoSelecionada.preco + extrasValor + (complementoItemSelecionado ? complementoItemSelecionado.preco : 0);
+        const precoProduto = variacaoProdutoCard ? (parseFloat(variacaoProdutoCard.dataset.precoProduto || 0) || 0) : 0;
+        const precoBase = precoProduto + variacaoSelecionada.preco + extrasValor + (complementoItemSelecionado ? complementoItemSelecionado.preco : 0);
         const pontosCusto = variacaoProdutoCard
           ? (parseInt(variacaoProdutoCard.dataset.pontosCusto || '0', 10) || 0)
           : 0;
@@ -2362,7 +2363,8 @@ function atualizarVariacaoTotal(){
   const qtd = parseInt(variacaoQtd.textContent, 10) || 1;
   const extraValor = extrasSelecionados.reduce((s, e) => s + e.preco, 0);
   const complementoValor = complementoItemSelecionado ? complementoItemSelecionado.preco : 0;
-  const total = (variacaoSelecionada.preco + extraValor + complementoValor) * qtd;
+  const precoProduto = variacaoProdutoCard ? (parseFloat(variacaoProdutoCard.dataset.precoProduto || 0) || 0) : 0;
+  const total = (precoProduto + variacaoSelecionada.preco + extraValor + complementoValor) * qtd;
   variacaoAddBtn.textContent = `Adicionar ${formatarDinheiro(total)}`;
   variacaoAddBtn.disabled = false;
 }

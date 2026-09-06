@@ -1120,9 +1120,6 @@ body.pdv-modal .pdv-search-btn{
   align-items:baseline;
   gap:8px;
 }
-.pdv-product-card.has-variacoes .pdv-product-price{
-  display:none;
-}
 .pdv-product-variacao{
   display:none;
   font-size:.72rem;
