@@ -33,8 +33,26 @@ $dataValidade = trim($_POST['data_validade'] ?? '') ?: null;
 $imagemBase64 = trim($_POST['imagem_base64'] ?? '');
 $imagemRemover = ($_POST['imagem_remover'] ?? '0') === '1';
 
-if ($nome === '' || $preco <= 0) {
-  echo json_encode(['ok'=>false]);
+/* Produto com variacoes nao precisa de preco base — quem define o preco de
+   verdade e cada variacao (ver preco_base em loja.php/pdv.php, que ja usa a
+   variacao mais barata quando o campo abaixo esta zerado). So bloqueia por
+   preco quando NAO ha variacao nenhuma com preco valido cadastrada. */
+$temVariacaoComPreco = false;
+if ($temVariacoes === 1) {
+  $variacoesDecodadas = json_decode($variacoesJson, true);
+  if (is_array($variacoesDecodadas)) {
+    foreach ($variacoesDecodadas as $v) {
+      if ((float) ($v['preco'] ?? 0) > 0) { $temVariacaoComPreco = true; break; }
+    }
+  }
+}
+
+if ($nome === '') {
+  echo json_encode(['ok'=>false, 'msg'=>'Informe o nome do produto.']);
+  exit;
+}
+if ($preco <= 0 && !$temVariacaoComPreco) {
+  echo json_encode(['ok'=>false, 'msg'=>'Informe um preço válido ou cadastre ao menos uma variação com preço.']);
   exit;
 }
 

@@ -198,6 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (btnAddComplementoPrecoModal) {
     btnAddComplementoPrecoModal.addEventListener('click', () => {
+      /* sincroniza o que ja foi digitado nas linhas existentes antes de
+         adicionar uma nova — sem isso, o render abaixo reconstroi a lista
+         a partir do array desatualizado e descarta tudo que a pessoa
+         tinha acabado de digitar nas linhas anteriores. */
+      complementosPrecoAtual = coletarComplementoPrecoModal();
       complementosPrecoAtual.push({ nome: '', preco: '', obrigatorio: 0 });
       renderComplementoPrecoModalProduto();
     });
@@ -231,12 +236,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (btnAddVariacaoModal) {
     btnAddVariacaoModal.addEventListener('click', () => {
+      /* mesmo motivo do comentario em btnAddComplementoPrecoModal — sincroniza
+         antes de adicionar, senao a proxima linha some o que ja foi digitado. */
+      variacoesAtual = coletarVariacoesModal();
       variacoesAtual.push({ tamanho: '', cor: '', preco: '' });
       renderVariacoesModalProduto();
     });
   }
   if (btnAddExtraModal) {
     btnAddExtraModal.addEventListener('click', () => {
+      extrasAtual = coletarExtrasModal();
       extrasAtual.push({ nome: '', preco: '', obrigatorio: 0 });
       renderExtrasModalProduto();
     });
