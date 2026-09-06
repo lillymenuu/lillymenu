@@ -719,6 +719,8 @@
 }
 .pedido-detalhe-item-row span{
   display:block;
+  flex:1 1 auto;
+  min-width:0;
   font-size:.75rem;
   line-height:1.58;
   color:#111827;
@@ -734,9 +736,11 @@
   margin-top:2px;
 }
 .pedido-detalhe-item-row strong{
+  flex:0 0 auto;
   font-size:.75rem;
   font-weight:600;
   color:#111827;
+  white-space:nowrap;
 }
 .pedido-detalhe-item-row:last-child{border-bottom:0}
 .pedido-detalhe-totais{
