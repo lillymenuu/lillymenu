@@ -6,7 +6,7 @@ acessoExigirMenu($conn, 'menu.relatorio_cross_sell');
 
 $lojaId = (int) ($_SESSION['loja_id'] ?? 1);
 
-$periodoFiltro = $_GET['periodo'] ?? '30dias';
+$periodoFiltro = $_GET['periodo'] ?? 'hoje';
 $inicioParam = $_GET['inicio'] ?? '';
 $fimParam = $_GET['fim'] ?? '';
 
