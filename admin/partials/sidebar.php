@@ -250,6 +250,25 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
 </script>
 
 <script>
+  /* Cada clique no menu recarrega a pagina inteira (nao e SPA) — sem isso,
+     a sidebar (que tem scroll proprio quando o menu nao cabe na tela) volta
+     pro topo a cada navegacao, obrigando a rolar de novo pra achar itens
+     mais abaixo (Relatorios, Gerenciar etc). Salva a posicao a cada scroll
+     e restaura assim que a sidebar existe no DOM. */
+  document.addEventListener('DOMContentLoaded', function(){
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    const salvo = sessionStorage.getItem('sidebarScrollTop');
+    if (salvo !== null) {
+      sidebar.scrollTop = parseInt(salvo, 10) || 0;
+    }
+    sidebar.addEventListener('scroll', () => {
+      sessionStorage.setItem('sidebarScrollTop', String(sidebar.scrollTop));
+    }, { passive: true });
+  });
+</script>
+
+<script>
   /* O elemento #trialWarning só existe bem mais abaixo no HTML (dentro de
      <main>, perto do final do arquivo) — rodar isso direto aqui, sem
      esperar o DOM terminar de ser parseado, sempre encontrava o elemento
