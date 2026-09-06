@@ -133,11 +133,57 @@ try {
   foreach ($pedidos as $pedido) {
     $pedidoId = (int) ($pedido['id'] ?? 0);
     $pedido['tipo'] = $pedidoId && isset($editados[$pedidoId]) ? 'editado' : 'novo';
+    $pedido['chave'] = 'pedido-' . $pedidoId;
     if (empty($pedido['cliente'])) {
       $pedido['cliente'] = 'Cliente';
     }
     $filtrados[] = $pedido;
   }
+
+  $stmtTableAv = $conn->prepare("SHOW TABLES LIKE 'avaliacoes'");
+  $stmtTableAv->execute();
+  if ((bool) $stmtTableAv->fetchColumn()) {
+    $colunasPedidoAv = $colunasPedido;
+    $codigoColAv = null;
+    foreach (['codigo', 'codigo_pedido', 'pedido_hash', 'hash', 'pedido_codigo', 'uuid'] as $col) {
+      if (in_array($col, $colunasPedidoAv, true)) {
+        $codigoColAv = $col;
+        break;
+      }
+    }
+    $selCodigoAv = $codigoColAv ? "COALESCE(NULLIF(p.{$codigoColAv},''), p.id)" : "p.id";
+    $stmtAv = $conn->prepare("
+      SELECT a.id, a.nota, a.descricao, a.criado_em, a.pedido_id,
+             {$selCodigoAv} AS codigo, c.nome AS cliente
+      FROM avaliacoes a
+      LEFT JOIN pedidos p ON p.id = a.pedido_id AND p.loja_id = a.loja_id
+      LEFT JOIN clientes c ON c.id = a.cliente_id AND c.loja_id = a.loja_id
+      WHERE a.loja_id = ? AND DATE(a.criado_em) = CURDATE()
+      ORDER BY a.criado_em DESC, a.id DESC
+      LIMIT 50
+    ");
+    $stmtAv->execute([$lojaId]);
+    foreach ($stmtAv->fetchAll(PDO::FETCH_ASSOC) as $av) {
+      $avId = (int) ($av['id'] ?? 0);
+      $filtrados[] = [
+        'id' => $avId,
+        'codigo' => $av['codigo'] ?? $av['pedido_id'],
+        'criado_em' => $av['criado_em'],
+        'cliente' => $av['cliente'] ?: 'Cliente',
+        'status' => null,
+        'origem' => null,
+        'tipo' => 'avaliacao',
+        'chave' => 'avaliacao-' . $avId,
+        'nota' => (int) ($av['nota'] ?? 0),
+        'pedido_id' => (int) ($av['pedido_id'] ?? 0),
+      ];
+    }
+  }
+
+  usort($filtrados, static function ($a, $b) {
+    return strcmp((string) ($b['criado_em'] ?? ''), (string) ($a['criado_em'] ?? ''));
+  });
+
   echo json_encode(['ok' => true, 'pedidos' => $filtrados]);
 } catch (Exception $e) {
   echo json_encode([

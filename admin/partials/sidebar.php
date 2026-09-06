@@ -1838,6 +1838,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       let tabAtual = 'unread';
       let lidas = new Set();
       let maiorIdVistoAlerta = null;
+      let maiorAvaliacaoVistoAlerta = null;
 
       /* ── Alarme sonoro de novo pedido (estilo alarme de celular) ── */
       let _alarmeCtx = null;
@@ -1888,7 +1889,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       }
 
       const abrirPedidoNotificado = (item) => {
-        marcarLida(+item.id);
+        marcarLida(item.chave);
         atualizarBadge();
         if (typeof window.abrirModalPedidoDetalhe === 'function') {
           window.abrirModalPedidoDetalhe(item.id);
@@ -1931,6 +1932,49 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         setTimeout(remover, 8000);
       };
 
+      /* ── Toast global de nova avaliação (mesmo padrão do pedido novo) ── */
+      const abrirAvaliacaoNotificada = (item) => {
+        marcarLida(item.chave);
+        atualizarBadge();
+        window.location.href = 'avaliacoes.php';
+      };
+
+      const mostrarToastGlobalAvaliacao = (item) => {
+        const el = document.createElement('div');
+        el.className = 'gnotif-toast';
+        const codigo = item.codigo ? item.codigo : item.id;
+        const nota = item.nota || 0;
+        const estrelas = '★'.repeat(nota) + '☆'.repeat(Math.max(0, 5 - nota));
+        el.innerHTML = `
+          <div class="gnotif-toast-icon" style="background:#f59e0b"><i class="bi bi-star-fill"></i></div>
+          <div class="gnotif-toast-body">
+            <div class="gnotif-toast-title">Nova avaliação!</div>
+            <div class="gnotif-toast-sub">${estrelas}</div>
+            <div class="gnotif-toast-meta">Pedido #${codigo} · ${item.cliente || 'Cliente'}</div>
+          </div>
+          <button class="gnotif-toast-close" type="button" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+        `;
+
+        const remover = () => {
+          el.classList.remove('show');
+          el.classList.add('hide');
+          setTimeout(() => el.remove(), 350);
+        };
+
+        el.addEventListener('click', () => {
+          remover();
+          abrirAvaliacaoNotificada(item);
+        });
+        el.querySelector('.gnotif-toast-close').addEventListener('click', e => {
+          e.stopPropagation();
+          remover();
+        });
+
+        gnotifToastContainer.appendChild(el);
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+        setTimeout(remover, 8000);
+      };
+
       const formatarTempo = (iso) => {
         if (!iso) return '';
         const data = new Date(iso.replace(' ', 'T'));
@@ -1955,7 +1999,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
           if (!raw) return;
           const arr = JSON.parse(raw);
           if (Array.isArray(arr)) {
-            lidas = new Set(arr.map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n)));
+            lidas = new Set(arr.map(v => String(v)));
           }
         } catch (e) {}
       };
@@ -1963,14 +2007,14 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         const arr = Array.from(lidas).slice(-200);
         localStorage.setItem(readKey, JSON.stringify(arr));
       };
-      const marcarLida = (id) => {
-        if (!id) return;
-        lidas.add(id);
+      const marcarLida = (chave) => {
+        if (!chave) return;
+        lidas.add(String(chave));
         salvarLidas();
       };
 
       const atualizarBadge = () => {
-        const naoLidas = itens.filter(i => !lidas.has(i.id));
+        const naoLidas = itens.filter(i => !lidas.has(i.chave));
         if (badge) {
           badge.textContent = naoLidas.length;
           badge.classList.toggle('show', naoLidas.length > 0);
@@ -1980,7 +2024,7 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       const renderizar = () => {
         if (!list) return;
         const visiveis = tabAtual === 'unread'
-          ? itens.filter(i => !lidas.has(i.id))
+          ? itens.filter(i => !lidas.has(i.chave))
           : itens;
         if (!visiveis.length) {
           const mensagem = tabAtual === 'unread'
@@ -1992,17 +2036,29 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         list.innerHTML = visiveis.map((item) => {
           const tempo = formatarTempo(item.criado_em);
           const codigo = item.codigo ? item.codigo : item.id;
-          const pedidoLabel = `Pedido #${codigo} - ${item.cliente || 'Cliente'}`;
           const isEditado = item.tipo === 'editado';
-          const isNaoLida = !lidas.has(item.id);
-          const titulo = isEditado ? 'Pedido editado.' : 'Você recebeu um novo pedido.';
-          const cls = isEditado ? 'notify-item is-clickable is-editado' : 'notify-item is-clickable';
+          const isAvaliacao = item.tipo === 'avaliacao';
+          const isNaoLida = !lidas.has(item.chave);
+          let titulo, sub, icone, cls;
+          if (isAvaliacao) {
+            const nota = item.nota || 0;
+            const estrelas = '★'.repeat(nota) + '☆'.repeat(Math.max(0, 5 - nota));
+            titulo = 'Você recebeu uma nova avaliação.';
+            sub = `Pedido #${codigo} - ${item.cliente || 'Cliente'} · ${estrelas}`;
+            icone = 'bi-star-fill';
+            cls = 'notify-item is-clickable is-avaliacao';
+          } else {
+            titulo = isEditado ? 'Pedido editado.' : 'Você recebeu um novo pedido.';
+            sub = `Pedido #${codigo} - ${item.cliente || 'Cliente'}`;
+            icone = 'bi-receipt';
+            cls = isEditado ? 'notify-item is-clickable is-editado' : 'notify-item is-clickable';
+          }
           return `
-            <div class="${cls}" data-pedido-id="${item.id}">
-              <div class="notify-icon"><i class="bi bi-receipt"></i></div>
+            <div class="${cls}" data-chave="${item.chave}" data-tipo="${item.tipo}" data-pedido-id="${item.id}">
+              <div class="notify-icon"><i class="bi ${icone}"></i></div>
               <div>
                 <div class="notify-item-title">${titulo}</div>
-                <div class="notify-item-sub">${pedidoLabel}</div>
+                <div class="notify-item-sub">${sub}</div>
                 <div class="notify-item-time">${tempo || ''}${isNaoLida ? '<span class="notify-dot"></span>' : ''}</div>
               </div>
             </div>
@@ -2042,6 +2098,17 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
               });
             }
             maiorIdVistoAlerta = maiorId;
+          }
+
+          const avaliacoesNovas = itens.filter(i => i.tipo === 'avaliacao');
+          const maiorIdAv = avaliacoesNovas.length ? Math.max(...avaliacoesNovas.map(i => +i.id)) : 0;
+          if (maiorAvaliacaoVistoAlerta === null) {
+            maiorAvaliacaoVistoAlerta = maiorIdAv;
+          } else if (maiorIdAv > maiorAvaliacaoVistoAlerta) {
+            const avaliacoesRecemChegadas = avaliacoesNovas.filter(i => +i.id > maiorAvaliacaoVistoAlerta);
+            avaliacoesRecemChegadas.forEach(mostrarToastGlobalAvaliacao);
+            tocarAlarmeNovoPedido();
+            maiorAvaliacaoVistoAlerta = maiorIdAv;
           }
         } catch (e) {
         }
@@ -2088,17 +2155,20 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         list.addEventListener('click', (e) => {
           const item = e.target.closest('.notify-item');
           if (!item) return;
-          const id = item.dataset.pedidoId;
-          if (!id) return;
-          const idNum = parseInt(id, 10);
-          if (!Number.isNaN(idNum)) {
-            marcarLida(idNum);
-          }
+          const chave = item.dataset.chave;
+          if (!chave) return;
+          marcarLida(chave);
           atualizarBadge();
           tabAtual = 'all';
           tabs.forEach(t => t.classList.toggle('active', t.dataset.notifyTab === 'all'));
           dropdown.classList.remove('show');
           dropdown.setAttribute('aria-hidden', 'true');
+          if (item.dataset.tipo === 'avaliacao') {
+            window.location.href = 'avaliacoes.php';
+            return;
+          }
+          const id = item.dataset.pedidoId;
+          if (!id) return;
           if (typeof window.abrirModalPedidoDetalhe === 'function') {
             window.abrirModalPedidoDetalhe(id);
           } else {
