@@ -1937,6 +1937,11 @@ function vincularControlesVariacao(){
     variacaoPlus.addEventListener('click', () => {
       if (!variacaoQtd) return;
       const atual = parseInt(variacaoQtd.textContent, 10) || 1;
+      const restante = variacaoProdutoCard ? obterEstoqueRestante(variacaoProdutoCard) : Infinity;
+      if (atual + 1 > restante) {
+        mostrarToast(`Estoque insuficiente. Disponivel: ${restante}.`, 'warn');
+        return;
+      }
       variacaoQtd.textContent = String(atual + 1);
       atualizarVariacaoTotal();
     });
@@ -1959,6 +1964,11 @@ function vincularControlesVariacao(){
       }
       if (!variacaoQtd) return;
       const qtd = parseInt(variacaoQtd.textContent, 10) || 1;
+      const restanteEstoque = obterEstoqueRestante(variacaoProdutoCard);
+      if (qtd > restanteEstoque) {
+        mostrarToast(`Estoque insuficiente. Disponivel: ${restanteEstoque}.`, 'warn');
+        return;
+      }
       const baseId = variacaoProdutoCard.dataset.id;
       const rowKey = `${baseId}-var-${variacaoSelecionada.id}`;
       const extraLabel = extrasSelecionados.length ? extrasSelecionados.map(e => ` + ${e.nome}`).join('') : '';
@@ -1989,7 +1999,8 @@ function vincularControlesVariacao(){
       } else {
         const extrasValor = extrasSelecionados.reduce((s, e) => s + e.preco, 0);
         const precoProduto = variacaoProdutoCard ? (parseFloat(variacaoProdutoCard.dataset.precoProduto || 0) || 0) : 0;
-        const precoBase = precoProduto + variacaoSelecionada.preco + extrasValor + (complementoItemSelecionado ? complementoItemSelecionado.preco : 0);
+        const precoVariacaoOuBase = variacaoSelecionada.preco > 0 ? variacaoSelecionada.preco : precoProduto;
+        const precoBase = precoVariacaoOuBase + extrasValor + (complementoItemSelecionado ? complementoItemSelecionado.preco : 0);
         const pontosCusto = variacaoProdutoCard
           ? (parseInt(variacaoProdutoCard.dataset.pontosCusto || '0', 10) || 0)
           : 0;
@@ -2364,7 +2375,8 @@ function atualizarVariacaoTotal(){
   const extraValor = extrasSelecionados.reduce((s, e) => s + e.preco, 0);
   const complementoValor = complementoItemSelecionado ? complementoItemSelecionado.preco : 0;
   const precoProduto = variacaoProdutoCard ? (parseFloat(variacaoProdutoCard.dataset.precoProduto || 0) || 0) : 0;
-  const total = (precoProduto + variacaoSelecionada.preco + extraValor + complementoValor) * qtd;
+  const precoVariacaoOuBase = variacaoSelecionada.preco > 0 ? variacaoSelecionada.preco : precoProduto;
+  const total = (precoVariacaoOuBase + extraValor + complementoValor) * qtd;
   variacaoAddBtn.textContent = `Adicionar ${formatarDinheiro(total)}`;
   variacaoAddBtn.disabled = false;
 }

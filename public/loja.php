@@ -300,11 +300,11 @@ foreach($categorias as $cat){
       $pr['preco_base']=(float)$pr['preco'];
       $pr['tem_variacoes']=(!empty($pr['tem_variacoes'])&&(int)$pr['tem_variacoes']===1)?1:0;
       if($pr['tem_variacoes'] && isset($variacoesMinPrecoPorProduto[(int)$pr['id']])){
-        /* A variacao pode ser um "tamanho" com preco proprio (base=0, variacao=95)
-           ou um adicional/opcao sobre o produto (base=14.99, variacao=0) — soma os
-           dois em vez de descartar o preco base, senao produtos com opcoes de preco
-           zero (ex.: "ketchup", "sem molho") ficam com preco em branco. */
-        $pr['preco_base']=$pr['preco_base']+$variacoesMinPrecoPorProduto[(int)$pr['id']];
+        /* A variacao pode ser um "tamanho" com preco proprio (variacao=95, define o
+           preco sozinha) ou uma opcao/adicional sobre o produto (variacao=0, ex.:
+           "ketchup", "sem molho") — nesse caso quem define o preco e o cadastro. */
+        $minVar=$variacoesMinPrecoPorProduto[(int)$pr['id']];
+        $pr['preco_base']=$minVar>0?$minVar:$pr['preco_base'];
       }
       $pr['estoque']=(int)$pr['estoque'];
       $pr['esgotado']=$pr['estoque']<=0;

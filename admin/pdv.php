@@ -609,11 +609,12 @@ $pdvOfflineJsVer = filemtime(__DIR__ . '/assets/js/pdv_offline.js');
                         <?php
                           $temVariacoesCard = !empty($p['tem_variacoes']) && (int) $p['tem_variacoes'] === 1;
                           $precoMinVariacaoCard = $variacoesMinPrecoPorProduto[(int) $p['id']] ?? null;
-                          /* A variacao pode ser um "tamanho" com preco proprio (produto base=0, variacao=95)
-                             ou uma opcao/adicional sobre o produto (produto base=14.99, variacao=0) — soma
-                             os dois em vez de descartar o preco base, senao produtos com opcoes de preco
-                             zero (ex.: "ketchup", "sem molho") ficam sem preco. */
-                          $precoExibicaoCard = ($temVariacoesCard && $precoMinVariacaoCard !== null) ? ($p['preco'] + $precoMinVariacaoCard) : $p['preco'];
+                          /* A variacao pode ser um "tamanho" com preco proprio (variacao=95, define o preco
+                             sozinha) ou uma opcao/adicional sobre o produto (variacao=0, ex.: "ketchup",
+                             "sem molho") — nesse caso quem define o preco e o cadastro do produto. */
+                          $precoExibicaoCard = ($temVariacoesCard && $precoMinVariacaoCard !== null)
+                            ? ($precoMinVariacaoCard > 0 ? $precoMinVariacaoCard : $p['preco'])
+                            : $p['preco'];
                         ?>
                         <div class="pdv-product-card<?= ($p['em_promocao'] ?? 0) ? ' promo' : '' ?><?= $temVariacoesCard ? ' has-variacoes' : '' ?>"
                              role="button" tabindex="0"

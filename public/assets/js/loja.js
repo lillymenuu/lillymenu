@@ -1133,7 +1133,8 @@ function _atualizarVarModalBtn(){
   const extraValor=varModalExtrasSelecionados.reduce((s,e)=>s+e.preco,0);
   const complementoValor=varModalComplementoSelecionado?varModalComplementoSelecionado.preco:0;
   const precoProduto=varModalAtual?varModalAtual.precoProduto:0;
-  const total=(precoProduto+varModalSelecionada.preco+extraValor+complementoValor)*qtd;
+  const precoVariacaoOuBase=varModalSelecionada.preco>0?varModalSelecionada.preco:precoProduto;
+  const total=(precoVariacaoOuBase+extraValor+complementoValor)*qtd;
   btn.disabled=false;
   btn.textContent=`Adicionar ${fmtR(total)}`;
 }
@@ -1153,7 +1154,8 @@ function confirmarVariacaoLoja(){
   const complementoLabel=varModalComplementoSelecionado?` + ${varModalComplementoSelecionado.nome}`:'';
   const nome=`${varModalAtual.nome} - ${varModalSelecionada.nome}${extraLabel}${complementoLabel}`;
   const extraPrecoTotal=varModalExtrasSelecionados.reduce((s,e)=>s+e.preco,0);
-  const preco=varModalAtual.precoProduto+varModalSelecionada.preco+extraPrecoTotal+(varModalComplementoSelecionado?varModalComplementoSelecionado.preco:0);
+  const precoVariacaoOuBase=varModalSelecionada.preco>0?varModalSelecionada.preco:varModalAtual.precoProduto;
+  const preco=precoVariacaoOuBase+extraPrecoTotal+(varModalComplementoSelecionado?varModalComplementoSelecionado.preco:0);
   const obs=document.getElementById('varModalObs').value.trim();
   const varKey=varModalAtual.produtoId+'-var-'+varModalSelecionada.id+(varModalExtrasSelecionados.length?('-'+varModalExtrasSelecionados.map(e=>e.nome).join(',')):'')+(varModalComplementoSelecionado?('-'+varModalComplementoSelecionado.nome):'');
   const idx=carrinho.findIndex(i=>i.varKey===varKey&&i.obs===obs);
