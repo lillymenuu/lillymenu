@@ -75,9 +75,16 @@ let _authCliente = null; // {id, nome, telefone, saldo}
 
 function abrirAuthModal(destino){
   _authDestino = destino;
-  /* se já autenticado nessa sessão, vai direto */
+  /* se já autenticado nessa sessão, vai direto — mas para "pedidos" precisa
+     rebuscar a lista na API, senão _irAposAuth() roda sem "dados.pedidos" e
+     abrirPedidosSheet cai no fallback do localStorage (que pode estar vazio
+     nesse dispositivo), mostrando "nenhum pedido" mesmo com pedidos reais. */
   if(_authCliente){
-    _irAposAuth();
+    if(destino==='pedidos'){
+      _recarregarPedidosAutenticado();
+    } else {
+      _irAposAuth();
+    }
     return;
   }
   const titles = {pedidos:'Lista de pedidos', pontos:'Clube de Pontos'};
@@ -154,6 +161,18 @@ async function entrarAuth(){
     },280);
   }catch(e){toast('Erro de conexão');}
   if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='Entrar';}
+}
+async function _recarregarPedidosAutenticado(){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('navPedidos')?.classList.add('active');
+  try{
+    const r=await fetch(`api/pedidos_por_cliente.php?tel=${encodeURIComponent(_authCliente.telefone||'')}&loja_id=${CFG.lojaId}`);
+    const d=await r.json();
+    if(d.ok) _authCliente=d.cliente;
+    abrirPedidosSheet(d.ok?d.pedidos:null, _authCliente);
+  }catch(e){
+    abrirPedidosSheet(null, _authCliente);
+  }
 }
 function _irAposAuth(dados){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
