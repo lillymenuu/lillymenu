@@ -2942,6 +2942,7 @@ async function fetchPedidoCard(h){
       <div class="pedido-sec">
         <div class="pedido-sec-title">Resumo</div>
         ${itensHtml}
+        ${isEntrega&&taxa>0.009?`<div class="pedido-row"><span>Taxa de entrega</span><span>${fmtR(taxa)}</span></div>`:''}
         ${cashbackGanhoHtml}
       </div>
 
