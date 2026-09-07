@@ -41,6 +41,7 @@ $menuLabelsRecursos = [
   'menu.controle_fiado' => 'Controle de fiado',
   'menu.financeiro' => 'Financeiro',
   'menu.motoboys' => 'Motoboys',
+  'menu.modo_garcom' => 'Modo Garçom',
   'menu.cupons' => 'Cupons',
   'menu.whatslilly' => 'WhatsLilly',
   'menu.lista_transmissao' => 'Lista de Transmissão',
@@ -52,7 +53,7 @@ $menuLabelsRecursos = [
 /* Mesmo agrupamento usado no menu lateral da loja (admin/partials/sidebar.php),
    pra quem marca aqui reconhecer de cara a qual tela cada recurso corresponde. */
 $recursosCategorias = [
-  'Dia a dia' => ['menu.pdv', 'menu.gestor_pedidos', 'menu.pedidos', 'menu.orcamentos', 'menu.motoboys'],
+  'Dia a dia' => ['menu.pdv', 'menu.gestor_pedidos', 'menu.pedidos', 'menu.orcamentos', 'menu.motoboys', 'menu.modo_garcom'],
   'Catálogo' => ['menu.produtos', 'menu.promo', 'menu.estoque'],
   'Clientes' => ['menu.clientes', 'menu.relatorios_fidelidade', 'menu.cupons'],
   'Financeiro' => ['menu.controle_caixa', 'menu.controle_fiado', 'menu.financeiro'],
