@@ -598,7 +598,6 @@ carregarFunil();
 (function(){
   const paginas = [
     { nome:'Dashboard',             url:'dashboard',                   icone:'bi-house' },
-    { nome:'Matéria-prima',         url:'cad_materia_prima',           icone:'bi-box-seam' },
     { nome:'Pedidos (PDV)',         url:'pdv',                         icone:'bi-bag-check' },
     { nome:'Gestor de Pedidos',     url:'gestor_pedidos',              icone:'bi-kanban' },
     { nome:'Lista de Pedidos',      url:'pedidos',                     icone:'bi-receipt' },
@@ -611,7 +610,6 @@ carregarFunil();
     { nome:'Relatório de clientes', url:'relatorios_clientes',         icone:'bi-people' },
     { nome:'Fidelidade',            url:'relatorios_fidelidade',       icone:'bi-award' },
     { nome:'Cross-sell',            url:'relatorio_cross_sell',        icone:'bi-shuffle' },
-    { nome:'Entrada / saída',       url:'entrada_saida',               icone:'bi-arrow-left-right' },
     { nome:'Financeiro Dashboard',  url:'financeiro_dashboard',        icone:'bi-pie-chart' },
     { nome:'Lançamentos',           url:'financeiro_lancamentos',      icone:'bi-arrow-left-right' },
     { nome:'Categorias',            url:'financeiro_categorias',       icone:'bi-diagram-3' },

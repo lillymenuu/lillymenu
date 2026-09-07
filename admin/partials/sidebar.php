@@ -203,10 +203,6 @@ $mostrarControleCaixa = $menuPode('menu.controle_caixa') && $planoPode('menu.con
 $mostrarControleFiado = $menuPode('menu.controle_fiado') && $planoPode('menu.controle_fiado');
 $mostrarMotoboys = $menuPode('menu.motoboys') && $planoPode('menu.motoboys');
 $mostrarModoGarcom = $menuPode('menu.modo_garcom') && $planoPode('menu.modo_garcom');
-$mostrarEntradaSaida = false;
-$mostrarMateriaPrima = false;
-$mostrarMateriaPrimaControle = false;
-$mostrarMateriaPrimaControleControl = false;
 $mostrarFinanceiro = $menuPode('menu.financeiro') && $planoPode('menu.financeiro');
 $mostrarCupons = $menuPode('menu.cupons') && $planoPode('menu.cupons');
 $mostrarListaTransmissao = $menuPode('menu.lista_transmissao') && $planoPode('menu.lista_transmissao');
@@ -233,7 +229,6 @@ try {
 
 $secAcessoRapido = $mostrarDashboard;
 $secDiaADia = $mostrarPdv || $mostrarGestor || $mostrarPedidos || $mostrarProdutos || $mostrarPromo || $mostrarEstoque || $mostrarClientes || $mostrarOrcamentos;
-$secControle = $mostrarEntradaSaida || $mostrarMateriaPrimaControleControl;
 $secFinanceiro = $mostrarFinanceiro;
 $secRelatorios = $mostrarRelatorios || $mostrarFidelidade || $mostrarCrossSellRelatorio;
 $secMonitorar = $mostrarWhatsLilly || $mostrarListaTransmissao;
@@ -708,30 +703,6 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
             </a>
           </li>
         <?php endif; ?>
-        <?php if ($mostrarMateriaPrima): ?>
-          <li>
-            <a href="cad_materia_prima" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
-              <i class="bi bi-box-seam"></i>
-              <span>Matéria-prima</span>
-            </a>
-          </li>
-        <?php endif; ?>
-        <?php if ($mostrarMateriaPrimaControle): ?>
-          <li>
-            <a href="cad_materia_prima" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
-              <i class="bi bi-box-seam"></i>
-              <span>Materia-prima</span>
-            </a>
-          </li>
-        <?php endif; ?>
-        <?php if ($mostrarMateriaPrimaControle): ?>
-          <li>
-            <a href="cad_materia_prima" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
-              <i class="bi bi-box-seam"></i>
-              <span>Materia-prima</span>
-            </a>
-          </li>
-        <?php endif; ?>
       </ul>
     <?php endif; ?>
 
@@ -844,34 +815,6 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         <?php endif; ?>
       </ul>
     <?php endif; ?>
-
-    <?php if ($secControle): ?>
-      <div class="sidebar-section-title">Controle</div>
-      <ul class="sidebar-menu">
-        <?php if ($mostrarMateriaPrimaControleControl): ?>
-          <li>
-            <a href="cad_materia_prima" class="<?= $rota=='cad_materia_prima.php'?'active':'' ?>">
-              <i class="bi bi-box-seam"></i>
-              <span>Materia-prima</span>
-            </a>
-          </li>
-        <?php endif; ?>
-        <?php if ($mostrarEntradaSaida): ?>
-          <li>
-            <a href="entrada_saida" class="<?= $rota=='entrada_saida.php'?'active':'' ?>">
-              <i class="bi bi-arrow-left-right"></i>
-              <span>Entrada / saída</span>
-            </a>
-          </li>
-        <?php endif; ?>
-      </ul>
-    <?php endif; ?>
-
-
-
-
-
-
 
     <?php if ($secFinanceiro): ?>
       <div class="sidebar-section-title">Financeiro</div>
