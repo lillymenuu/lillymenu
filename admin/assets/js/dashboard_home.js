@@ -653,7 +653,7 @@ carregarFunil();
       return;
     }
     dropdown.innerHTML = lista.map((p, i) =>
-      `<a class="dash-nav-search-item" href="${p.url}" data-idx="${i}">
+      `<a class="dash-nav-search-item" href="${p.url}" data-idx="${i}" style="--i:${i}">
          <i class="bi ${p.icone}"></i>
          <span>${p.nome}</span>
        </a>`
