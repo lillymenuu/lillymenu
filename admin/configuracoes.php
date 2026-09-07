@@ -681,6 +681,15 @@ $settingsSections = [
   ]
 ];
 
+/* Fidelidade (cashback + clube de pontos) usa o mesmo recurso de plano do
+   relatorio de fidelidade (menu.relatorios_fidelidade) — se o plano da loja
+   nao libera esse recurso, a secao nem aparece aqui em Configuracoes. */
+if (!acessoMenuPermitido($conn, 'menu.relatorios_fidelidade')) {
+  $settingsSections = array_values(array_filter($settingsSections, function ($section) {
+    return $section['title'] !== 'Fidelidade';
+  }));
+}
+
 $modalForms = ['loja-info', 'whatsapp', 'taxa-entrega', 'valor-minimo', 'receber-pedidos', 'pedidos-agendados', 'tipos-pedidos', 'horarios', 'formas-pagamento', 'usuarios', 'permissoes', 'cashback', 'clube-pontos', 'menu-custom', 'impressao'];
 $cssVer = filemtime(__DIR__ . '/assets/css/dashboard.css');
 $configCssVer = filemtime(__DIR__ . '/assets/css/configuracoes.css');
