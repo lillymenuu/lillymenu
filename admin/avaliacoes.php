@@ -2,6 +2,7 @@
 require_once __DIR__ . '/protect.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/helpers/config.php';
+require_once __DIR__ . '/../helpers/pedido_codigo.php';
 
 $lojaId   = (int)($_SESSION['loja_id'] ?? 1);
 $lojaNome = config($conn, 'nome_loja', 'Minha Loja');
@@ -61,12 +62,9 @@ $paginas  = max(1,(int)ceil($totalF/$limite));
 $pagina   = min($pagina,$paginas);
 $offset   = ($pagina-1)*$limite;
 
-$pedCols   = $conn->query("SHOW COLUMNS FROM pedidos")->fetchAll(PDO::FETCH_COLUMN,0);
-$selCodigo = in_array('codigo',$pedCols) ? "COALESCE(NULLIF(p.codigo,''),p.id)" : "p.id";
-
 $stmtList = $conn->prepare("
   SELECT a.id, a.nota, a.descricao, a.criado_em,
-         a.pedido_id, {$selCodigo} AS codigo_pedido,
+         a.pedido_id,
          p.total AS pedido_total, p.criado_em AS pedido_data,
          c.nome AS cliente_nome, c.telefone AS cliente_tel
   FROM avaliacoes a
@@ -78,6 +76,17 @@ $stmtList = $conn->prepare("
 ");
 $stmtList->execute($params);
 $avaliacoes = $stmtList->fetchAll(PDO::FETCH_ASSOC);
+
+/* Mesmo numero de pedido exibido em gestor_pedidos e no acompanhamento do
+   cliente em loja.php — calculado a partir do id, nao do campo pedidos.codigo
+   (que so e preenchido em pedidos feitos pela loja e fica congelado no valor
+   de quando o pedido foi criado, dessincronizando sempre que a sequencia e
+   zerada depois). */
+$codigoBase = getPedidoCodigoBase($conn, $lojaId);
+foreach ($avaliacoes as &$av) {
+  $av['codigo_pedido'] = calcCodigoDisplay((int)$av['pedido_id'], $codigoBase);
+}
+unset($av);
 
 /* Helpers */
 function rs(int $n): string {

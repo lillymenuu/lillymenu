@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
+require_once __DIR__ . '/../../helpers/pedido_codigo.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -143,31 +144,26 @@ try {
   $stmtTableAv = $conn->prepare("SHOW TABLES LIKE 'avaliacoes'");
   $stmtTableAv->execute();
   if ((bool) $stmtTableAv->fetchColumn()) {
-    $colunasPedidoAv = $colunasPedido;
-    $codigoColAv = null;
-    foreach (['codigo', 'codigo_pedido', 'pedido_hash', 'hash', 'pedido_codigo', 'uuid'] as $col) {
-      if (in_array($col, $colunasPedidoAv, true)) {
-        $codigoColAv = $col;
-        break;
-      }
-    }
-    $selCodigoAv = $codigoColAv ? "COALESCE(NULLIF(p.{$codigoColAv},''), p.id)" : "p.id";
     $stmtAv = $conn->prepare("
       SELECT a.id, a.nota, a.descricao, a.criado_em, a.pedido_id,
-             {$selCodigoAv} AS codigo, c.nome AS cliente
+             c.nome AS cliente
       FROM avaliacoes a
-      LEFT JOIN pedidos p ON p.id = a.pedido_id AND p.loja_id = a.loja_id
       LEFT JOIN clientes c ON c.id = a.cliente_id AND c.loja_id = a.loja_id
       WHERE a.loja_id = ? AND DATE(a.criado_em) = CURDATE()
       ORDER BY a.criado_em DESC, a.id DESC
       LIMIT 50
     ");
     $stmtAv->execute([$lojaId]);
+    // Mesmo numero exibido em gestor_pedidos e no acompanhamento do cliente —
+    // calculado a partir do id, nao de pedidos.codigo (congelado na criacao e
+    // dessincroniza toda vez que a sequencia e zerada depois).
+    $codigoBaseAv = getPedidoCodigoBase($conn, $lojaId);
     foreach ($stmtAv->fetchAll(PDO::FETCH_ASSOC) as $av) {
       $avId = (int) ($av['id'] ?? 0);
+      $pedidoIdAv = (int) ($av['pedido_id'] ?? 0);
       $filtrados[] = [
         'id' => $avId,
-        'codigo' => $av['codigo'] ?? $av['pedido_id'],
+        'codigo' => calcCodigoDisplay($pedidoIdAv, $codigoBaseAv),
         'criado_em' => $av['criado_em'],
         'cliente' => $av['cliente'] ?: 'Cliente',
         'status' => null,
@@ -175,7 +171,7 @@ try {
         'tipo' => 'avaliacao',
         'chave' => 'avaliacao-' . $avId,
         'nota' => (int) ($av['nota'] ?? 0),
-        'pedido_id' => (int) ($av['pedido_id'] ?? 0),
+        'pedido_id' => $pedidoIdAv,
       ];
     }
   }
