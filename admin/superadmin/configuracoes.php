@@ -49,6 +49,18 @@ $menuLabelsRecursos = [
   'menu.relatorio_cross_sell' => 'Relatório de Cross-sell',
 ];
 
+/* Mesmo agrupamento usado no menu lateral da loja (admin/partials/sidebar.php),
+   pra quem marca aqui reconhecer de cara a qual tela cada recurso corresponde. */
+$recursosCategorias = [
+  'Dia a dia' => ['menu.pdv', 'menu.gestor_pedidos', 'menu.pedidos', 'menu.orcamentos', 'menu.motoboys'],
+  'Catálogo' => ['menu.produtos', 'menu.promo', 'menu.estoque'],
+  'Clientes' => ['menu.clientes', 'menu.relatorios_fidelidade', 'menu.cupons'],
+  'Financeiro' => ['menu.controle_caixa', 'menu.controle_fiado', 'menu.financeiro'],
+  'Relatórios' => ['menu.relatorios', 'menu.relatorio_cross_sell'],
+  'Comunicação' => ['menu.whatslilly', 'menu.lista_transmissao'],
+  'Sistema' => ['menu.configuracoes', 'menu.cross_sell_config'],
+];
+
 $saasCfg = [];
 try {
   $stmt = $conn->query("SELECT chave, valor FROM configuracoes WHERE loja_id = 0 AND chave IN ('saas_pix_chave','saas_pix_nome','saas_whatsapp_numero','saas_nominatim_ativo')");
@@ -145,38 +157,12 @@ $configJsVer = filemtime(__DIR__ . '/assets/js/configuracoes.js');
       </section>
 
       <section class="card cfg-card" id="recursosPlanoCard">
-        <div class="cfg-card-head" id="recursosPlanoToggle">
+        <div class="cfg-card-head">
           <div>
             <div class="cfg-card-title">Recursos por plano</div>
             <div class="cfg-card-sub">Escolha quais telas cada plano libera para as lojas.</div>
           </div>
-          <button class="action-btn ghost cfg-edit-btn" type="button" id="recursosPlanoChevron">Editar</button>
-        </div>
-        <div class="cfg-card-body" id="recursosPlanoBody" style="display:none">
-          <form id="recursosPlanoForm">
-            <div class="form-grid">
-              <div>
-                <label class="form-label">Plano</label>
-                <select class="form-control" id="recursosPlanoSelect"></select>
-              </div>
-            </div>
-            <label class="perm-check cfg-check-full">
-              <input type="checkbox" id="recursosSemRestricao">
-              <span>Sem restrição (libera todas as telas para este plano)</span>
-            </label>
-            <div class="form-grid cfg-recursos-grid" id="recursosPlanoGrid">
-              <?php foreach ($menuLabelsRecursos as $chave => $label): ?>
-                <label class="perm-check">
-                  <input type="checkbox" class="recursos-plano-check" value="<?= htmlspecialchars($chave) ?>">
-                  <span><?= htmlspecialchars($label) ?></span>
-                </label>
-              <?php endforeach; ?>
-            </div>
-            <div class="modal-actions">
-              <button class="action-btn primary" type="submit">Salvar recursos do plano</button>
-            </div>
-            <div class="modal-msg" id="recursosPlanoMsg" aria-live="polite"></div>
-          </form>
+          <button class="action-btn ghost cfg-edit-btn" type="button" id="recursosPlanoOpenBtn">Gerenciar recursos</button>
         </div>
       </section>
 
@@ -457,6 +443,64 @@ $configJsVer = filemtime(__DIR__ . '/assets/js/configuracoes.js');
       <button class="action-btn danger" type="button" id="confirmExcluir">Excluir</button>
     </div>
     <div class="modal-msg" id="excluirMsg" aria-live="polite"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="recursosPlanoModal" aria-hidden="true">
+  <div class="modal-card wide" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Recursos por plano</div>
+        <div class="cfg-card-sub" style="margin-top:4px">Marque quais telas cada plano libera para as lojas.</div>
+      </div>
+      <button class="action-btn ghost" type="button" data-close-modal>Fechar</button>
+    </div>
+
+    <?php if (count($planosAtivos) < 1): ?>
+      <p style="margin:0;color:#64748b;font-size:13px">Nenhum plano ativo encontrado.</p>
+    <?php else: ?>
+      <div class="recursos-matrix-scroll">
+        <div class="recursos-matrix" style="--plan-count:<?= count($planosAtivos) ?>">
+          <div class="recursos-matrix-row recursos-matrix-headrow">
+            <div class="recursos-matrix-feature-head">Recurso</div>
+            <?php foreach ($planosAtivos as $pl): ?>
+              <div class="recursos-plan-head">
+                <div class="recursos-plan-name"><?= htmlspecialchars($pl['nome']) ?></div>
+                <div class="recursos-plan-price">R$ <?= number_format((float) $pl['valor'], 2, ',', '.') ?>/mês</div>
+                <label class="recursos-plan-full">
+                  <input type="checkbox" class="recursos-sem-restricao" data-plano-id="<?= (int) $pl['id'] ?>" <?= $pl['recursos'] === null ? 'checked' : '' ?>>
+                  <span>Sem restrição</span>
+                </label>
+              </div>
+            <?php endforeach; ?>
+          </div>
+
+          <?php foreach ($recursosCategorias as $categoria => $chaves): ?>
+            <div class="recursos-matrix-category"><?= htmlspecialchars($categoria) ?></div>
+            <?php foreach ($chaves as $chave): if (!isset($menuLabelsRecursos[$chave])) continue; ?>
+              <div class="recursos-matrix-row">
+                <div class="recursos-matrix-feature"><?= htmlspecialchars($menuLabelsRecursos[$chave]) ?></div>
+                <?php foreach ($planosAtivos as $pl):
+                  $semRestricaoPlano = $pl['recursos'] === null;
+                  $marcado = $semRestricaoPlano || (is_array($pl['recursos']) && in_array($chave, $pl['recursos'], true));
+                ?>
+                  <div class="recursos-matrix-cell">
+                    <input type="checkbox" class="recursos-plano-check" data-plano-id="<?= (int) $pl['id'] ?>"
+                           value="<?= htmlspecialchars($chave) ?>" <?= $marcado ? 'checked' : '' ?> <?= $semRestricaoPlano ? 'disabled' : '' ?>>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php endforeach; ?>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    <div class="modal-actions">
+      <button class="action-btn ghost" type="button" data-close-modal>Cancelar</button>
+      <button class="action-btn primary" type="button" id="recursosPlanoSalvarBtn">Salvar recursos</button>
+    </div>
+    <div class="modal-msg" id="recursosPlanoMsg" aria-live="polite"></div>
   </div>
 </div>
 

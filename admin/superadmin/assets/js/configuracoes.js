@@ -69,64 +69,67 @@
     }
   });
 
-  const recursosPlanoToggle = document.getElementById('recursosPlanoToggle');
-  const recursosPlanoBody = document.getElementById('recursosPlanoBody');
-  const recursosPlanoSelect = document.getElementById('recursosPlanoSelect');
-  const recursosSemRestricao = document.getElementById('recursosSemRestricao');
-  const recursosPlanoGrid = document.getElementById('recursosPlanoGrid');
-  const recursosPlanoChecks = document.querySelectorAll('.recursos-plano-check');
+  const recursosPlanoModal = document.getElementById('recursosPlanoModal');
+  const recursosPlanoOpenBtn = document.getElementById('recursosPlanoOpenBtn');
+  const recursosPlanoSalvarBtn = document.getElementById('recursosPlanoSalvarBtn');
 
-  recursosPlanoToggle?.addEventListener('click', () => {
-    recursosPlanoBody.style.display = recursosPlanoBody.style.display === 'none' ? 'block' : 'none';
+  recursosPlanoOpenBtn?.addEventListener('click', () => {
+    if (recursosPlanoModal) abrirModal(recursosPlanoModal);
+  });
+  recursosPlanoModal?.addEventListener('click', (e) => {
+    if (e.target === recursosPlanoModal) fecharModal(recursosPlanoModal);
   });
 
-  function preencherRecursosPlano() {
-    const planoId = parseInt(recursosPlanoSelect.value || '0', 10);
-    const plano = planosDisponiveis.find(p => parseInt(p.id, 10) === planoId);
-    const recursos = plano ? plano.recursos : null;
-
-    recursosSemRestricao.checked = !recursos;
-    recursosPlanoChecks.forEach(chk => {
-      chk.checked = Array.isArray(recursos) && recursos.includes(chk.value);
+  // "Sem restrição" desativa (e desmarca visualmente, sem perder o valor salvo)
+  // só as checagens daquele plano — cada coluna do comparativo é independente.
+  document.querySelectorAll('.recursos-sem-restricao').forEach(toggle => {
+    toggle.addEventListener('change', () => {
+      const planoId = toggle.dataset.planoId;
+      document.querySelectorAll(`.recursos-plano-check[data-plano-id="${planoId}"]`).forEach(chk => {
+        chk.disabled = toggle.checked;
+      });
     });
-    recursosPlanoGrid.classList.toggle('disabled', !recursos);
-  }
-
-  if (recursosPlanoSelect) {
-    recursosPlanoSelect.innerHTML = planosDisponiveis.map(p =>
-      `<option value="${p.id}">${p.nome} — ${formatMoneyBR(p.valor)}</option>`
-    ).join('');
-    preencherRecursosPlano();
-  }
-
-  recursosPlanoSelect?.addEventListener('change', preencherRecursosPlano);
-  recursosSemRestricao?.addEventListener('change', () => {
-    recursosPlanoGrid.classList.toggle('disabled', recursosSemRestricao.checked);
   });
 
-  document.getElementById('recursosPlanoForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  recursosPlanoSalvarBtn?.addEventListener('click', async () => {
     const msg = document.getElementById('recursosPlanoMsg');
     msg.textContent = '';
-    const body = new FormData();
-    body.append('plano_id', recursosPlanoSelect.value);
-    body.append('sem_restricao', recursosSemRestricao.checked ? '1' : '0');
-    recursosPlanoChecks.forEach(chk => {
-      if (chk.checked) body.append('recursos[]', chk.value);
-    });
-    const resp = await fetch('../api/gerenciamento_plano_recursos_salvar.php', { method: 'POST', body });
-    const data = await resp.json();
-    if (data.ok) {
-      msg.textContent = 'Recursos do plano salvos.';
-      msg.className = 'modal-msg success';
-      const plano = planosDisponiveis.find(p => parseInt(p.id, 10) === parseInt(recursosPlanoSelect.value, 10));
-      if (plano) {
-        plano.recursos = recursosSemRestricao.checked ? null : Array.from(recursosPlanoChecks).filter(c => c.checked).map(c => c.value);
+    msg.className = 'modal-msg';
+    recursosPlanoSalvarBtn.disabled = true;
+    recursosPlanoSalvarBtn.textContent = 'Salvando...';
+
+    const idsPlanos = Array.from(document.querySelectorAll('.recursos-sem-restricao')).map(t => t.dataset.planoId);
+    try {
+      const resultados = await Promise.all(idsPlanos.map(async (planoId) => {
+        const semRestricao = document.querySelector(`.recursos-sem-restricao[data-plano-id="${planoId}"]`).checked;
+        const checks = document.querySelectorAll(`.recursos-plano-check[data-plano-id="${planoId}"]`);
+        const body = new FormData();
+        body.append('plano_id', planoId);
+        body.append('sem_restricao', semRestricao ? '1' : '0');
+        checks.forEach(chk => { if (chk.checked) body.append('recursos[]', chk.value); });
+        const resp = await fetch('../api/gerenciamento_plano_recursos_salvar.php', { method: 'POST', body });
+        const data = await resp.json();
+        if (data.ok) {
+          const plano = planosDisponiveis.find(p => parseInt(p.id, 10) === parseInt(planoId, 10));
+          if (plano) {
+            plano.recursos = semRestricao ? null : Array.from(checks).filter(c => c.checked).map(c => c.value);
+          }
+        }
+        return data.ok;
+      }));
+      if (resultados.every(Boolean)) {
+        msg.textContent = 'Recursos salvos para todos os planos.';
+        msg.className = 'modal-msg success';
+      } else {
+        msg.textContent = 'Alguns planos não foram salvos. Tente novamente.';
+        msg.className = 'modal-msg error';
       }
-    } else {
-      msg.textContent = data.msg || 'Erro ao salvar recursos do plano.';
+    } catch (e) {
+      msg.textContent = 'Erro de conexão ao salvar.';
       msg.className = 'modal-msg error';
     }
+    recursosPlanoSalvarBtn.disabled = false;
+    recursosPlanoSalvarBtn.textContent = 'Salvar recursos';
   });
 
   const modalEditar = document.getElementById('editarLojaModal');
