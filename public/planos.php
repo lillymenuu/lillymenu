@@ -343,8 +343,15 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
       <?php endforeach; ?>
     </div>
     <div class="plan-cards-grid">
-      <?php foreach ($planos as $i => $plano): ?>
-        <div class="plan-card reveal reveal-delay-<?= $i + 1 ?>" style="--plan-color:<?= htmlspecialchars($plano['cor']) ?>">
+      <?php foreach ($planos as $i => $plano):
+        // So os selos de recomendacao (nao qualquer selo, ex.: "simples")
+        // dao o tratamento visual de plano em destaque (botao solido, cartao elevado).
+        $ehDestaque = in_array(mb_strtolower(trim($plano['badge'])), ['popular', 'recomendado', 'mais vendido', 'recommended'], true);
+        $ehGratuito = stripos($plano['nome'], 'gr') === 0 && stripos($plano['nome'], 'tis') !== false; // "Gratis"/"Grátis"
+        $anteriorEhGratuito = $i > 0 && stripos($planos[$i - 1]['nome'], 'gr') === 0 && stripos($planos[$i - 1]['nome'], 'tis') !== false;
+        $cardClasses = 'plan-card reveal reveal-delay-' . ($i + 1) . ($ehDestaque ? ' plan-card--destaque' : '');
+      ?>
+        <div class="<?= $cardClasses ?>" style="--plan-color:<?= htmlspecialchars($plano['cor']) ?>">
           <div class="plan-card-top">
             <div class="plan-card-name"><?= htmlspecialchars($plano['nome']) ?></div>
             <?php if ($plano['badge']): ?><span class="plan-badge"><?= htmlspecialchars($plano['badge']) ?></span><?php endif; ?>
@@ -352,12 +359,16 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
           <?php if ($plano['preco']): ?><div class="plan-preco"><?= htmlspecialchars($plano['preco']) ?></div><?php endif; ?>
           <p class="plan-desc"><?= htmlspecialchars($plano['descricao']) ?></p>
           <a class="plan-btn" href="<?= htmlspecialchars($plano['botao_link']) ?>">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12.04 2.01C6.53 2.01 2 6.54 2 12.05c0 1.86.52 3.66 1.5 5.22L2 22l4.84-1.27c1.5.82 3.19 1.26 4.93 1.26 5.51 0 10.04-4.53 10.04-10.04 0-5.51-4.53-9.94-10.04-9.94z"/></svg>
+            <?php if ($ehGratuito): ?>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <?php else: ?>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12.04 2.01C6.53 2.01 2 6.54 2 12.05c0 1.86.52 3.66 1.5 5.22L2 22l4.84-1.27c1.5.82 3.19 1.26 4.93 1.26 5.51 0 10.04-4.53 10.04-10.04 0-5.51-4.53-9.94-10.04-9.94z"/></svg>
+            <?php endif; ?>
             <?= htmlspecialchars($plano['botao_texto']) ?>
           </a>
           <div class="plan-divider"></div>
           <div class="plan-includes">
-            <?php if ($i === 0): ?>
+            <?php if ($i === 0 || $anteriorEhGratuito): ?>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
               Este plano inclui:
             <?php else: ?>

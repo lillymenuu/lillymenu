@@ -785,6 +785,16 @@
         "rule": "design-system-font-size",
         "value": ".6rem",
         "createdAt": "2026-09-02T21:59:17.082Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(8,20,33,.1)",
+        "createdAt": "2026-09-07T19:35:10.048Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(8,20,33,.35)",
+        "createdAt": "2026-09-07T19:35:10.231Z"
       }
     ]
   }

@@ -31,10 +31,23 @@ document.querySelectorAll('a[href^="#"]').forEach((link) => {
     const targetId = link.getAttribute('href');
     if (!targetId || targetId === '#') return;
     const target = document.querySelector(targetId);
-    if (!target) return;
-    e.preventDefault();
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    closeMobileMenu();
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      closeMobileMenu();
+      return;
+    }
+    // Em paginas sem a secao correspondente (ex.: os cards de plano em
+    // planos.php, que nao tem uma secao #contato/#cadastro na pagina),
+    // "#contato" e "#cadastro" abrem os modais de contato/cadastro em vez
+    // de silenciosamente nao fazer nada.
+    if (targetId === '#contato' && typeof toggleEspecialistaModal === 'function') {
+      e.preventDefault();
+      toggleEspecialistaModal(true);
+    } else if (targetId === '#cadastro' && typeof toggleCadastroModal === 'function') {
+      e.preventDefault();
+      toggleCadastroModal(true);
+    }
   });
 });
 
