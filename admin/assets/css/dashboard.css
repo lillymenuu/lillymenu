@@ -1677,7 +1677,6 @@ body.dash-diggy .dash-nav-search-wrap:focus-within .dash-nav-search-input{
 }
 body.dash-diggy .dash-nav-search-dropdown{
   position:fixed;
-  top:100px;
   left:50%;
   transform:translateX(-50%);
   width:600px;

@@ -625,7 +625,18 @@ carregarFunil();
 
   let activeIdx = -1;
 
+  /* A busca fica dentro do .dash-hero, cuja posicao vertical muda quando o
+     aviso de renovacao do trial aparece acima dela — por isso o "top" do
+     dropdown precisa ser calculado a partir da posicao real da barra, em
+     vez de um valor fixo que so bate com o layout sem o aviso. */
+  function posicionarDropdown() {
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 10) + 'px';
+  }
+
   function render(lista) {
+    posicionarDropdown();
     if (!lista.length) {
       dropdown.innerHTML = '<div class="dash-nav-search-empty">Nenhuma página encontrada.</div>';
       dropdown.classList.add('show');
@@ -674,6 +685,10 @@ carregarFunil();
 
   document.addEventListener('click', (e) => {
     if (!wrap.contains(e.target) && !dropdown.contains(e.target)) fechar();
+  });
+
+  window.addEventListener('resize', () => {
+    if (dropdown.classList.contains('show')) posicionarDropdown();
   });
 
   // Mostrar todas ao focar sem texto
