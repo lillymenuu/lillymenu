@@ -78,10 +78,15 @@ $whatsLink = 'https://wa.me/' . $whatsNumeroSuporte . '?text=' . urlencode($msgC
 $uploadMsg = $_GET['msg'] ?? '';
 $retornoUpload = 'plan-details';
 
-// Planos disponiveis pra troca (exclui o atual).
-$stmt = $conn->prepare("SELECT id, nome, valor FROM planos WHERE ativo = 1 AND landing_slug IS NOT NULL AND id <> ? ORDER BY valor ASC");
-$stmt->execute([(int) ($assinatura['plano_id'] ?? 0)]);
+// Planos disponiveis pra troca — so upgrade (valor maior que o plano atual).
+// Reduzir de plano nao e self-service: precisa passar pelo suporte, pra evitar
+// downgrade acidental que corta recursos que a loja ja esta usando.
+$stmt = $conn->prepare("SELECT id, nome, valor FROM planos WHERE ativo = 1 AND landing_slug IS NOT NULL AND id <> ? AND valor > ? ORDER BY valor ASC");
+$stmt->execute([(int) ($assinatura['plano_id'] ?? 0), (float) $plano['valor']]);
 $planosDisponiveis = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$msgReduzirPlano = "Olá, gostaria de reduzir o plano da minha loja {$lojaNome}.";
+$whatsLinkReduzir = 'https://wa.me/' . $whatsNumeroSuporte . '?text=' . urlencode($msgReduzirPlano);
 
 // Perfil de cobranca (CPF/telefone) ja salvo, se houver.
 $stmt = $conn->prepare("SELECT chave, valor FROM configuracoes WHERE loja_id = ? AND chave IN ('cobranca_cpf','cobranca_telefone')");
@@ -166,7 +171,7 @@ $planDetailsCssVer = filemtime(__DIR__ . '/assets/css/plan-details.css');
     <?php if ($temCobrancaPendente): ?>
       <div class="pay-alert pay-alert-erro">Finalize o pagamento pendente antes de trocar de plano.</div>
     <?php elseif (!$planosDisponiveis): ?>
-      <div class="plan-card-vazio">Nenhum outro plano disponível no momento.</div>
+      <div class="plan-card-vazio">Você já está no plano mais completo disponível.</div>
     <?php else: ?>
       <div class="plan-picker" id="planoPickerLista">
         <?php foreach ($planosDisponiveis as $p): ?>
@@ -180,6 +185,10 @@ $planDetailsCssVer = filemtime(__DIR__ . '/assets/css/plan-details.css');
       <div class="plan-picker-msg" id="trocarPlanoMsg"></div>
       <button type="button" class="plan-btn-primary" id="btnConfirmarTrocaPlano">Confirmar troca</button>
     <?php endif; ?>
+    <div class="plan-card-desc" style="margin-top:12px">
+      Por aqui só é possível fazer upgrade. Para reduzir de plano,
+      <a href="<?= htmlspecialchars($whatsLinkReduzir) ?>" target="_blank" rel="noopener">fale com o suporte</a>.
+    </div>
   </div>
 
   <?php if ($cobrancaCpfAtual === '' || $cobrancaTelefoneAtual === ''): ?>

@@ -13,7 +13,7 @@ if ($planoId <= 0) {
   exit;
 }
 
-$stmt = $conn->prepare("SELECT id, nome FROM planos WHERE id = ? AND ativo = 1 AND landing_slug IS NOT NULL LIMIT 1");
+$stmt = $conn->prepare("SELECT id, nome, valor FROM planos WHERE id = ? AND ativo = 1 AND landing_slug IS NOT NULL LIMIT 1");
 $stmt->execute([$planoId]);
 $plano = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$plano) {
@@ -31,6 +31,18 @@ if (!$assinatura) {
 
 if ((int) $assinatura['plano_id'] === $planoId) {
   echo json_encode(['ok' => false, 'msg' => 'Voce ja esta neste plano.']);
+  exit;
+}
+
+// So permite upgrade por aqui (plano mais caro que o atual). Reduzir de
+// plano precisa passar pelo suporte — mesma regra aplicada na tela
+// (admin/plan-details.php so lista planos com valor maior que o atual),
+// checada de novo aqui pra nao depender so do que o front-end manda.
+$stmt = $conn->prepare("SELECT valor FROM planos WHERE id = ? LIMIT 1");
+$stmt->execute([(int) $assinatura['plano_id']]);
+$valorAtual = (float) $stmt->fetchColumn();
+if ((float) $plano['valor'] <= $valorAtual) {
+  echo json_encode(['ok' => false, 'msg' => 'Para reduzir de plano, entre em contato com o suporte.']);
   exit;
 }
 
