@@ -171,6 +171,7 @@ $landing = [
   'planos_tabela_destaques' => landingGet($conn, 'planos_tabela_destaques', "Suporte 24h\nSem multa de cancelamento\nUse em qualquer dispositivo\nSem custo de instalacao"),
   'plano1_nome' => landingGet($conn, 'plano1_nome', 'Basico'),
   'plano1_cor' => landingGet($conn, 'plano1_cor', '#facc15'),
+  'plano1_botao_cor' => landingGet($conn, 'plano1_botao_cor', '#facc15'),
   'plano1_badge' => landingGet($conn, 'plano1_badge', ''),
   'plano1_preco' => landingGet($conn, 'plano1_preco', ''),
   'plano1_ativo' => landingGet($conn, 'plano1_ativo', '1'),
@@ -180,6 +181,7 @@ $landing = [
   'plano1_features' => landingGet($conn, 'plano1_features', "Suporte 24h\nGestor de pedidos\nPrograma de Fidelidade\nCardapio Digital\nIntegracao com iFood\nPagamento online"),
   'plano2_nome' => landingGet($conn, 'plano2_nome', 'Essencial'),
   'plano2_cor' => landingGet($conn, 'plano2_cor', '#3b82f6'),
+  'plano2_botao_cor' => landingGet($conn, 'plano2_botao_cor', '#3b82f6'),
   'plano2_badge' => landingGet($conn, 'plano2_badge', 'Popular'),
   'plano2_preco' => landingGet($conn, 'plano2_preco', ''),
   'plano2_ativo' => landingGet($conn, 'plano2_ativo', '1'),
@@ -189,6 +191,7 @@ $landing = [
   'plano2_features' => landingGet($conn, 'plano2_features', "PDV + Balcao e Mesas\nControle de Estoque\nFicha tecnica\nControle financeiro\nApp para garcom\nQR Code na mesa\nDashboard com relatorios"),
   'plano3_nome' => landingGet($conn, 'plano3_nome', 'Completo'),
   'plano3_cor' => landingGet($conn, 'plano3_cor', '#22c55e'),
+  'plano3_botao_cor' => landingGet($conn, 'plano3_botao_cor', '#22c55e'),
   'plano3_badge' => landingGet($conn, 'plano3_badge', 'Recomendado'),
   'plano3_preco' => landingGet($conn, 'plano3_preco', ''),
   'plano3_ativo' => landingGet($conn, 'plano3_ativo', '1'),
@@ -198,6 +201,7 @@ $landing = [
   'plano3_features' => landingGet($conn, 'plano3_features', "Fiscal\nIntegracao com contabilidade\nNFC-e/CF-e ilimitada\nConciliacao de pagamentos\nNFC-e/NF-e ilimitadas\nNota de devolucao\nInventario"),
   'plano4_nome' => landingGet($conn, 'plano4_nome', 'Premium'),
   'plano4_cor' => landingGet($conn, 'plano4_cor', '#a855f7'),
+  'plano4_botao_cor' => landingGet($conn, 'plano4_botao_cor', '#a855f7'),
   'plano4_badge' => landingGet($conn, 'plano4_badge', ''),
   'plano4_preco' => landingGet($conn, 'plano4_preco', ''),
   'plano4_ativo' => landingGet($conn, 'plano4_ativo', '1'),
@@ -740,6 +744,10 @@ $painelJsVer = filemtime(__DIR__ . '/assets/js/painel.js');
                   <div>
                     <label class="form-label">Cor (faixa e selo)</label>
                     <input class="form-control" type="color" name="plano<?= $n ?>_cor" value="<?= htmlspecialchars($landing['plano' . $n . '_cor']) ?>">
+                  </div>
+                  <div>
+                    <label class="form-label">Cor do botao "Assine ja"</label>
+                    <input class="form-control" type="color" name="plano<?= $n ?>_botao_cor" value="<?= htmlspecialchars($landing['plano' . $n . '_botao_cor']) ?>">
                   </div>
                   <div>
                     <label class="form-label">Selo (ex: Popular, Recomendado)</label>

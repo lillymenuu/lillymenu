@@ -795,6 +795,11 @@
         "rule": "design-system-color",
         "value": "rgba(8,20,33,.35)",
         "createdAt": "2026-09-07T19:35:10.231Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(8,20,33,.25)",
+        "createdAt": "2026-09-07T19:56:29.770Z"
       }
     ]
   }

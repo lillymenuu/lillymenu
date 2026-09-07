@@ -356,16 +356,13 @@ p{margin:0}
 .plan-btn{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
   width:100%;padding:12px;border-radius:12px;
-  background:#fff;border:1.5px solid var(--border);color:var(--text);
+  background:var(--plan-btn-color, var(--plan-color));border:1.5px solid var(--plan-btn-color, var(--plan-color));color:#fff;
   font-size:13.5px;font-weight:700;margin-top:16px;
-  transition:background .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  box-shadow:0 12px 24px -8px rgba(8,20,33,.25);
+  transition:filter .15s ease, transform .15s ease, box-shadow .15s ease;
 }
-.plan-btn:hover{background:var(--light-bg);transform:translateY(-1px)}
-.plan-card--destaque .plan-btn{
-  background:var(--plan-color);border-color:var(--plan-color);color:#fff;
-  box-shadow:0 12px 24px -8px rgba(8,20,33,.35);
-}
-.plan-card--destaque .plan-btn:hover{filter:brightness(.94);transform:translateY(-1px)}
+.plan-btn:hover{filter:brightness(.94);transform:translateY(-1px)}
+.plan-card--destaque .plan-btn{box-shadow:0 12px 24px -8px rgba(8,20,33,.35)}
 .plan-divider{height:1px;background:var(--border);margin:18px 0 14px}
 .plan-includes{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px}
 .plan-includes svg{color:var(--link)}

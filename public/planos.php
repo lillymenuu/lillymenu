@@ -187,6 +187,7 @@ foreach ($planosDefault as $i => $padrao) {
   $planos[] = [
     'nome' => landing_get($conn, 'plano' . $n . '_nome', $padrao['nome']),
     'cor' => landing_get($conn, 'plano' . $n . '_cor', $padrao['cor']),
+    'botao_cor' => landing_get($conn, 'plano' . $n . '_botao_cor', landing_get($conn, 'plano' . $n . '_cor', $padrao['cor'])),
     'badge' => landing_get($conn, 'plano' . $n . '_badge', $padrao['badge']),
     'preco' => landing_get($conn, 'plano' . $n . '_preco', ''),
     'ativo' => landing_get($conn, 'plano' . $n . '_ativo', '1') !== '0',
@@ -351,7 +352,7 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
         $anteriorEhGratuito = $i > 0 && stripos($planos[$i - 1]['nome'], 'gr') === 0 && stripos($planos[$i - 1]['nome'], 'tis') !== false;
         $cardClasses = 'plan-card reveal reveal-delay-' . ($i + 1) . ($ehDestaque ? ' plan-card--destaque' : '');
       ?>
-        <div class="<?= $cardClasses ?>" style="--plan-color:<?= htmlspecialchars($plano['cor']) ?>">
+        <div class="<?= $cardClasses ?>" style="--plan-color:<?= htmlspecialchars($plano['cor']) ?>;--plan-btn-color:<?= htmlspecialchars($plano['botao_cor']) ?>">
           <div class="plan-card-top">
             <div class="plan-card-name"><?= htmlspecialchars($plano['nome']) ?></div>
             <?php if ($plano['badge']): ?><span class="plan-badge"><?= htmlspecialchars($plano['badge']) ?></span><?php endif; ?>

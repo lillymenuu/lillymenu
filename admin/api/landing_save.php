@@ -126,10 +126,10 @@ $campos = [
   'planos_cta_botao_link',
   'planos_tabela_titulo',
   'planos_tabela_destaques',
-  'plano1_nome', 'plano1_cor', 'plano1_badge', 'plano1_preco', 'plano1_ativo', 'plano1_descricao', 'plano1_botao_texto', 'plano1_botao_link', 'plano1_features',
-  'plano2_nome', 'plano2_cor', 'plano2_badge', 'plano2_preco', 'plano2_ativo', 'plano2_descricao', 'plano2_botao_texto', 'plano2_botao_link', 'plano2_features',
-  'plano3_nome', 'plano3_cor', 'plano3_badge', 'plano3_preco', 'plano3_ativo', 'plano3_descricao', 'plano3_botao_texto', 'plano3_botao_link', 'plano3_features',
-  'plano4_nome', 'plano4_cor', 'plano4_badge', 'plano4_preco', 'plano4_ativo', 'plano4_descricao', 'plano4_botao_texto', 'plano4_botao_link', 'plano4_features'
+  'plano1_nome', 'plano1_cor', 'plano1_botao_cor', 'plano1_badge', 'plano1_preco', 'plano1_ativo', 'plano1_descricao', 'plano1_botao_texto', 'plano1_botao_link', 'plano1_features',
+  'plano2_nome', 'plano2_cor', 'plano2_botao_cor', 'plano2_badge', 'plano2_preco', 'plano2_ativo', 'plano2_descricao', 'plano2_botao_texto', 'plano2_botao_link', 'plano2_features',
+  'plano3_nome', 'plano3_cor', 'plano3_botao_cor', 'plano3_badge', 'plano3_preco', 'plano3_ativo', 'plano3_descricao', 'plano3_botao_texto', 'plano3_botao_link', 'plano3_features',
+  'plano4_nome', 'plano4_cor', 'plano4_botao_cor', 'plano4_badge', 'plano4_preco', 'plano4_ativo', 'plano4_descricao', 'plano4_botao_texto', 'plano4_botao_link', 'plano4_features'
 ];
 
 foreach ($campos as $campo) {
