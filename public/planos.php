@@ -271,7 +271,7 @@ $planos = array_values(array_filter($planos, fn($p) => $p['ativo']));
       <div class="nav-links">
         <a href="index.php#inicio">Inicio</a>
         <a href="index.php#a-lilly">A <?= htmlspecialchars($brand) ?></a>
-        <a href="index.php#solucoes">Solucoes</a>
+        <a href="index.php#solucoes">Soluções</a>
         <a href="index.php#franquias">Franquias</a>
         <a href="planos">Planos</a>
       </div>
