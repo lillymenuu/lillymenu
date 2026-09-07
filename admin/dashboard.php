@@ -3,6 +3,50 @@ require_once __DIR__ . '/protect.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/helpers/config.php';
 require_once __DIR__ . '/helpers/pedidos_competencia.php';
+require_once __DIR__ . '/helpers/acesso_menu.php';
+
+/* Atalhos da busca de paginas do dashboard — mesmas chaves menu.* usadas no
+   sidebar (admin/partials/sidebar.php) e na matriz de recursos por plano do
+   superadmin. 'chave'=>null pula o filtro (tela sempre acessivel, igual ja
+   e no menu lateral: Avaliacoes e Assinatura nao sao restringiveis por plano). */
+$dashSearchPaginasTodas = [
+  ['nome' => 'Dashboard',             'url' => 'dashboard',                   'icone' => 'bi-house',                  'chave' => 'menu.dashboard'],
+  ['nome' => 'Pedidos (PDV)',         'url' => 'pdv',                         'icone' => 'bi-bag-check',              'chave' => 'menu.pdv'],
+  ['nome' => 'Gestor de Pedidos',     'url' => 'gestor_pedidos',              'icone' => 'bi-kanban',                 'chave' => 'menu.gestor_pedidos'],
+  ['nome' => 'Lista de Pedidos',      'url' => 'pedidos',                     'icone' => 'bi-receipt',                'chave' => 'menu.pedidos'],
+  ['nome' => 'Orçamento/Recibo',      'url' => 'orcamentos',                  'icone' => 'bi-file-earmark-text',      'chave' => 'menu.orcamentos'],
+  ['nome' => 'Produtos',              'url' => 'produtos',                    'icone' => 'bi-bag',                    'chave' => 'menu.produtos'],
+  ['nome' => 'Promo',                 'url' => 'promo',                       'icone' => 'bi-gift',                   'chave' => 'menu.promo'],
+  ['nome' => 'Estoque',               'url' => 'estoque',                     'icone' => 'bi-box-seam',               'chave' => 'menu.estoque'],
+  ['nome' => 'Clientes',              'url' => 'clientes',                    'icone' => 'bi-grid-3x3-gap',           'chave' => 'menu.clientes'],
+  ['nome' => 'Relatórios',            'url' => 'relatorios',                  'icone' => 'bi-bar-chart',              'chave' => 'menu.relatorios'],
+  ['nome' => 'Relatório de clientes', 'url' => 'relatorios_clientes',         'icone' => 'bi-people',                 'chave' => 'menu.relatorios'],
+  ['nome' => 'Fidelidade',            'url' => 'relatorios_fidelidade',       'icone' => 'bi-award',                  'chave' => 'menu.relatorios_fidelidade'],
+  ['nome' => 'Cross-sell',            'url' => 'relatorio_cross_sell',        'icone' => 'bi-shuffle',                'chave' => 'menu.relatorio_cross_sell'],
+  ['nome' => 'Financeiro Dashboard',  'url' => 'financeiro_dashboard',        'icone' => 'bi-pie-chart',              'chave' => 'menu.financeiro'],
+  ['nome' => 'Lançamentos',           'url' => 'financeiro_lancamentos',      'icone' => 'bi-arrow-left-right',       'chave' => 'menu.financeiro'],
+  ['nome' => 'Categorias',            'url' => 'financeiro_categorias',       'icone' => 'bi-diagram-3',              'chave' => 'menu.financeiro'],
+  ['nome' => 'Contas',                'url' => 'financeiro_contas',           'icone' => 'bi-bank',                   'chave' => 'menu.financeiro'],
+  ['nome' => 'Formas de pagamento',   'url' => 'financeiro_formas_pagamento', 'icone' => 'bi-credit-card-2-front',    'chave' => 'menu.financeiro'],
+  ['nome' => 'DRE',                   'url' => 'financeiro_dre',              'icone' => 'bi-table',                  'chave' => 'menu.financeiro'],
+  ['nome' => 'WhatsLilly',            'url' => 'whatslilly',                  'icone' => 'bi-whatsapp',               'chave' => 'menu.whatslilly'],
+  ['nome' => 'Lista de Transmissão',  'url' => 'lista_transmissao',           'icone' => 'bi-broadcast',              'chave' => 'menu.lista_transmissao'],
+  ['nome' => 'Motoboys',              'url' => 'motoboys',                    'icone' => 'bi-bicycle',                'chave' => 'menu.motoboys'],
+  ['nome' => 'Modo Garçom',           'url' => 'modo_garcom',                 'icone' => 'bi-person-badge',           'chave' => 'menu.modo_garcom'],
+  ['nome' => 'Controle de caixa',     'url' => 'controle_caixa',              'icone' => 'bi-cash-stack',             'chave' => 'menu.controle_caixa'],
+  ['nome' => 'Controle de fiado',     'url' => 'controle_fiado',              'icone' => 'bi-journal-text',           'chave' => 'menu.controle_fiado'],
+  ['nome' => 'Cupons',                'url' => 'cupons',                      'icone' => 'bi-ticket-perforated',      'chave' => 'menu.cupons'],
+  ['nome' => 'Avaliações',            'url' => 'avaliacoes',                  'icone' => 'bi-star-half',              'chave' => null],
+  ['nome' => 'Assinatura',            'url' => 'plan-details',                'icone' => 'bi-credit-card',            'chave' => null],
+  ['nome' => 'Configurações',         'url' => 'configuracoes',               'icone' => 'bi-gear',                   'chave' => 'menu.configuracoes'],
+];
+$dashSearchPaginas = array_values(array_filter($dashSearchPaginasTodas, function ($p) use ($conn) {
+  return $p['chave'] === null || acessoMenuPermitido($conn, $p['chave']);
+}));
+foreach ($dashSearchPaginas as &$dashSearchPaginaItem) {
+  unset($dashSearchPaginaItem['chave']);
+}
+unset($dashSearchPaginaItem);
 
 $lojaId = (int) ($_SESSION['loja_id'] ?? 1);
 $tzDashboard = new DateTimeZone('America/Fortaleza');
@@ -509,6 +553,7 @@ let labels = <?php echo json_encode($labels); ?>;
 let seriePedidos = <?php echo json_encode($seriePedidos); ?>;
 let serieValores = <?php echo json_encode($serieValores); ?>;
 let periodoAtual = <?php echo (int) $periodo; ?>;
+const DASH_SEARCH_PAGINAS = <?php echo json_encode($dashSearchPaginas, JSON_UNESCAPED_UNICODE); ?>;
 </script>
 <script src="./assets/js/dashboard_home.js?v=<?= $dashboardHomeJsVer ?>"></script>
 <script src="./assets/js/suporte_chat.js?v=<?= $suporteChatJsVer ?>"></script>

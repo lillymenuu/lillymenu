@@ -596,37 +596,11 @@ async function carregarFunil() {
 carregarFunil();
 /* ── Busca de páginas do sistema ── */
 (function(){
-  const paginas = [
-    { nome:'Dashboard',             url:'dashboard',                   icone:'bi-house' },
-    { nome:'Pedidos (PDV)',         url:'pdv',                         icone:'bi-bag-check' },
-    { nome:'Gestor de Pedidos',     url:'gestor_pedidos',              icone:'bi-kanban' },
-    { nome:'Lista de Pedidos',      url:'pedidos',                     icone:'bi-receipt' },
-    { nome:'Orçamento/Recibo',      url:'orcamentos',                  icone:'bi-file-earmark-text' },
-    { nome:'Produtos',              url:'produtos',                    icone:'bi-bag' },
-    { nome:'Promo',                 url:'promo',                       icone:'bi-gift' },
-    { nome:'Estoque',               url:'estoque',                     icone:'bi-box-seam' },
-    { nome:'Clientes',              url:'clientes',                    icone:'bi-grid-3x3-gap' },
-    { nome:'Relatórios',            url:'relatorios',                  icone:'bi-bar-chart' },
-    { nome:'Relatório de clientes', url:'relatorios_clientes',         icone:'bi-people' },
-    { nome:'Fidelidade',            url:'relatorios_fidelidade',       icone:'bi-award' },
-    { nome:'Cross-sell',            url:'relatorio_cross_sell',        icone:'bi-shuffle' },
-    { nome:'Financeiro Dashboard',  url:'financeiro_dashboard',        icone:'bi-pie-chart' },
-    { nome:'Lançamentos',           url:'financeiro_lancamentos',      icone:'bi-arrow-left-right' },
-    { nome:'Categorias',            url:'financeiro_categorias',       icone:'bi-diagram-3' },
-    { nome:'Contas',                url:'financeiro_contas',           icone:'bi-bank' },
-    { nome:'Formas de pagamento',   url:'financeiro_formas_pagamento', icone:'bi-credit-card-2-front' },
-    { nome:'DRE',                   url:'financeiro_dre',              icone:'bi-table' },
-    { nome:'WhatsLilly',            url:'whatslilly',                  icone:'bi-whatsapp' },
-    { nome:'Lista de Transmissão',  url:'lista_transmissao',           icone:'bi-broadcast' },
-    { nome:'Motoboys',              url:'motoboys',                    icone:'bi-bicycle' },
-    { nome:'Modo Garçom',           url:'modo_garcom',                 icone:'bi-person-badge' },
-    { nome:'Controle de caixa',     url:'controle_caixa',              icone:'bi-cash-stack' },
-    { nome:'Controle de fiado',     url:'controle_fiado',              icone:'bi-journal-text' },
-    { nome:'Cupons',                url:'cupons',                      icone:'bi-ticket-perforated' },
-    { nome:'Avaliações',            url:'avaliacoes',                  icone:'bi-star-half' },
-    { nome:'Assinatura',            url:'plan-details',                icone:'bi-credit-card' },
-    { nome:'Configurações',         url:'configuracoes',               icone:'bi-gear' },
-  ];
+  // Lista vem filtrada do servidor (admin/dashboard.php) pelos recursos que o
+  // plano da loja libera — mesma checagem usada no sidebar e no bloqueio de
+  // acesso direto por URL (acessoMenuPermitido). Sem fallback hardcoded aqui
+  // de proposito, pra nunca mostrar um atalho que o plano nao libera.
+  const paginas = (typeof DASH_SEARCH_PAGINAS !== 'undefined') ? DASH_SEARCH_PAGINAS : [];
 
   const input    = document.getElementById('dashNavSearchInput');
   const dropdown = document.getElementById('dashNavDropdown');
