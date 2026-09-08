@@ -215,12 +215,21 @@ if (!tabelaExiste($conn, 'lojas') || !tabelaExiste($conn, 'admins')) {
 // e no fallback de admin/protect.php) - o dias_trial por plano e usado em outros
 // fluxos administrativos, nao neste cadastro.
 $diasTrial = 30;
-if ($planoId > 0 && tabelaExiste($conn, 'planos')) {
-  $stmt = $conn->prepare("SELECT id FROM planos WHERE id = ? AND ativo = 1 AND landing_slug IS NOT NULL LIMIT 1");
-  $stmt->execute([$planoId]);
-  if (!$stmt->fetchColumn()) {
-    echo json_encode(['ok' => false, 'msg' => 'Plano invalido, selecione novamente.']);
-    exit;
+if ($tabelaPlanosExiste = tabelaExiste($conn, 'planos')) {
+  if ($planoId > 0) {
+    $stmt = $conn->prepare("SELECT id FROM planos WHERE id = ? AND ativo = 1 AND landing_slug IS NOT NULL LIMIT 1");
+    $stmt->execute([$planoId]);
+    if (!$stmt->fetchColumn()) {
+      echo json_encode(['ok' => false, 'msg' => 'Plano invalido, selecione novamente.']);
+      exit;
+    }
+  } else {
+    // Nenhum plano veio no cadastro (ex.: formulario de "Cadastre-se" da navbar,
+    // que nao passa por planos.php) — sem isso a loja ficava com plano_id NULL,
+    // e o fallback de acessoMenuPermitido() (admin/helpers/acesso_menu.php)
+    // trata "sem plano" como "libera todas as telas", o que nao e a intencao.
+    $stmtPlanoPadrao = $conn->query("SELECT id FROM planos WHERE ativo = 1 ORDER BY id ASC LIMIT 1");
+    $planoId = (int) ($stmtPlanoPadrao ? $stmtPlanoPadrao->fetchColumn() : 0);
   }
 }
 

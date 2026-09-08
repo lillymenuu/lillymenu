@@ -67,7 +67,7 @@ try {
 
   // Cria loja
   $stmt = $conn->prepare(
-    "INSERT INTO lojas (nome, ativo) VALUES (?, 0)"
+    "INSERT INTO lojas (nome, ativo) VALUES (?, 1)"
   );
   $stmt->execute([$lojaNome]);
   $lojaId = (int) $conn->lastInsertId();
@@ -75,7 +75,7 @@ try {
   // Cria usuario admin
   $stmt = $conn->prepare(
     "INSERT INTO admins (nome, usuario, email, senha, ativo, loja_id, perfil)
-     VALUES (?, ?, ?, ?, 0, ?, 'admin')"
+     VALUES (?, ?, ?, ?, 1, ?, 'admin')"
   );
   $stmt->execute([
     $nome,
@@ -84,6 +84,7 @@ try {
     password_hash($senha, PASSWORD_DEFAULT),
     $lojaId
   ]);
+  $adminId = (int) $conn->lastInsertId();
 
   // Cria assinatura trial com datas
   $stmtPlano = $conn->query("SELECT id FROM planos WHERE ativo = 1 ORDER BY id ASC LIMIT 1");
@@ -107,7 +108,6 @@ try {
    * para que $menuRestrito = false e ele veja todo o menu (igual à loja principal).
    * Se a tabela não existir, ignora silenciosamente. */
   try {
-    $adminId = (int)$conn->lastInsertId();
     $stmtPerm = $conn->prepare("SHOW TABLES LIKE 'permissoes_usuarios'");
     $stmtPerm->execute();
     if ($stmtPerm->fetchColumn()) {
