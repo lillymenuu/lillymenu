@@ -173,7 +173,7 @@ if (!function_exists('confirmarPagamentoAssinatura')) {
   function confirmarPagamentoAssinatura(PDO $conn, int $cobrancaId, ?string $mpPaymentId = null): bool {
     $conn->beginTransaction();
     try {
-      $stmt = $conn->prepare("SELECT c.id, c.status, c.assinatura_id, a.loja_id FROM cobrancas c INNER JOIN assinaturas a ON a.id = c.assinatura_id WHERE c.id = ? LIMIT 1 FOR UPDATE");
+      $stmt = $conn->prepare("SELECT c.id, c.status, c.vencimento, c.assinatura_id, a.loja_id FROM cobrancas c INNER JOIN assinaturas a ON a.id = c.assinatura_id WHERE c.id = ? LIMIT 1 FOR UPDATE");
       $stmt->execute([$cobrancaId]);
       $cobranca = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -193,11 +193,17 @@ if (!function_exists('confirmarPagamentoAssinatura')) {
       $stmt = $conn->prepare("UPDATE cobrancas SET status = 'pago', pago_em = NOW(), mp_payment_id = COALESCE(?, mp_payment_id) WHERE id = ? AND status != 'pago'");
       $stmt->execute([$mpPaymentId, $cobrancaId]);
 
+      // O novo ciclo comeca a contar do vencimento original da cobranca, nao do
+      // dia em que o pagamento foi de fato aprovado — um comprovante aprovado
+      // com atraso pelo superadmin (ex.: 5 dias depois) nao deve dar 5 dias de
+      // graca extra pro cliente. Cai em CURDATE() so se a cobranca nao tiver
+      // vencimento registrado (nao deveria acontecer, mas evita data nula).
+      $baseCiclo = !empty($cobranca['vencimento']) ? $cobranca['vencimento'] : date('Y-m-d');
       $conn->prepare("
         UPDATE assinaturas
-        SET status = 'ativa', ciclo_inicio = CURDATE(), ciclo_fim = DATE_ADD(CURDATE(), INTERVAL 30 DAY), bloqueada_em = NULL
+        SET status = 'ativa', ciclo_inicio = ?, ciclo_fim = DATE_ADD(?, INTERVAL 30 DAY), bloqueada_em = NULL
         WHERE id = ?
-      ")->execute([$assinaturaId]);
+      ")->execute([$baseCiclo, $baseCiclo, $assinaturaId]);
       $conn->prepare("UPDATE lojas SET ativo = 1 WHERE id = ?")->execute([$lojaId]);
       $conn->prepare("UPDATE admins SET ativo = 1 WHERE loja_id = ?")->execute([$lojaId]);
 
