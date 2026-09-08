@@ -26,6 +26,42 @@ function cfg(PDO $db, int $lid, string $chave, $default = ''): string {
 $nomeLoja       = cfg($conn,$lojaId,'nome_loja','Minha Loja');
 $lojaVerificada = cfg($conn,$lojaId,'loja_verificada','0') === '1';
 
+/* Loja inativa (assinatura suspensa/vencida ou desativada manualmente pelo
+   superadmin) — bloqueia o cardapio publico e o recebimento de pedidos, nao
+   so o painel admin. E o mesmo campo lojas.ativo que admin/protect.php e o
+   cron admin/cli/check_expired.php zeram ao suspender por falta de pagamento. */
+$stmtLojaAtiva = $conn->prepare("SELECT ativo FROM lojas WHERE id = ? LIMIT 1");
+$stmtLojaAtiva->execute([$lojaId]);
+$lojaAtivaCol = $stmtLojaAtiva->fetchColumn();
+if ($lojaAtivaCol !== false && (int) $lojaAtivaCol === 0) {
+  http_response_code(503);
+  ?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= htmlspecialchars($nomeLoja) ?> - Indisponivel</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5ede5;font-family:'Poppins',sans-serif;color:#1f2328;padding:24px;box-sizing:border-box}
+  .box{max-width:420px;text-align:center;background:#fff;border-radius:20px;padding:40px 32px;box-shadow:0 22px 45px rgba(8,20,33,.12)}
+  .box i{font-size:40px;display:block;margin-bottom:14px}
+  h1{font-size:20px;margin:0 0 10px}
+  p{font-size:14px;color:#5b6169;line-height:1.6;margin:0}
+</style>
+</head>
+<body>
+  <div class="box">
+    <span>🛎️</span>
+    <h1><?= htmlspecialchars($nomeLoja) ?> esta temporariamente indisponivel</h1>
+    <p>Este cardapio nao esta aceitando pedidos no momento. Tente novamente mais tarde ou entre em contato diretamente com a loja.</p>
+  </div>
+</body>
+</html>
+<?php
+  exit;
+}
+
 /* Slug / redirect */
 $linkLoja = cfg($conn,$lojaId,'link_loja','');
 $slug = '';

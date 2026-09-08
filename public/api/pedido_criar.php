@@ -39,6 +39,18 @@ comboEstoqueEnsureModule($conn);
 estoqueVinculoEnsureModule($conn);
 
 $lojaId    = (int) ($_POST['loja_id'] ?? 1);
+
+// Mesma trava de public/loja.php: nao aceita pedido de loja suspensa/desativada
+// (assinatura vencida ou desativada manualmente), mesmo que o POST chegue direto
+// na API sem passar pela pagina do cardapio.
+$stmtLojaAtivaPed = $conn->prepare("SELECT ativo FROM lojas WHERE id = ? LIMIT 1");
+$stmtLojaAtivaPed->execute([$lojaId]);
+$lojaAtivaPedCol = $stmtLojaAtivaPed->fetchColumn();
+if ($lojaAtivaPedCol !== false && (int) $lojaAtivaPedCol === 0) {
+  echo json_encode(['ok' => false, 'msg' => 'Esta loja nao esta aceitando pedidos no momento.']);
+  exit;
+}
+
 $nome      = trim($_POST['cliente_nome'] ?? '');
 $telefone  = preg_replace('/\D+/','',trim($_POST['cliente_telefone'] ?? ''));
 /* o helper formatará ao criar/buscar o cliente */

@@ -53,6 +53,46 @@ try {
 }
 
 try {
+  // Mesma logica acima, mas pra trial vencido (trial_fim no passado). Antes
+  // disso so acontecia de forma lazy dentro de admin/protect.php quando
+  // alguem da loja logava — uma loja cujo dono nunca mais voltou ao admin
+  // apos o trial vencer ficava com status='trial' e lojas.ativo=1 pra
+  // sempre, sem cobranca gerada e invisivel como inadimplente pro
+  // superadmin. Gera a primeira cobranca pendente aqui tambem, igual
+  // protect.php ja faz no caminho lazy.
+  $stmt = $conn->prepare("
+    SELECT a.id, a.loja_id, COALESCE(p.valor, 50.00) AS valor
+    FROM assinaturas a
+    LEFT JOIN planos p ON p.id = a.plano_id
+    WHERE a.status = 'trial' AND a.trial_fim IS NOT NULL AND a.trial_fim < ?
+  ");
+  $stmt->execute([$hoje]);
+  $trialsVencidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+  foreach ($trialsVencidos as $assinatura) {
+    $conn->prepare("UPDATE assinaturas SET status = 'suspensa', bloqueada_em = NOW() WHERE id = ?")
+      ->execute([(int) $assinatura['id']]);
+    $conn->prepare("UPDATE lojas SET ativo = 0 WHERE id = ?")
+      ->execute([(int) $assinatura['loja_id']]);
+    $conn->prepare("UPDATE admins SET ativo = 0 WHERE loja_id = ?")
+      ->execute([(int) $assinatura['loja_id']]);
+
+    $stmtCobrancaExiste = $conn->prepare("SELECT id FROM cobrancas WHERE assinatura_id = ? AND status = 'pendente' LIMIT 1");
+    $stmtCobrancaExiste->execute([(int) $assinatura['id']]);
+    if (!$stmtCobrancaExiste->fetchColumn()) {
+      $conn->prepare("
+        INSERT INTO cobrancas (assinatura_id, valor, vencimento, status)
+        VALUES (?, ?, CURDATE(), 'pendente')
+      ")->execute([(int) $assinatura['id'], (float) $assinatura['valor']]);
+    }
+  }
+
+  echo count($trialsVencidos) . " trial(s) vencido(s) marcado(s) como suspensa, com cobranca gerada.\n";
+} catch (Exception $e) {
+  echo "Erro ao suspender trials vencidos: " . $e->getMessage() . "\n";
+}
+
+try {
   $stmt = $conn->prepare("
     UPDATE cobrancas
     SET status = 'atrasado'
