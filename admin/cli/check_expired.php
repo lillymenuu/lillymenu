@@ -5,6 +5,14 @@
  *     desativando loja/admins junto — hoje isso so acontece de forma lazy quando
  *     alguem da loja loga (admin/protect.php); esse script deixa o dado certo no
  *     banco mesmo sem ninguem logar, o que importa pro dashboard do superadmin.
+ *  1b) mesma coisa para trials vencidos (status='trial' com trial_fim no passado),
+ *      que antes so eram suspensos de forma lazy — e gera a primeira cobranca
+ *      pendente, igual admin/protect.php ja faz nesse caminho lazy.
+ *  1c) envia um lembrete via WhatsApp (Evolution API, mesma usada na Lista de
+ *      Transmissao) pro numero de contato da loja 3 dias antes do trial vencer —
+ *      ate agora o unico aviso era passivo (banner dentro do admin, so visto se
+ *      alguem da loja logasse nesses ultimos dias). Dispara uma unica vez por
+ *      loja, no dia exato em que faltam 3 dias (nao reenvia nos dias seguintes).
  *  2) marca como 'atrasado' as cobrancas Pix (Mercado Pago) que ficaram 'pendente'
  *     e cujo QR Code ja expirou (mp_expiracao no passado), pra nao ficarem
  *     penduradas como "pendente" pra sempre.
@@ -24,10 +32,12 @@ if (php_sapi_name() !== 'cli') {
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../helpers/mercadopago.php';
+require_once __DIR__ . '/../helpers/whats_send.php';
 
 garantirMercadopagoColunas($conn);
 
 $hoje = date('Y-m-d');
+$diasAvisoTrial = 3;
 
 try {
   $stmt = $conn->prepare("
@@ -90,6 +100,48 @@ try {
   echo count($trialsVencidos) . " trial(s) vencido(s) marcado(s) como suspensa, com cobranca gerada.\n";
 } catch (Exception $e) {
   echo "Erro ao suspender trials vencidos: " . $e->getMessage() . "\n";
+}
+
+try {
+  // Lembrete de trial acabando, enviado uma unica vez por loja no dia exato em
+  // que faltam $diasAvisoTrial dias (trial_fim = hoje + N dias) — casar a data
+  // exata evita reenviar todo dia enquanto o cron roda. Numero de contato vem
+  // de configuracoes.whatsapp_numero, preenchido no cadastro (campo "contato").
+  $enviados = 0;
+  if (whatsEvolutionConfigurada($conn, 0)) {
+    $stmt = $conn->prepare("
+      SELECT a.id, a.loja_id, a.trial_fim
+      FROM assinaturas a
+      WHERE a.status = 'trial' AND a.trial_fim = DATE_ADD(?, INTERVAL {$diasAvisoTrial} DAY)
+    ");
+    $stmt->execute([$hoje]);
+    $trialsAvisar = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($trialsAvisar as $assinatura) {
+      $lojaIdAviso = (int) $assinatura['loja_id'];
+      $stmtCfg = $conn->prepare("SELECT chave, valor FROM configuracoes WHERE loja_id = ? AND chave IN ('nome_loja','whatsapp_numero')");
+      $stmtCfg->execute([$lojaIdAviso]);
+      $cfg = [];
+      foreach ($stmtCfg->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $cfg[$row['chave']] = $row['valor'];
+      }
+      $numero = trim((string) ($cfg['whatsapp_numero'] ?? ''));
+      if ($numero === '') {
+        continue;
+      }
+      $nomeLojaAviso = $cfg['nome_loja'] ?? 'sua loja';
+      $dataFimFmt = date('d/m/Y', strtotime($assinatura['trial_fim']));
+      $msg = "Ola! O periodo de teste gratis de \"{$nomeLojaAviso}\" no LillyMenu termina em {$diasAvisoTrial} dias ({$dataFimFmt}).\n\nPara continuar usando o sistema sem interrupcoes, acesse seu painel e escolha um plano:\nhttps://lillymenu.com/admin/login";
+      $resultado = whatsEnviarMensagem($conn, 0, $numero, $msg);
+      if ($resultado['ok']) {
+        $enviados++;
+      }
+    }
+  }
+
+  echo $enviados . " lembrete(s) de trial enviado(s) por WhatsApp.\n";
+} catch (Exception $e) {
+  echo "Erro ao enviar lembretes de trial: " . $e->getMessage() . "\n";
 }
 
 try {
