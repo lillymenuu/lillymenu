@@ -45,10 +45,10 @@ export function OrderCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onAbrir}
-      className="flex cursor-pointer flex-col gap-2 rounded-xl border bg-card p-3 text-sm shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+      className="flex cursor-pointer flex-col gap-1.5 rounded-xl border bg-card p-2.5 text-sm shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 font-semibold">
+        <span className="flex items-center gap-1.5 font-medium">
           <Icon size={14} className="shrink-0 text-muted-foreground" />
           Pedido #{pedido.codigo}
         </span>
@@ -59,54 +59,54 @@ export function OrderCard({
               parar(e);
               onAbrir();
             }}
-            className="flex size-6 items-center justify-center rounded-full border text-muted-foreground hover:bg-muted"
+            className="flex size-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground hover:bg-muted"
             aria-label="Imprimir"
           >
             <Printer size={11} />
           </button>
-          <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-1 text-[11px] font-normal text-muted-foreground">
             <Clock size={10} />
             {formatTempoRelativo(referencia)}
           </span>
         </div>
       </div>
 
-      <span className="text-xs font-bold tracking-wide" style={{ color: corTipo }}>
+      <span className="text-center text-xs font-semibold tracking-wide" style={{ color: corTipo }}>
         {TIPO_LABELS[pedido.tipo] ?? pedido.tipo?.toUpperCase()}
       </span>
 
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate font-semibold">{pedido.nome}</span>
-        <span className="shrink-0 text-xs text-muted-foreground">{pedido.telefone}</span>
+      <div className="flex items-baseline justify-center gap-2 text-center">
+        <span className="truncate font-medium">{pedido.nome}</span>
+        <span className="shrink-0 text-xs font-normal text-muted-foreground">{pedido.telefone}</span>
       </div>
 
       {pedido.tipo === "entrega" && pedido.endereco_entrega && (
-        <div className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs text-muted-foreground">
           <MapPin size={12} className="shrink-0" />
           <span className="truncate">{pedido.endereco_entrega}</span>
         </div>
       )}
 
       <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">Total</span>
-        <span className="font-semibold">{formatBRL(pedido.total)}</span>
+        <span className="font-normal text-muted-foreground">Total</span>
+        <span className="font-medium">{formatBRL(pedido.total)}</span>
       </div>
       <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">Pagamento</span>
-        <span className="font-medium">{pagamentoTexto}</span>
+        <span className="font-normal text-muted-foreground">Pagamento</span>
+        <span className="font-normal">{pagamentoTexto}</span>
       </div>
 
       {pedido.tipo === "entrega" &&
         (pedido.motoboy_nome ? (
-          <div onClick={parar}>
+          <div className="text-center" onClick={parar}>
             <div className="text-sm">
-              <span className="text-muted-foreground">Entregador: </span>
-              <span className="font-semibold">{pedido.motoboy_nome}</span>
+              <span className="font-normal text-muted-foreground">Entregador: </span>
+              <span className="font-medium">{pedido.motoboy_nome}</span>
             </div>
             <button
               type="button"
               onClick={onVincularMotoboy}
-              className="text-xs font-medium text-primary hover:underline"
+              className="text-xs font-normal text-primary hover:underline"
             >
               Alterar vínculo
             </button>
@@ -118,20 +118,20 @@ export function OrderCard({
               parar(e);
               onVincularMotoboy();
             }}
-            className="text-left text-xs font-medium text-primary hover:underline"
+            className="text-center text-xs font-normal text-primary hover:underline"
           >
             Vincular entregador
           </button>
         ))}
 
-      <div className="mt-1 flex items-center gap-1.5" onClick={parar}>
+      <div className="mt-0.5 flex items-center gap-1.5" onClick={parar}>
         {pedido.status === "pendente" ? (
           <>
-            <Button variant="outline" className="flex-1 rounded-lg" onClick={onRecusar}>
-              Recusar pedido
+            <Button variant="outline" className="min-w-0 flex-1 rounded-lg px-1.5" onClick={onRecusar}>
+              Recusar
             </Button>
-            <Button className="flex-1 rounded-lg" onClick={onAvancar}>
-              Aceitar pedido
+            <Button className="min-w-0 flex-1 rounded-lg px-1.5" onClick={onAvancar}>
+              Aceitar
             </Button>
           </>
         ) : (

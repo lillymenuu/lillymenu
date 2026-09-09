@@ -227,10 +227,10 @@ export function OrderManager({
                 dragOverStatus === coluna.status && "ring-2 ring-primary ring-offset-2"
               )}
             >
-              <div className="bg-primary p-3 text-primary-foreground">
+              <div className="bg-primary px-3 py-2 text-primary-foreground">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold">{coluna.label}</span>
-                  <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium">{coluna.label}</span>
+                  <div className="flex items-center gap-1">
                     <button
                       type="button"
                       title="Só hoje"
@@ -238,11 +238,11 @@ export function OrderManager({
                         setFiltros((f) => ({ ...f, [coluna.status]: { ...f[coluna.status], hoje: !f[coluna.status].hoje } }))
                       }
                       className={cn(
-                        "flex size-6 items-center justify-center rounded-full bg-white/15 hover:bg-white/25",
+                        "flex size-5 items-center justify-center rounded-full bg-white/15 hover:bg-white/25",
                         filtro.hoje && "bg-white text-primary"
                       )}
                     >
-                      <MoreVertical size={12} />
+                      <MoreVertical size={11} />
                     </button>
                     <button
                       type="button"
@@ -251,19 +251,21 @@ export function OrderManager({
                         setFiltros((f) => ({ ...f, [coluna.status]: { ...f[coluna.status], tipo: cicloTipo(f[coluna.status].tipo) } }))
                       }
                       className={cn(
-                        "flex size-6 items-center justify-center rounded-full bg-white/15 hover:bg-white/25",
+                        "flex size-5 items-center justify-center rounded-full bg-white/15 hover:bg-white/25",
                         filtro.tipo !== "todos" && "bg-white text-primary"
                       )}
                     >
-                      <Filter size={12} />
+                      <Filter size={11} />
                     </button>
                   </div>
                 </div>
-                <div className="mt-1 text-2xl leading-none font-bold">{pedidosColuna.length}</div>
-                <div className="mt-1 text-sm text-white/85">{formatBRL(subtotal)}</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg leading-none font-semibold">{pedidosColuna.length}</span>
+                  <span className="text-xs font-normal text-white/85">{formatBRL(subtotal)}</span>
+                </div>
               </div>
 
-              <div className="flex flex-1 flex-col gap-2 overflow-y-auto bg-muted/30 p-2">
+              <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto bg-muted/30 p-2">
                 {pedidosColuna.length === 0 && (
                   <div className="flex flex-1 items-center justify-center py-10 text-center text-xs text-muted-foreground">
                     Nenhum pedido aqui.
