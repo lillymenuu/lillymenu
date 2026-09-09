@@ -1,14 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { cn } from "cn";
+import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Metric = "pedidos" | "faturamento";
 
@@ -17,15 +13,52 @@ const chartConfig: ChartConfig = {
   faturamento: { label: "Faturamento", color: "#9c5523" },
 };
 
+const PERIODOS: Record<string, string> = {
+  "7": "Últimos 7 dias",
+  "15": "Últimos 15 dias",
+  "30": "Últimos 30 dias",
+};
+
+const METRICAS: Record<Metric, string> = {
+  pedidos: "Número de pedidos",
+  faturamento: "Faturamento",
+};
+
+function formatarValor(metric: Metric, v: number) {
+  return metric === "faturamento" ? `R$ ${v.toFixed(0)}` : String(v);
+}
+
+type DotProps = { cx?: number; cy?: number; value?: number; index?: number };
+
+function renderValueBubble(metric: Metric) {
+  return function ValueBubble({ cx, cy, value, index }: DotProps) {
+    if (cx == null || cy == null || value == null) return null;
+    const texto = formatarValor(metric, value);
+    const largura = Math.max(24, texto.length * 6.5 + 14);
+    return (
+      <g key={`bubble-${index}`}>
+        <rect x={cx - largura / 2} y={cy - 28} width={largura} height={18} rx={9} fill="#9c5523" />
+        <text x={cx} y={cy - 19} textAnchor="middle" dominantBaseline="middle" fontSize={10} fontWeight={700} fill="#fff">
+          {texto}
+        </text>
+        <circle cx={cx} cy={cy} r={3.5} fill="#fff" stroke="#9c5523" strokeWidth={2} />
+      </g>
+    );
+  };
+}
+
 export function DashboardChart({
+  periodo,
   labels,
   seriePedidos,
   serieValores,
 }: {
+  periodo: 7 | 15 | 30;
   labels: string[];
   seriePedidos: number[];
   serieValores: number[];
 }) {
+  const router = useRouter();
   const [metric, setMetric] = useState<Metric>("pedidos");
 
   const data = labels.map((dia, i) => ({
@@ -36,29 +69,45 @@ export function DashboardChart({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-1 self-end rounded-lg border p-0.5 text-xs">
-        <button
-          className={cn(
-            "rounded-md px-2.5 py-1 transition-colors",
-            metric === "pedidos" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-          )}
-          onClick={() => setMetric("pedidos")}
-        >
-          Nº de pedidos
-        </button>
-        <button
-          className={cn(
-            "rounded-md px-2.5 py-1 transition-colors",
-            metric === "faturamento" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-          )}
-          onClick={() => setMetric("faturamento")}
-        >
-          Faturamento
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          Você está vendo {metric === "faturamento" ? "o faturamento" : "os pedidos recebidos"} na sua
+          loja nos últimos {periodo} dias
+        </p>
+        <div className="flex items-center gap-2">
+          <Select
+            items={PERIODOS}
+            value={String(periodo)}
+            onValueChange={(v) => v && router.push(`/dashboard?periodo=${v}`)}
+          >
+            <SelectTrigger size="sm" className="rounded-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(PERIODOS).map(([v, label]) => (
+                <SelectItem key={v} value={v}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select items={METRICAS} value={metric} onValueChange={(v) => v && setMetric(v as Metric)}>
+            <SelectTrigger size="sm" className="rounded-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(METRICAS).map(([v, label]) => (
+                <SelectItem key={v} value={v}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">
-        <AreaChart data={data} margin={{ left: 4, right: 4 }}>
+        <AreaChart data={data} margin={{ top: 32, left: 4, right: 4 }}>
           <defs>
             <linearGradient id="fillMetric" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#9c5523" stopOpacity={0.35} />
@@ -67,23 +116,15 @@ export function DashboardChart({
           </defs>
           <CartesianGrid vertical={false} strokeDasharray="3 3" />
           <XAxis dataKey="dia" tickLine={false} axisLine={false} tickMargin={8} />
-          <ChartTooltip
-            content={
-              <ChartTooltipContent
-                formatter={(value) =>
-                  metric === "faturamento"
-                    ? `R$ ${Number(value).toFixed(2).replace(".", ",")}`
-                    : String(value)
-                }
-              />
-            }
-          />
           <Area
             dataKey={metric}
-            type="monotone"
+            type="natural"
             fill="url(#fillMetric)"
             stroke="#9c5523"
-            strokeWidth={2}
+            strokeWidth={2.5}
+            dot={renderValueBubble(metric)}
+            activeDot={false}
+            isAnimationActive
           />
         </AreaChart>
       </ChartContainer>

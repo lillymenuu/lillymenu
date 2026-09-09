@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { BadgeCheck, Banknote, ShoppingBag, TrendingUp, Users } from "lucide-react";
 import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "cn";
 import { DashboardChart } from "@/components/dashboard-chart";
 import { ConversionFunnel } from "@/components/conversion-funnel";
@@ -197,29 +195,12 @@ export default async function DashboardPage({
       )}
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <h2 className="text-sm font-semibold">Desempenho</h2>
-            <p className="text-xs text-muted-foreground">
-              Pedidos recebidos nos últimos {data.periodo} dias
-            </p>
-          </div>
-          <div className="flex items-center gap-1">
-            {[7, 15, 30].map((p) => (
-              <Link
-                key={p}
-                href={`/dashboard?periodo=${p}`}
-                className={cn(
-                  buttonVariants({ variant: p === data!.periodo ? "default" : "outline", size: "sm" })
-                )}
-              >
-                {p}d
-              </Link>
-            ))}
-          </div>
+        <CardHeader>
+          <h2 className="text-sm font-semibold">Desempenho</h2>
         </CardHeader>
         <CardContent>
           <DashboardChart
+            periodo={data.periodo}
             labels={data.grafico.labels}
             seriePedidos={data.grafico.serie_pedidos}
             serieValores={data.grafico.serie_valores}
