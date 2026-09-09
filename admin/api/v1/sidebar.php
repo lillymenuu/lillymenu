@@ -125,6 +125,27 @@ $lojaPerfilImg = (string) config($conn, 'loja_perfil', '', $lojaId);
 $lojaVerificada = config($conn, 'loja_verificada', '0', $lojaId) === '1';
 $forceFechada = config($conn, 'loja_force_fechada', '0', $lojaId) === '1';
 
+$lojaCapaImg = (string) config($conn, 'loja_capa', '', $lojaId);
+$lojaContato = (string) config($conn, 'loja_contato', '', $lojaId);
+$lojaCnpj    = (string) config($conn, 'loja_cnpj', '', $lojaId);
+$lojaRua         = (string) config($conn, 'loja_rua', '', $lojaId);
+$lojaNumero      = (string) config($conn, 'loja_numero', '', $lojaId);
+$lojaBairro      = (string) config($conn, 'loja_bairro', '', $lojaId);
+$lojaCidade      = (string) config($conn, 'loja_cidade', '', $lojaId);
+$lojaEstado      = (string) config($conn, 'loja_estado', '', $lojaId);
+$lojaCep         = (string) config($conn, 'loja_cep', '', $lojaId);
+$lojaComplemento = (string) config($conn, 'loja_complemento', '', $lojaId);
+
+$enderecoLinha1 = trim(implode(', ', array_filter([$lojaRua, $lojaNumero])));
+$cidadeEstado   = trim(implode('/', array_filter([$lojaCidade, $lojaEstado])));
+$enderecoLinha2 = trim(implode(' - ', array_filter([$lojaBairro, $cidadeEstado])));
+$enderecoLinha3 = $lojaCep !== '' ? 'CEP: ' . $lojaCep : '';
+$enderecoLinha4 = trim($lojaComplemento);
+$enderecoLinhas = array_values(array_filter(
+  [$enderecoLinha1, $enderecoLinha2, $enderecoLinha3, $enderecoLinha4],
+  fn($l) => $l !== ''
+));
+
 $planoNome   = 'Customizado';
 $planoStatus = '';
 $planoExpira = '';
@@ -176,12 +197,16 @@ $adminRow = $stmtAdmin->fetch(PDO::FETCH_ASSOC) ?: [];
 echo json_encode([
   'ok'    => true,
   'loja'  => [
-    'id'         => $lojaId,
-    'nome'       => $lojaNome,
-    'inicial'    => mb_strtoupper(mb_substr($lojaNome, 0, 1)),
-    'logo'       => $lojaPerfilImg !== '' ? $lojaPerfilImg : null,
-    'verificada' => $lojaVerificada,
-    'aberta'     => !$forceFechada,
+    'id'             => $lojaId,
+    'nome'           => $lojaNome,
+    'inicial'        => mb_strtoupper(mb_substr($lojaNome, 0, 1)),
+    'logo'           => $lojaPerfilImg !== '' ? $lojaPerfilImg : null,
+    'capa'           => $lojaCapaImg !== '' ? $lojaCapaImg : null,
+    'contato'        => $lojaContato,
+    'cnpj'           => $lojaCnpj,
+    'enderecoLinhas' => $enderecoLinhas,
+    'verificada'     => $lojaVerificada,
+    'aberta'         => !$forceFechada,
   ],
   'plano' => [
     'nome'   => $planoNome,

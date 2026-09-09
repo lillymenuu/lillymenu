@@ -8,6 +8,7 @@ import { Menu, X, LogOut, Store, ChevronLeft, ChevronRight, Gem } from "lucide-r
 import type { SidebarData } from "@/lib/sidebar";
 import { NAV_SECTIONS } from "@/components/sidebar-nav-config";
 import { NotificationBell } from "@/components/notification-bell";
+import { LojaInfoDialog } from "@/components/loja-info-dialog";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "cn";
 
@@ -28,6 +29,7 @@ export function AppShell({
   const [collapsed, setCollapsed] = useState(false);
   const [lojaAberta, setLojaAberta] = useState(sidebarData.loja.aberta);
   const [alternandoLoja, setAlternandoLoja] = useState(false);
+  const [lojaInfoOpen, setLojaInfoOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -168,34 +170,41 @@ export function AppShell({
               <div className={cn("absolute right-0 top-0", collapsed && "md:hidden")}>
                 <NotificationBell lojaId={sidebarData.loja.id} phpAdminUrl={phpAdminUrl} theme="light" />
               </div>
-              <div
-                className={cn(
-                  "flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold",
-                  collapsed
-                    ? "size-10 bg-white/15 text-sm text-white"
-                    : "size-14 border border-border bg-muted text-base text-foreground"
-                )}
+              <button
+                type="button"
+                onClick={() => setLojaInfoOpen(true)}
+                className="flex flex-col items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                aria-label="Ver informações da loja"
               >
-                {sidebarData.loja.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={
-                      sidebarData.loja.logo.startsWith("http")
-                        ? sidebarData.loja.logo
-                        : `${phpAdminUrl}/${sidebarData.loja.logo}`
-                    }
-                    alt={sidebarData.loja.nome}
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  sidebarData.loja.inicial
-                )}
-              </div>
-              {!collapsed && (
-                <div className="mt-2 max-w-full text-center text-sm font-semibold leading-tight text-foreground">
-                  {sidebarData.loja.nome}
+                <div
+                  className={cn(
+                    "flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold",
+                    collapsed
+                      ? "size-10 bg-white/15 text-sm text-white"
+                      : "size-14 border border-border bg-muted text-base text-foreground"
+                  )}
+                >
+                  {sidebarData.loja.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={
+                        sidebarData.loja.logo.startsWith("http")
+                          ? sidebarData.loja.logo
+                          : `${phpAdminUrl}/${sidebarData.loja.logo}`
+                      }
+                      alt={sidebarData.loja.nome}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    sidebarData.loja.inicial
+                  )}
                 </div>
-              )}
+                {!collapsed && (
+                  <div className="mt-2 max-w-full text-center text-sm font-semibold leading-tight text-foreground">
+                    {sidebarData.loja.nome}
+                  </div>
+                )}
+              </button>
             </div>
             {!collapsed && (
               <div className="mt-3 flex items-center justify-between gap-2">
@@ -219,17 +228,17 @@ export function AppShell({
           </div>
 
           {!collapsed && (
-            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3 text-xs">
-              <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <span className="flex size-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
+            <div className="flex flex-nowrap items-center justify-between gap-2 border-b border-border px-4 py-3 text-xs">
+              <span className="flex min-w-0 items-center gap-1.5 font-medium text-foreground">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
                   <Gem size={11} />
                 </span>
-                {sidebarData.plano.nome}
+                <span className="truncate">{sidebarData.plano.nome}</span>
               </span>
-              <span className="flex items-center gap-1 text-muted-foreground">
-                {sidebarData.plano.expira || "-"}
+              <span className="flex shrink-0 items-center gap-1 text-muted-foreground">
+                <span className="whitespace-nowrap">{sidebarData.plano.expira || "-"}</span>
                 {sidebarData.plano.badge && (
-                  <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">
+                  <span className="whitespace-nowrap rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">
                     {sidebarData.plano.badge}
                   </span>
                 )}
@@ -328,6 +337,13 @@ export function AppShell({
         </header>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
+
+      <LojaInfoDialog
+        open={lojaInfoOpen}
+        onOpenChange={setLojaInfoOpen}
+        loja={sidebarData.loja}
+        phpAdminUrl={phpAdminUrl}
+      />
     </div>
   );
 }

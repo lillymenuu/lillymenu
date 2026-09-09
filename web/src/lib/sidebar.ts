@@ -7,6 +7,10 @@ export type SidebarData = {
     nome: string;
     inicial: string;
     logo: string | null;
+    capa: string | null;
+    contato: string;
+    cnpj: string;
+    enderecoLinhas: string[];
     verificada: boolean;
     aberta: boolean;
   };
