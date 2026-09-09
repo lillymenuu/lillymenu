@@ -215,7 +215,7 @@ export function ProdutoFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] max-w-2xl overflow-x-hidden sm:max-w-2xl">
+      <DialogContent className="max-h-[88vh] max-w-4xl overflow-x-hidden sm:max-w-4xl">
         <DialogHeader className="flex-row items-center justify-between pr-8">
           <DialogTitle>{produto ? "Editar produto" : "Novo produto"} - detalhes</DialogTitle>
           {produto && (
@@ -250,8 +250,8 @@ export function ProdutoFormDialog({
           </div>
 
           <TabsContent value="detalhes">
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <div className="flex shrink-0 flex-col gap-2">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <div className="relative flex size-32 items-center justify-center overflow-hidden rounded-lg border bg-muted">
                   {imagemPreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -277,12 +277,12 @@ export function ProdutoFormDialog({
                   className="hidden"
                   onChange={handleImagemSelecionada}
                 />
-                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                <Button type="button" variant="outline" size="sm" className="w-fit" onClick={() => fileInputRef.current?.click()}>
                   Escolher imagem
                 </Button>
               </div>
 
-              <div className="flex flex-1 flex-col gap-3.5">
+              <div className="flex flex-col gap-3.5">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="p-nome">
                     Nome do produto<span className="text-destructive">*</span>
@@ -290,29 +290,31 @@ export function ProdutoFormDialog({
                   <Input id="p-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="p-codigo">Código do produto (PDV)</Label>
-                  <Input id="p-codigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex.: 123" />
-                </div>
+                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="p-codigo">Código do produto (PDV)</Label>
+                    <Input id="p-codigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex.: 123" />
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="p-categoria">Categoria</Label>
-                  <Select
-                    items={Object.fromEntries(categorias.map((c) => [String(c.id), c.nome]))}
-                    value={categoriaId}
-                    onValueChange={(v) => setCategoriaId(v ?? "")}
-                  >
-                    <SelectTrigger id="p-categoria" className="w-full">
-                      <SelectValue placeholder="Sem categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categorias.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="p-categoria">Categoria</Label>
+                    <Select
+                      items={Object.fromEntries(categorias.map((c) => [String(c.id), c.nome]))}
+                      value={categoriaId}
+                      onValueChange={(v) => setCategoriaId(v ?? "")}
+                    >
+                      <SelectTrigger id="p-categoria" className="w-full">
+                        <SelectValue placeholder="Sem categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categorias.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -327,35 +329,37 @@ export function ProdutoFormDialog({
                   />
                 </div>
 
-                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-                  <div>
-                    <div className="text-sm font-medium">Produto apenas por agendamento</div>
-                    <div className="text-xs text-muted-foreground">
-                      Ao marcar essa opção o produto só poderá ser vendido por agendamento.
-                    </div>
-                  </div>
-                  <Switch checked={apenasAgendamento} onCheckedChange={(v) => setApenasAgendamento(v === true)} />
-                </div>
-
-                <div className="flex flex-col gap-2 rounded-lg border p-3">
-                  <div className="flex items-center justify-between gap-3">
+                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                  <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
                     <div>
-                      <div className="text-sm font-medium">Quantidade mínima para pedido</div>
+                      <div className="text-sm font-medium">Produto apenas por agendamento</div>
                       <div className="text-xs text-muted-foreground">
-                        Ao habilitar seus clientes terão que pedir uma quantidade mínima desse produto.
+                        Ao marcar essa opção o produto só poderá ser vendido por agendamento.
                       </div>
                     </div>
-                    <Switch checked={qtdMinimaAtiva} onCheckedChange={(v) => setQtdMinimaAtiva(v === true)} />
+                    <Switch checked={apenasAgendamento} onCheckedChange={(v) => setApenasAgendamento(v === true)} />
                   </div>
-                  {qtdMinimaAtiva && (
-                    <Input
-                      type="number"
-                      min={1}
-                      value={qtdMinima}
-                      onChange={(e) => setQtdMinima(e.target.value)}
-                      className="max-w-32"
-                    />
-                  )}
+
+                  <div className="flex flex-col gap-2 rounded-lg border p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-medium">Quantidade mínima para pedido</div>
+                        <div className="text-xs text-muted-foreground">
+                          Ao habilitar seus clientes terão que pedir uma quantidade mínima desse produto.
+                        </div>
+                      </div>
+                      <Switch checked={qtdMinimaAtiva} onCheckedChange={(v) => setQtdMinimaAtiva(v === true)} />
+                    </div>
+                    {qtdMinimaAtiva && (
+                      <Input
+                        type="number"
+                        min={1}
+                        value={qtdMinima}
+                        onChange={(e) => setQtdMinima(e.target.value)}
+                        className="max-w-32"
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">

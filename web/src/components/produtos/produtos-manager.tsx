@@ -117,7 +117,7 @@ export function ProdutosManager({
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Produtos</h1>
@@ -227,7 +227,7 @@ export function ProdutosManager({
             {itens.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum produto nesta categoria ainda.</p>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {itens.map((p) => {
                   const imagemUrl = p.imagem
                     ? p.imagem.startsWith("http")
