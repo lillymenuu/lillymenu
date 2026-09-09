@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { Menu, X, LogOut, Store, ChevronLeft, ChevronRight, Gem } from "lucide-react";
 import type { SidebarData } from "@/lib/sidebar";
 import { NAV_SECTIONS } from "@/components/sidebar-nav-config";
 import { NotificationBell } from "@/components/notification-bell";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "cn";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
@@ -24,6 +26,8 @@ export function AppShell({
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [lojaAberta, setLojaAberta] = useState(sidebarData.loja.aberta);
+  const [alternandoLoja, setAlternandoLoja] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -53,6 +57,31 @@ export function AppShell({
     router.refresh();
   }
 
+  async function handleToggleLoja(aberta: boolean) {
+    setLojaAberta(aberta);
+    setAlternandoLoja(true);
+    try {
+      const res = await fetch("/api/loja-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ aberta }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setLojaAberta(!aberta);
+        toast.error(data.msg ?? "Erro ao atualizar o status da loja.");
+        return;
+      }
+      toast.success(aberta ? "Loja aberta" : "Loja fechada");
+      router.refresh();
+    } catch {
+      setLojaAberta(!aberta);
+      toast.error("Erro ao atualizar o status da loja.");
+    } finally {
+      setAlternandoLoja(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-muted/20">
       {mobileOpen && (
@@ -64,9 +93,9 @@ export function AppShell({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 shrink-0 overflow-hidden transition-[transform,width] duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-56 shrink-0 overflow-hidden transition-[transform,width] duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
-          collapsed ? "md:w-16" : "md:w-72"
+          collapsed ? "md:w-16" : "md:w-56"
         )}
       >
         <div
@@ -123,47 +152,60 @@ export function AppShell({
 
           <div
             className={cn(
-              "flex items-center gap-3 border-b p-4",
-              collapsed ? "border-white/15" : "border-border",
-              collapsed && "md:justify-center md:px-2"
+              "border-b p-4",
+              collapsed ? "border-white/15" : "border-border"
             )}
           >
-            <div
-              className={cn(
-                "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold",
-                collapsed ? "bg-white/15 text-white" : "border border-border bg-muted text-foreground"
+            <div className={cn("flex items-center gap-3", collapsed && "md:justify-center")}>
+              <div
+                className={cn(
+                  "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold",
+                  collapsed ? "bg-white/15 text-white" : "border border-border bg-muted text-foreground"
+                )}
+              >
+                {sidebarData.loja.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={
+                      sidebarData.loja.logo.startsWith("http")
+                        ? sidebarData.loja.logo
+                        : `${phpAdminUrl}/${sidebarData.loja.logo}`
+                    }
+                    alt={sidebarData.loja.nome}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  sidebarData.loja.inicial
+                )}
+              </div>
+              {!collapsed && (
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold text-foreground">{sidebarData.loja.nome}</div>
+                </div>
               )}
-            >
-              {sidebarData.loja.logo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={`${phpAdminUrl}/${sidebarData.loja.logo}`}
-                  alt={sidebarData.loja.nome}
-                  className="size-full object-cover"
-                />
-              ) : (
-                sidebarData.loja.inicial
-              )}
+              <div className={cn(collapsed && "md:hidden")}>
+                <NotificationBell lojaId={sidebarData.loja.id} phpAdminUrl={phpAdminUrl} theme="light" />
+              </div>
             </div>
             {!collapsed && (
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-foreground">{sidebarData.loja.nome}</div>
+              <div className="mt-3 flex items-center justify-between gap-2">
                 <span
                   className={cn(
-                    "mt-0.5 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium",
-                    sidebarData.loja.aberta
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : "bg-muted text-muted-foreground"
+                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium",
+                    lojaAberta ? "bg-emerald-500/15 text-emerald-600" : "bg-muted text-muted-foreground"
                   )}
                 >
                   <Store size={10} />
-                  {sidebarData.loja.aberta ? "Loja aberta" : "Loja fechada"}
+                  {lojaAberta ? "Loja aberta" : "Loja fechada"}
                 </span>
+                <Switch
+                  checked={lojaAberta}
+                  onCheckedChange={handleToggleLoja}
+                  disabled={alternandoLoja}
+                  aria-label={lojaAberta ? "Fechar loja" : "Abrir loja"}
+                />
               </div>
             )}
-            <div className={cn(collapsed && "md:hidden")}>
-              <NotificationBell lojaId={sidebarData.loja.id} phpAdminUrl={phpAdminUrl} theme="light" />
-            </div>
           </div>
 
           {!collapsed && (
