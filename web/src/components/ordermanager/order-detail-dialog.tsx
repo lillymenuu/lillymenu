@@ -19,6 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "./confirm-dialog";
 import { LinkMotoboyDialog } from "./link-motoboy-dialog";
 import { STATUS_LABELS, TIPO_LABELS, formatBRL, formatTempoRelativo } from "./constants";
+import { ClientePerfilDialog } from "@/components/cliente/cliente-perfil-dialog";
 import type { Motoboy } from "@/lib/pedidos";
 import { cn } from "cn";
 
@@ -87,6 +88,7 @@ type ClienteStats = {
 type PedidoDetalhe = {
   id: number;
   codigo: number;
+  cliente_id: number;
   status: string;
   tipo: string;
   criado_em: string;
@@ -131,6 +133,7 @@ export function OrderDetailDialog({
   const [cancelando, setCancelando] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
   const [motoboyOpen, setMotoboyOpen] = useState(false);
+  const [clienteOpen, setClienteOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !pedidoId) return;
@@ -314,14 +317,13 @@ export function OrderDetailDialog({
                         </div>
                       )}
                     </div>
-                    <a
-                      href={`${phpAdminUrl}/clientes`}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => setClienteOpen(true)}
                       className={cn(buttonVariants({ size: "sm", variant: "outline" }), "w-full rounded-lg font-normal")}
                     >
                       Ver mais sobre o cliente
-                    </a>
+                    </button>
                   </div>
                 )}
 
@@ -529,6 +531,12 @@ export function OrderDetailDialog({
           }}
         />
       )}
+
+      <ClientePerfilDialog
+        open={clienteOpen}
+        onOpenChange={setClienteOpen}
+        clienteId={pedido?.cliente_id ?? null}
+      />
     </>
   );
 }
