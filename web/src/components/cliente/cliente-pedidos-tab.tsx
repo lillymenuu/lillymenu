@@ -53,10 +53,10 @@ export function ClientePedidosTab({ clienteId }: { clienteId: number }) {
   }, [clienteId, periodo, tipo, pagina]);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="text-sm font-semibold">Pedidos feitos pelo cliente</div>
+    <div className="flex flex-col gap-2.5">
+      <div className="text-sm font-medium">Pedidos feitos pelo cliente</div>
 
-      <div className="flex flex-wrap items-end gap-2.5">
+      <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col gap-1">
           <span className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
             Período dos pedidos
@@ -103,26 +103,26 @@ export function ClientePedidosTab({ clienteId }: { clienteId: number }) {
           <p className="py-6 text-center text-sm text-muted-foreground">Nenhum pedido no período.</p>
         )}
         {pedidos.map((p) => (
-          <div key={p.id} className="flex flex-col gap-1.5 rounded-lg border p-3 text-sm">
+          <div key={p.id} className="flex flex-col gap-1.5 rounded-lg border p-2.5 text-sm">
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
                 <CalendarClock size={12} /> Pedido realizado em:
               </span>
               <Badge
-                className="text-white"
+                className="font-normal text-white"
                 style={{ backgroundColor: TIPO_CORES[p.tipo] ?? "#6b7280" }}
               >
                 {TIPO_LABELS[p.tipo] ?? p.tipo}
               </Badge>
             </div>
-            <div className="font-medium">{formatDataHoraCurta(p.criado_em)}</div>
+            <div className="font-normal">{formatDataHoraCurta(p.criado_em)}</div>
             <div className="mt-1">
               <div className="text-xs font-normal text-muted-foreground">Resumo do pedido:</div>
-              <div className="font-medium">{p.resumo || "-"}</div>
+              <div className="font-normal">{p.resumo || "-"}</div>
             </div>
             <div className="mt-1 flex items-center justify-between border-t pt-1.5">
               <span className="font-normal text-muted-foreground">Total:</span>
-              <span className="font-semibold">{formatBRL(p.total)}</span>
+              <span className="font-medium">{formatBRL(p.total)}</span>
             </div>
           </div>
         ))}

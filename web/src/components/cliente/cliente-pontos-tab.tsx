@@ -35,8 +35,8 @@ export function ClientePontosTab({ clienteId }: { clienteId: number }) {
   }, [clienteId, pagina]);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="text-sm font-semibold">Extrato de pontos</div>
+    <div className="flex flex-col gap-2.5">
+      <div className="text-sm font-medium">Extrato de pontos</div>
 
       {carregando ? (
         <p className="py-6 text-center text-sm text-muted-foreground">Carregando...</p>
@@ -50,7 +50,7 @@ export function ClientePontosTab({ clienteId }: { clienteId: number }) {
             const info = TIPO_INFO[p.tipo] ?? { label: p.tipo, positivo: p.pontos >= 0 };
             const Icone = info.positivo ? ArrowUp : p.tipo === "pendente" ? Clock : ArrowDown;
             return (
-              <div key={p.id} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
+              <div key={p.id} className="flex items-center gap-3 rounded-lg border p-2.5 text-sm">
                 <span
                   className={
                     info.positivo
@@ -61,7 +61,7 @@ export function ClientePontosTab({ clienteId }: { clienteId: number }) {
                   <Icone size={16} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium">{info.label}</div>
+                  <div className="font-normal">{info.label}</div>
                   <div className="text-xs font-normal text-muted-foreground">
                     {formatDataHoraCurta(p.criado_em)}
                   </div>
@@ -69,8 +69,8 @@ export function ClientePontosTab({ clienteId }: { clienteId: number }) {
                 <span
                   className={
                     info.positivo
-                      ? "shrink-0 font-semibold text-emerald-600"
-                      : "shrink-0 font-semibold text-destructive"
+                      ? "shrink-0 font-medium text-emerald-600"
+                      : "shrink-0 font-medium text-destructive"
                   }
                 >
                   {info.positivo ? "+" : ""}

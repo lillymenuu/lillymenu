@@ -28,8 +28,8 @@ export function ClienteAvaliacoesTab({ clienteId }: { clienteId: number }) {
   }, [clienteId, pagina]);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="text-sm font-semibold">Avaliações feitas pelo cliente</div>
+    <div className="flex flex-col gap-2.5">
+      <div className="text-sm font-medium">Avaliações feitas pelo cliente</div>
 
       {carregando ? (
         <p className="py-6 text-center text-sm text-muted-foreground">Carregando...</p>
@@ -43,7 +43,7 @@ export function ClienteAvaliacoesTab({ clienteId }: { clienteId: number }) {
       ) : (
         <div className="flex flex-col gap-2">
           {avaliacoes.map((a) => (
-            <div key={a.id} className="flex flex-col gap-1.5 rounded-lg border p-3 text-sm">
+            <div key={a.id} className="flex flex-col gap-1.5 rounded-lg border p-2.5 text-sm">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-0.5 text-amber-500">
                   {Array.from({ length: 5 }).map((_, i) => (

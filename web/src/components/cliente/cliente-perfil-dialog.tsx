@@ -16,7 +16,7 @@ import { formatDataCurta, type ClienteStats } from "./types";
 import { cn } from "cn";
 
 const tabTriggerClass =
-  "rounded-full px-3 data-active:bg-pink-500 data-active:text-white data-active:shadow-none";
+  "rounded-lg px-3 font-normal data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none";
 
 export function ClientePerfilDialog({
   open,
@@ -63,11 +63,11 @@ export function ClientePerfilDialog({
           <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden">
             <DialogHeader className="pr-8">
               <div className="flex items-center gap-3">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-base font-semibold">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-base font-medium">
                   {(stats?.nome || "C").charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <DialogTitle className="truncate">{stats?.nome ?? "Cliente"}</DialogTitle>
+                  <DialogTitle className="truncate font-medium">{stats?.nome ?? "Cliente"}</DialogTitle>
                   <div className="text-xs font-normal text-muted-foreground">
                     Cliente desde: {stats ? formatDataCurta(stats.criado_em) : "-"}
                   </div>
@@ -79,7 +79,7 @@ export function ClientePerfilDialog({
               <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
             ) : (
               <Tabs value={aba} onValueChange={(v) => v && setAba(v)} className="pt-3">
-                <TabsList className="w-full rounded-full bg-muted p-1">
+                <TabsList className="w-full rounded-lg bg-muted p-1">
                   <TabsTrigger value="perfil" className={cn(tabTriggerClass, "flex-1")}>
                     <User size={13} /> Perfil
                   </TabsTrigger>
@@ -120,7 +120,7 @@ export function ClientePerfilDialog({
               Registrar fiado
             </Button>
             <Button
-              className="rounded-lg bg-pink-500 font-normal text-white hover:bg-pink-600"
+              className="rounded-lg font-normal"
               onClick={() => setEditarOpen(true)}
               disabled={!clienteId}
             >
