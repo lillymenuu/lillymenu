@@ -113,7 +113,7 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-3 py-6 sm:px-5">
       <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-[1fr_auto_1fr]">
         <div>
           <div className="flex items-center gap-2">

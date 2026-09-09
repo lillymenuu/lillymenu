@@ -1,4 +1,8 @@
+import { Users, Eye, ShoppingCart, CheckCircle2 } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
 const CORES = ["#9c5523", "#b8703c", "#d18f5e", "#e8b587"];
+const ICONES = [Users, Eye, ShoppingCart, CheckCircle2];
 
 export function ConversionFunnel({
   visitas,
@@ -29,36 +33,60 @@ export function ConversionFunnel({
   ];
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
         <h2 className="text-sm font-semibold">Funil de conversão</h2>
         {visitas > 0 && (
-          <div className="flex items-baseline gap-1.5 text-sm">
-            <span className="font-bold text-primary">{conversao}%</span>
-            <span className="text-xs text-muted-foreground">taxa de conversão · últimos {dias} dias</span>
+          <div className="flex items-center gap-1.5 rounded-full bg-linear-to-r from-primary/12 to-primary/5 py-1 pr-3 pl-2.5 ring-1 ring-primary/15">
+            <span className="text-sm font-bold tabular-nums text-primary">{conversao}%</span>
+            <span className="text-[11px] text-muted-foreground">conversão · últimos {dias} dias</span>
           </div>
         )}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {etapas.map((e, i) => (
-          <div key={e.label} className="rounded-xl border p-4">
-            <div className="mb-1 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">{e.label}</span>
-              <span className="font-semibold" style={{ color: CORES[i] }}>
-                {e.pct}%
-              </span>
-            </div>
-            <div className="mb-2 text-xl font-bold">{e.val.toLocaleString("pt-BR")}</div>
-            <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {etapas.map((e, i) => {
+            const Icon = ICONES[i];
+            const cor = CORES[i];
+            return (
               <div
-                className="h-full rounded-full"
-                style={{ width: `${e.pct}%`, background: CORES[i] }}
-              />
-            </div>
-            <div className="text-xs text-muted-foreground">{e.desc}</div>
-          </div>
-        ))}
-      </div>
-    </div>
+                key={e.label}
+                className="relative overflow-hidden rounded-xl border p-4 transition-shadow duration-300 hover:shadow-[0_8px_20px_-8px_rgba(156,85,35,0.35)]"
+                style={{ background: `linear-gradient(165deg, color-mix(in srgb, ${cor} 6%, var(--card)) 0%, var(--card) 55%)` }}
+              >
+                <div className="mb-2.5 flex items-center justify-between">
+                  <span
+                    className="flex size-7 items-center justify-center rounded-lg"
+                    style={{ background: `color-mix(in srgb, ${cor} 14%, transparent)`, color: cor }}
+                  >
+                    <Icon size={14} strokeWidth={2.25} />
+                  </span>
+                  <span className="text-xs font-bold tabular-nums" style={{ color: cor }}>
+                    {e.pct}%
+                  </span>
+                </div>
+                <div className="mb-0.5 text-2xl font-bold tabular-nums tracking-tight">
+                  {e.val.toLocaleString("pt-BR")}
+                </div>
+                <div className="mb-3 text-xs font-medium text-muted-foreground">{e.label}</div>
+                <div className="relative mb-3 h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="relative h-full origin-left rounded-full"
+                    style={{
+                      width: `${e.pct}%`,
+                      background: `linear-gradient(90deg, ${cor}, color-mix(in srgb, ${cor}, white 35%))`,
+                      animation: `funil-fill 900ms cubic-bezier(0.22,1,0.36,1) ${i * 110}ms both`,
+                    }}
+                  >
+                    <div className="absolute inset-x-0 top-0 h-[3px] rounded-full bg-white/35" />
+                  </div>
+                </div>
+                <div className="text-[11px] leading-snug text-muted-foreground">{e.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
