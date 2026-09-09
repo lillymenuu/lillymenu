@@ -12,7 +12,6 @@ import {
   Info,
   ImagePlus,
   Trash2,
-  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -25,13 +24,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { Categoria, Produto } from "@/lib/produtos";
 
@@ -252,24 +244,28 @@ export function ProdutoFormDialog({
           <TabsContent value="detalhes">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <div className="relative flex size-32 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="relative flex size-32 items-center justify-center overflow-hidden rounded-lg border bg-muted"
+                  title="Clique para escolher uma imagem"
+                >
                   {imagemPreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={imagemPreview} alt="" className="size-full object-cover" />
                   ) : (
                     <ImagePlus size={26} className="text-muted-foreground" />
                   )}
-                  {imagemPreview && (
-                    <button
-                      type="button"
-                      onClick={removerImagem}
-                      className="absolute right-1 top-1 rounded-full bg-background/90 p-1 shadow"
-                      aria-label="Remover imagem"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
-                </div>
+                </button>
+                {imagemPreview && (
+                  <button
+                    type="button"
+                    onClick={removerImagem}
+                    className="w-fit text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    Remover imagem
+                  </button>
+                )}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -277,9 +273,6 @@ export function ProdutoFormDialog({
                   className="hidden"
                   onChange={handleImagemSelecionada}
                 />
-                <Button type="button" variant="outline" size="sm" className="w-fit" onClick={() => fileInputRef.current?.click()}>
-                  Escolher imagem
-                </Button>
               </div>
 
               <div className="flex flex-col gap-3.5">
@@ -290,31 +283,9 @@ export function ProdutoFormDialog({
                   <Input id="p-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
                 </div>
 
-                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="p-codigo">Código do produto (PDV)</Label>
-                    <Input id="p-codigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex.: 123" />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="p-categoria">Categoria</Label>
-                    <Select
-                      items={Object.fromEntries(categorias.map((c) => [String(c.id), c.nome]))}
-                      value={categoriaId}
-                      onValueChange={(v) => setCategoriaId(v ?? "")}
-                    >
-                      <SelectTrigger id="p-categoria" className="w-full">
-                        <SelectValue placeholder="Sem categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categorias.map((c) => (
-                          <SelectItem key={c.id} value={String(c.id)}>
-                            {c.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="p-codigo">Código do produto (PDV)</Label>
+                  <Input id="p-codigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex.: 123" className="max-w-64" />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -323,7 +294,7 @@ export function ProdutoFormDialog({
                     id="p-descricao"
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value)}
-                    rows={3}
+                    rows={2}
                     placeholder="Descreva o produto"
                     className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                   />
