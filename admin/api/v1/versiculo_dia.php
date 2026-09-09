@@ -237,7 +237,7 @@ function extrairVersiculoV1(string $html): array {
 $hoje           = date('Y-m-d');
 $fonteUrl       = 'https://www.bibliaon.com/versiculo_do_dia/';
 $temReacoes     = tabelaExisteV1($conn, 'versiculo_reacoes');
-$versiculoAtivo = config($conn, 'versiculo_dashboard_ativo', '1') === '1';
+$versiculoAtivo = config($conn, 'versiculo_dashboard_ativo', '1', $lojaId) === '1';
 
 if (!$versiculoAtivo) {
   echo json_encode(['ok' => true, 'ativo' => false]);

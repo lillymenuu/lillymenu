@@ -1,7 +1,7 @@
 <?php
-function config(PDO $conn, string $chave, $default = null) {
+function config(PDO $conn, string $chave, $default = null, ?int $lojaIdForcado = null) {
   static $cache = [];
-  $lojaId = $_SESSION['loja_id'] ?? 1;
+  $lojaId = $lojaIdForcado ?? ($_SESSION['loja_id'] ?? 1);
   $cacheKey = $lojaId . ':' . $chave;
 
   if (isset($cache[$cacheKey])) {

@@ -93,9 +93,9 @@ export function AppShell({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-56 shrink-0 overflow-hidden transition-[transform,width] duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-52 shrink-0 overflow-hidden transition-[transform,width] duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
-          collapsed ? "md:w-16" : "md:w-56"
+          collapsed ? "md:w-16" : "md:w-52"
         )}
       >
         <div
@@ -122,9 +122,17 @@ export function AppShell({
             )}
           >
             {!collapsed && (
-              <div className="min-w-0">
-                <div className="truncate text-sm font-bold text-foreground">Lilly Menu</div>
-                <div className="truncate text-xs text-muted-foreground">Sistema de Gestão</div>
+              <div className="flex min-w-0 items-center gap-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${phpAdminUrl}/assets/img/favicon_store.png`}
+                  alt=""
+                  className="size-6 shrink-0 rounded-md object-contain"
+                />
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-bold text-foreground">Lilly Menu</div>
+                  <div className="truncate text-xs text-muted-foreground">Sistema de Gestão</div>
+                </div>
               </div>
             )}
             <button

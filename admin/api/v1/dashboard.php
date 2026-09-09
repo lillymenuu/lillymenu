@@ -137,8 +137,8 @@ try {
   $topProdutos = [];
 }
 
-$lojaNome = config($conn, 'nome_loja', 'Minha Loja');
-$lojaVerificada = config($conn, 'loja_verificada', '0') === '1';
+$lojaNome = config($conn, 'nome_loja', 'Minha Loja', $lojaId);
+$lojaVerificada = config($conn, 'loja_verificada', '0', $lojaId) === '1';
 
 echo json_encode([
   'ok'      => true,

@@ -120,10 +120,10 @@ $menu = [
 ];
 
 require_once __DIR__ . '/../../helpers/config.php';
-$lojaNome = config($conn, 'nome_loja', 'Minha Loja');
-$lojaPerfilImg = (string) config($conn, 'loja_perfil', '');
-$lojaVerificada = config($conn, 'loja_verificada', '0') === '1';
-$forceFechada = config($conn, 'loja_force_fechada', '0') === '1';
+$lojaNome = config($conn, 'nome_loja', 'Minha Loja', $lojaId);
+$lojaPerfilImg = (string) config($conn, 'loja_perfil', '', $lojaId);
+$lojaVerificada = config($conn, 'loja_verificada', '0', $lojaId) === '1';
+$forceFechada = config($conn, 'loja_force_fechada', '0', $lojaId) === '1';
 
 $planoNome   = 'Customizado';
 $planoStatus = '';
