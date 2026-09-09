@@ -719,6 +719,8 @@ export function ProdutoFormDialog({
       onOpenChange={setEstoqueDialogOpen}
       produtoId={produto?.id ?? null}
       phpAdminUrl={phpAdminUrl}
+      onSaved={(novaQuantidade) => setEstoqueAtual(novaQuantidade)}
+      onDeleted={() => setEstoqueAtual(0)}
     />
     </>
   );

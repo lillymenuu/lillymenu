@@ -16,11 +16,15 @@ export function EstoqueDialog({
   onOpenChange,
   produtoId,
   phpAdminUrl,
+  onSaved,
+  onDeleted,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   produtoId: number | null;
   phpAdminUrl: string;
+  onSaved?: (novaQuantidade: number) => void;
+  onDeleted?: () => void;
 }) {
   const router = useRouter();
   const [carregando, setCarregando] = useState(false);
@@ -72,6 +76,7 @@ export function EstoqueDialog({
         return;
       }
       toast.success("Item de estoque editado com sucesso");
+      onSaved?.(Math.max(0, parseInt(quantidade, 10) || 0));
       onOpenChange(false);
       router.refresh();
     } finally {
@@ -81,15 +86,21 @@ export function EstoqueDialog({
 
   async function excluir() {
     if (!produtoId) return;
-    if (!confirm("Excluir o controle de estoque deste produto?")) return;
+    if (!confirm("Tem certeza que deseja deletar o controle de estoque deste produto? A quantidade e o vínculo com outros itens serão removidos.")) return;
     setExcluindo(true);
     try {
-      await fetch("/api/estoque", {
+      const res = await fetch("/api/estoque", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ produto_id: produtoId }),
       });
-      toast.success("Estoque excluído com sucesso");
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        toast.error(data.msg ?? "Erro ao deletar o estoque.");
+        return;
+      }
+      toast.success("Estoque deletado com sucesso");
+      onDeleted?.();
       onOpenChange(false);
       router.refresh();
     } finally {
