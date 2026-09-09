@@ -5,6 +5,7 @@ export type Categoria = {
   nome: string;
   ativo: number;
   ordem: number | null;
+  modo_exibicao?: "vertical" | "horizontal" | "grid";
 };
 
 export type Produto = {
@@ -21,6 +22,8 @@ export type Produto = {
   imagem?: string | null;
   codigo?: string | null;
   descricao?: string | null;
+  apenas_agendamento?: number;
+  quantidade_minima?: number;
 };
 
 export function getCategorias() {

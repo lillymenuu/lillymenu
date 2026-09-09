@@ -34,6 +34,8 @@ if ($metodo === 'GET') {
   $temImagem = in_array('imagem', $colunas, true);
   $temCodigo = in_array('codigo', $colunas, true);
   $temDescricao = in_array('descricao', $colunas, true);
+  $temApenasAgendamento = in_array('apenas_agendamento', $colunas, true);
+  $temQuantidadeMinima = in_array('quantidade_minima', $colunas, true);
 
   $precoExpr = ($temPrecoPromocional && $temPromoDesativado)
     ? "IF(p.promo_desativado = 0 AND p.preco_promocional IS NOT NULL AND p.preco_promocional > 0, p.preco_promocional, p.preco)"
@@ -49,6 +51,8 @@ if ($metodo === 'GET') {
   if ($temImagem) $selectCampos[] = 'p.imagem';
   if ($temCodigo) $selectCampos[] = 'p.codigo';
   if ($temDescricao) $selectCampos[] = 'p.descricao';
+  if ($temApenasAgendamento) $selectCampos[] = 'p.apenas_agendamento';
+  if ($temQuantidadeMinima) $selectCampos[] = 'p.quantidade_minima';
 
   $ordenacao = $temOrdem
     ? "ORDER BY c.ordem IS NULL, c.ordem, c.nome, p.ordem IS NULL, p.ordem, p.nome"
@@ -72,6 +76,8 @@ if ($metodo === 'GET') {
     $p['estoque_quantidade'] = (int) $p['estoque_quantidade'];
     if (isset($p['preco_promocional'])) $p['preco_promocional'] = $p['preco_promocional'] !== null ? (float) $p['preco_promocional'] : null;
     if (isset($p['promo_desativado'])) $p['promo_desativado'] = (int) $p['promo_desativado'];
+    if (isset($p['apenas_agendamento'])) $p['apenas_agendamento'] = (int) $p['apenas_agendamento'];
+    if (isset($p['quantidade_minima'])) $p['quantidade_minima'] = (int) $p['quantidade_minima'];
     return $p;
   }, $stmt->fetchAll(PDO::FETCH_ASSOC));
 
@@ -133,6 +139,8 @@ if ($metodo === 'POST') {
   $ativo       = !empty($dados['ativo']) ? 1 : 0;
   $imagemBase64  = trim((string) ($dados['imagem_base64'] ?? ''));
   $imagemRemover = !empty($dados['imagem_remover']);
+  $apenasAgendamento = !empty($dados['apenas_agendamento']) ? 1 : 0;
+  $quantidadeMinima  = max(0, (int) ($dados['quantidade_minima'] ?? 0));
 
   if ($nome === '') {
     echo json_encode(['ok' => false, 'msg' => 'Informe o nome do produto.']);
@@ -154,6 +162,8 @@ if ($metodo === 'POST') {
   $temPromoDesativado = in_array('promo_desativado', $colunas, true);
   $temOrdem = in_array('ordem', $colunas, true);
   $temImagem = in_array('imagem', $colunas, true);
+  $temApenasAgendamento = in_array('apenas_agendamento', $colunas, true);
+  $temQuantidadeMinima = in_array('quantidade_minima', $colunas, true);
 
   if ($id !== '' && (int) $id > 0) {
     $idInt = (int) $id;
@@ -169,6 +179,8 @@ if ($metodo === 'POST') {
     if ($temDescricao) $campos['descricao'] = $descricao;
     if ($temPrecoPromocional) $campos['preco_promocional'] = $precoPromocional;
     if ($temPromoDesativado) $campos['promo_desativado'] = $promoDesativado;
+    if ($temApenasAgendamento) $campos['apenas_agendamento'] = $apenasAgendamento;
+    if ($temQuantidadeMinima) $campos['quantidade_minima'] = $quantidadeMinima;
     if ($temImagem) {
       if ($imagemRemover) {
         $campos['imagem'] = null;
@@ -221,6 +233,8 @@ if ($metodo === 'POST') {
   if ($temDescricao) { $campos[] = 'descricao'; $values[] = $descricao; }
   if ($temPrecoPromocional) { $campos[] = 'preco_promocional'; $values[] = $precoPromocional; }
   if ($temPromoDesativado) { $campos[] = 'promo_desativado'; $values[] = $promoDesativado; }
+  if ($temApenasAgendamento) { $campos[] = 'apenas_agendamento'; $values[] = $apenasAgendamento; }
+  if ($temQuantidadeMinima) { $campos[] = 'quantidade_minima'; $values[] = $quantidadeMinima; }
   if ($temOrdem) { $campos[] = 'ordem'; $values[] = $novaOrdem; }
   if ($temImagem && $imagemBase64 !== '') {
     $imagemSalva = storage_save_base64($imagemBase64, 'produtos', 'produto', $lojaId);
