@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TOKEN_COOKIE } from "@/lib/authCookie";
 
-const PROTECTED_PREFIXES = ["/avaliacoes", "/dashboard"];
+const PROTECTED_PREFIXES = ["/avaliacoes", "/dashboard", "/produtos"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -22,5 +22,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/avaliacoes/:path*", "/dashboard/:path*"],
+  matcher: ["/avaliacoes/:path*", "/dashboard/:path*", "/produtos/:path*"],
 };
