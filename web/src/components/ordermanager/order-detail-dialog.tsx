@@ -22,6 +22,45 @@ import { STATUS_LABELS, TIPO_LABELS, formatBRL, formatTempoRelativo } from "./co
 import type { Motoboy } from "@/lib/pedidos";
 import { cn } from "cn";
 
+function Skeleton({ className }: { className?: string }) {
+  return <div className={cn("animate-pulse rounded-md bg-muted", className)} />;
+}
+
+function DetalheSkeleton() {
+  return (
+    <div className="flex flex-col gap-3 pt-1">
+      <Skeleton className="mx-auto h-4 w-36" />
+
+      <div className="grid grid-cols-2 gap-2.5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-1.5">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-4 w-28" />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-7 flex-1 rounded-lg" />
+        <Skeleton className="h-7 flex-1 rounded-lg" />
+      </div>
+
+      <Skeleton className="h-20 rounded-lg" />
+
+      <div className="flex flex-col gap-1.5 pt-1">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+
+      <div className="flex flex-col gap-1.5 pt-1">
+        <Skeleton className="h-3 w-20" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    </div>
+  );
+}
+
 function formatDataHora(iso: string): string {
   const d = new Date(iso.replace(" ", "T"));
   if (Number.isNaN(d.getTime())) return "-";
@@ -102,6 +141,13 @@ export function OrderDetailDialog({
   async function carregar() {
     if (!pedidoId) return;
     setCarregando(true);
+    // Limpa o pedido anterior na hora — sem isso, ao trocar de um pedido pro
+    // outro o modal continua mostrando os dados antigos ate a resposta nova
+    // chegar, dando a impressao de que "demorou" ou trocou errado.
+    setPedido(null);
+    setStats(null);
+    setItens([]);
+    setPagamentos([]);
     try {
       const res = await fetch(`/api/ordermanager/pedido-detalhe?id=${pedidoId}`);
       const data = await res.json();
@@ -203,8 +249,8 @@ export function OrderDetailDialog({
               </div>
             </DialogHeader>
 
-            {carregando && !pedido ? (
-              <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
+            {carregando ? (
+              <DetalheSkeleton />
             ) : pedido ? (
               <div className="flex flex-col gap-3 pt-1 text-sm">
                 <span className="text-center text-sm font-medium text-destructive">
