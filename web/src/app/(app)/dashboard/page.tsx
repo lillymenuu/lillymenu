@@ -7,7 +7,18 @@ import { cn } from "cn";
 import { DashboardChart } from "@/components/dashboard-chart";
 import { ConversionFunnel } from "@/components/conversion-funnel";
 import { DashboardSearch } from "@/components/dashboard-search";
+import { VerseOfDay } from "@/components/verse-of-day";
 import { getSidebarData } from "@/lib/sidebar";
+
+type VersiculoResponse = {
+  ok: true;
+  ativo: boolean;
+  texto?: string;
+  referencia?: string;
+  data?: string;
+  reacao?: "gostou" | "nao_gostou" | null;
+  fonte_url?: string;
+};
 
 type FunilResponse = {
   ok: true;
@@ -83,6 +94,13 @@ export default async function DashboardPage({
     // busca fica vazia se o sidebar nao carregar; nao bloqueia o resto do dashboard
   }
 
+  let versiculo: VersiculoResponse | null = null;
+  try {
+    versiculo = await phpApiFetch<VersiculoResponse>("/admin/api/v1/versiculo_dia.php");
+  } catch {
+    // fonte externa pode falhar (timeout, fora do ar) — widget so some, nao quebra o dashboard
+  }
+
   if (erro || !data) {
     return (
       <div className="mx-auto max-w-5xl p-6">
@@ -156,6 +174,16 @@ export default async function DashboardPage({
           pctPedidos={funil.pct_pedidos}
           conversao={funil.conversao}
           dias={funil.dias}
+        />
+      )}
+
+      {versiculo?.ok && versiculo.ativo && versiculo.texto && (
+        <VerseOfDay
+          texto={versiculo.texto}
+          referencia={versiculo.referencia ?? ""}
+          data={versiculo.data ?? ""}
+          fonteUrl={versiculo.fonte_url ?? ""}
+          reacaoInicial={versiculo.reacao ?? null}
         />
       )}
 
