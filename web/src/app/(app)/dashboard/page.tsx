@@ -5,6 +5,22 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "cn";
 import { DashboardChart } from "@/components/dashboard-chart";
+import { ConversionFunnel } from "@/components/conversion-funnel";
+import { DashboardSearch } from "@/components/dashboard-search";
+import { getSidebarData } from "@/lib/sidebar";
+
+type FunilResponse = {
+  ok: true;
+  dias: number;
+  visitas: number;
+  views: number;
+  carrinhos: number;
+  pedidos: number;
+  conversao: number;
+  pct_views: number;
+  pct_carrinhos: number;
+  pct_pedidos: number;
+};
 
 type DashboardResponse = {
   ok: true;
@@ -44,14 +60,27 @@ export default async function DashboardPage({
   const periodo = params.periodo ?? "7";
 
   let data: DashboardResponse | null = null;
+  let funil: FunilResponse | null = null;
   let erro: string | null = null;
 
   try {
-    data = await phpApiFetch<DashboardResponse>(
-      `/admin/api/v1/dashboard.php?periodo=${encodeURIComponent(periodo)}`
-    );
+    [data, funil] = await Promise.all([
+      phpApiFetch<DashboardResponse>(
+        `/admin/api/v1/dashboard.php?periodo=${encodeURIComponent(periodo)}`
+      ),
+      phpApiFetch<FunilResponse>(`/admin/api/v1/funil_conversao.php?dias=7`),
+    ]);
   } catch (e) {
     erro = e instanceof PhpApiError ? e.message : "Erro ao carregar o dashboard.";
+  }
+
+  const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
+  let menu: Record<string, boolean> = {};
+  try {
+    const sidebarData = await getSidebarData();
+    menu = sidebarData.menu;
+  } catch {
+    // busca fica vazia se o sidebar nao carregar; nao bloqueia o resto do dashboard
   }
 
   if (erro || !data) {
@@ -66,9 +95,12 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-semibold">{data.loja.nome}</h1>
-        {data.loja.verificada && <BadgeCheck className="text-primary" size={20} />}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-semibold">{data.loja.nome}</h1>
+          {data.loja.verificada && <BadgeCheck className="text-primary" size={20} />}
+        </div>
+        <DashboardSearch menu={menu} phpAdminUrl={phpAdminUrl} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -112,6 +144,20 @@ export default async function DashboardPage({
           </CardContent>
         </Card>
       </div>
+
+      {funil && (
+        <ConversionFunnel
+          visitas={funil.visitas}
+          views={funil.views}
+          carrinhos={funil.carrinhos}
+          pedidos={funil.pedidos}
+          pctViews={funil.pct_views}
+          pctCarrinhos={funil.pct_carrinhos}
+          pctPedidos={funil.pct_pedidos}
+          conversao={funil.conversao}
+          dias={funil.dias}
+        />
+      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

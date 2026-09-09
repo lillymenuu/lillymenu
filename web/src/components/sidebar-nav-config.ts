@@ -106,3 +106,10 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
 ];
+
+/** Lista achatada de todas as paginas visiveis para o admin, para a busca global do Dashboard. */
+export function getSearchablePages(menu: Record<string, boolean>): NavItem[] {
+  return NAV_SECTIONS.flatMap((section) =>
+    section.items.filter((item) => item.menuKey === null || menu[item.menuKey])
+  );
+}
