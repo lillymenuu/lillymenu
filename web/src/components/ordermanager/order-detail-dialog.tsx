@@ -187,14 +187,14 @@ export function OrderDetailDialog({
                       href={`${phpAdminUrl}/pdv?pedido_id=${pedido.id}`}
                       target="_blank"
                       rel="noreferrer"
-                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}
+                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
                     >
                       Editar pedido
                     </a>
                     <button
                       type="button"
                       onClick={() => window.print()}
-                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}
+                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
                     >
                       <Printer size={13} /> Imprimir
                     </button>
@@ -206,50 +206,50 @@ export function OrderDetailDialog({
             {carregando && !pedido ? (
               <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
             ) : pedido ? (
-              <div className="flex flex-col gap-4 pt-1 text-sm">
-                <span className="text-sm font-semibold text-destructive">
+              <div className="flex flex-col gap-3 pt-1 text-sm">
+                <span className="text-center text-sm font-medium text-destructive">
                   feito {formatTempoRelativo(pedido.criado_em)}
                 </span>
 
                 {pedido.agendamento && (
-                  <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-700">
+                  <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-normal text-amber-700">
                     Agendado para: {pedido.agendamento}
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3 border-t pt-3">
+                <div className="grid grid-cols-2 gap-2.5 border-t pt-2.5">
                   <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
                       <CalendarClock size={12} /> Horário do pedido
                     </span>
-                    <span className="font-semibold">{formatDataHora(pedido.criado_em)}</span>
+                    <span className="font-medium">{formatDataHora(pedido.criado_em)}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
                       <Monitor size={12} /> Status do pedido
                     </span>
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-medium text-blue-600">
                       {(STATUS_LABELS[pedido.status] ?? pedido.status).toUpperCase()}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
                       <User size={12} /> Nome do cliente
                     </span>
-                    <span className="font-semibold">{pedido.nome}</span>
+                    <span className="font-medium">{pedido.nome}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
                       <PhoneCall size={12} /> Telefone
                     </span>
-                    <span className="font-semibold">{pedido.telefone}</span>
+                    <span className="font-medium">{pedido.telefone}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <a
                     href={telHref}
-                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1 rounded-full")}
+                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1 rounded-lg font-normal")}
                   >
                     <Phone size={13} /> Ligar
                   </a>
@@ -257,63 +257,63 @@ export function OrderDetailDialog({
                     href={waHref}
                     target="_blank"
                     rel="noreferrer"
-                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1 rounded-full")}
+                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1 rounded-lg font-normal")}
                   >
                     <MessageCircle size={13} /> WhatsApp
                   </a>
                 </div>
 
                 {stats && (
-                  <div className="grid grid-cols-2 gap-3 rounded-xl border p-3 text-sm">
+                  <div className="grid grid-cols-2 gap-2.5 rounded-lg border p-2.5 text-sm">
                     <div>
-                      <div className="text-xs text-muted-foreground">Pedidos feitos</div>
-                      <div className="font-semibold">{stats.pedidos_feitos}</div>
+                      <div className="text-xs font-normal text-muted-foreground">Pedidos feitos</div>
+                      <div className="font-medium">{stats.pedidos_feitos}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-muted-foreground">Ticket médio</div>
-                      <div className="font-semibold">{formatBRL(stats.ticket_medio)}</div>
+                      <div className="text-xs font-normal text-muted-foreground">Ticket médio</div>
+                      <div className="font-medium">{formatBRL(stats.ticket_medio)}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-muted-foreground">Pontos</div>
-                      <div className="font-semibold">{stats.pontos}</div>
+                      <div className="text-xs font-normal text-muted-foreground">Pontos</div>
+                      <div className="font-medium">{stats.pontos}</div>
                     </div>
                     {stats.cashback_saldo > 0 && (
                       <div>
-                        <div className="text-xs text-muted-foreground">Cashback</div>
-                        <div className="font-semibold">{formatBRL(stats.cashback_saldo)}</div>
+                        <div className="text-xs font-normal text-muted-foreground">Cashback</div>
+                        <div className="font-medium">{formatBRL(stats.cashback_saldo)}</div>
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="flex flex-col gap-1.5 border-t pt-3">
-                  <div className="text-xs font-semibold uppercase text-muted-foreground">
+                <div className="flex flex-col gap-1.5 border-t pt-2.5">
+                  <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     {TIPO_LABELS[pedido.tipo] ?? pedido.tipo}
                   </div>
                   {pedido.tipo === "entrega" && (
                     <>
                       {pedido.endereco_entrega && (
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">Endereço</span>
+                          <span className="font-normal text-muted-foreground">Endereço</span>
                           <button
                             type="button"
                             onClick={copiarEndereco}
-                            className="flex items-center gap-1 text-right font-medium hover:text-primary"
+                            className="flex items-center gap-1 text-right font-normal hover:text-primary"
                           >
                             {pedido.endereco_entrega} <Copy size={11} />
                           </button>
                         </div>
                       )}
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Taxa de entrega</span>
-                        <span className="font-medium">{formatBRL(pedido.taxa_entrega)}</span>
+                        <span className="font-normal text-muted-foreground">Taxa de entrega</span>
+                        <span className="font-normal">{formatBRL(pedido.taxa_entrega)}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Motoboy</span>
+                        <span className="font-normal text-muted-foreground">Motoboy</span>
                         <button
                           type="button"
                           onClick={() => setMotoboyOpen(true)}
-                          className="flex items-center gap-1 font-medium text-primary hover:underline"
+                          className="flex items-center gap-1 font-normal text-primary hover:underline"
                         >
                           <Truck size={12} />
                           {pedido.motoboy_nome ?? "Vincular"}
@@ -323,15 +323,15 @@ export function OrderDetailDialog({
                   )}
                 </div>
 
-                <div className="flex flex-col gap-1.5 border-t pt-3">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase text-muted-foreground">
+                <div className="flex flex-col gap-1.5 border-t pt-2.5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     Pagamento
                   </div>
                   {pagamentos.length > 0 ? (
                     pagamentos.map((p, i) => (
                       <div key={i} className="flex items-center justify-between">
-                        <span className="text-muted-foreground">{p.forma}</span>
-                        <span className="font-medium">{formatBRL(p.valor)}</span>
+                        <span className="font-normal text-muted-foreground">{p.forma}</span>
+                        <span className="font-normal">{formatBRL(p.valor)}</span>
                       </div>
                     ))
                   ) : (
@@ -340,67 +340,67 @@ export function OrderDetailDialog({
                 </div>
 
                 {pedido.observacoes_cliente && (
-                  <div className="flex flex-col gap-1 border-t pt-3">
-                    <div className="text-xs font-semibold uppercase text-muted-foreground">
+                  <div className="flex flex-col gap-1 border-t pt-2.5">
+                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                       Observações do cliente
                     </div>
-                    <p className="text-sm">{pedido.observacoes_cliente}</p>
+                    <p className="text-sm font-normal">{pedido.observacoes_cliente}</p>
                   </div>
                 )}
 
-                <div className="flex flex-col gap-1.5 border-t pt-3">
-                  <div className="text-xs font-semibold uppercase text-muted-foreground">
+                <div className="flex flex-col gap-1.5 border-t pt-2.5">
+                  <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     Resumo do pedido
                   </div>
                   <div className="flex flex-col gap-1">
                     {itens.map((item, i) => (
                       <div key={i} className="flex items-start justify-between gap-2 text-sm">
-                        <span>
+                        <span className="font-normal">
                           {item.quantidade}x {item.produto_nome}
                           {item.observacoes && (
-                            <span className="block text-xs text-muted-foreground">{item.observacoes}</span>
+                            <span className="block text-xs font-normal text-muted-foreground">{item.observacoes}</span>
                           )}
                         </span>
-                        <span className="shrink-0 font-medium">{formatBRL(item.preco * item.quantidade)}</span>
+                        <span className="shrink-0 font-normal">{formatBRL(item.preco * item.quantidade)}</span>
                       </div>
                     ))}
                   </div>
                   <div className="mt-1 flex flex-col gap-1 border-t pt-2 text-sm">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between font-normal">
                       <span>Subtotal</span>
-                      <span className="font-medium">{formatBRL(pedido.subtotal)}</span>
+                      <span>{formatBRL(pedido.subtotal)}</span>
                     </div>
                     {Number(pedido.cashback_valor) > 0 && (
-                      <div className="flex items-center justify-between text-muted-foreground">
+                      <div className="flex items-center justify-between font-normal text-muted-foreground">
                         <span>Cashback para o cliente</span>
                         <span>{formatBRL(pedido.cashback_valor)}</span>
                       </div>
                     )}
                     {Number(pedido.desconto) > 0 && (
-                      <div className="flex items-center justify-between text-muted-foreground">
+                      <div className="flex items-center justify-between font-normal text-muted-foreground">
                         <span>Desconto</span>
                         <span>-{formatBRL(pedido.desconto)}</span>
                       </div>
                     )}
                     {Number(pedido.taxa_entrega) > 0 && (
-                      <div className="flex items-center justify-between text-muted-foreground">
+                      <div className="flex items-center justify-between font-normal text-muted-foreground">
                         <span>Taxa de entrega</span>
                         <span>{formatBRL(pedido.taxa_entrega)}</span>
                       </div>
                     )}
                     {Number(pedido.taxa_maquininha) > 0 && (
-                      <div className="flex items-center justify-between text-muted-foreground">
+                      <div className="flex items-center justify-between font-normal text-muted-foreground">
                         <span>Taxa maquininha</span>
                         <span>{formatBRL(pedido.taxa_maquininha)}</span>
                       </div>
                     )}
                     {Number(pedido.cashback_usado) > 0 && (
-                      <div className="flex items-center justify-between font-medium">
+                      <div className="flex items-center justify-between font-normal">
                         <span>Cashback usado</span>
                         <span>-{formatBRL(pedido.cashback_usado)}</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between text-base font-bold">
+                    <div className="flex items-center justify-between text-base font-medium">
                       <span>Total</span>
                       <span>{formatBRL(pedido.total)}</span>
                     </div>
@@ -416,7 +416,7 @@ export function OrderDetailDialog({
             <DialogFooter>
               <Button
                 variant="outline"
-                className="rounded-full"
+                className="rounded-lg font-normal"
                 onClick={() => setCancelarOpen(true)}
                 disabled={pedido.status === "cancelado"}
               >
@@ -424,7 +424,7 @@ export function OrderDetailDialog({
               </Button>
               {finalizavel && (
                 <Button
-                  className="rounded-full bg-pink-500 text-white hover:bg-pink-600"
+                  className="rounded-lg bg-pink-500 font-normal text-white hover:bg-pink-600"
                   onClick={finalizar}
                   disabled={finalizando}
                 >
