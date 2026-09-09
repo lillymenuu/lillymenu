@@ -140,12 +140,35 @@ try {
 $lojaNome = config($conn, 'nome_loja', 'Minha Loja', $lojaId);
 $lojaVerificada = config($conn, 'loja_verificada', '0', $lojaId) === '1';
 
+/* Mesma logica de admin/dashboard.php pra montar o link publico da loja a
+ * partir da chave livre "link_loja" (aceita o formato antigo /lilly/slug e
+ * variantes). $_SERVER['HTTP_HOST'] aqui e o host da chamada servidor-a-
+ * servidor do Next.js (o dominio do PHP, ex.: lillymenu.com) — nao o
+ * dominio da Vercel, entao o link gerado fica correto pro cliente final. */
+$_linkLojaRaw = config($conn, 'link_loja', '', $lojaId);
+$_protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+$_host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$_linkLojaBase = $_protocol . $_host . '/';
+$_linkLojaBaseAntigo = $_protocol . $_host . '/lilly/';
+if (strpos($_linkLojaRaw, $_linkLojaBaseAntigo) === 0) {
+  $_slug = urldecode(substr($_linkLojaRaw, strlen($_linkLojaBaseAntigo)));
+} elseif (preg_match('#[?&]loja=([^&]+)#', $_linkLojaRaw, $_m)) {
+  $_slug = urldecode($_m[1]);
+} elseif (preg_match('#/([^/?]+)/?$#', $_linkLojaRaw, $_m)) {
+  $_slug = $_m[1];
+} else {
+  $_slug = $_linkLojaRaw;
+}
+$_slug = preg_replace('/\.php$/i', '', $_slug);
+$linkLoja = $_slug !== '' ? $_linkLojaBase . $_slug : '';
+
 echo json_encode([
   'ok'      => true,
   'periodo' => $periodo,
   'loja'    => [
     'nome'       => $lojaNome,
     'verificada' => $lojaVerificada,
+    'link'       => $linkLoja,
   ],
   'kpis' => [
     'receita_mes_atual'   => $totalReceitaMesAtual,

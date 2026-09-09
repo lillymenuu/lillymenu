@@ -7,6 +7,7 @@ import { cn } from "cn";
 import { DashboardChart } from "@/components/dashboard-chart";
 import { ConversionFunnel } from "@/components/conversion-funnel";
 import { DashboardSearch } from "@/components/dashboard-search";
+import { StoreLinkField } from "@/components/store-link-field";
 import { VerseOfDay } from "@/components/verse-of-day";
 import { getSidebarData } from "@/lib/sidebar";
 
@@ -36,7 +37,7 @@ type FunilResponse = {
 type DashboardResponse = {
   ok: true;
   periodo: 7 | 15 | 30;
-  loja: { nome: string; verificada: boolean };
+  loja: { nome: string; verificada: boolean; link: string };
   kpis: {
     receita_mes_atual: number;
     faixa_receita_mes: string;
@@ -113,12 +114,20 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-semibold">{data.loja.nome}</h1>
-          {data.loja.verificada && <BadgeCheck className="text-primary" size={20} />}
+      <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-[1fr_auto_1fr]">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold">{data.loja.nome}</h1>
+            {data.loja.verificada && <BadgeCheck className="text-primary" size={20} />}
+          </div>
+          <p className="text-sm text-muted-foreground">Dashboard</p>
         </div>
-        <DashboardSearch menu={menu} phpAdminUrl={phpAdminUrl} />
+        <div className="justify-self-center">
+          <DashboardSearch menu={menu} phpAdminUrl={phpAdminUrl} />
+        </div>
+        <div className="justify-self-start sm:justify-self-end">
+          <StoreLinkField link={data.loja.link} />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
