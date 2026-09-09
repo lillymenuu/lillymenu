@@ -215,24 +215,24 @@ export default async function DashboardPage({
         </CardHeader>
         <CardContent>
           {data.top_produtos.length > 0 ? (
-            <div className="flex flex-col divide-y">
-              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 pb-2 text-xs font-medium text-muted-foreground">
-                <span>Produto</span>
-                <span className="text-right">Valor</span>
-                <span className="text-center">Saídas</span>
-                <span className="text-right">Estoque</span>
-              </div>
+            <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-4">
+              <span className="pb-2 text-xs font-medium text-muted-foreground">Produto</span>
+              <span className="pb-2 text-right text-xs font-medium text-muted-foreground">Valor</span>
+              <span className="pb-2 text-right text-xs font-medium text-muted-foreground">Saídas</span>
+              <span className="pb-2 text-right text-xs font-medium text-muted-foreground">Estoque</span>
+
               {data.top_produtos.map((p, i) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 py-2.5 text-sm"
-                >
-                  <span className="truncate font-medium">{p.nome}</span>
-                  <span className="text-right text-muted-foreground">{formatBRL(p.valor)}</span>
-                  <span className="text-center text-muted-foreground">{p.saidas}</span>
+                <div key={i} className="contents">
+                  <span className="truncate border-t py-2.5 text-sm font-medium">{p.nome}</span>
+                  <span className="border-t py-2.5 text-right text-sm tabular-nums text-muted-foreground">
+                    {formatBRL(p.valor)}
+                  </span>
+                  <span className="border-t py-2.5 text-right text-sm tabular-nums text-muted-foreground">
+                    {p.saidas}
+                  </span>
                   <span
                     className={cn(
-                      "text-right",
+                      "border-t py-2.5 text-right text-sm tabular-nums",
                       p.estoque <= 0 ? "font-medium text-destructive" : "text-muted-foreground"
                     )}
                   >
