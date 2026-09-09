@@ -150,12 +150,12 @@ export default async function AvaliacoesPage({
                   Total e média das avaliações
                 </p>
               </CardHeader>
-              <CardContent className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                <div className="flex flex-col items-center gap-1 rounded-lg border p-3">
+              <CardContent className="grid grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-3">
+                <div className="flex flex-col items-center gap-1 rounded-lg border p-2">
                   <span className="text-xl font-bold">{data.total}</span>
                   <span className="text-[11px] text-muted-foreground">Total</span>
                 </div>
-                <div className="flex flex-col items-center gap-1 rounded-lg border p-3">
+                <div className="flex flex-col items-center gap-1 rounded-lg border p-2">
                   <span
                     className="text-xl font-bold"
                     style={{
@@ -172,7 +172,7 @@ export default async function AvaliacoesPage({
                   <Link
                     key={n}
                     href={`/avaliacoes${buildQuery({ nota: n, busca: filtroBusca })}`}
-                    className={`flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors hover:bg-muted ${
+                    className={`flex flex-col items-center gap-1 rounded-lg border p-2 transition-colors hover:bg-muted ${
                       filtroNota === n ? "border-primary bg-muted" : ""
                     }`}
                   >

@@ -25,16 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ImageCropDialog } from "./image-crop-dialog";
 import type { Categoria, Produto } from "@/lib/produtos";
-
-function fileParaBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 const ABAS_PLACEHOLDER = [
   { value: "disponibilidade", label: "Disponibilidade", icon: CalendarCheck },
@@ -79,6 +71,8 @@ export function ProdutoFormDialog({
   const [imagemPreview, setImagemPreview] = useState<string | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [imagemRemover, setImagemRemover] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -124,12 +118,16 @@ export function ProdutoFormDialog({
     }
   }, [open, produto, categoriaPadrao, phpAdminUrl]);
 
-  async function handleImagemSelecionada(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImagemSelecionada(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const base64 = await fileParaBase64(file);
-    setImagemBase64(base64);
-    setImagemPreview(base64);
+    setCropFile(file);
+    setCropOpen(true);
+  }
+
+  function handleCropConfirm(dataUrl: string) {
+    setImagemBase64(dataUrl);
+    setImagemPreview(dataUrl);
     setImagemRemover(false);
   }
 
@@ -206,6 +204,7 @@ export function ProdutoFormDialog({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] max-w-4xl overflow-x-hidden sm:max-w-4xl">
         <DialogHeader className="flex-row items-center justify-between pr-8">
@@ -411,5 +410,7 @@ export function ProdutoFormDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <ImageCropDialog open={cropOpen} onOpenChange={setCropOpen} file={cropFile} onConfirm={handleCropConfirm} />
+    </>
   );
 }

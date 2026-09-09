@@ -227,7 +227,7 @@ export function ProdutosManager({
             {itens.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum produto nesta categoria ainda.</p>
             ) : (
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
                 {itens.map((p) => {
                   const imagemUrl = p.imagem
                     ? p.imagem.startsWith("http")
