@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { ChartConfig, ChartContainer } from "@/components/ui/chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "cn";
 
 type Metric = "pedidos" | "faturamento";
 
@@ -58,13 +58,35 @@ export function DashboardChart({
   seriePedidos: number[];
   serieValores: number[];
 }) {
-  const router = useRouter();
   const [metric, setMetric] = useState<Metric>("pedidos");
+  const [periodoAtual, setPeriodoAtual] = useState(periodo);
+  const [grafico, setGrafico] = useState({ labels, seriePedidos, serieValores });
+  const [carregando, setCarregando] = useState(false);
 
-  const data = labels.map((dia, i) => ({
+  async function trocarPeriodo(v: string) {
+    const novoPeriodo = Number(v) as 7 | 15 | 30;
+    if (novoPeriodo === periodoAtual) return;
+    setCarregando(true);
+    try {
+      const res = await fetch(`/api/dashboard-grafico?periodo=${novoPeriodo}`);
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setGrafico({
+          labels: data.grafico.labels,
+          seriePedidos: data.grafico.serie_pedidos,
+          serieValores: data.grafico.serie_valores,
+        });
+        setPeriodoAtual(novoPeriodo);
+      }
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  const data = grafico.labels.map((dia, i) => ({
     dia,
-    pedidos: seriePedidos[i] ?? 0,
-    faturamento: serieValores[i] ?? 0,
+    pedidos: grafico.seriePedidos[i] ?? 0,
+    faturamento: grafico.serieValores[i] ?? 0,
   }));
 
   return (
@@ -72,14 +94,10 @@ export function DashboardChart({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           Você está vendo {metric === "faturamento" ? "o faturamento" : "os pedidos recebidos"} na sua
-          loja nos últimos {periodo} dias
+          loja nos últimos {periodoAtual} dias
         </p>
         <div className="flex items-center gap-2">
-          <Select
-            items={PERIODOS}
-            value={String(periodo)}
-            onValueChange={(v) => v && router.push(`/dashboard?periodo=${v}`)}
-          >
+          <Select items={PERIODOS} value={String(periodoAtual)} onValueChange={(v) => v && trocarPeriodo(v)}>
             <SelectTrigger size="sm" className="rounded-full">
               <SelectValue />
             </SelectTrigger>
@@ -106,7 +124,10 @@ export function DashboardChart({
         </div>
       </div>
 
-      <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">
+      <ChartContainer
+        config={chartConfig}
+        className={cn("aspect-auto h-64 w-full transition-opacity duration-300 ease-out", carregando && "opacity-40")}
+      >
         <AreaChart data={data} margin={{ top: 32, left: 4, right: 4 }}>
           <defs>
             <linearGradient id="fillMetric" x1="0" y1="0" x2="0" y2="1">
@@ -117,6 +138,7 @@ export function DashboardChart({
           <CartesianGrid vertical={false} strokeDasharray="3 3" />
           <XAxis dataKey="dia" tickLine={false} axisLine={false} tickMargin={8} />
           <Area
+            key={periodoAtual}
             dataKey={metric}
             type="natural"
             fill="url(#fillMetric)"
@@ -125,6 +147,8 @@ export function DashboardChart({
             dot={renderValueBubble(metric)}
             activeDot={false}
             isAnimationActive
+            animationDuration={500}
+            animationEasing="ease-out"
           />
         </AreaChart>
       </ChartContainer>
