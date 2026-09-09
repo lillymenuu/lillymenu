@@ -177,7 +177,7 @@ export function OrderDetailDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-lg gap-3 overflow-hidden sm:max-w-lg">
-          <div className="max-h-[75vh] overflow-y-auto overflow-x-hidden pr-1">
+          <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden">
             <DialogHeader className="pr-8">
               <div className="flex items-center justify-between gap-2">
                 <DialogTitle>Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>
@@ -217,7 +217,7 @@ export function OrderDetailDialog({
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-2.5 border-t pt-2.5">
+                <div className="grid grid-cols-2 gap-2.5">
                   <div className="flex flex-col gap-1">
                     <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
                       <CalendarClock size={12} /> Horário do pedido
@@ -286,7 +286,7 @@ export function OrderDetailDialog({
                   </div>
                 )}
 
-                <div className="flex flex-col gap-1.5 border-t pt-2.5">
+                <div className="flex flex-col gap-1.5 pt-1">
                   <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     {TIPO_LABELS[pedido.tipo] ?? pedido.tipo}
                   </div>
@@ -416,6 +416,7 @@ export function OrderDetailDialog({
             <DialogFooter>
               <Button
                 variant="outline"
+                size="lg"
                 className="rounded-lg font-normal"
                 onClick={() => setCancelarOpen(true)}
                 disabled={pedido.status === "cancelado"}
@@ -424,7 +425,8 @@ export function OrderDetailDialog({
               </Button>
               {finalizavel && (
                 <Button
-                  className="rounded-lg bg-pink-500 font-normal text-white hover:bg-pink-600"
+                  size="lg"
+                  className="rounded-lg font-normal"
                   onClick={finalizar}
                   disabled={finalizando}
                 >
