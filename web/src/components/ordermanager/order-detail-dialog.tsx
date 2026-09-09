@@ -292,45 +292,61 @@ export function OrderDetailDialog({
                   </div>
                 </div>
 
+                {stats && (
+                  <div className="flex flex-col gap-3 rounded-lg border p-2.5 text-sm">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <div className="text-xs font-normal text-muted-foreground">Pedidos feitos</div>
+                        <div className="font-medium">{stats.pedidos_feitos}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-normal text-muted-foreground">Ticket médio</div>
+                        <div className="font-medium">{formatBRL(stats.ticket_medio)}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-normal text-muted-foreground">Pontos</div>
+                        <div className="font-medium">{stats.pontos}</div>
+                      </div>
+                      {stats.cashback_saldo > 0 && (
+                        <div>
+                          <div className="text-xs font-normal text-muted-foreground">Cashback</div>
+                          <div className="font-medium">{formatBRL(stats.cashback_saldo)}</div>
+                        </div>
+                      )}
+                    </div>
+                    <a
+                      href={`${phpAdminUrl}/clientes`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "w-full rounded-lg font-normal")}
+                    >
+                      Ver mais sobre o cliente
+                    </a>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2">
                   <a
                     href={telHref}
-                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1 rounded-lg font-normal")}
+                    className={cn(
+                      buttonVariants({ size: "sm", variant: "outline" }),
+                      "h-auto min-w-0 flex-1 rounded-lg py-2 text-center text-xs leading-tight font-normal whitespace-normal"
+                    )}
                   >
-                    <Phone size={13} /> Ligar
+                    <Phone size={13} className="shrink-0" /> Entrar em contato com o cliente
                   </a>
                   <a
                     href={waHref}
                     target="_blank"
                     rel="noreferrer"
-                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1 rounded-lg font-normal")}
+                    className={cn(
+                      buttonVariants({ size: "sm", variant: "outline" }),
+                      "h-auto min-w-0 flex-1 rounded-lg py-2 text-center text-xs leading-tight font-normal whitespace-normal"
+                    )}
                   >
-                    <MessageCircle size={13} /> WhatsApp
+                    <MessageCircle size={13} className="shrink-0" /> Enviar pedido ao WhatsApp
                   </a>
                 </div>
-
-                {stats && (
-                  <div className="grid grid-cols-2 gap-2.5 rounded-lg border p-2.5 text-sm">
-                    <div>
-                      <div className="text-xs font-normal text-muted-foreground">Pedidos feitos</div>
-                      <div className="font-medium">{stats.pedidos_feitos}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-normal text-muted-foreground">Ticket médio</div>
-                      <div className="font-medium">{formatBRL(stats.ticket_medio)}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-normal text-muted-foreground">Pontos</div>
-                      <div className="font-medium">{stats.pontos}</div>
-                    </div>
-                    {stats.cashback_saldo > 0 && (
-                      <div>
-                        <div className="text-xs font-normal text-muted-foreground">Cashback</div>
-                        <div className="font-medium">{formatBRL(stats.cashback_saldo)}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 <div className="flex flex-col gap-1.5 pt-1">
                   <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
