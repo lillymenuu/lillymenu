@@ -2,15 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Phone, MessageCircle, Copy, Truck, ExternalLink } from "lucide-react";
+import {
+  Phone,
+  MessageCircle,
+  Copy,
+  Truck,
+  Printer,
+  XCircle,
+  CalendarClock,
+  Monitor,
+  User,
+  PhoneCall,
+} from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "./confirm-dialog";
 import { LinkMotoboyDialog } from "./link-motoboy-dialog";
 import { STATUS_LABELS, TIPO_LABELS, formatBRL, formatTempoRelativo } from "./constants";
 import type { Motoboy } from "@/lib/pedidos";
 import { cn } from "cn";
+
+function formatDataHora(iso: string): string {
+  const d = new Date(iso.replace(" ", "T"));
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 type ItemPedido = { produto_nome: string; quantidade: number; preco: number; observacoes: string | null };
 type Pagamento = { forma: string; valor: number; taxa_maquininha?: number };
@@ -37,6 +59,7 @@ type PedidoDetalhe = {
   desconto: number;
   taxa_maquininha: number;
   cashback_usado: number;
+  cashback_valor: number;
   total: number;
   agendamento: string | null;
   observacoes_cliente: string | null;
@@ -159,14 +182,23 @@ export function OrderDetailDialog({
               <div className="flex items-center justify-between gap-2">
                 <DialogTitle>Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>
                 {pedido && (
-                  <a
-                    href={`${phpAdminUrl}/pdv?pedido_id=${pedido.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Editar pedido <ExternalLink size={11} />
-                  </a>
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href={`${phpAdminUrl}/pdv?pedido_id=${pedido.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}
+                    >
+                      Editar pedido
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}
+                    >
+                      <Printer size={13} /> Imprimir
+                    </button>
+                  </div>
                 )}
               </div>
             </DialogHeader>
@@ -174,11 +206,10 @@ export function OrderDetailDialog({
             {carregando && !pedido ? (
               <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
             ) : pedido ? (
-              <div className="flex flex-col gap-4 pt-2 text-sm">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>feito {formatTempoRelativo(pedido.criado_em)}</span>
-                  <Badge variant="outline">{STATUS_LABELS[pedido.status] ?? pedido.status}</Badge>
-                </div>
+              <div className="flex flex-col gap-4 pt-1 text-sm">
+                <span className="text-sm font-semibold text-destructive">
+                  feito {formatTempoRelativo(pedido.criado_em)}
+                </span>
 
                 {pedido.agendamento && (
                   <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-700">
@@ -186,21 +217,39 @@ export function OrderDetailDialog({
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs text-muted-foreground">Cliente</span>
-                    <span className="font-medium">{pedido.nome}</span>
+                <div className="grid grid-cols-2 gap-3 border-t pt-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CalendarClock size={12} /> Horário do pedido
+                    </span>
+                    <span className="font-semibold">{formatDataHora(pedido.criado_em)}</span>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs text-muted-foreground">Telefone</span>
-                    <span className="font-medium">{pedido.telefone}</span>
+                  <div className="flex flex-col gap-1">
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Monitor size={12} /> Status do pedido
+                    </span>
+                    <span className="font-semibold text-blue-600">
+                      {(STATUS_LABELS[pedido.status] ?? pedido.status).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <User size={12} /> Nome do cliente
+                    </span>
+                    <span className="font-semibold">{pedido.nome}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <PhoneCall size={12} /> Telefone
+                    </span>
+                    <span className="font-semibold">{pedido.telefone}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <a
                     href={telHref}
-                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1")}
+                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1 rounded-full")}
                   >
                     <Phone size={13} /> Ligar
                   </a>
@@ -208,30 +257,32 @@ export function OrderDetailDialog({
                     href={waHref}
                     target="_blank"
                     rel="noreferrer"
-                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1")}
+                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "flex-1 rounded-full")}
                   >
                     <MessageCircle size={13} /> WhatsApp
                   </a>
                 </div>
 
                 {stats && (
-                  <div className="grid grid-cols-2 gap-2 rounded-lg border p-3 text-xs">
+                  <div className="grid grid-cols-2 gap-3 rounded-xl border p-3 text-sm">
                     <div>
-                      <div className="text-muted-foreground">Pedidos feitos</div>
+                      <div className="text-xs text-muted-foreground">Pedidos feitos</div>
                       <div className="font-semibold">{stats.pedidos_feitos}</div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Ticket médio</div>
+                      <div className="text-xs text-muted-foreground">Ticket médio</div>
                       <div className="font-semibold">{formatBRL(stats.ticket_medio)}</div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Pontos</div>
+                      <div className="text-xs text-muted-foreground">Pontos</div>
                       <div className="font-semibold">{stats.pontos}</div>
                     </div>
-                    <div>
-                      <div className="text-muted-foreground">Cashback</div>
-                      <div className="font-semibold">{formatBRL(stats.cashback_saldo)}</div>
-                    </div>
+                    {stats.cashback_saldo > 0 && (
+                      <div>
+                        <div className="text-xs text-muted-foreground">Cashback</div>
+                        <div className="font-semibold">{formatBRL(stats.cashback_saldo)}</div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -319,6 +370,12 @@ export function OrderDetailDialog({
                       <span>Subtotal</span>
                       <span className="font-medium">{formatBRL(pedido.subtotal)}</span>
                     </div>
+                    {Number(pedido.cashback_valor) > 0 && (
+                      <div className="flex items-center justify-between text-muted-foreground">
+                        <span>Cashback para o cliente</span>
+                        <span>{formatBRL(pedido.cashback_valor)}</span>
+                      </div>
+                    )}
                     {Number(pedido.desconto) > 0 && (
                       <div className="flex items-center justify-between text-muted-foreground">
                         <span>Desconto</span>
@@ -357,11 +414,20 @@ export function OrderDetailDialog({
 
           {pedido && (
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCancelarOpen(true)} disabled={pedido.status === "cancelado"}>
-                Cancelar pedido
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => setCancelarOpen(true)}
+                disabled={pedido.status === "cancelado"}
+              >
+                <XCircle size={14} /> Cancelar pedido
               </Button>
               {finalizavel && (
-                <Button onClick={finalizar} disabled={finalizando}>
+                <Button
+                  className="rounded-full bg-pink-500 text-white hover:bg-pink-600"
+                  onClick={finalizar}
+                  disabled={finalizando}
+                >
                   {finalizando ? "Aguarde..." : "Mover para finalizado"}
                 </Button>
               )}

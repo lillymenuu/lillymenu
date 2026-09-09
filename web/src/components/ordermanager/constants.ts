@@ -22,6 +22,12 @@ export const TIPO_LABELS: Record<string, string> = {
   mesa: "MESA",
 };
 
+export const TIPO_CORES: Record<string, string> = {
+  entrega: "#ea580c",
+  retirada: "#2563eb",
+  mesa: "#7c3aed",
+};
+
 /** Próxima etapa a partir de cada status do quadro; "entrega" avança via
  * pedidos_finalizar.php (não pedidos_status.php), tratado à parte. */
 export const PROXIMA_ETAPA: Record<string, { label: string; proximo: string }> = {

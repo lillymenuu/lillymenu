@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { Search, Plus, Filter, CalendarClock } from "lucide-react";
+import { Search, Plus, Filter, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Motoboy, Pedido } from "@/lib/pedidos";
 import { OrderCard } from "./order-card";
@@ -55,6 +55,7 @@ export function OrderManager({
   const [recusando, setRecusando] = useState(false);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
   const [alertaMotoboy, setAlertaMotoboy] = useState<Pedido | null>(null);
+  const [vincularManual, setVincularManual] = useState<Pedido | null>(null);
 
   const pausadoRef = useRef(false);
   const arrastandoIdRef = useRef<number | null>(null);
@@ -222,51 +223,47 @@ export function OrderManager({
               onDragLeave={() => setDragOverStatus((s) => (s === coluna.status ? null : s))}
               onDrop={(e) => onDrop(e, coluna.status)}
               className={cn(
-                "flex min-h-[300px] flex-col gap-2 rounded-xl border bg-muted/30 p-2 transition-colors",
-                dragOverStatus === coluna.status && "border-primary bg-primary/5"
+                "flex min-h-[320px] flex-col overflow-hidden rounded-xl border transition-shadow",
+                dragOverStatus === coluna.status && "ring-2 ring-primary ring-offset-2"
               )}
             >
-              <div className="flex items-center justify-between gap-2 px-1 pt-1">
-                <div className="min-w-0">
+              <div className="bg-primary p-3 text-primary-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold">{coluna.label}</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold">{coluna.label}</span>
-                    <span className="flex size-5 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">
-                      {pedidosColuna.length}
-                    </span>
+                    <button
+                      type="button"
+                      title="Só hoje"
+                      onClick={() =>
+                        setFiltros((f) => ({ ...f, [coluna.status]: { ...f[coluna.status], hoje: !f[coluna.status].hoje } }))
+                      }
+                      className={cn(
+                        "flex size-6 items-center justify-center rounded-full bg-white/15 hover:bg-white/25",
+                        filtro.hoje && "bg-white text-primary"
+                      )}
+                    >
+                      <MoreVertical size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      title={`Tipo: ${filtro.tipo}`}
+                      onClick={() =>
+                        setFiltros((f) => ({ ...f, [coluna.status]: { ...f[coluna.status], tipo: cicloTipo(f[coluna.status].tipo) } }))
+                      }
+                      className={cn(
+                        "flex size-6 items-center justify-center rounded-full bg-white/15 hover:bg-white/25",
+                        filtro.tipo !== "todos" && "bg-white text-primary"
+                      )}
+                    >
+                      <Filter size={12} />
+                    </button>
                   </div>
-                  <span className="text-xs text-muted-foreground">{formatBRL(subtotal)}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    title={`Tipo: ${filtro.tipo}`}
-                    onClick={() =>
-                      setFiltros((f) => ({ ...f, [coluna.status]: { ...f[coluna.status], tipo: cicloTipo(f[coluna.status].tipo) } }))
-                    }
-                    className={cn(
-                      "flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted",
-                      filtro.tipo !== "todos" && "bg-primary/10 text-primary"
-                    )}
-                  >
-                    <Filter size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    title="Só hoje"
-                    onClick={() =>
-                      setFiltros((f) => ({ ...f, [coluna.status]: { ...f[coluna.status], hoje: !f[coluna.status].hoje } }))
-                    }
-                    className={cn(
-                      "flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted",
-                      filtro.hoje && "bg-primary/10 text-primary"
-                    )}
-                  >
-                    <CalendarClock size={12} />
-                  </button>
-                </div>
+                <div className="mt-1 text-2xl leading-none font-bold">{pedidosColuna.length}</div>
+                <div className="mt-1 text-sm text-white/85">{formatBRL(subtotal)}</div>
               </div>
 
-              <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-0.5 pb-1">
+              <div className="flex flex-1 flex-col gap-2 overflow-y-auto bg-muted/30 p-2">
                 {pedidosColuna.length === 0 && (
                   <div className="flex flex-1 items-center justify-center py-10 text-center text-xs text-muted-foreground">
                     Nenhum pedido aqui.
@@ -279,6 +276,7 @@ export function OrderManager({
                     onAbrir={() => setDetalheId(pedido.id)}
                     onAvancar={() => avancar(pedido)}
                     onRecusar={() => setRecusarId(pedido.id)}
+                    onVincularMotoboy={() => setVincularManual(pedido)}
                     onDragStart={(e) => onDragStart(e, pedido.id)}
                     onDragEnd={onDragEnd}
                   />
@@ -316,6 +314,21 @@ export function OrderManager({
         textoConfirmar="Recusar pedido"
         onConfirmar={recusar}
       />
+
+      {vincularManual && (
+        <LinkMotoboyDialog
+          open={!!vincularManual}
+          onOpenChange={(v) => !v && setVincularManual(null)}
+          pedidoId={vincularManual.id}
+          pedidoNome={`#${vincularManual.codigo} · ${vincularManual.nome}`}
+          motoboys={motoboys}
+          motoboyAtualId={vincularManual.motoboy_id}
+          onVinculado={() => {
+            setVincularManual(null);
+            carregarPedidos();
+          }}
+        />
+      )}
 
       {pedidoAlertaAtual && (
         <LinkMotoboyDialog
