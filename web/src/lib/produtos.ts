@@ -24,6 +24,13 @@ export type Produto = {
   descricao?: string | null;
   apenas_agendamento?: number;
   quantidade_minima?: number;
+  pontos_ganho?: number;
+  pontos_custo?: number;
+  disponivel_catalogo?: number;
+  disponivel_mesa?: number;
+  dias_semana?: string[];
+  horario_ini?: string | null;
+  horario_fim?: string | null;
 };
 
 export function getCategorias() {

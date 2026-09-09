@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ export function CriarCategoriaDialog({
         setErro(data.msg ?? "Erro ao salvar categoria.");
         return;
       }
+      toast.success(categoria ? "Categoria atualizada com sucesso" : "Categoria criada com sucesso");
       onOpenChange(false);
       router.refresh();
     } finally {

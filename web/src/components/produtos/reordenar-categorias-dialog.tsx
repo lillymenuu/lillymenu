@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { GripVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ export function ReordenarCategoriasDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ordem: lista.map((c) => c.id) }),
       });
+      toast.success("Categorias reordenadas com sucesso");
       onOpenChange(false);
       router.refresh();
     } finally {

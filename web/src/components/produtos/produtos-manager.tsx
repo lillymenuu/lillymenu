@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   CheckCircle2,
   ListOrdered,
@@ -89,20 +90,24 @@ export function ProdutosManager({
   }
 
   async function toggleAtivoProduto(produto: Produto) {
+    const novoAtivo = produto.ativo === 1 ? 0 : 1;
     await fetch("/api/produtos", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: produto.id, ativo: produto.ativo === 1 ? 0 : 1 }),
+      body: JSON.stringify({ id: produto.id, ativo: novoAtivo }),
     });
+    toast.success(novoAtivo ? "Produto ativado com sucesso" : "Produto desativado com sucesso");
     router.refresh();
   }
 
   async function toggleAtivoCategoria(cat: Categoria) {
+    const novoAtivo = cat.ativo === 1 ? 0 : 1;
     await fetch("/api/categorias", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: cat.id, nome: cat.nome, ativo: cat.ativo === 1 ? 0 : 1, modo_exibicao: cat.modo_exibicao }),
+      body: JSON.stringify({ id: cat.id, nome: cat.nome, ativo: novoAtivo, modo_exibicao: cat.modo_exibicao }),
     });
+    toast.success(novoAtivo ? "Categoria ativada com sucesso" : "Categoria pausada com sucesso");
     router.refresh();
   }
 
@@ -113,6 +118,7 @@ export function ProdutosManager({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: cat.id }),
     });
+    toast.success("Categoria excluída com sucesso");
     router.refresh();
   }
 

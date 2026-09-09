@@ -3,12 +3,13 @@
  * Versao JSON do essencial de admin/produtos.php + admin/api/produtos_save.php
  * + produtos_delete.php + produtos_toggle.php, combinados num unico endpoint
  * REST-ish (GET lista, POST cria/atualiza, DELETE remove, PATCH so troca
- * ativo/inativo). Escopo essencial combinado com o usuario: nome, preco,
- * categoria, descricao, codigo, imagem, promocao simples, ativo/inativo.
+ * ativo/inativo). Cobre: nome, preco, categoria, descricao, codigo, imagem,
+ * promocao, ativo/inativo, agendamento (apenas_agendamento), quantidade
+ * minima, pontos de fidelidade (ganho/custo), disponibilidade por
+ * catalogo/mesa e agendamento por dia da semana/horario.
  * Fora do escopo (ficam so no admin/produtos.php por enquanto): variacoes,
- * extras/complementos, combos, vinculo de estoque, duplicar, transferir
- * entre lojas, reordenar por arrastar, agendamento por dia/horario, pontos
- * de fidelidade, disponibilidade por catalogo/mesa, datas de validade.
+ * extras/complementos, combos, vinculo de estoque entre produtos, datas de
+ * validade/fabricacao.
  */
 
 require_once __DIR__ . '/../../../config/database.php';
@@ -36,6 +37,13 @@ if ($metodo === 'GET') {
   $temDescricao = in_array('descricao', $colunas, true);
   $temApenasAgendamento = in_array('apenas_agendamento', $colunas, true);
   $temQuantidadeMinima = in_array('quantidade_minima', $colunas, true);
+  $temPontosGanho = in_array('pontos_ganho', $colunas, true);
+  $temPontosCusto = in_array('pontos_custo', $colunas, true);
+  $temDisponivelCatalogo = in_array('disponivel_catalogo', $colunas, true);
+  $temDisponivelMesa = in_array('disponivel_mesa', $colunas, true);
+  $temDiasSemana = in_array('dias_semana', $colunas, true);
+  $temHorarioIni = in_array('horario_ini', $colunas, true);
+  $temHorarioFim = in_array('horario_fim', $colunas, true);
 
   $precoExpr = ($temPrecoPromocional && $temPromoDesativado)
     ? "IF(p.promo_desativado = 0 AND p.preco_promocional IS NOT NULL AND p.preco_promocional > 0, p.preco_promocional, p.preco)"
@@ -53,6 +61,13 @@ if ($metodo === 'GET') {
   if ($temDescricao) $selectCampos[] = 'p.descricao';
   if ($temApenasAgendamento) $selectCampos[] = 'p.apenas_agendamento';
   if ($temQuantidadeMinima) $selectCampos[] = 'p.quantidade_minima';
+  if ($temPontosGanho) $selectCampos[] = 'p.pontos_ganho';
+  if ($temPontosCusto) $selectCampos[] = 'p.pontos_custo';
+  if ($temDisponivelCatalogo) $selectCampos[] = 'p.disponivel_catalogo';
+  if ($temDisponivelMesa) $selectCampos[] = 'p.disponivel_mesa';
+  if ($temDiasSemana) $selectCampos[] = 'p.dias_semana';
+  if ($temHorarioIni) $selectCampos[] = 'p.horario_ini';
+  if ($temHorarioFim) $selectCampos[] = 'p.horario_fim';
 
   $ordenacao = $temOrdem
     ? "ORDER BY c.ordem IS NULL, c.ordem, c.nome, p.ordem IS NULL, p.ordem, p.nome"
@@ -78,6 +93,14 @@ if ($metodo === 'GET') {
     if (isset($p['promo_desativado'])) $p['promo_desativado'] = (int) $p['promo_desativado'];
     if (isset($p['apenas_agendamento'])) $p['apenas_agendamento'] = (int) $p['apenas_agendamento'];
     if (isset($p['quantidade_minima'])) $p['quantidade_minima'] = (int) $p['quantidade_minima'];
+    if (isset($p['pontos_ganho'])) $p['pontos_ganho'] = (int) $p['pontos_ganho'];
+    if (isset($p['pontos_custo'])) $p['pontos_custo'] = (int) $p['pontos_custo'];
+    if (isset($p['disponivel_catalogo'])) $p['disponivel_catalogo'] = (int) $p['disponivel_catalogo'];
+    if (isset($p['disponivel_mesa'])) $p['disponivel_mesa'] = (int) $p['disponivel_mesa'];
+    if (array_key_exists('dias_semana', $p)) {
+      $decoded = $p['dias_semana'] ? json_decode($p['dias_semana'], true) : [];
+      $p['dias_semana'] = is_array($decoded) ? $decoded : [];
+    }
     return $p;
   }, $stmt->fetchAll(PDO::FETCH_ASSOC));
 
@@ -141,6 +164,14 @@ if ($metodo === 'POST') {
   $imagemRemover = !empty($dados['imagem_remover']);
   $apenasAgendamento = !empty($dados['apenas_agendamento']) ? 1 : 0;
   $quantidadeMinima  = max(0, (int) ($dados['quantidade_minima'] ?? 0));
+  $pontosGanho = max(0, (int) ($dados['pontos_ganho'] ?? 0));
+  $pontosCusto = max(0, (int) ($dados['pontos_custo'] ?? 0));
+  $disponivelCatalogo = !empty($dados['disponivel_catalogo']) ? 1 : 0;
+  $disponivelMesa = !empty($dados['disponivel_mesa']) ? 1 : 0;
+  $diasSemanaArr = is_array($dados['dias_semana'] ?? null) ? $dados['dias_semana'] : [];
+  $diasSemanaJson = $diasSemanaArr ? json_encode(array_values($diasSemanaArr)) : null;
+  $horarioIni = trim((string) ($dados['horario_ini'] ?? '')) ?: null;
+  $horarioFim = trim((string) ($dados['horario_fim'] ?? '')) ?: null;
 
   if ($nome === '') {
     echo json_encode(['ok' => false, 'msg' => 'Informe o nome do produto.']);
@@ -164,6 +195,13 @@ if ($metodo === 'POST') {
   $temImagem = in_array('imagem', $colunas, true);
   $temApenasAgendamento = in_array('apenas_agendamento', $colunas, true);
   $temQuantidadeMinima = in_array('quantidade_minima', $colunas, true);
+  $temPontosGanho = in_array('pontos_ganho', $colunas, true);
+  $temPontosCusto = in_array('pontos_custo', $colunas, true);
+  $temDisponivelCatalogo = in_array('disponivel_catalogo', $colunas, true);
+  $temDisponivelMesa = in_array('disponivel_mesa', $colunas, true);
+  $temDiasSemana = in_array('dias_semana', $colunas, true);
+  $temHorarioIni = in_array('horario_ini', $colunas, true);
+  $temHorarioFim = in_array('horario_fim', $colunas, true);
 
   if ($id !== '' && (int) $id > 0) {
     $idInt = (int) $id;
@@ -181,6 +219,13 @@ if ($metodo === 'POST') {
     if ($temPromoDesativado) $campos['promo_desativado'] = $promoDesativado;
     if ($temApenasAgendamento) $campos['apenas_agendamento'] = $apenasAgendamento;
     if ($temQuantidadeMinima) $campos['quantidade_minima'] = $quantidadeMinima;
+    if ($temPontosGanho) $campos['pontos_ganho'] = $pontosGanho;
+    if ($temPontosCusto) $campos['pontos_custo'] = $pontosCusto;
+    if ($temDisponivelCatalogo) $campos['disponivel_catalogo'] = $disponivelCatalogo;
+    if ($temDisponivelMesa) $campos['disponivel_mesa'] = $disponivelMesa;
+    if ($temDiasSemana) $campos['dias_semana'] = $diasSemanaJson;
+    if ($temHorarioIni) $campos['horario_ini'] = $horarioIni;
+    if ($temHorarioFim) $campos['horario_fim'] = $horarioFim;
     if ($temImagem) {
       if ($imagemRemover) {
         $campos['imagem'] = null;
@@ -235,6 +280,13 @@ if ($metodo === 'POST') {
   if ($temPromoDesativado) { $campos[] = 'promo_desativado'; $values[] = $promoDesativado; }
   if ($temApenasAgendamento) { $campos[] = 'apenas_agendamento'; $values[] = $apenasAgendamento; }
   if ($temQuantidadeMinima) { $campos[] = 'quantidade_minima'; $values[] = $quantidadeMinima; }
+  if ($temPontosGanho) { $campos[] = 'pontos_ganho'; $values[] = $pontosGanho; }
+  if ($temPontosCusto) { $campos[] = 'pontos_custo'; $values[] = $pontosCusto; }
+  if ($temDisponivelCatalogo) { $campos[] = 'disponivel_catalogo'; $values[] = $disponivelCatalogo; }
+  if ($temDisponivelMesa) { $campos[] = 'disponivel_mesa'; $values[] = $disponivelMesa; }
+  if ($temDiasSemana) { $campos[] = 'dias_semana'; $values[] = $diasSemanaJson; }
+  if ($temHorarioIni) { $campos[] = 'horario_ini'; $values[] = $horarioIni; }
+  if ($temHorarioFim) { $campos[] = 'horario_fim'; $values[] = $horarioFim; }
   if ($temOrdem) { $campos[] = 'ordem'; $values[] = $novaOrdem; }
   if ($temImagem && $imagemBase64 !== '') {
     $imagemSalva = storage_save_base64($imagemBase64, 'produtos', 'produto', $lojaId);
