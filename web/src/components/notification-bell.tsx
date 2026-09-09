@@ -75,7 +75,15 @@ function tocarAlarme() {
   }
 }
 
-export function NotificationBell({ lojaId, phpAdminUrl }: { lojaId: number; phpAdminUrl: string }) {
+export function NotificationBell({
+  lojaId,
+  phpAdminUrl,
+  theme = "light",
+}: {
+  lojaId: number;
+  phpAdminUrl: string;
+  theme?: "light" | "dark";
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"unread" | "all">("unread");
@@ -356,7 +364,12 @@ export function NotificationBell({ lojaId, phpAdminUrl }: { lojaId: number; phpA
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className="relative rounded-md p-1.5 text-white/85 hover:bg-white/10 hover:text-white"
+        className={cn(
+          "relative rounded-md p-1.5",
+          theme === "dark"
+            ? "text-white/85 hover:bg-white/10 hover:text-white"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        )}
         aria-label="Notificações"
       >
         <Bell size={17} />
