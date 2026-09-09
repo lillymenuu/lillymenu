@@ -125,7 +125,7 @@ export function AppShell({
               <div className="flex min-w-0 items-center gap-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`${phpAdminUrl}/assets/img/favicon_store.png`}
+                  src="/favicon_store.png"
                   alt=""
                   className="size-6 shrink-0 rounded-md object-contain"
                 />
