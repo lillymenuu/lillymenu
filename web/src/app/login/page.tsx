@@ -47,7 +47,7 @@ function LoginForm() {
         return;
       }
 
-      router.push(searchParams.get("next") || "/avaliacoes");
+      router.push(searchParams.get("next") || "/dashboard");
       router.refresh();
     } catch {
       setErro("Erro de conexao. Tente novamente.");
