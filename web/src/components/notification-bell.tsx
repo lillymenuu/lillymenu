@@ -157,7 +157,7 @@ export function NotificationBell({
       if (item.tipo === "avaliacao") {
         router.push("/avaliacoes");
       } else {
-        window.location.href = `${phpAdminUrl}/gestor_pedidos?pedido=${item.id}`;
+        router.push(`/ordermanager?pedido=${item.id}`);
       }
     },
     [marcarLida, router, phpAdminUrl]
