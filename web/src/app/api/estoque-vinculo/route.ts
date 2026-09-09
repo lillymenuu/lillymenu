@@ -8,9 +8,13 @@ function erroResposta(e: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  const produtoId = request.nextUrl.searchParams.get("produto_id") ?? "";
+  const params = request.nextUrl.searchParams;
+  const produtoId = params.get("produto_id") ?? "";
+  const search = params.get("search") ?? "";
   try {
-    const data = await phpApiFetch(`/admin/api/v1/estoque.php?produto_id=${encodeURIComponent(produtoId)}`);
+    const data = await phpApiFetch(
+      `/admin/api/v1/estoque_vinculo.php?produto_id=${encodeURIComponent(produtoId)}&search=${encodeURIComponent(search)}`
+    );
     return NextResponse.json(data);
   } catch (e) {
     return erroResposta(e);
@@ -20,22 +24,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   const body = await request.text();
   try {
-    const data = await phpApiFetch("/admin/api/v1/estoque.php", {
+    const data = await phpApiFetch("/admin/api/v1/estoque_vinculo.php", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
-}
-
-export async function DELETE(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/estoque.php", {
-      method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body,
     });

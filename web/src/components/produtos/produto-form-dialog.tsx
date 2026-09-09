@@ -37,6 +37,8 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ImageCropDialog } from "./image-crop-dialog";
 import { ConfigurarDiasDialog } from "./configurar-dias-dialog";
+import { MoneyInput } from "./money-input";
+import { EstoqueDialog } from "./estoque-dialog";
 import type { Categoria, Produto } from "@/lib/produtos";
 
 const DIAS_LABEL: Record<string, string> = {
@@ -93,11 +95,8 @@ export function ProdutoFormDialog({
   const [pontosCustoAtivo, setPontosCustoAtivo] = useState(false);
   const [pontosCusto, setPontosCusto] = useState("1");
 
-  const [estoqueEditando, setEstoqueEditando] = useState(false);
-  const [estoqueQtd, setEstoqueQtd] = useState("0");
-  const [estoqueMinimo, setEstoqueMinimo] = useState("0");
   const [estoqueAtual, setEstoqueAtual] = useState(0);
-  const [salvandoEstoque, setSalvandoEstoque] = useState(false);
+  const [estoqueDialogOpen, setEstoqueDialogOpen] = useState(false);
 
   const [transferindo, setTransferindo] = useState(false);
   const [categoriaTransferir, setCategoriaTransferir] = useState<string>("");
@@ -118,7 +117,6 @@ export function ProdutoFormDialog({
     setErro(null);
     setImagemBase64(null);
     setImagemRemover(false);
-    setEstoqueEditando(false);
     setTransferindo(false);
     if (produto) {
       setNome(produto.nome);
@@ -142,8 +140,6 @@ export function ProdutoFormDialog({
       setPontosCustoAtivo((produto.pontos_custo ?? 0) > 0);
       setPontosCusto(String(produto.pontos_custo || 1));
       setEstoqueAtual(produto.estoque_quantidade ?? 0);
-      setEstoqueQtd(String(produto.estoque_quantidade ?? 0));
-      setEstoqueMinimo("0");
       setCategoriaTransferir(produto.categoria_id ? String(produto.categoria_id) : "");
       setImagemPreview(
         produto.imagem
@@ -174,8 +170,6 @@ export function ProdutoFormDialog({
       setPontosCustoAtivo(false);
       setPontosCusto("1");
       setEstoqueAtual(0);
-      setEstoqueQtd("0");
-      setEstoqueMinimo("0");
       setImagemPreview(null);
     }
   }, [open, produto, categoriaPadrao, phpAdminUrl]);
@@ -278,33 +272,6 @@ export function ProdutoFormDialog({
       router.refresh();
     } finally {
       setExcluindo(false);
-    }
-  }
-
-  async function salvarEstoque() {
-    if (!produto) return;
-    setSalvandoEstoque(true);
-    try {
-      const res = await fetch("/api/estoque", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          produto_id: produto.id,
-          quantidade: Math.max(0, parseInt(estoqueQtd, 10) || 0),
-          quantidade_minima: Math.max(0, parseInt(estoqueMinimo, 10) || 0),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setErro(data.msg ?? "Erro ao atualizar estoque.");
-        return;
-      }
-      setEstoqueAtual(data.quantidade);
-      setEstoqueEditando(false);
-      toast.success("Item de estoque editado com sucesso");
-      router.refresh();
-    } finally {
-      setSalvandoEstoque(false);
     }
   }
 
@@ -490,14 +457,7 @@ export function ProdutoFormDialog({
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="p-preco">Preço</Label>
-                <Input
-                  id="p-preco"
-                  inputMode="decimal"
-                  value={preco}
-                  onChange={(e) => setPreco(e.target.value)}
-                  placeholder="0,00"
-                  className="max-w-48"
-                />
+                <MoneyInput id="p-preco" value={preco} onChange={setPreco} className="max-w-48" />
               </div>
 
               <div className="flex flex-col gap-3 rounded-lg border p-3">
@@ -508,12 +468,10 @@ export function ProdutoFormDialog({
                 {promoAtiva && (
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="p-preco-promo">Preço promocional</Label>
-                    <Input
+                    <MoneyInput
                       id="p-preco-promo"
-                      inputMode="decimal"
                       value={precoPromocional}
-                      onChange={(e) => setPrecoPromocional(e.target.value)}
-                      placeholder="0,00"
+                      onChange={setPrecoPromocional}
                       className="max-w-48"
                     />
                   </div>
@@ -649,53 +607,16 @@ export function ProdutoFormDialog({
             ) : (
               <div className="rounded-lg border p-3">
                 <div className="text-sm font-semibold">{nome || produto.nome}</div>
-                {!estoqueEditando ? (
-                  <>
-                    <div
-                      className={`mt-1 flex items-center gap-1 text-xs ${estoqueAtual > 0 ? "text-emerald-600" : "text-destructive"}`}
-                    >
-                      {estoqueAtual > 0 ? "✓" : "✕"} {estoqueAtual} em estoque
-                    </div>
-                    <div className="mt-3 flex justify-end">
-                      <Button size="sm" onClick={() => setEstoqueEditando(true)}>
-                        Editar estoque
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="mt-2 flex flex-col gap-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="est-qtd">Quantidade</Label>
-                        <Input
-                          id="est-qtd"
-                          type="number"
-                          min={0}
-                          value={estoqueQtd}
-                          onChange={(e) => setEstoqueQtd(e.target.value)}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="est-min">Estoque mínimo</Label>
-                        <Input
-                          id="est-min"
-                          type="number"
-                          min={0}
-                          value={estoqueMinimo}
-                          onChange={(e) => setEstoqueMinimo(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setEstoqueEditando(false)}>
-                        Cancelar
-                      </Button>
-                      <Button size="sm" onClick={salvarEstoque} disabled={salvandoEstoque}>
-                        {salvandoEstoque ? "Salvando..." : "Salvar"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <div
+                  className={`mt-1 flex items-center gap-1 text-xs ${estoqueAtual > 0 ? "text-emerald-600" : "text-destructive"}`}
+                >
+                  {estoqueAtual > 0 ? "✓" : "✕"} {estoqueAtual} em estoque
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <Button size="sm" onClick={() => setEstoqueDialogOpen(true)}>
+                    Editar estoque
+                  </Button>
+                </div>
               </div>
             )}
           </TabsContent>
@@ -774,10 +695,7 @@ export function ProdutoFormDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSalvarClick} disabled={salvando}>
+          <Button onClick={handleSalvarClick} disabled={salvando} className="w-full sm:w-auto">
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
@@ -795,6 +713,12 @@ export function ProdutoFormDialog({
         setHorarioIni(ini);
         setHorarioFim(fim);
       }}
+    />
+    <EstoqueDialog
+      open={estoqueDialogOpen}
+      onOpenChange={setEstoqueDialogOpen}
+      produtoId={produto?.id ?? null}
+      phpAdminUrl={phpAdminUrl}
     />
     </>
   );
