@@ -164,11 +164,16 @@ export function AppShell({
               collapsed ? "border-white/15" : "border-border"
             )}
           >
-            <div className={cn("flex items-center gap-3", collapsed && "md:justify-center")}>
+            <div className="relative flex flex-col items-center">
+              <div className={cn("absolute right-0 top-0", collapsed && "md:hidden")}>
+                <NotificationBell lojaId={sidebarData.loja.id} phpAdminUrl={phpAdminUrl} theme="light" />
+              </div>
               <div
                 className={cn(
-                  "flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-bold",
-                  collapsed ? "bg-white/15 text-white" : "border border-border bg-muted text-foreground"
+                  "flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold",
+                  collapsed
+                    ? "size-10 bg-white/15 text-sm text-white"
+                    : "size-14 border border-border bg-muted text-base text-foreground"
                 )}
               >
                 {sidebarData.loja.logo ? (
@@ -187,13 +192,10 @@ export function AppShell({
                 )}
               </div>
               {!collapsed && (
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-foreground">{sidebarData.loja.nome}</div>
+                <div className="mt-2 max-w-full text-center text-sm font-semibold leading-tight text-foreground">
+                  {sidebarData.loja.nome}
                 </div>
               )}
-              <div className={cn(collapsed && "md:hidden")}>
-                <NotificationBell lojaId={sidebarData.loja.id} phpAdminUrl={phpAdminUrl} theme="light" />
-              </div>
             </div>
             {!collapsed && (
               <div className="mt-3 flex items-center justify-between gap-2">
