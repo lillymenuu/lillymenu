@@ -176,6 +176,7 @@ $adminRow = $stmtAdmin->fetch(PDO::FETCH_ASSOC) ?: [];
 echo json_encode([
   'ok'    => true,
   'loja'  => [
+    'id'         => $lojaId,
     'nome'       => $lojaNome,
     'inicial'    => mb_strtoupper(mb_substr($lojaNome, 0, 1)),
     'logo'       => $lojaPerfilImg !== '' ? $lojaPerfilImg : null,

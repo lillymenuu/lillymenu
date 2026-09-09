@@ -1,0 +1,165 @@
+<?php
+/*
+ * Versao do novo frontend Next.js de admin/api/notificacoes_pedidos.php —
+ * mesma logica (pedidos novos/editados de hoje + avaliacoes de hoje,
+ * combinados e ordenados), trocando sessao PHP por token Bearer.
+ */
+
+require_once __DIR__ . '/../../../config/database.php';
+require_once __DIR__ . '/../../helpers/api_auth.php';
+require_once __DIR__ . '/../../../helpers/pedido_codigo.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+$auth   = apiAuthExigir($conn);
+$lojaId = $auth['loja_id'];
+
+try {
+  $stmtTable = $conn->prepare("SHOW TABLES LIKE 'operacao_logs'");
+  $stmtTable->execute();
+  $temLogs = (bool) $stmtTable->fetchColumn();
+  $editados = [];
+  if ($temLogs) {
+    $colunasLogs = $conn->query("SHOW COLUMNS FROM operacao_logs")->fetchAll(PDO::FETCH_COLUMN, 0);
+    $temAcaoLog = in_array('acao', $colunasLogs, true);
+    $temDadosLog = in_array('dados', $colunasLogs, true);
+    $temLojaLog = in_array('loja_id', $colunasLogs, true);
+    $dataColLog = null;
+    foreach (['criado_em', 'created_at', 'data', 'data_hora', 'atualizado_em'] as $col) {
+      if (in_array($col, $colunasLogs, true)) {
+        $dataColLog = $col;
+        break;
+      }
+    }
+    if ($temAcaoLog && $temDadosLog) {
+      $whereLog = ["acao = 'pedido_editado'"];
+      $paramsLog = [];
+      if ($dataColLog) {
+        $whereLog[] = "DATE({$dataColLog}) = CURDATE()";
+      }
+      if ($temLojaLog && $lojaId > 0) {
+        $whereLog[] = "loja_id = ?";
+        $paramsLog[] = $lojaId;
+      }
+      $stmtLog = $conn->prepare("
+        SELECT dados
+        FROM operacao_logs
+        WHERE " . implode(' AND ', $whereLog)
+      );
+      $stmtLog->execute($paramsLog);
+      foreach ($stmtLog->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        if (empty($row['dados'])) {
+          continue;
+        }
+        $payload = json_decode((string) $row['dados'], true);
+        $novoPedido = (int) ($payload['novo_pedido'] ?? 0);
+        if ($novoPedido > 0) {
+          $editados[$novoPedido] = true;
+        }
+      }
+    }
+  }
+
+  $colunasPedido = $conn->query("SHOW COLUMNS FROM pedidos")->fetchAll(PDO::FETCH_COLUMN, 0);
+  $temLojaPedido = in_array('loja_id', $colunasPedido, true);
+  $temClienteIdPedido = in_array('cliente_id', $colunasPedido, true);
+  $temOrigemPedido = in_array('origem', $colunasPedido, true);
+  $selectOrigem = $temOrigemPedido ? "p.origem" : "NULL AS origem";
+  $dataColPedido = null;
+  foreach (['criado_em', 'created_at', 'data', 'data_pedido', 'criado', 'atualizado_em'] as $col) {
+    if (in_array($col, $colunasPedido, true)) {
+      $dataColPedido = $col;
+      break;
+    }
+  }
+  $codigoCol = null;
+  foreach (['codigo', 'codigo_pedido', 'pedido_hash', 'hash', 'pedido_codigo', 'uuid'] as $col) {
+    if (in_array($col, $colunasPedido, true)) {
+      $codigoCol = $col;
+      break;
+    }
+  }
+  $selectCodigo = $codigoCol ? "p.{$codigoCol} AS codigo" : "NULL AS codigo";
+  $selectData = $dataColPedido ? "p.{$dataColPedido} AS criado_em" : "NOW() AS criado_em";
+  $colunasClientes = $conn->query("SHOW COLUMNS FROM clientes")->fetchAll(PDO::FETCH_COLUMN, 0);
+  $temLojaCliente = in_array('loja_id', $colunasClientes, true);
+  $joinClientes = "LEFT JOIN clientes c ON c.id = p.cliente_id";
+  if ($temClienteIdPedido && $temLojaPedido && $temLojaCliente) {
+    $joinClientes .= " AND c.loja_id = p.loja_id";
+  }
+  $where = [];
+  $params = [];
+  if ($temLojaPedido && $lojaId > 0) {
+    $where[] = "p.loja_id = ?";
+    $params[] = $lojaId;
+  }
+  if ($dataColPedido) {
+    $where[] = "DATE(p.{$dataColPedido}) = CURDATE()";
+  }
+  $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+  $orderCol = $dataColPedido ? "p.{$dataColPedido}" : "p.id";
+  $stmt = $conn->prepare("
+    SELECT p.id, {$selectCodigo}, {$selectData}, c.nome AS cliente, p.status, {$selectOrigem}
+    FROM pedidos p
+    {$joinClientes}
+    {$whereSql}
+    ORDER BY {$orderCol} DESC, p.id DESC
+    LIMIT 50
+  ");
+  $stmt->execute($params);
+  $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  $filtrados = [];
+  foreach ($pedidos as $pedido) {
+    $pedidoId = (int) ($pedido['id'] ?? 0);
+    $pedido['tipo'] = $pedidoId && isset($editados[$pedidoId]) ? 'editado' : 'novo';
+    $pedido['chave'] = 'pedido-' . $pedidoId;
+    if (empty($pedido['cliente'])) {
+      $pedido['cliente'] = 'Cliente';
+    }
+    $filtrados[] = $pedido;
+  }
+
+  $stmtTableAv = $conn->prepare("SHOW TABLES LIKE 'avaliacoes'");
+  $stmtTableAv->execute();
+  if ((bool) $stmtTableAv->fetchColumn()) {
+    $stmtAv = $conn->prepare("
+      SELECT a.id, a.nota, a.descricao, a.criado_em, a.pedido_id,
+             c.nome AS cliente
+      FROM avaliacoes a
+      LEFT JOIN clientes c ON c.id = a.cliente_id AND c.loja_id = a.loja_id
+      WHERE a.loja_id = ? AND DATE(a.criado_em) = CURDATE()
+      ORDER BY a.criado_em DESC, a.id DESC
+      LIMIT 50
+    ");
+    $stmtAv->execute([$lojaId]);
+    $codigoBaseAv = getPedidoCodigoBase($conn, $lojaId);
+    foreach ($stmtAv->fetchAll(PDO::FETCH_ASSOC) as $av) {
+      $avId = (int) ($av['id'] ?? 0);
+      $pedidoIdAv = (int) ($av['pedido_id'] ?? 0);
+      $filtrados[] = [
+        'id' => $avId,
+        'codigo' => calcCodigoDisplay($pedidoIdAv, $codigoBaseAv),
+        'criado_em' => $av['criado_em'],
+        'cliente' => $av['cliente'] ?: 'Cliente',
+        'status' => null,
+        'origem' => null,
+        'tipo' => 'avaliacao',
+        'chave' => 'avaliacao-' . $avId,
+        'nota' => (int) ($av['nota'] ?? 0),
+        'pedido_id' => $pedidoIdAv,
+      ];
+    }
+  }
+
+  usort($filtrados, static function ($a, $b) {
+    return strcmp((string) ($b['criado_em'] ?? ''), (string) ($a['criado_em'] ?? ''));
+  });
+
+  echo json_encode(['ok' => true, 'pedidos' => $filtrados]);
+} catch (Exception $e) {
+  echo json_encode([
+    'ok' => false,
+    'pedidos' => [],
+    'erro' => $e->getMessage(),
+  ]);
+}

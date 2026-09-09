@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Menu, X, LogOut, Store } from "lucide-react";
 import type { SidebarData } from "@/lib/sidebar";
 import { NAV_SECTIONS } from "@/components/sidebar-nav-config";
+import { NotificationBell } from "@/components/notification-bell";
 import { cn } from "cn";
 
 export function AppShell({
@@ -73,13 +74,14 @@ export function AppShell({
               sidebarData.loja.inicial
             )}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold">{sidebarData.loja.nome}</div>
             <div className="flex items-center gap-1 text-xs text-white/70">
               <Store size={11} />
               {sidebarData.loja.aberta ? "Loja aberta" : "Loja fechada"}
             </div>
           </div>
+          <NotificationBell lojaId={sidebarData.loja.id} phpAdminUrl={phpAdminUrl} />
         </div>
 
         <div className="flex items-center justify-between gap-2 border-b border-white/15 px-4 py-3 text-xs">

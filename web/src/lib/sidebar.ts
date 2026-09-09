@@ -3,6 +3,7 @@ import { phpApiFetch } from "@/lib/phpApi";
 export type SidebarData = {
   ok: true;
   loja: {
+    id: number;
     nome: string;
     inicial: string;
     logo: string | null;
