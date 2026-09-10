@@ -19,6 +19,13 @@ export type Produto = {
   estoque_quantidade: number;
   preco_promocional?: number | null;
   promo_desativado?: number;
+  promo_dias?: number | null;
+  promo_inicio?: string | null;
+  promo_imagem?: string | null;
+  promo_descricao?: string | null;
+  promo_etiqueta?: string | null;
+  em_promo?: boolean;
+  dias_restantes?: number | null;
   imagem?: string | null;
   codigo?: string | null;
   descricao?: string | null;
