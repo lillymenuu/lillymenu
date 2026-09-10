@@ -116,6 +116,7 @@ type PedidoDetalhe = {
   motoboy_id: number | null;
   motoboy_nome: string | null;
   motoboy_whatsapp: string | null;
+  editado_por: string | null;
 };
 
 export function OrderDetailDialog({
@@ -124,7 +125,6 @@ export function OrderDetailDialog({
   pedidoId,
   motoboys,
   phpAdminUrl,
-  adminNome,
   onAtualizado,
 }: {
   open: boolean;
@@ -132,7 +132,6 @@ export function OrderDetailDialog({
   pedidoId: number | null;
   motoboys: Motoboy[];
   phpAdminUrl: string;
-  adminNome: string;
   onAtualizado: () => void;
 }) {
   const [carregando, setCarregando] = useState(false);
@@ -271,19 +270,19 @@ export function OrderDetailDialog({
                   feito {formatTempoRelativo(pedido.criado_em)}
                 </span>
 
-                {adminNome && (
-                  <div className="py-1 text-center text-[10px] text-muted-foreground">
-                    Editado por: <span className="font-medium text-foreground">{adminNome}</span>
-                  </div>
-                )}
-
                 {pedido.agendamento && (
                   <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-center text-xs font-semibold text-amber-700">
                     Agendado para: {formatDataHora(pedido.agendamento)}
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-2.5 border-t pt-2.5">
+                {pedido.editado_por && (
+                  <div className="text-left text-[10px] text-muted-foreground">
+                    Editado por: <span className="font-medium text-foreground">{pedido.editado_por}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-2.5">
                   <div className="flex flex-col gap-1">
                     <span className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
                       <CalendarClock size={11} /> Horário do pedido

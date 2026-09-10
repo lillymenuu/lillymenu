@@ -152,6 +152,30 @@ $pagamentos->execute([$id, $lojaId]);
 $codigoBase = getPedidoCodigoBase($conn, $lojaId);
 $p['codigo'] = calcCodigoDisplay((int) $p['id'], $codigoBase);
 
+/* "Editado por": ultimo registro de edicao do pedido (admin/api/pdv_salvar.php
+ * grava acao='pedido_editado', referencia='pedido:<id>' via registrarOperacao()).
+ * So aparece se o pedido realmente foi editado depois de criado. */
+$editadoPor = null;
+try {
+  $stmtTemLogs = $conn->query("SHOW TABLES LIKE 'operacao_logs'");
+  if ($stmtTemLogs->fetchColumn()) {
+    $stmtEdicao = $conn->prepare("
+      SELECT a.nome
+      FROM operacao_logs l
+      LEFT JOIN admins a ON a.id = l.operador_id
+      WHERE l.acao = 'pedido_editado' AND l.referencia = ?
+      ORDER BY l.criado_em DESC, l.id DESC
+      LIMIT 1
+    ");
+    $stmtEdicao->execute(['pedido:' . $id]);
+    $nomeEditor = $stmtEdicao->fetchColumn();
+    $editadoPor = $nomeEditor !== false && $nomeEditor !== null ? (string) $nomeEditor : null;
+  }
+} catch (Throwable $e) {
+  $editadoPor = null;
+}
+$p['editado_por'] = $editadoPor;
+
 echo json_encode([
   'ok' => true,
   'pedido' => $p,
