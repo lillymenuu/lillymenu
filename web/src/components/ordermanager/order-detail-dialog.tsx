@@ -13,12 +13,21 @@ import {
   Monitor,
   User,
   PhoneCall,
+  MapPin,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "./confirm-dialog";
 import { LinkMotoboyDialog } from "./link-motoboy-dialog";
-import { STATUS_LABELS, TIPO_LABELS, formatBRL, formatTempoRelativo } from "./constants";
+import { STATUS_LABELS, TIPO_LABELS, TIPO_CORES, formatBRL, formatTempoRelativo } from "./constants";
+
+const ORIGEM_LABELS: Record<string, string> = {
+  balcao: "pelo balcão",
+  loja: "pela loja",
+  online: "online",
+  site: "pelo site",
+  whatsapp: "pelo WhatsApp",
+};
 import { ClientePerfilDialog } from "@/components/cliente/cliente-perfil-dialog";
 import type { Motoboy } from "@/lib/pedidos";
 import { cn } from "cn";
@@ -91,6 +100,7 @@ type PedidoDetalhe = {
   cliente_id: number;
   status: string;
   tipo: string;
+  origem: string | null;
   criado_em: string;
   nome: string;
   telefone: string;
@@ -350,40 +360,55 @@ export function OrderDetailDialog({
                   </a>
                 </div>
 
-                <div className="flex flex-col gap-1.5 pt-1">
-                  <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    {TIPO_LABELS[pedido.tipo] ?? pedido.tipo}
+                <div className="flex flex-col gap-2.5 pt-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
+                    <span style={{ color: TIPO_CORES[pedido.tipo] ?? undefined }}>
+                      {TIPO_LABELS[pedido.tipo] ?? pedido.tipo}
+                    </span>
+                    {pedido.origem && (
+                      <span className="font-normal tracking-normal text-muted-foreground normal-case">
+                        · pedido {ORIGEM_LABELS[pedido.origem] ?? pedido.origem}
+                      </span>
+                    )}
                   </div>
+
+                  {pedido.tipo === "entrega" && pedido.endereco_entrega && (
+                    <div className="flex flex-col gap-1">
+                      <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
+                        <MapPin size={12} /> Endereço
+                      </span>
+                      <span className="font-normal">{pedido.endereco_entrega}</span>
+                    </div>
+                  )}
+
                   {pedido.tipo === "entrega" && (
-                    <>
-                      {pedido.endereco_entrega && (
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-normal text-muted-foreground">Endereço</span>
-                          <button
-                            type="button"
-                            onClick={copiarEndereco}
-                            className="flex items-center gap-1 text-right font-normal hover:text-primary"
-                          >
-                            {pedido.endereco_entrega} <Copy size={11} />
-                          </button>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="font-normal text-muted-foreground">Taxa de entrega</span>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-normal text-muted-foreground">Taxa de entrega</span>
                         <span className="font-normal">{formatBRL(pedido.taxa_entrega)}</span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="font-normal text-muted-foreground">Motoboy</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-normal text-muted-foreground">Motoboy</span>
                         <button
                           type="button"
                           onClick={() => setMotoboyOpen(true)}
-                          className="flex items-center gap-1 font-normal text-primary hover:underline"
+                          className="flex items-center gap-1 text-left font-normal text-primary hover:underline"
                         >
                           <Truck size={12} />
                           {pedido.motoboy_nome ?? "Vincular"}
                         </button>
                       </div>
-                    </>
+                    </div>
+                  )}
+
+                  {pedido.tipo === "entrega" && pedido.endereco_entrega && (
+                    <button
+                      type="button"
+                      onClick={copiarEndereco}
+                      className="text-center text-xs font-normal text-primary hover:underline"
+                    >
+                      <Copy size={11} className="mr-1 inline" /> Copiar Endereço
+                    </button>
                   )}
                 </div>
 
