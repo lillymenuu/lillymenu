@@ -41,6 +41,13 @@ export function formatBRL(v: number | string) {
   return `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 }
 
+export function formatHora(iso: string): string {
+  if (!iso) return "-";
+  const data = new Date(iso.replace(" ", "T"));
+  if (Number.isNaN(data.getTime())) return "-";
+  return data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
 export function formatTempoRelativo(iso: string): string {
   if (!iso) return "-";
   const data = new Date(iso.replace(" ", "T"));

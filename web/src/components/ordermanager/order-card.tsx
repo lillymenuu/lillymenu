@@ -3,7 +3,7 @@
 import { Clock, MapPin, Printer, Bike, ShoppingBag, UtensilsCrossed, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Pedido } from "@/lib/pedidos";
-import { PROXIMA_ETAPA, TIPO_CORES, TIPO_LABELS, formatBRL, formatTempoRelativo } from "./constants";
+import { PROXIMA_ETAPA, TIPO_CORES, TIPO_LABELS, formatBRL, formatHora } from "./constants";
 import { cn } from "cn";
 
 const TIPO_ICONS = { entrega: Bike, retirada: ShoppingBag, mesa: UtensilsCrossed } as const;
@@ -74,7 +74,7 @@ export function OrderCard({
             )}
           >
             <Clock size={10} />
-            {formatTempoRelativo(pedido.criado_em)}
+            {formatHora(pedido.criado_em)}
           </span>
         </div>
       </div>
