@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, RotateCcw } from "lucide-react";
+import { Plus, RotateCcw, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,38 +22,51 @@ import {
 } from "@/components/ui/table";
 import { OrderDetailDialog } from "@/components/ordermanager/order-detail-dialog";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
-import {
-  STATUS_LABELS,
-  STATUS_CORES,
-  TIPO_LABELS,
-  TIPO_CORES,
-  formatBRL,
-  formatDataHora,
-} from "@/components/ordermanager/constants";
+import { STATUS_CORES, formatBRL, formatDataHora } from "@/components/ordermanager/constants";
+import { DateRangePicker } from "./date-range-picker";
 import type { Motoboy, Pedido, PedidosListarResposta } from "@/lib/pedidos";
+import { cn } from "cn";
+
+/* Rotulos/cores desta tabela seguem o mesmo padrao visual da tela legada
+ * (admin/pedidos.php: mapStatus/mapPagamento + .badge-pill), por isso tem
+ * mapas proprios em vez de reaproveitar STATUS_LABELS/TIPO_CORES usados no
+ * kanban e no modal de detalhe (que usam outra convencao de cores/rotulos). */
+const STATUS_LABELS_TABELA: Record<string, string> = {
+  pendente: "Pendente",
+  aceito: "Aceito",
+  preparando: "Em preparo",
+  entrega: "Em entrega",
+  finalizado: "Finalizado",
+  cancelado: "Cancelado",
+};
 
 const STATUS_ITEMS: Record<string, string> = {
-  "": "Todos",
-  ...STATUS_LABELS,
+  "": "Todos os status",
+  ...STATUS_LABELS_TABELA,
+};
+
+const PAGAMENTO_LABELS: Record<string, string> = {
+  pix: "Transferência Pix",
+  dinheiro: "Dinheiro",
+  credito: "Cartão de crédito",
+  debito: "Cartão de débito",
+};
+
+const PAGAMENTO_CORES: Record<string, { bg: string; fg: string }> = {
+  pix: { bg: "#dbeafe", fg: "#2563eb" },
+  dinheiro: { bg: "#dcfce7", fg: "#16a34a" },
+  credito: { bg: "#ede9fe", fg: "#6d28d9" },
+  debito: { bg: "#e0f2fe", fg: "#0284c7" },
+};
+
+const TIPO_PILL: Record<string, { label: string; bg: string; fg: string }> = {
+  entrega: { label: "Entrega", bg: "#fde68a", fg: "#92400e" },
+  retirada: { label: "Retirada", bg: "#dbeafe", fg: "#2563eb" },
 };
 
 function hojeISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function paginasVisiveis(paginas: number, pagina: number): (number | "...")[] {
-  if (paginas <= 7) {
-    return Array.from({ length: paginas }, (_, i) => i + 1);
-  }
-  const itens: (number | "...")[] = [1];
-  if (pagina > 3) itens.push("...");
-  const inicio = Math.max(2, pagina - 1);
-  const fim = Math.min(paginas - 1, pagina + 1);
-  for (let i = inicio; i <= fim; i++) itens.push(i);
-  if (pagina < paginas - 2) itens.push("...");
-  itens.push(paginas);
-  return itens;
 }
 
 export function OrderListTable({
@@ -172,126 +184,159 @@ export function OrderListTable({
         </div>
       </div>
 
-      <Card>
-        <CardContent className="flex flex-wrap items-end justify-between gap-3">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase">Status</span>
-              <Select
-                items={STATUS_ITEMS}
-                value={status}
-                onValueChange={(v) => mudarFiltro(() => setStatus(v ?? ""))}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(STATUS_ITEMS).map(([value, label]) => (
-                    <SelectItem key={value || "todos"} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase">De</span>
-              <Input
-                type="date"
-                value={dataIni}
-                onChange={(e) => mudarFiltro(() => setDataIni(e.target.value))}
-                className="w-36"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase">Até</span>
-              <Input
-                type="date"
-                value={dataFim}
-                onChange={(e) => mudarFiltro(() => setDataFim(e.target.value))}
-                className="w-36"
-              />
+      <Card className="rounded-2xl">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-[0.95rem] font-bold">Filtros para pedidos</div>
+            <div className="text-xs text-muted-foreground">
+              {total} pedido{total === 1 ? "" : "s"} encontrado{total === 1 ? "" : "s"}
             </div>
           </div>
-          <span className="text-sm text-muted-foreground">
-            {total} pedido{total === 1 ? "" : "s"} encontrado{total === 1 ? "" : "s"}
-          </span>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Select
+              items={STATUS_ITEMS}
+              value={status}
+              onValueChange={(v) => mudarFiltro(() => setStatus(v ?? ""))}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(STATUS_ITEMS).map(([value, label]) => (
+                  <SelectItem key={value || "todos"} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <DateRangePicker
+              dataIni={dataIni}
+              dataFim={dataFim}
+              onChange={(ini, fim) =>
+                mudarFiltro(() => {
+                  setDataIni(ini);
+                  setDataFim(fim);
+                })
+              }
+            />
+          </div>
         </CardContent>
       </Card>
 
-      <Card className="flex-1 gap-0 py-0">
+      <Card className="flex-1 gap-0 rounded-2xl py-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>N. pedido</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Pagamento</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="text-[0.66rem] tracking-wide text-muted-foreground uppercase">
+                  N. pedido
+                </TableHead>
+                <TableHead className="text-[0.66rem] tracking-wide text-muted-foreground uppercase">
+                  Nome
+                </TableHead>
+                <TableHead className="text-[0.66rem] tracking-wide text-muted-foreground uppercase">
+                  Data
+                </TableHead>
+                <TableHead className="text-[0.66rem] tracking-wide text-muted-foreground uppercase">
+                  Pagamento
+                </TableHead>
+                <TableHead className="text-[0.66rem] tracking-wide text-muted-foreground uppercase">
+                  Status
+                </TableHead>
+                <TableHead className="text-[0.66rem] tracking-wide text-muted-foreground uppercase">
+                  Tipo
+                </TableHead>
+                <TableHead className="text-[0.66rem] tracking-wide text-muted-foreground uppercase">
+                  Valor
+                </TableHead>
+                <TableHead className="text-[0.66rem] tracking-wide text-muted-foreground uppercase">
+                  Ação
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {carregando ? (
                 Array.from({ length: limite }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={7}>
+                    <TableCell colSpan={8}>
                       <div className="h-5 w-full animate-pulse rounded-md bg-muted" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : pedidos.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     Nenhum pedido encontrado.
                   </TableCell>
                 </TableRow>
               ) : (
                 pedidos.map((pedido) => {
                   const statusCor = STATUS_CORES[pedido.status] ?? STATUS_CORES.pendente;
+                  const tipoPill = TIPO_PILL[pedido.tipo] ?? TIPO_PILL.retirada;
                   const formas = pedido.pagamentos?.length
                     ? pedido.pagamentos.map((p) => p.forma)
-                    : [pedido.forma_pagamento || "-"];
+                    : [pedido.forma_pagamento || ""];
                   return (
                     <TableRow
                       key={pedido.id}
                       className="cursor-pointer"
                       onClick={() => setDetalheId(pedido.id)}
                     >
-                      <TableCell className="font-medium">#{pedido.codigo}</TableCell>
+                      <TableCell className="font-medium">
+                        <span
+                          className="mr-1.5 inline-block size-2 rounded-full align-middle"
+                          style={{ background: "#9c5523" }}
+                        />
+                        #{pedido.codigo}
+                      </TableCell>
                       <TableCell className="max-w-48 truncate">{pedido.nome}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatDataHora(pedido.criado_em)}
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col">
-                          {formas.map((forma, i) => (
-                            <span key={i} className="capitalize">
-                              {forma}
-                            </span>
-                          ))}
+                        <div className="flex flex-col gap-1">
+                          {formas.map((forma, i) => {
+                            const cor = PAGAMENTO_CORES[forma] ?? { bg: "#f1f5f9", fg: "#64748b" };
+                            return (
+                              <span
+                                key={i}
+                                className="w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                                style={{ background: cor.bg, color: cor.fg }}
+                              >
+                                {PAGAMENTO_LABELS[forma] ?? forma ?? "-"}
+                              </span>
+                            );
+                          })}
                         </div>
                       </TableCell>
                       <TableCell>
                         <span
-                          className="rounded-full px-2 py-1 text-[11px] font-medium"
+                          className="w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold"
                           style={{ background: statusCor.bg, color: statusCor.fg }}
                         >
-                          {STATUS_LABELS[pedido.status] ?? pedido.status}
+                          {STATUS_LABELS_TABELA[pedido.status] ?? pedido.status}
                         </span>
                       </TableCell>
                       <TableCell>
                         <span
-                          className="text-xs font-semibold tracking-wide"
-                          style={{ color: TIPO_CORES[pedido.tipo] ?? "#6b7280" }}
+                          className="w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                          style={{ background: tipoPill.bg, color: tipoPill.fg }}
                         >
-                          {TIPO_LABELS[pedido.tipo] ?? pedido.tipo?.toUpperCase()}
+                          {tipoPill.label}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatBRL(pedido.total)}
+                      <TableCell className="font-medium">{formatBRL(pedido.total)}</TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDetalheId(pedido.id);
+                          }}
+                          className="flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-muted/70"
+                        >
+                          <Printer size={11} /> Imprimir
+                        </button>
                       </TableCell>
                     </TableRow>
                   );
@@ -302,8 +347,8 @@ export function OrderListTable({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t p-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Itens por página</span>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Itens por página:</span>
             <Select
               items={{ "10": "10", "20": "20", "50": "50" }}
               value={String(limite)}
@@ -320,45 +365,31 @@ export function OrderListTable({
                 ))}
               </SelectContent>
             </Select>
-            <span>
-              Mostrando {inicioItem} a {fimItem} de {total} pedidos
-            </span>
           </div>
 
+          <span className="text-xs text-muted-foreground">
+            Mostrando {inicioItem} a {fimItem} de {total} pedidos
+          </span>
+
           <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pagina <= 1}
-              onClick={() => setPagina((p) => Math.max(1, p - 1))}
-            >
+            <PageButton disabled={pagina <= 1} onClick={() => setPagina(1)}>
+              «
+            </PageButton>
+            <PageButton disabled={pagina <= 1} onClick={() => setPagina((p) => Math.max(1, p - 1))}>
               ‹
-            </Button>
-            {paginasVisiveis(paginas, pagina).map((item, i) =>
-              item === "..." ? (
-                <span key={`e${i}`} className="px-1 text-sm text-muted-foreground">
-                  …
-                </span>
-              ) : (
-                <Button
-                  key={item}
-                  variant={item === pagina ? "default" : "outline"}
-                  size="sm"
-                  className="w-8"
-                  onClick={() => setPagina(item)}
-                >
-                  {item}
-                </Button>
-              )
-            )}
-            <Button
-              variant="outline"
-              size="sm"
+            </PageButton>
+            <span className="px-1.5 text-xs text-muted-foreground">
+              Página {pagina} de {paginas}
+            </span>
+            <PageButton
               disabled={pagina >= paginas}
               onClick={() => setPagina((p) => Math.min(paginas, p + 1))}
             >
               ›
-            </Button>
+            </PageButton>
+            <PageButton disabled={pagina >= paginas} onClick={() => setPagina(paginas)}>
+              »
+            </PageButton>
           </div>
         </div>
       </Card>
@@ -382,5 +413,29 @@ export function OrderListTable({
         onConfirmar={confirmarZerarSequencia}
       />
     </div>
+  );
+}
+
+function PageButton({
+  disabled,
+  onClick,
+  children,
+}: {
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "flex size-7 items-center justify-center rounded-md border text-xs font-semibold text-foreground transition-colors",
+        disabled ? "cursor-not-allowed opacity-40" : "hover:border-primary hover:text-primary"
+      )}
+    >
+      {children}
+    </button>
   );
 }
