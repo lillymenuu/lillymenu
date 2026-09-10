@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-  Phone,
-  MessageCircle,
   Copy,
   Truck,
   Printer,
@@ -17,6 +15,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { ConfirmDialog } from "./confirm-dialog";
 import { LinkMotoboyDialog } from "./link-motoboy-dialog";
 import { STATUS_LABELS, TIPO_LABELS, TIPO_CORES, formatBRL, formatTempoRelativo } from "./constants";
@@ -345,7 +344,7 @@ export function OrderDetailDialog({
                       "h-auto min-w-0 flex-1 rounded-lg py-2 text-center text-[11px] leading-tight font-normal whitespace-normal"
                     )}
                   >
-                    <Phone size={12} className="shrink-0" /> Entrar em contato com o cliente
+                    <WhatsAppIcon size={12} className="shrink-0 text-emerald-600" /> Entrar em contato com o cliente
                   </a>
                   <a
                     href={waHref}
@@ -356,7 +355,7 @@ export function OrderDetailDialog({
                       "h-auto min-w-0 flex-1 rounded-lg py-2 text-center text-[11px] leading-tight font-normal whitespace-normal"
                     )}
                   >
-                    <MessageCircle size={12} className="shrink-0" /> Enviar pedido ao WhatsApp
+                    <WhatsAppIcon size={12} className="shrink-0 text-emerald-600" /> Enviar pedido ao WhatsApp
                   </a>
                 </div>
 
