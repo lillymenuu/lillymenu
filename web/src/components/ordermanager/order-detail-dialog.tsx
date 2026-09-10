@@ -271,8 +271,8 @@ export function OrderDetailDialog({
                 </span>
 
                 {pedido.agendamento && (
-                  <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-[10px] font-normal text-amber-700">
-                    Agendado para: {pedido.agendamento}
+                  <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-center text-xs font-semibold text-amber-700">
+                    Agendado para: {formatDataHora(pedido.agendamento)}
                   </div>
                 )}
 
