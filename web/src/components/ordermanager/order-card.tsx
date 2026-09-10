@@ -30,10 +30,10 @@ export function OrderCard({
     (Date.now() - new Date(pedido.criado_em.replace(" ", "T")).getTime()) / 60000
   );
   const atrasado = minutosDesdeCriacao >= 60;
-  const pagamentoTexto =
+  const formasPagamento =
     pedido.pagamentos?.length > 0
-      ? pedido.pagamentos.map((p) => p.forma).join(", ")
-      : pedido.forma_pagamento || "-";
+      ? pedido.pagamentos.map((p) => p.forma)
+      : [pedido.forma_pagamento || "-"];
   const Icon = TIPO_ICONS[pedido.tipo as keyof typeof TIPO_ICONS] ?? ShoppingBag;
   const corTipo = TIPO_CORES[pedido.tipo] ?? "#6b7280";
   const finalizarEmVerde = pedido.status === "entrega";
@@ -105,9 +105,15 @@ export function OrderCard({
         <span className="font-normal text-muted-foreground">Total</span>
         <span className="font-medium">{formatBRL(pedido.total)}</span>
       </div>
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-start justify-between text-sm">
         <span className="font-normal text-muted-foreground">Pagamento</span>
-        <span className="font-normal">{pagamentoTexto}</span>
+        <div className="flex flex-col items-end">
+          {formasPagamento.map((forma, i) => (
+            <span key={i} className="font-normal capitalize">
+              {forma}
+            </span>
+          ))}
+        </div>
       </div>
 
       {pedido.tipo === "entrega" &&

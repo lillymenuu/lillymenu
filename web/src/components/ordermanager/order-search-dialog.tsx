@@ -32,10 +32,10 @@ function ResultadoSkeleton() {
 function ResultadoCard({ pedido, onClick }: { pedido: Pedido; onClick: () => void }) {
   const Icon = TIPO_ICONS[pedido.tipo as keyof typeof TIPO_ICONS] ?? ShoppingBag;
   const corTipo = TIPO_CORES[pedido.tipo] ?? "#6b7280";
-  const pagamentoTexto =
+  const formasPagamento =
     pedido.pagamentos?.length > 0
-      ? pedido.pagamentos.map((p) => p.forma).join(", ")
-      : pedido.forma_pagamento || "-";
+      ? pedido.pagamentos.map((p) => p.forma)
+      : [pedido.forma_pagamento || "-"];
   const minutosDesdeCriacao = Math.floor(
     (Date.now() - new Date(pedido.criado_em.replace(" ", "T")).getTime()) / 60000
   );
@@ -80,9 +80,15 @@ function ResultadoCard({ pedido, onClick }: { pedido: Pedido; onClick: () => voi
         <span className="font-normal text-muted-foreground">Total</span>
         <span className="font-medium">{formatBRL(Number(pedido.total))}</span>
       </div>
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <span className="font-normal text-muted-foreground">Pagamento</span>
-        <span className="font-normal">{pagamentoTexto}</span>
+        <div className="flex flex-col items-end">
+          {formasPagamento.map((forma, i) => (
+            <span key={i} className="font-normal capitalize">
+              {forma}
+            </span>
+          ))}
+        </div>
       </div>
     </button>
   );
