@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, MapPin, Printer, Bike, ShoppingBag, UtensilsCrossed } from "lucide-react";
+import { Clock, MapPin, Printer, Bike, ShoppingBag, UtensilsCrossed, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Pedido } from "@/lib/pedidos";
 import { PROXIMA_ETAPA, TIPO_CORES, TIPO_LABELS, formatBRL, formatTempoRelativo } from "./constants";
@@ -25,8 +25,11 @@ export function OrderCard({
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
 }) {
-  const referencia = pedido.status_em || pedido.criado_em;
   const proxima = PROXIMA_ETAPA[pedido.status];
+  const minutosDesdeCriacao = Math.floor(
+    (Date.now() - new Date(pedido.criado_em.replace(" ", "T")).getTime()) / 60000
+  );
+  const atrasado = minutosDesdeCriacao >= 60;
   const pagamentoTexto =
     pedido.pagamentos?.length > 0
       ? pedido.pagamentos.map((p) => p.forma).join(", ")
@@ -64,9 +67,14 @@ export function OrderCard({
           >
             <Printer size={11} />
           </button>
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-1 text-[11px] font-normal text-muted-foreground">
+          <span
+            className={cn(
+              "flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-normal",
+              atrasado ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
+            )}
+          >
             <Clock size={10} />
-            {formatTempoRelativo(referencia)}
+            {formatTempoRelativo(pedido.criado_em)}
           </span>
         </div>
       </div>
@@ -74,6 +82,12 @@ export function OrderCard({
       <span className="text-center text-xs font-semibold tracking-wide" style={{ color: corTipo }}>
         {TIPO_LABELS[pedido.tipo] ?? pedido.tipo?.toUpperCase()}
       </span>
+
+      {pedido.agendamento && (
+        <span className="mx-auto flex w-fit items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+          <CalendarClock size={10} /> Agendado
+        </span>
+      )}
 
       <div className="flex items-baseline justify-center gap-2 text-center">
         <span className="truncate font-medium">{pedido.nome}</span>
