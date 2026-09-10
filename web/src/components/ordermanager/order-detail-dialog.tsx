@@ -265,64 +265,64 @@ export function OrderDetailDialog({
             {carregando ? (
               <DetalheSkeleton />
             ) : pedido ? (
-              <div className="flex flex-col gap-3 pt-1 text-sm">
-                <span className="text-center text-sm font-medium text-destructive">
+              <div className="flex flex-col gap-3 pt-1 text-xs">
+                <span className="text-center text-xs font-medium text-destructive">
                   feito {formatTempoRelativo(pedido.criado_em)}
                 </span>
 
                 {pedido.agendamento && (
-                  <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-normal text-amber-700">
+                  <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-[10px] font-normal text-amber-700">
                     Agendado para: {pedido.agendamento}
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
-                      <CalendarClock size={12} /> Horário do pedido
+                    <span className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
+                      <CalendarClock size={11} /> Horário do pedido
                     </span>
                     <span className="font-medium">{formatDataHora(pedido.criado_em)}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
-                      <Monitor size={12} /> Status do pedido
+                    <span className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
+                      <Monitor size={11} /> Status do pedido
                     </span>
                     <span className="font-medium text-blue-600">
                       {(STATUS_LABELS[pedido.status] ?? pedido.status).toUpperCase()}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
-                      <User size={12} /> Nome do cliente
+                    <span className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
+                      <User size={11} /> Nome do cliente
                     </span>
                     <span className="font-medium">{pedido.nome}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
-                      <PhoneCall size={12} /> Telefone
+                    <span className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
+                      <PhoneCall size={11} /> Telefone
                     </span>
                     <span className="font-medium">{pedido.telefone}</span>
                   </div>
                 </div>
 
                 {stats && (
-                  <div className="flex flex-col gap-3 rounded-lg border p-2.5 text-sm">
+                  <div className="flex flex-col gap-3 rounded-lg border p-2.5">
                     <div className="grid grid-cols-2 gap-2.5">
                       <div>
-                        <div className="text-xs font-normal text-muted-foreground">Pedidos feitos</div>
+                        <div className="text-[10px] font-normal text-muted-foreground">Pedidos feitos</div>
                         <div className="font-medium">{stats.pedidos_feitos}</div>
                       </div>
                       <div>
-                        <div className="text-xs font-normal text-muted-foreground">Ticket médio</div>
+                        <div className="text-[10px] font-normal text-muted-foreground">Ticket médio</div>
                         <div className="font-medium">{formatBRL(stats.ticket_medio)}</div>
                       </div>
                       <div>
-                        <div className="text-xs font-normal text-muted-foreground">Pontos</div>
+                        <div className="text-[10px] font-normal text-muted-foreground">Pontos</div>
                         <div className="font-medium">{stats.pontos}</div>
                       </div>
                       {stats.cashback_saldo > 0 && (
                         <div>
-                          <div className="text-xs font-normal text-muted-foreground">Cashback</div>
+                          <div className="text-[10px] font-normal text-muted-foreground">Cashback</div>
                           <div className="font-medium">{formatBRL(stats.cashback_saldo)}</div>
                         </div>
                       )}
@@ -342,10 +342,10 @@ export function OrderDetailDialog({
                     href={telHref}
                     className={cn(
                       buttonVariants({ size: "sm", variant: "outline" }),
-                      "h-auto min-w-0 flex-1 rounded-lg py-2 text-center text-xs leading-tight font-normal whitespace-normal"
+                      "h-auto min-w-0 flex-1 rounded-lg py-2 text-center text-[11px] leading-tight font-normal whitespace-normal"
                     )}
                   >
-                    <Phone size={13} className="shrink-0" /> Entrar em contato com o cliente
+                    <Phone size={12} className="shrink-0" /> Entrar em contato com o cliente
                   </a>
                   <a
                     href={waHref}
@@ -353,15 +353,15 @@ export function OrderDetailDialog({
                     rel="noreferrer"
                     className={cn(
                       buttonVariants({ size: "sm", variant: "outline" }),
-                      "h-auto min-w-0 flex-1 rounded-lg py-2 text-center text-xs leading-tight font-normal whitespace-normal"
+                      "h-auto min-w-0 flex-1 rounded-lg py-2 text-center text-[11px] leading-tight font-normal whitespace-normal"
                     )}
                   >
-                    <MessageCircle size={13} className="shrink-0" /> Enviar pedido ao WhatsApp
+                    <MessageCircle size={12} className="shrink-0" /> Enviar pedido ao WhatsApp
                   </a>
                 </div>
 
                 <div className="flex flex-col gap-2.5 pt-1">
-                  <div className="flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium tracking-wide uppercase">
                     <span style={{ color: TIPO_CORES[pedido.tipo] ?? undefined }}>
                       {TIPO_LABELS[pedido.tipo] ?? pedido.tipo}
                     </span>
@@ -374,8 +374,8 @@ export function OrderDetailDialog({
 
                   {pedido.tipo === "entrega" && pedido.endereco_entrega && (
                     <div className="flex flex-col gap-1">
-                      <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
-                        <MapPin size={12} /> Endereço
+                      <span className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
+                        <MapPin size={11} /> Endereço
                       </span>
                       <span className="font-normal">{pedido.endereco_entrega}</span>
                     </div>
@@ -384,17 +384,17 @@ export function OrderDetailDialog({
                   {pedido.tipo === "entrega" && (
                     <div className="grid grid-cols-2 gap-2.5">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-normal text-muted-foreground">Taxa de entrega</span>
+                        <span className="text-[10px] font-normal text-muted-foreground">Taxa de entrega</span>
                         <span className="font-normal">{formatBRL(pedido.taxa_entrega)}</span>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-normal text-muted-foreground">Motoboy</span>
+                        <span className="text-[10px] font-normal text-muted-foreground">Motoboy</span>
                         <button
                           type="button"
                           onClick={() => setMotoboyOpen(true)}
                           className="flex items-center gap-1 text-left font-normal text-primary hover:underline"
                         >
-                          <Truck size={12} />
+                          <Truck size={11} />
                           {pedido.motoboy_nome ?? "Vincular"}
                         </button>
                       </div>
@@ -405,15 +405,15 @@ export function OrderDetailDialog({
                     <button
                       type="button"
                       onClick={copiarEndereco}
-                      className="text-center text-xs font-normal text-primary hover:underline"
+                      className="text-center text-[10px] font-normal text-primary hover:underline"
                     >
-                      <Copy size={11} className="mr-1 inline" /> Copiar Endereço
+                      <Copy size={10} className="mr-1 inline" /> Copiar Endereço
                     </button>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-1.5 border-t pt-2.5">
-                  <div className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  <div className="flex items-center gap-1.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                     Pagamento
                   </div>
                   {pagamentos.length > 0 ? (
@@ -430,31 +430,31 @@ export function OrderDetailDialog({
 
                 {pedido.observacoes_cliente && (
                   <div className="flex flex-col gap-1 border-t pt-2.5">
-                    <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    <div className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                       Observações do cliente
                     </div>
-                    <p className="text-sm font-normal">{pedido.observacoes_cliente}</p>
+                    <p className="font-normal">{pedido.observacoes_cliente}</p>
                   </div>
                 )}
 
                 <div className="flex flex-col gap-1.5 border-t pt-2.5">
-                  <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  <div className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                     Resumo do pedido
                   </div>
                   <div className="flex flex-col gap-1">
                     {itens.map((item, i) => (
-                      <div key={i} className="flex items-start justify-between gap-2 text-sm">
+                      <div key={i} className="flex items-start justify-between gap-2">
                         <span className="font-normal">
                           {item.quantidade}x {item.produto_nome}
                           {item.observacoes && (
-                            <span className="block text-xs font-normal text-muted-foreground">{item.observacoes}</span>
+                            <span className="block text-[10px] font-normal text-muted-foreground">{item.observacoes}</span>
                           )}
                         </span>
                         <span className="shrink-0 font-normal">{formatBRL(item.preco * item.quantidade)}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-1 flex flex-col gap-1 border-t pt-2 text-sm">
+                  <div className="mt-1 flex flex-col gap-1 border-t pt-2">
                     <div className="flex items-center justify-between font-normal">
                       <span>Subtotal</span>
                       <span>{formatBRL(pedido.subtotal)}</span>
@@ -489,7 +489,7 @@ export function OrderDetailDialog({
                         <span>-{formatBRL(pedido.cashback_usado)}</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between text-base font-medium">
+                    <div className="flex items-center justify-between text-sm font-medium">
                       <span>Total</span>
                       <span>{formatBRL(pedido.total)}</span>
                     </div>
