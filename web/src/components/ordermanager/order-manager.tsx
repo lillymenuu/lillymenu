@@ -36,10 +36,12 @@ export function OrderManager({
   pedidosIniciais,
   motoboys,
   phpAdminUrl,
+  adminNome,
 }: {
   pedidosIniciais: Pedido[];
   motoboys: Motoboy[];
   phpAdminUrl: string;
+  adminNome: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -295,6 +297,7 @@ export function OrderManager({
         pedidoId={detalheId}
         motoboys={motoboys}
         phpAdminUrl={phpAdminUrl}
+        adminNome={adminNome}
         onAtualizado={carregarPedidos}
       />
 
