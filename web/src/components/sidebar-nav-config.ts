@@ -56,7 +56,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { menuKey: "pdv", label: "Pedidos (PDV)", icon: ShoppingBag, href: "/pdv" },
       { menuKey: "gestor", label: "Gestor de Pedidos", icon: Kanban, href: "/ordermanager", migrated: true },
-      { menuKey: "pedidos", label: "Lista de Pedidos", icon: Receipt, href: "/pedidos" },
+      { menuKey: "pedidos", label: "Lista de Pedidos", icon: Receipt, href: "/order-list", migrated: true },
       { menuKey: "orcamentos", label: "Orçamento/Recibo", icon: FileText, href: "/orcamentos" },
       { menuKey: "produtos", label: "Produtos", icon: Package, href: "/produtos", migrated: true },
       { menuKey: "promo", label: "Promo", icon: Gift, href: "/promo" },

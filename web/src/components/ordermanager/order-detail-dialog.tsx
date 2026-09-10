@@ -18,7 +18,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { ConfirmDialog } from "./confirm-dialog";
 import { LinkMotoboyDialog } from "./link-motoboy-dialog";
-import { STATUS_LABELS, TIPO_LABELS, TIPO_CORES, formatBRL, formatTempoRelativo } from "./constants";
+import { STATUS_LABELS, TIPO_LABELS, TIPO_CORES, formatBRL, formatTempoRelativo, formatDataHora } from "./constants";
 
 const ORIGEM_LABELS: Record<string, string> = {
   balcao: "pelo balcão",
@@ -68,18 +68,6 @@ function DetalheSkeleton() {
       </div>
     </div>
   );
-}
-
-function formatDataHora(iso: string): string {
-  const d = new Date(iso.replace(" ", "T"));
-  if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 type ItemPedido = { produto_nome: string; quantidade: number; preco: number; observacoes: string | null };

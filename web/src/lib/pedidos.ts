@@ -34,3 +34,33 @@ export function getMotoboysAtivos() {
     "/admin/api/v1/motoboys.php?action=list"
   );
 }
+
+export type PedidosListarParams = {
+  status?: string;
+  data_ini?: string;
+  data_fim?: string;
+  pagina?: number;
+  limite?: number;
+};
+
+export type PedidosListarResposta = {
+  ok: true;
+  pedidos: Pedido[];
+  total: number;
+  paginas: number;
+  pagina: number;
+  limite: number;
+};
+
+export function getPedidosListar(params: PedidosListarParams = {}) {
+  const qs = new URLSearchParams();
+  if (params.status) qs.set("status", params.status);
+  if (params.data_ini) qs.set("data_ini", params.data_ini);
+  if (params.data_fim) qs.set("data_fim", params.data_fim);
+  if (params.pagina) qs.set("pagina", String(params.pagina));
+  if (params.limite) qs.set("limite", String(params.limite));
+  const query = qs.toString();
+  return phpApiFetch<PedidosListarResposta>(
+    `/admin/api/v1/pedidos_listar.php${query ? `?${query}` : ""}`
+  );
+}
