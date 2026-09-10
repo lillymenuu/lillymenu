@@ -91,7 +91,10 @@ if (!empty($p['cliente_id'])) {
     $stats['cashback_saldo'] = (float) $stmtSaldo->fetchColumn();
   }
   if ($temPontosCliente || $temPontosSaldoCliente) {
-    $campoPontos = $temPontosCliente ? 'pontos' : 'pontos_saldo';
+    // Mesma prioridade de coluna usada ao creditar pontos (pedidos_finalizar.php,
+    // pedido_criar.php): pontos_saldo primeiro, senao a movimentacao fica gravada
+    // numa coluna e o saldo exibido aqui continua lendo da outra, sempre zerado.
+    $campoPontos = $temPontosSaldoCliente ? 'pontos_saldo' : 'pontos';
     $stmtPontos = $conn->prepare("SELECT {$campoPontos} FROM clientes WHERE id = ? AND loja_id = ?");
     $stmtPontos->execute([$p['cliente_id'], $lojaId]);
     $stats['pontos'] = (int) $stmtPontos->fetchColumn();
