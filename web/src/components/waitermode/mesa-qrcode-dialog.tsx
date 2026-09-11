@@ -17,7 +17,11 @@ export function MesaQrCodeDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
-  const link = mesa ? `${cardapioUrl}?mesa=${mesa.id}` : "";
+  // cardapioUrl normalmente é so o slug (sem querystring), mas quando a loja
+  // não tem um slug válido (nome vazio/só símbolos) cai pro fallback direto
+  // "loja.php?loja_id=X", que já vem com "?" — nesse caso precisa de "&".
+  const separador = cardapioUrl.includes("?") ? "&" : "?";
+  const link = mesa ? `${cardapioUrl}${separador}mesa=${mesa.id}` : "";
 
   useEffect(() => {
     if (!mesa) {

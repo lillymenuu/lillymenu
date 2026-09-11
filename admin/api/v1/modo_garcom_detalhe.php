@@ -51,8 +51,11 @@ $garconsAtivosCount = count(array_filter($garcons, fn($g) => (int) $g['ativo'] =
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-$nomeLojaCfg = config($conn, 'nome_loja', '');
-$linkLojaCfg = config($conn, 'link_loja', '');
+// $lojaId explicito (4o parametro) — sem ele, config() cai em
+// $_SESSION['loja_id'] ?? 1, que nunca e setado nesse endpoint (autenticacao
+// via Bearer token, sem sessao PHP), resolvendo sempre a config errada.
+$nomeLojaCfg = config($conn, 'nome_loja', '', $lojaId);
+$linkLojaCfg = config($conn, 'link_loja', '', $lojaId);
 $lojaLinkSlug = '';
 if ($linkLojaCfg) {
   if (preg_match('#[?&]loja=([^&]+)#', $linkLojaCfg, $m)) {
@@ -69,10 +72,20 @@ if ($lojaLinkSlug === '') {
   $lojaLinkSlug = preg_replace('/[^a-z0-9]+/', '-', $lojaLinkSlug);
   $lojaLinkSlug = trim($lojaLinkSlug, '-');
 }
-$garcomLoginUrl = $protocol . $host . '/' . rawurlencode($lojaLinkSlug) . '/garcom_login';
-// Link do cardapio publico (mesmo slug, sem sufixo) — usado pra montar o QR
-// Code de mesa (?mesa=<id>), lido em public/loja.php.
-$cardapioUrl = $protocol . $host . '/' . rawurlencode($lojaLinkSlug);
+if ($lojaLinkSlug !== '') {
+  $garcomLoginUrl = $protocol . $host . '/' . rawurlencode($lojaLinkSlug) . '/garcom_login';
+  // Link do cardapio publico (mesmo slug, sem sufixo) — usado pra montar o QR
+  // Code de mesa (?mesa=<id>), lido em public/loja.php.
+  $cardapioUrl = $protocol . $host . '/' . rawurlencode($lojaLinkSlug);
+} else {
+  // Nome da loja vazio ou so com caracteres que nao sobram nada apos
+  // normalizar (ex: so acentos/emoji) — sem slug nenhum pra montar o link
+  // curto. Cai pro acesso direto via loja_id (mesmo fallback ja usado em
+  // public/garcom.php quando a sessao expira sem slug resolvido), que
+  // sempre funciona independente do nome da loja.
+  $garcomLoginUrl = $protocol . $host . '/public/garcom_login.php?loja_id=' . $lojaId;
+  $cardapioUrl = $protocol . $host . '/public/loja.php?loja_id=' . $lojaId;
+}
 
 echo json_encode([
   'ok' => true,
