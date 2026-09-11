@@ -23,6 +23,7 @@ import { OrderDetailDialog } from "@/components/ordermanager/order-detail-dialog
 import { DateRangePicker } from "@/components/order-list/date-range-picker";
 import { STATUS_CORES, TIPO_CORES, TIPO_LABELS, formatBRL } from "@/components/ordermanager/constants";
 import { TopRankingChart } from "./top-ranking-chart";
+import { ViewToggle, type SalesView } from "./view-toggle";
 import type { Motoboy } from "@/lib/pedidos";
 import type { RelatoriosParams, RelatoriosResposta } from "@/lib/relatorios";
 import { cn } from "cn";
@@ -80,6 +81,8 @@ export function SalesManager({
   const [dados, setDados] = useState(dadosIniciais);
   const [carregando, setCarregando] = useState(false);
   const [detalheId, setDetalheId] = useState<number | null>(null);
+  const [pagamentoView, setPagamentoView] = useState<SalesView>("cards");
+  const [produtoView, setProdutoView] = useState<SalesView>("cards");
 
   const primeiraRenderRef = useRef(true);
 
@@ -227,16 +230,47 @@ export function SalesManager({
         </Card>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {(["pix", "credito", "debito", "dinheiro"] as const).map((forma) => (
-          <Card key={forma} size="sm">
-            <CardContent className="flex flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground">{PAGAMENTO_LABELS[forma]}</span>
-              <span className="text-base font-semibold">{formatBRL(pagamentoPorForma[forma]?.total ?? 0)}</span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardContent>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">Vendas por meio de pagamento</h3>
+            <ViewToggle value={pagamentoView} onChange={setPagamentoView} />
+          </div>
+          {pagamentoView === "cards" ? (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {(["pix", "credito", "debito", "dinheiro"] as const).map((forma) => (
+                <div key={forma} className="rounded-lg border p-3">
+                  <div className="text-xs text-muted-foreground">{PAGAMENTO_LABELS[forma]}</div>
+                  <div className="text-base font-semibold">{formatBRL(pagamentoPorForma[forma]?.total ?? 0)}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Forma de pagamento</TableHead>
+                  <TableHead className="text-right">Quantidade</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(["pix", "credito", "debito", "dinheiro"] as const).map((forma) => (
+                  <TableRow key={forma}>
+                    <TableCell className="font-medium">{PAGAMENTO_LABELS[forma]}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {pagamentoPorForma[forma]?.quantidade ?? 0}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatBRL(pagamentoPorForma[forma]?.total ?? 0)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -263,10 +297,13 @@ export function SalesManager({
 
       <Card>
         <CardContent>
-          <h3 className="mb-3 text-sm font-semibold">Vendas por produto</h3>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">Vendas por produto</h3>
+            <ViewToggle value={produtoView} onChange={setProdutoView} />
+          </div>
           {dados.vendas_produtos.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">Sem dados no período.</p>
-          ) : (
+          ) : produtoView === "cards" ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
               {dados.vendas_produtos.map((p, i) => (
                 <div key={i} className="rounded-lg border p-3">
@@ -276,6 +313,25 @@ export function SalesManager({
                 </div>
               ))}
             </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Produto</TableHead>
+                  <TableHead className="text-right">Quantidade</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dados.vendas_produtos.map((p, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="max-w-64 truncate font-medium">{p.nome}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{p.quantidade}</TableCell>
+                    <TableCell className="text-right font-medium">{formatBRL(p.total)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
