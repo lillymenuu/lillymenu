@@ -98,7 +98,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "motoboys", label: "Motoboys", icon: Bike, href: "/motoboys", migrated: true },
       { menuKey: "modoGarcom", label: "Modo Garçom", icon: BadgeIcon, href: "/modo_garcom" },
       { menuKey: "controleCaixa", label: "Controle de caixa", icon: Wallet, href: "/cashcontrol", migrated: true },
-      { menuKey: "controleFiado", label: "Controle de fiado", icon: BookText, href: "/controle_fiado" },
+      { menuKey: "controleFiado", label: "Controle de fiado", icon: BookText, href: "/storecredittracking", migrated: true },
       { menuKey: "cupons", label: "Cupons", icon: Ticket, href: "/cupons" },
       { menuKey: null, label: "Avaliações", icon: Star, href: "/avaliacoes", migrated: true },
       { menuKey: null, label: "Assinatura", icon: CreditCard, href: "/plan-details", migrated: true },
