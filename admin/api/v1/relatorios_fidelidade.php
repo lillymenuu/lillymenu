@@ -1,8 +1,11 @@
 <?php
 /*
  * Versao JSON de admin/relatorios_fidelidade.php para o novo frontend
- * Next.js (/loyaltyreports), trocando sessao por token Bearer. Janela
- * fixa de 30 dias, sem filtros — igual ao legado.
+ * Next.js (/loyaltyreports), trocando sessao por token Bearer. O legado
+ * usava uma janela fixa de 30 dias sem filtro nenhum; aqui o periodo e
+ * parametrizavel (mesmo padrao de periodo usado em /sales e
+ * /clientreports), mantendo 30 dias como default pra bater com o
+ * comportamento original quando nenhum filtro e informado.
  */
 
 require_once __DIR__ . '/../../../config/database.php';
@@ -15,9 +18,22 @@ header('Content-Type: application/json; charset=utf-8');
 $auth   = apiAuthExigir($conn);
 $lojaId = $auth['loja_id'];
 
-$periodoDias = 30;
-$inicio = date('Y-m-d', strtotime('-' . ($periodoDias - 1) . ' days'));
+$periodoFiltro = trim($_GET['periodo'] ?? '30');
+$dataIniParam = trim($_GET['data_ini'] ?? '');
+$dataFimParam = trim($_GET['data_fim'] ?? '');
 $hoje = date('Y-m-d');
+
+if ($dataIniParam !== '' && $dataFimParam !== '') {
+  $inicio = $dataIniParam . ' 00:00:00';
+  $fim = $dataFimParam . ' 23:59:59';
+} elseif ($periodoFiltro === 'hoje') {
+  $inicio = $hoje . ' 00:00:00';
+  $fim = $hoje . ' 23:59:59';
+} else {
+  $dias = in_array($periodoFiltro, ['7', '15', '30', '60', '90', '365'], true) ? (int) $periodoFiltro : 30;
+  $inicio = date('Y-m-d', strtotime('-' . ($dias - 1) . ' days')) . ' 00:00:00';
+  $fim = $hoje . ' 23:59:59';
+}
 
 $clientesColunas = $conn->query("SHOW COLUMNS FROM clientes")->fetchAll(PDO::FETCH_COLUMN, 0);
 $pedidoColunas = $conn->query("SHOW COLUMNS FROM pedidos")->fetchAll(PDO::FETCH_COLUMN, 0);
@@ -127,17 +143,17 @@ if ($temTabelaMov) {
   $stmt = $conn->prepare("
     SELECT COALESCE(SUM(valor),0)
     FROM cashback_movimentacoes
-    WHERE tipo = 'uso' AND criado_em >= ? AND loja_id = ?
+    WHERE tipo = 'uso' AND criado_em BETWEEN ? AND ? AND loja_id = ?
   ");
-  $stmt->execute([$inicio, $lojaId]);
+  $stmt->execute([$inicio, $fim, $lojaId]);
   $cashbackUtilizado = (float) $stmt->fetchColumn();
 } elseif ($temCashbackUsado) {
   $stmt = $conn->prepare("
     SELECT COALESCE(SUM(cashback_usado),0)
     FROM pedidos
-    WHERE criado_em >= ? AND status <> 'cancelado' AND loja_id = ?
+    WHERE criado_em BETWEEN ? AND ? AND status <> 'cancelado' AND loja_id = ?
   ");
-  $stmt->execute([$inicio, $lojaId]);
+  $stmt->execute([$inicio, $fim, $lojaId]);
   $cashbackUtilizado = (float) $stmt->fetchColumn();
 }
 
@@ -146,17 +162,17 @@ if ($temCashbackAplicado) {
   $stmt = $conn->prepare("
     SELECT COUNT(*)
     FROM pedidos
-    WHERE criado_em >= ? AND status <> 'cancelado' AND cashback_aplicado = 1 AND loja_id = ?
+    WHERE criado_em BETWEEN ? AND ? AND status <> 'cancelado' AND cashback_aplicado = 1 AND loja_id = ?
   ");
-  $stmt->execute([$inicio, $lojaId]);
+  $stmt->execute([$inicio, $fim, $lojaId]);
   $pedidosComCashback = (int) $stmt->fetchColumn();
 } elseif ($temCashbackValor) {
   $stmt = $conn->prepare("
     SELECT COUNT(*)
     FROM pedidos
-    WHERE criado_em >= ? AND status <> 'cancelado' AND cashback_valor > 0 AND loja_id = ?
+    WHERE criado_em BETWEEN ? AND ? AND status <> 'cancelado' AND cashback_valor > 0 AND loja_id = ?
   ");
-  $stmt->execute([$inicio, $lojaId]);
+  $stmt->execute([$inicio, $fim, $lojaId]);
   $pedidosComCashback = (int) $stmt->fetchColumn();
 }
 
@@ -167,9 +183,9 @@ if ($temCupom) {
   $stmt = $conn->prepare("
     SELECT COUNT(*) AS total, $selectDesconto AS desconto
     FROM pedidos
-    WHERE criado_em >= ? AND status <> 'cancelado' AND cupom IS NOT NULL AND cupom <> '' AND loja_id = ?
+    WHERE criado_em BETWEEN ? AND ? AND status <> 'cancelado' AND cupom IS NOT NULL AND cupom <> '' AND loja_id = ?
   ");
-  $stmt->execute([$inicio, $lojaId]);
+  $stmt->execute([$inicio, $fim, $lojaId]);
   $res = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
   $cupomPedidos = (int) ($res['total'] ?? 0);
   $cupomDesconto = (float) ($res['desconto'] ?? 0);
@@ -218,10 +234,10 @@ if ($clientesRows) {
     $stmt = $conn->prepare("
       SELECT " . implode(',', $select) . "
       FROM pedidos
-      WHERE criado_em >= ? AND status <> 'cancelado' AND cliente_id IN ($placeholders) AND loja_id = ?
+      WHERE criado_em BETWEEN ? AND ? AND status <> 'cancelado' AND cliente_id IN ($placeholders) AND loja_id = ?
       GROUP BY cliente_id
     ");
-    $stmt->execute(array_merge([$inicio], $ids, [$lojaId]));
+    $stmt->execute(array_merge([$inicio, $fim], $ids, [$lojaId]));
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
       $clientesExtras[$row['cliente_id']] = $row;
     }
@@ -245,12 +261,12 @@ if ($temTabelaMov) {
   $stmt = $conn->prepare("
     SELECT tipo, valor, criado_em, expira_em
     FROM cashback_movimentacoes
-    WHERE criado_em >= ? AND loja_id = ?
+    WHERE criado_em BETWEEN ? AND ? AND loja_id = ?
       AND tipo IN ('entrada','uso','expirado')
     ORDER BY criado_em DESC
     LIMIT 40
   ");
-  $stmt->execute([$inicio, $lojaId]);
+  $stmt->execute([$inicio, $fim, $lojaId]);
   $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   foreach ($rows as $row) {
@@ -281,11 +297,11 @@ if ($temTabelaMov) {
     $stmt = $conn->prepare("
       SELECT " . implode(',', $select) . "
       FROM pedidos
-      WHERE criado_em >= ? AND status <> 'cancelado' AND (" . implode(' OR ', $condicoes) . ") AND loja_id = ?
+      WHERE criado_em BETWEEN ? AND ? AND status <> 'cancelado' AND (" . implode(' OR ', $condicoes) . ") AND loja_id = ?
       ORDER BY criado_em DESC
       LIMIT 40
     ");
-    $stmt->execute([$inicio, $lojaId]);
+    $stmt->execute([$inicio, $fim, $lojaId]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($rows as $row) {
@@ -314,7 +330,8 @@ $historico = array_slice($historico, 0, 20);
 
 echo json_encode([
   'ok' => true,
-  'periodo_dias' => $periodoDias,
+  'data_ini' => substr($inicio, 0, 10),
+  'data_fim' => substr($fim, 0, 10),
   'cashback_saldo_base' => $cashbackSaldoBase,
   'cashback_utilizado' => $cashbackUtilizado,
   'pedidos_com_cashback' => $pedidosComCashback,

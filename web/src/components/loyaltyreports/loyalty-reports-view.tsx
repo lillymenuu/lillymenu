@@ -1,5 +1,16 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Wallet, ArrowDownCircle, Receipt, Ticket, ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -8,19 +19,107 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DateRangePicker } from "@/components/order-list/date-range-picker";
 import { formatDataCurta } from "@/components/cliente/types";
 import { formatBRL } from "@/components/ordermanager/constants";
-import type { RelatoriosFidelidadeResposta } from "@/lib/relatoriosFidelidade";
+import type { RelatoriosFidelidadeParams, RelatoriosFidelidadeResposta } from "@/lib/relatoriosFidelidade";
 import { cn } from "cn";
 
-export function LoyaltyReportsView({ dados }: { dados: RelatoriosFidelidadeResposta }) {
+const PERIODO_ITEMS: Record<string, string> = {
+  hoje: "Hoje",
+  "7": "7 dias",
+  "15": "15 dias",
+  "30": "30 dias",
+  "60": "60 dias",
+  "90": "90 dias",
+  "365": "1 ano",
+  custom: "Personalizado",
+};
+
+function hojeISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export function LoyaltyReportsView({ dadosIniciais }: { dadosIniciais: RelatoriosFidelidadeResposta }) {
+  const [periodo, setPeriodo] = useState("30");
+  const [dataIni, setDataIni] = useState(hojeISO());
+  const [dataFim, setDataFim] = useState(hojeISO());
+  const [dados, setDados] = useState(dadosIniciais);
+  const [carregando, setCarregando] = useState(false);
+
+  const primeiraRenderRef = useRef(true);
+
+  async function carregar() {
+    setCarregando(true);
+    try {
+      const params: RelatoriosFidelidadeParams = {};
+      if (periodo === "custom") {
+        params.data_ini = dataIni;
+        params.data_fim = dataFim;
+      } else {
+        params.periodo = periodo;
+      }
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => {
+        if (v) qs.set(k, v);
+      });
+      const res = await fetch(`/api/loyaltyreports/listar?${qs.toString()}`, { cache: "no-store" });
+      const data: RelatoriosFidelidadeResposta & { ok: boolean; msg?: string } = await res.json();
+      if (!data.ok) {
+        toast.error(data.msg ?? "Erro ao carregar o relatório.");
+        return;
+      }
+      setDados(data);
+    } catch {
+      toast.error("Erro ao carregar o relatório.");
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  useEffect(() => {
+    if (primeiraRenderRef.current) {
+      primeiraRenderRef.current = false;
+      return;
+    }
+    carregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodo, dataIni, dataFim]);
+
+  const periodoTexto = `${formatDataCurta(dados.data_ini)} — ${formatDataCurta(dados.data_fim)}`;
+
   return (
-    <div className="flex h-full flex-col gap-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-lg font-semibold">Visão geral de Fidelidade</h1>
-        <p className="text-sm text-muted-foreground">
-          Mostrando resultados nos últimos {dados.periodo_dias} dias.
-        </p>
+    <div className={cn("flex h-full flex-col gap-6 p-4 md:p-6 transition-opacity", carregando && "opacity-60")}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-semibold">Visão geral de Fidelidade</h1>
+          <p className="text-sm text-muted-foreground">Mostrando resultados de {periodoTexto}.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select items={PERIODO_ITEMS} value={periodo} onValueChange={(v) => setPeriodo(v ?? "30")}>
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(PERIODO_ITEMS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {periodo === "custom" && (
+            <DateRangePicker
+              dataIni={dataIni}
+              dataFim={dataFim}
+              onChange={(ini, fim) => {
+                setDataIni(ini);
+                setDataFim(fim);
+              }}
+            />
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -53,7 +152,7 @@ export function LoyaltyReportsView({ dados }: { dados: RelatoriosFidelidadeRespo
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">
           Clientes com maior saldo acumulado{" "}
-          <span className="font-normal text-muted-foreground">nos últimos {dados.periodo_dias} dias</span>
+          <span className="font-normal text-muted-foreground">no período selecionado</span>
         </h2>
         <Card className="gap-0 rounded-2xl py-0">
           <div className="overflow-x-auto">
@@ -100,7 +199,7 @@ export function LoyaltyReportsView({ dados }: { dados: RelatoriosFidelidadeRespo
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">
           Histórico de entradas e saídas de cashback{" "}
-          <span className="font-normal text-muted-foreground">nos últimos {dados.periodo_dias} dias</span>
+          <span className="font-normal text-muted-foreground">no período selecionado</span>
         </h2>
         <Card className="gap-0 rounded-2xl py-0">
           <div className="overflow-x-auto">

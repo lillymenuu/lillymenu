@@ -7,9 +7,9 @@ export default async function LoyaltyReportsPage() {
   let erro: string | null = null;
 
   try {
-    const dados = await getRelatoriosFidelidade();
+    const dados = await getRelatoriosFidelidade({ periodo: "30" });
 
-    return <LoyaltyReportsView dados={dados} />;
+    return <LoyaltyReportsView dadosIniciais={dados} />;
   } catch (e) {
     erro = e instanceof PhpApiError ? e.message : "Erro ao carregar o relatório de fidelidade.";
   }

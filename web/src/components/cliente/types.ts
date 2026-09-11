@@ -64,7 +64,11 @@ export function formatEndereco(e: ClienteEndereco): string {
 
 export function formatDataCurta(iso: string | null): string {
   if (!iso) return "-";
-  const d = new Date(iso.replace(" ", "T"));
+  // Data pura ("YYYY-MM-DD", sem hora) e interpretada pelo JS como UTC
+  // meia-noite — em fusos negativos (ex.: America/Fortaleza) isso exibe o
+  // dia anterior. Forca meia-noite local nesse caso.
+  const comHora = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso.replace(" ", "T");
+  const d = new Date(comHora);
   if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("pt-BR");
 }

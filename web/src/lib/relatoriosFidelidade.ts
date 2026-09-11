@@ -17,7 +17,8 @@ export type MovimentoFidelidade = {
 
 export type RelatoriosFidelidadeResposta = {
   ok: true;
-  periodo_dias: number;
+  data_ini: string;
+  data_fim: string;
   cashback_saldo_base: number;
   cashback_utilizado: number;
   pedidos_com_cashback: number;
@@ -27,6 +28,19 @@ export type RelatoriosFidelidadeResposta = {
   cupom_pedidos: number;
 };
 
-export function getRelatoriosFidelidade() {
-  return phpApiFetch<RelatoriosFidelidadeResposta>("/admin/api/v1/relatorios_fidelidade.php");
+export type RelatoriosFidelidadeParams = {
+  periodo?: string;
+  data_ini?: string;
+  data_fim?: string;
+};
+
+export function getRelatoriosFidelidade(params: RelatoriosFidelidadeParams = {}) {
+  const qs = new URLSearchParams();
+  if (params.periodo) qs.set("periodo", params.periodo);
+  if (params.data_ini) qs.set("data_ini", params.data_ini);
+  if (params.data_fim) qs.set("data_fim", params.data_fim);
+  const query = qs.toString();
+  return phpApiFetch<RelatoriosFidelidadeResposta>(
+    `/admin/api/v1/relatorios_fidelidade.php${query ? `?${query}` : ""}`
+  );
 }
