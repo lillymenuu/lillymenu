@@ -53,3 +53,38 @@ export async function phpApiFetch<T>(
 export function phpApiBaseUrl(): string {
   return BASE_URL as string;
 }
+
+/**
+ * Variante de phpApiFetch que NAO lanca em `{ok:false}` — devolve o corpo
+ * exatamente como o PHP respondeu. Usada por rotas onde `ok:false` e uma
+ * resposta de negocio esperada (validacao) cuja mensagem especifica
+ * (`data.msg`) precisa chegar ao dialog do cliente, em vez de virar o erro
+ * generico "Erro ao falar com a API." que phpApiFetch produz.
+ */
+export async function phpApiFetchPassthrough<T>(
+  path: string,
+  init: RequestInit = {}
+): Promise<T> {
+  const store = await cookies();
+  const token = store.get(TOKEN_COOKIE)?.value;
+
+  const headers = new Headers(init.headers);
+  headers.set("Accept", "application/json");
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    headers,
+    cache: "no-store",
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok && !data) {
+    throw new PhpApiError(res.status, "Erro ao falar com a API.");
+  }
+
+  return data as T;
+}
