@@ -18,7 +18,7 @@ header('Content-Type: application/json; charset=utf-8');
 $auth   = apiAuthExigir($conn);
 $lojaId = $auth['loja_id'];
 
-$periodoFiltro = trim($_GET['periodo'] ?? '30');
+$periodoFiltro = trim($_GET['periodo'] ?? 'hoje');
 $dataIniParam = trim($_GET['data_ini'] ?? '');
 $dataFimParam = trim($_GET['data_fim'] ?? '');
 $hoje = date('Y-m-d');

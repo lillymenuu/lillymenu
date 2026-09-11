@@ -42,7 +42,7 @@ function hojeISO() {
 }
 
 export function LoyaltyReportsView({ dadosIniciais }: { dadosIniciais: RelatoriosFidelidadeResposta }) {
-  const [periodo, setPeriodo] = useState("30");
+  const [periodo, setPeriodo] = useState("hoje");
   const [dataIni, setDataIni] = useState(hojeISO());
   const [dataFim, setDataFim] = useState(hojeISO());
   const [dados, setDados] = useState(dadosIniciais);
@@ -97,7 +97,7 @@ export function LoyaltyReportsView({ dadosIniciais }: { dadosIniciais: Relatorio
           <p className="text-sm text-muted-foreground">Mostrando resultados de {periodoTexto}.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Select items={PERIODO_ITEMS} value={periodo} onValueChange={(v) => setPeriodo(v ?? "30")}>
+          <Select items={PERIODO_ITEMS} value={periodo} onValueChange={(v) => setPeriodo(v ?? "hoje")}>
             <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>

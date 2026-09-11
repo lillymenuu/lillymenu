@@ -7,7 +7,7 @@ export default async function LoyaltyReportsPage() {
   let erro: string | null = null;
 
   try {
-    const dados = await getRelatoriosFidelidade({ periodo: "30" });
+    const dados = await getRelatoriosFidelidade({ periodo: "hoje" });
 
     return <LoyaltyReportsView dadosIniciais={dados} />;
   } catch (e) {
