@@ -249,19 +249,19 @@ export function SalesManager({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Forma de pagamento</TableHead>
-                  <TableHead className="text-right">Quantidade</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="font-normal text-muted-foreground">Forma de pagamento</TableHead>
+                  <TableHead className="text-right font-normal text-muted-foreground">Quantidade</TableHead>
+                  <TableHead className="text-right font-normal text-muted-foreground">Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(["pix", "credito", "debito", "dinheiro"] as const).map((forma) => (
                   <TableRow key={forma}>
-                    <TableCell className="font-medium">{PAGAMENTO_LABELS[forma]}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">
+                    <TableCell className="font-normal">{PAGAMENTO_LABELS[forma]}</TableCell>
+                    <TableCell className="text-right font-normal tabular-nums text-muted-foreground">
                       {pagamentoPorForma[forma]?.quantidade ?? 0}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell className="text-right font-normal tabular-nums">
                       {formatBRL(pagamentoPorForma[forma]?.total ?? 0)}
                     </TableCell>
                   </TableRow>
@@ -323,17 +323,19 @@ export function SalesManager({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Produto</TableHead>
-                  <TableHead className="text-right">Quantidade</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="font-normal text-muted-foreground">Produto</TableHead>
+                  <TableHead className="text-right font-normal text-muted-foreground">Quantidade</TableHead>
+                  <TableHead className="text-right font-normal text-muted-foreground">Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {dados.vendas_produtos.map((p, i) => (
                   <TableRow key={i}>
-                    <TableCell className="max-w-64 truncate font-medium">{p.nome}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{p.quantidade}</TableCell>
-                    <TableCell className="text-right font-medium">{formatBRL(p.total)}</TableCell>
+                    <TableCell className="max-w-64 truncate font-normal">{p.nome}</TableCell>
+                    <TableCell className="text-right font-normal tabular-nums text-muted-foreground">
+                      {p.quantidade}
+                    </TableCell>
+                    <TableCell className="text-right font-normal tabular-nums">{formatBRL(p.total)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
