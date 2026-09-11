@@ -67,7 +67,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Relatórios",
     items: [
-      { menuKey: "relatorios", label: "Vendas", icon: BarChart3, href: "/relatorios" },
+      { menuKey: "relatorios", label: "Vendas", icon: BarChart3, href: "/sales", migrated: true },
       { menuKey: "relatorios", label: "Relatório de clientes", icon: Users, href: "/relatorios_clientes" },
       { menuKey: "fidelidade", label: "Fidelidade", icon: Award, href: "/relatorios_fidelidade" },
       { menuKey: "crossSellRelatorio", label: "Cross-sell", icon: Shuffle, href: "/relatorio_cross_sell" },
