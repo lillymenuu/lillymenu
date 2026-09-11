@@ -223,7 +223,7 @@ export function OrderListTable({
         </CardContent>
       </Card>
 
-      <Card className="flex-1 gap-0 rounded-2xl py-0">
+      <Card className="gap-0 rounded-2xl py-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
