@@ -95,7 +95,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Gerenciar",
     items: [
       { menuKey: "gerenciamento", label: "Gerenciamento", icon: Building2, href: "/superadmin/dashboard" },
-      { menuKey: "motoboys", label: "Motoboys", icon: Bike, href: "/motoboys" },
+      { menuKey: "motoboys", label: "Motoboys", icon: Bike, href: "/motoboys", migrated: true },
       { menuKey: "modoGarcom", label: "Modo Garçom", icon: BadgeIcon, href: "/modo_garcom" },
       { menuKey: "controleCaixa", label: "Controle de caixa", icon: Wallet, href: "/controle_caixa" },
       { menuKey: "controleFiado", label: "Controle de fiado", icon: BookText, href: "/controle_fiado" },
