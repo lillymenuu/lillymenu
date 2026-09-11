@@ -10,6 +10,8 @@ require_once __DIR__ . '/../../helpers/api_auth.php';
 require_once __DIR__ . '/../../helpers/operacao.php';
 require_once __DIR__ . '/../../../helpers/storage.php';
 
+date_default_timezone_set('America/Fortaleza');
+
 header('Content-Type: application/json; charset=utf-8');
 
 $auth   = apiAuthExigir($conn);
