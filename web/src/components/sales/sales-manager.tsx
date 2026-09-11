@@ -304,12 +304,18 @@ export function SalesManager({
           {dados.vendas_produtos.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">Sem dados no período.</p>
           ) : produtoView === "cards" ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
               {dados.vendas_produtos.map((p, i) => (
-                <div key={i} className="rounded-lg border p-3">
-                  <div className="truncate text-sm font-medium">{p.nome}</div>
-                  <div className="text-lg font-bold">{formatBRL(p.total)}</div>
-                  <div className="text-xs text-muted-foreground">{p.quantidade} unidades</div>
+                <div key={i} className="flex flex-col gap-1.5 rounded-lg border p-3">
+                  <span className="text-xs font-medium text-primary">{p.nome}</span>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Total</span>
+                    <span className="font-semibold">{formatBRL(p.total)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Quantidade</span>
+                    <span className="font-semibold">{p.quantidade}</span>
+                  </div>
                 </div>
               ))}
             </div>
