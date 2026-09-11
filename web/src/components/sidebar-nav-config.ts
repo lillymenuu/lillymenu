@@ -60,7 +60,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "orcamentos", label: "Orçamento/Recibo", icon: FileText, href: "/orcamentos" },
       { menuKey: "produtos", label: "Produtos", icon: Package, href: "/produtos", migrated: true },
       { menuKey: "promo", label: "Promo", icon: Gift, href: "/promotion", migrated: true },
-      { menuKey: "estoque", label: "Estoque", icon: Boxes, href: "/estoque" },
+      { menuKey: "estoque", label: "Estoque", icon: Boxes, href: "/stock", migrated: true },
       { menuKey: "clientes", label: "Clientes", icon: Grid3x3, href: "/clientes" },
     ],
   },
