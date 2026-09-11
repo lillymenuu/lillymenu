@@ -9,6 +9,7 @@ require_once '../../config/database.php';
 require_once '../../helpers/telefone.php';
 require_once '../../admin/helpers/combo_estoque_module.php';
 require_once '../../admin/helpers/estoque_vinculo_module.php';
+require_once '../../admin/helpers/garcom_module.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   echo json_encode(['ok'=>false,'msg'=>'Método inválido']); exit;
@@ -37,6 +38,10 @@ try {
 }
 comboEstoqueEnsureModule($conn);
 estoqueVinculoEnsureModule($conn);
+// Garante mesa_id/ENUM tipo='mesa' mesmo em lojas que nunca abriram o Modo
+// Garcom (/waitermode) no admin — o pedido de mesa via QR Code nao pode
+// depender disso ja ter rodado antes.
+garcomEnsureModule($conn);
 
 $lojaId    = (int) ($_POST['loja_id'] ?? 1);
 
@@ -49,6 +54,24 @@ $lojaAtivaPedCol = $stmtLojaAtivaPed->fetchColumn();
 if ($lojaAtivaPedCol !== false && (int) $lojaAtivaPedCol === 0) {
   echo json_encode(['ok' => false, 'msg' => 'Esta loja nao esta aceitando pedidos no momento.']);
   exit;
+}
+
+// Pedido de mesa (QR Code escaneado na mesa, ver public/loja.php CFG.mesaId).
+// So aceita mesa_id que pertence a essa loja e esta ativa — mesma checagem
+// ja usada em public/api/garcom_pedido_criar.php (fluxo do garcom logado).
+$mesaIdPost = (int) ($_POST['mesa_id'] ?? 0);
+$mesaId = 0;
+$mesaNome = '';
+if ($mesaIdPost > 0) {
+  $stmtMesaPed = $conn->prepare("SELECT id, nome FROM mesas WHERE id = ? AND loja_id = ? AND ativo = 1 LIMIT 1");
+  $stmtMesaPed->execute([$mesaIdPost, $lojaId]);
+  $mesaPedRow = $stmtMesaPed->fetch(PDO::FETCH_ASSOC);
+  if (!$mesaPedRow) {
+    echo json_encode(['ok' => false, 'msg' => 'Mesa invalida ou desativada. Peça pra equipe do salão te ajudar.']);
+    exit;
+  }
+  $mesaId = (int) $mesaPedRow['id'];
+  $mesaNome = (string) $mesaPedRow['nome'];
 }
 
 $nome      = trim($_POST['cliente_nome'] ?? '');
@@ -182,6 +205,7 @@ try {
   $temObs      = in_array('observacoes_cliente',$cols);
   $temCaixaId  = in_array('caixa_id',$cols);
   $temOrigem   = in_array('origem',$cols);
+  $temMesaId   = in_array('mesa_id',$cols);
 
   /* ── Montar INSERT ── */
   $fields  = ['cliente_id','forma_pagamento','total','status','loja_id','criado_em'];
@@ -193,6 +217,7 @@ try {
   if ($temTaxa)     { $fields[]='taxa_entrega';      $values[]=$taxaEnt; }
   if ($temEndereco) { $fields[]='endereco_entrega';  $values[]=$endereco; }
   if ($temOrigem)   { $fields[]='origem';            $values[]='loja'; }
+  if ($temMesaId && $mesaId > 0) { $fields[]='mesa_id'; $values[]=$mesaId; }
   if (in_array('troco',$cols) && $trocoSolicitado && $trocoValorPedido>0) {
     $fields[]='troco'; $values[]=$trocoValorPedido;
   }
@@ -465,7 +490,7 @@ try {
       $pixNome    = $cfgGet('pagamento_pix_nome');
       $pixChave   = $cfgGet('pagamento_pix_chave');
 
-      $tipoTexto    = ($tipo === 'entrega') ? 'Entrega' : 'Retirada';
+      $tipoTexto    = ($tipo === 'mesa') ? 'Consumo no local' : (($tipo === 'entrega') ? 'Entrega' : 'Retirada');
       $pagTexto     = ucfirst(str_ireplace(['_', '-'], ' ', $pagamento));
       $telFormatado = formatarTelefoneBR($telefone);
 
@@ -477,7 +502,9 @@ try {
       $msg .= "- {$pagTexto}\n";
       $msg .= "Tipo de entrega: {$tipoTexto}\n";
 
-      if ($tipo === 'retirada') {
+      if ($tipo === 'mesa') {
+        $msg .= "*Mesa: {$mesaNome}*\n";
+      } elseif ($tipo === 'retirada') {
         $msg .= "*Tempo estimado para retirada: Entre {$tempoMin} e {$tempoMax} minutos*\n";
         $endLoja = "{$lojaRua} , {$lojaNum}, {$lojaBairro}, {$lojaCidade}/{$lojaEstado}, CEP {$lojaCep}";
         $msg .= "*Endereço para retirada: {$endLoja}*\n";

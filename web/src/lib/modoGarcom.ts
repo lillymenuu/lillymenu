@@ -24,6 +24,7 @@ export type ModoGarcomDetalheResposta = {
   mesas_ativas: number;
   garcons_ativos: number;
   garcom_login_url: string;
+  cardapio_url: string;
 };
 
 export type ModoGarcomStats = {

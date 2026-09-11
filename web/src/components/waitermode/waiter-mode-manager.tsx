@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Copy, Pencil, Plus, Receipt, Trash2, KeyRound } from "lucide-react";
+import { Copy, Pencil, Plus, Receipt, Trash2, KeyRound, QrCode } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { STATUS_CORES, STATUS_LABELS, PROXIMA_ETAPA, formatBRL, formatHora } fro
 import { MesaFormDialog } from "@/components/waitermode/mesa-form-dialog";
 import { GarcomFormDialog } from "@/components/waitermode/garcom-form-dialog";
 import { CodigoGeradoDialog } from "@/components/waitermode/codigo-gerado-dialog";
+import { MesaQrCodeDialog } from "@/components/waitermode/mesa-qrcode-dialog";
 import type { Garcom, Mesa, ModoGarcomDetalheResposta, ModoGarcomStats, PedidoMesa } from "@/lib/modoGarcom";
 import { cn } from "cn";
 
@@ -31,6 +32,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
   const [mesaEditando, setMesaEditando] = useState<Mesa | null>(null);
   const [mesaExcluir, setMesaExcluir] = useState<Mesa | null>(null);
   const [excluindoMesa, setExcluindoMesa] = useState(false);
+  const [mesaQrCode, setMesaQrCode] = useState<Mesa | null>(null);
 
   const [garcomFormOpen, setGarcomFormOpen] = useState(false);
   const [garcomEditando, setGarcomEditando] = useState<Garcom | null>(null);
@@ -395,6 +397,14 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                       Livre
                     </Badge>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 rounded-lg font-normal"
+                    onClick={() => setMesaQrCode(m)}
+                  >
+                    <QrCode className="size-3.5" /> QR Code
+                  </Button>
                   <div className="flex justify-end gap-1">
                     <Button
                       variant="ghost"
@@ -531,6 +541,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
           recarregarDetalhe();
         }}
       />
+      <MesaQrCodeDialog mesa={mesaQrCode} cardapioUrl={dados.cardapio_url} onOpenChange={(v) => !v && setMesaQrCode(null)} />
     </div>
   );
 }

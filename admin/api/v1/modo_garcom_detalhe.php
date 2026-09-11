@@ -70,6 +70,9 @@ if ($lojaLinkSlug === '') {
   $lojaLinkSlug = trim($lojaLinkSlug, '-');
 }
 $garcomLoginUrl = $protocol . $host . '/' . rawurlencode($lojaLinkSlug) . '/garcom_login';
+// Link do cardapio publico (mesmo slug, sem sufixo) — usado pra montar o QR
+// Code de mesa (?mesa=<id>), lido em public/loja.php.
+$cardapioUrl = $protocol . $host . '/' . rawurlencode($lojaLinkSlug);
 
 echo json_encode([
   'ok' => true,
@@ -95,4 +98,5 @@ echo json_encode([
   'mesas_ativas' => $mesasAtivasCount,
   'garcons_ativos' => $garconsAtivosCount,
   'garcom_login_url' => $garcomLoginUrl,
+  'cardapio_url' => $cardapioUrl,
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

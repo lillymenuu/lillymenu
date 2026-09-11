@@ -2137,6 +2137,14 @@ function continuarDoContato(){
      só verifica novamente se ainda não tem saldo carregado */
   if(CFG.cashbackAtivo && cashbackSaldo<=0) verificarCashbackFluxo(tel);
   fecharSheet('contactSheet');
+  /* Pedido de mesa (QR escaneado na mesa, CFG.mesaId setado pelo servidor):
+     nao faz sentido perguntar retirada/entrega de quem ja esta sentado —
+     pula o step 1 (tipo) direto pro pagamento, com tipoPed fixo em 'mesa'. */
+  if(CFG.mesaId){
+    tipoPed='mesa';
+    setTimeout(()=>{irStep(3);abrirSheet('chkSheet');},250);
+    return;
+  }
   setTimeout(()=>{irStep(1);abrirSheet('chkSheet');},250);
 }
 function maskTelContact(el){
@@ -2265,7 +2273,8 @@ function renderResumo(bd){
   const nome=_authCliente?.nome||(document.getElementById('cNome')?.value||_ultimoNome||'');
   const tel=_authCliente?.telefone||(document.getElementById('cTel')?.value||_ultimoTel||'');
   const isEnt=tipoPed==='entrega'||tipoPed==='entrega_agendada';
-  const endereco=isEnt?endResumoData?.addr:CFG.enderecoLoja||'';
+  const isMesa=tipoPed==='mesa';
+  const endereco=isEnt?endResumoData?.addr:(isMesa?'':CFG.enderecoLoja||'');
   const endLabel=isEnt?'Endereço para entrega do pedido':'Endereço para retirada do pedido';
   const pagLabel=({pix:'Pix',dinheiro:'Dinheiro',credito:'Cartão de crédito',debito:'Cartão de débito'})[pagPed]||pagPed||'';
   const pagIcon=({pix:'bi-qr-code',dinheiro:'bi-cash-stack',credito:'bi-credit-card-2-front',debito:'bi-credit-card'})[pagPed]||'bi-credit-card';
@@ -2311,6 +2320,15 @@ function renderResumo(bd){
         <div class="resumo-row-text"><span class="resumo-row-name">${nome}</span><br><small style="color:#888">${tel}</small></div>
       </div>
     </div>
+    ${isMesa?`<div class="resumo-section">
+      <div class="resumo-section-header">
+        <span class="resumo-section-title">Consumo no local</span>
+      </div>
+      <div class="resumo-row">
+        <i class="bi bi-shop resumo-row-icon"></i>
+        <div class="resumo-row-text"><span class="resumo-row-name">${CFG.mesaNome||'Mesa'}</span></div>
+      </div>
+    </div>`:''}
     ${endereco?`<div class="resumo-section">
       <div class="resumo-section-header">
         <span class="resumo-section-title">${endLabel}</span>
@@ -2570,7 +2588,7 @@ async function enviar(){
   const tipoBackend=tipoPed==='entrega_agendada'?'entrega':(tipoPed==='retirada_agendada'?'retirada':tipoPed);
   /* data/slot agendamento */
   const agendStr=agendamento.slot?JSON.stringify({data:agendamento.data?.toISOString().slice(0,10),slot:agendamento.slot}):'';
-  const body=new URLSearchParams({loja_id:CFG.lojaId,cliente_nome:(document.getElementById('cNome')?.value||'').trim(),cliente_telefone:tel,tipo:tipoBackend,tipo_agendamento:tipoPed,agendamento:agendStr,forma_pagamento:pagPed,taxa_entrega:taxa,endereco:end,subtotal:sub,total:totalFinal,cashback_usar:cashbackUsando?'1':'0',cashback_valor:cashbackDescontado,cupom_codigo:cupomAplicado?.codigo||'',cupom_desconto:cupomDesc,troco_solicitado:trocoPrecisa?'1':'0',troco_valor:trocoVal,itens:JSON.stringify(carrinho.map(i=>({id:i.id,nome:i.n,preco:i.p,qtd:i.q,obs:i.obs||'',combosels:i.combosels||null,crossSell:i.crossSell?1:0})))});
+  const body=new URLSearchParams({loja_id:CFG.lojaId,mesa_id:CFG.mesaId||'',cliente_nome:(document.getElementById('cNome')?.value||'').trim(),cliente_telefone:tel,tipo:tipoBackend,tipo_agendamento:tipoPed,agendamento:agendStr,forma_pagamento:pagPed,taxa_entrega:taxa,endereco:end,subtotal:sub,total:totalFinal,cashback_usar:cashbackUsando?'1':'0',cashback_valor:cashbackDescontado,cupom_codigo:cupomAplicado?.codigo||'',cupom_desconto:cupomDesc,troco_solicitado:trocoPrecisa?'1':'0',troco_valor:trocoVal,itens:JSON.stringify(carrinho.map(i=>({id:i.id,nome:i.n,preco:i.p,qtd:i.q,obs:i.obs||'',combosels:i.combosels||null,crossSell:i.crossSell?1:0})))});
   try{
     const res=await fetch('api/pedido_criar.php',{method:'POST',body});
     const d=await res.json();
@@ -2591,9 +2609,11 @@ async function enviar(){
     const isEnt=_ultimoTipo==='entrega'||_ultimoTipo==='entrega_agendada';
     const tempoTxt=_ultimoAgendSlot
       ?`Agendado para: ${_ultimoAgendSlot}`
-      :(isEnt
-        ?`Entrega em ${CFG.tEntMin}–${CFG.tEntMax} min`
-        :`Pronto em ${CFG.tRetMin}–${CFG.tRetMax} min`);
+      :(_ultimoTipo==='mesa'
+        ?'Seu pedido foi enviado para a cozinha!'
+        :(isEnt
+          ?`Entrega em ${CFG.tEntMin}–${CFG.tEntMax} min`
+          :`Pronto em ${CFG.tRetMin}–${CFG.tRetMax} min`));
     document.getElementById('confTempo').textContent=tempoTxt;
     if(pagPed==='pix'&&CFG.pixChave){document.getElementById('pixBoxConf').classList.remove('d-none'); document.getElementById('pixChaveConf').textContent=CFG.pixChave;}
   }catch(e){toast('Erro de conexão');btn.disabled=false;btn.textContent='Confirmar pedido';btn.classList.add('pulse-cta');}
@@ -2840,7 +2860,9 @@ async function fetchPedidoCard(h){
     if(!d.ok) return gerarCardSimples(h);
     const p=d.pedido;
     const st=p.status||'pendente';
-    const label=STATUS_LABELS[st]||st;
+    /* pedido de mesa: "A caminho" (pensado pro motoboy) nao faz sentido quando
+       ja esta pronto no salao — mesmo rotulo que o Modo Garcom ja usa. */
+    const label=((p.tipo||'').toLowerCase()==='mesa'&&st==='entrega')?'Pronto!':(STATUS_LABELS[st]||st);
     const total=parseFloat(p.total||0);
     const taxa=parseFloat(p.taxa_entrega||0);
     const desconto=parseFloat(p.desconto||0);

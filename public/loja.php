@@ -13,6 +13,29 @@ require_once '../admin/helpers/whatsapp.php';
 
 $lojaId = definirLojaIdSessao($conn);
 
+/* QR Code de mesa (Modo Garcom > /waitermode): a URL gerada pro QR leva
+   ?mesa=<id>, que sobrevive ao rewrite do .htaccess (QSA) e chega aqui em
+   $_GET['mesa']. Validado contra loja_id/ativo pra nao aceitar mesa de
+   outra loja ou ja desativada — nesses casos o pedido segue como se
+   nao tivesse vindo de QR nenhum (retirada/entrega normal). */
+$mesaId = 0;
+$mesaNome = null;
+$mesaIdParam = (int) ($_GET['mesa'] ?? 0);
+if ($mesaIdParam > 0) {
+  try {
+    $stmtMesa = $conn->prepare("SELECT id, nome FROM mesas WHERE id = ? AND loja_id = ? AND ativo = 1 LIMIT 1");
+    $stmtMesa->execute([$mesaIdParam, $lojaId]);
+    $mesaRow = $stmtMesa->fetch(PDO::FETCH_ASSOC);
+    if ($mesaRow) {
+      $mesaId = (int) $mesaRow['id'];
+      $mesaNome = $mesaRow['nome'];
+    }
+  } catch (Throwable $e) {
+    // loja que nunca abriu /waitermode pode nao ter a tabela `mesas` ainda —
+    // trata como se o QR nao tivesse mesa nenhuma, sem quebrar o cardapio.
+  }
+}
+
 function cfg(PDO $db, int $lid, string $chave, $default = ''): string {
   static $cache = [];
   $k = $lid.':'.$chave;
@@ -478,6 +501,8 @@ $cfgJS=json_encode(['lojaId'=>$lojaId,'nomeLoja'=>$nomeLoja,'lojaPerfil'=>$perfi
 'catalogoVersao'=>cfg($conn,$lojaId,'catalogo_versao',''),
 'geoAtivo'=>cfg($conn,0,'saas_nominatim_ativo','1')==='1',
 'pausaAtivaFim'=>$pausaAtivaFim,
+'mesaId'=>$mesaId ?: null,
+'mesaNome'=>$mesaNome,
 ],JSON_UNESCAPED_UNICODE);
 $lojaCssVer = filemtime(__DIR__ . '/assets/css/loja.css');
 $lojaJsVer = filemtime(__DIR__ . '/assets/js/loja.js');
