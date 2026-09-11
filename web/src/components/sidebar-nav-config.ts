@@ -61,7 +61,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "produtos", label: "Produtos", icon: Package, href: "/produtos", migrated: true },
       { menuKey: "promo", label: "Promo", icon: Gift, href: "/promotion", migrated: true },
       { menuKey: "estoque", label: "Estoque", icon: Boxes, href: "/stock", migrated: true },
-      { menuKey: "clientes", label: "Clientes", icon: Grid3x3, href: "/clientes" },
+      { menuKey: "clientes", label: "Clientes", icon: Grid3x3, href: "/clients", migrated: true },
     ],
   },
   {
