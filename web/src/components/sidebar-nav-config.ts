@@ -96,7 +96,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { menuKey: "gerenciamento", label: "Gerenciamento", icon: Building2, href: "/superadmin/dashboard" },
       { menuKey: "motoboys", label: "Motoboys", icon: Bike, href: "/motoboys", migrated: true },
-      { menuKey: "modoGarcom", label: "Modo Garçom", icon: BadgeIcon, href: "/modo_garcom" },
+      { menuKey: "modoGarcom", label: "Modo Garçom", icon: BadgeIcon, href: "/waitermode", migrated: true },
       { menuKey: "controleCaixa", label: "Controle de caixa", icon: Wallet, href: "/cashcontrol", migrated: true },
       { menuKey: "controleFiado", label: "Controle de fiado", icon: BookText, href: "/storecredittracking", migrated: true },
       { menuKey: "cupons", label: "Cupons", icon: Ticket, href: "/cupons" },
