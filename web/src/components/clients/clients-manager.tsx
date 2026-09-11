@@ -164,7 +164,7 @@ export function ClientsManager({
                     </TableCell>
                     <TableCell>{formatBRL(c.cashback_saldo)}</TableCell>
                     <TableCell>{c.pontos_saldo} pts</TableCell>
-                    <TableCell className="max-w-64 truncate text-muted-foreground">{c.endereco_texto}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{c.endereco_texto}</TableCell>
                   </TableRow>
                 ))
               )}

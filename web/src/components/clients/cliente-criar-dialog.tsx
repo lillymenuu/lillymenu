@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatarCep, buscarEnderecoPorCep } from "@/lib/cep";
 
 type FormState = {
   nome: string;
@@ -44,6 +45,7 @@ export function ClienteCriarDialog({
 }) {
   const [form, setForm] = useState<FormState>(VAZIO);
   const [salvando, setSalvando] = useState(false);
+  const [buscandoCep, setBuscandoCep] = useState(false);
 
   useEffect(() => {
     if (open) setForm(VAZIO);
@@ -54,6 +56,25 @@ export function ClienteCriarDialog({
       value: form[chave],
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [chave]: e.target.value })),
     };
+  }
+
+  async function handleCepChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const formatado = formatarCep(e.target.value);
+    setForm((f) => ({ ...f, cep: formatado }));
+    if (formatado.replace(/\D/g, "").length !== 8) return;
+    setBuscandoCep(true);
+    try {
+      const endereco = await buscarEnderecoPorCep(formatado);
+      if (!endereco) {
+        toast.error("CEP não encontrado.");
+        return;
+      }
+      setForm((f) => ({ ...f, rua: endereco.rua, bairro: endereco.bairro, cidade: endereco.cidade, estado: endereco.estado }));
+    } catch {
+      toast.error("Erro ao buscar o CEP.");
+    } finally {
+      setBuscandoCep(false);
+    }
   }
 
   async function salvar() {
@@ -102,7 +123,13 @@ export function ClienteCriarDialog({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="cli-novo-cep">CEP</Label>
-            <Input id="cli-novo-cep" placeholder="Ex.: 00000-000" {...campo("cep")} />
+            <Input
+              id="cli-novo-cep"
+              placeholder="Ex.: 00000-000"
+              value={form.cep}
+              onChange={handleCepChange}
+              disabled={buscandoCep}
+            />
           </div>
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <div className="flex flex-col gap-1.5">
