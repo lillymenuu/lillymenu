@@ -53,6 +53,11 @@ export function SelecionarClienteDialog({
   function handleBuscaChange(v: string) {
     setBusca(v);
     if (buscaTimer.current) clearTimeout(buscaTimer.current);
+    if (v.trim() === "") {
+      setMostrarResultados(false);
+      setResultados(null);
+      return;
+    }
     buscaTimer.current = setTimeout(() => buscar(v), 300);
   }
 
@@ -105,7 +110,6 @@ export function SelecionarClienteDialog({
                 autoComplete="off"
                 placeholder="Busque por número ou nome"
                 value={busca}
-                onFocus={() => buscar(busca)}
                 onChange={(e) => handleBuscaChange(e.target.value)}
               />
               <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
