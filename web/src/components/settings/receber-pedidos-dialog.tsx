@@ -11,6 +11,20 @@ import type { ConfiguracoesDetalhe } from "@/lib/settings";
 
 type Pedidos = ConfiguracoesDetalhe["pedidos"];
 
+function maskTelefone(valor: string): string {
+  let v = valor.replace(/\D/g, "").slice(0, 11);
+  if (v.length > 10) {
+    v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
+  } else if (v.length > 5) {
+    v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+  } else if (v.length > 2) {
+    v = v.replace(/(\d{2})(\d{0,4})/, "($1) $2");
+  } else if (v.length > 0) {
+    v = v.replace(/(\d{0,2})/, "($1");
+  }
+  return v;
+}
+
 export function ReceberPedidosDialog({
   open,
   onOpenChange,
@@ -26,7 +40,7 @@ export function ReceberPedidosDialog({
   const [gestor, setGestor] = useState(pedidos.gestor_pedidos_ativo);
   const [notificar, setNotificar] = useState(pedidos.notificar_pedido_whatsapp_ativo);
   const [aceiteAutomatico, setAceiteAutomatico] = useState(pedidos.aceite_automatico_diggy_ativo);
-  const [whatsappNumero, setWhatsappNumero] = useState(pedidos.whatsapp_numero);
+  const [whatsappNumero, setWhatsappNumero] = useState(maskTelefone(pedidos.whatsapp_numero));
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -35,7 +49,7 @@ export function ReceberPedidosDialog({
     setGestor(pedidos.gestor_pedidos_ativo);
     setNotificar(pedidos.notificar_pedido_whatsapp_ativo);
     setAceiteAutomatico(pedidos.aceite_automatico_diggy_ativo);
-    setWhatsappNumero(pedidos.whatsapp_numero);
+    setWhatsappNumero(maskTelefone(pedidos.whatsapp_numero));
   }, [open, pedidos]);
 
   async function salvar() {
@@ -80,7 +94,7 @@ export function ReceberPedidosDialog({
           <Linha titulo="Aceite automático" desc="Aceita pedidos automaticamente sem confirmação manual." checked={aceiteAutomatico} onCheckedChange={setAceiteAutomatico} />
           <div className="space-y-1 rounded-lg border p-3">
             <Label className="text-xs">Número do WhatsApp para receber pedidos</Label>
-            <Input value={whatsappNumero} onChange={(e) => setWhatsappNumero(e.target.value)} placeholder="(11) 99999-9999" />
+            <Input value={whatsappNumero} onChange={(e) => setWhatsappNumero(maskTelefone(e.target.value))} placeholder="(11) 99999-9999" />
           </div>
         </div>
         <DialogFooter>
