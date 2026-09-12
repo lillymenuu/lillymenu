@@ -93,8 +93,8 @@ export function LojaInfoDialog({
 }) {
   const [nome, setNome] = useState(loja.nome);
   const [contato, setContato] = useState(loja.contato);
-  const [cpf, setCpf] = useState(loja.cpf);
-  const [cnpj, setCnpj] = useState(loja.cnpj);
+  const [cpf, setCpf] = useState(maskCpf(loja.cpf));
+  const [cnpj, setCnpj] = useState(maskCnpj(loja.cnpj));
   const [linkSlug, setLinkSlug] = useState(loja.link_slug);
   const [instagram, setInstagram] = useState(loja.instagram);
   const [tiktok, setTiktok] = useState(loja.tiktok);
@@ -121,8 +121,8 @@ export function LojaInfoDialog({
     if (!open) return;
     setNome(loja.nome);
     setContato(loja.contato);
-    setCpf(loja.cpf);
-    setCnpj(loja.cnpj);
+    setCpf(maskCpf(loja.cpf));
+    setCnpj(maskCnpj(loja.cnpj));
     setLinkSlug(loja.link_slug);
     setInstagram(loja.instagram);
     setTiktok(loja.tiktok);
