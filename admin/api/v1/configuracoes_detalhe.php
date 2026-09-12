@@ -31,6 +31,18 @@ function cfg(PDO $conn, int $lojaId, string $chave, $default = '') {
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $lojaLinkBase = $protocol . $host . '/';
+$lojaLinkBaseAntigo = $lojaLinkBase . 'lilly/';
+
+$lojaLink = cfg($conn, $lojaId, 'link_loja', '');
+$lojaLinkSlug = $lojaLink;
+if (strpos($lojaLink, $lojaLinkBaseAntigo) === 0) {
+  $lojaLinkSlug = urldecode(substr($lojaLink, strlen($lojaLinkBaseAntigo)));
+} elseif (preg_match('#[?&]loja=([^&]+)#', $lojaLink, $m)) {
+  $lojaLinkSlug = urldecode($m[1]);
+} elseif (preg_match('#/([^/?]+)/?$#', $lojaLink, $m)) {
+  $lojaLinkSlug = $m[1];
+}
+$lojaLinkSlug = preg_replace('/\.php$/i', '', $lojaLinkSlug);
 
 $horariosSemanaRaw = cfg($conn, $lojaId, 'horarios_semana', '');
 $horariosSemana = json_decode((string) $horariosSemanaRaw, true);
@@ -125,8 +137,10 @@ echo json_encode([
     'nome' => cfg($conn, $lojaId, 'nome_loja', ''),
     'contato' => cfg($conn, $lojaId, 'loja_contato', ''),
     'descricao' => cfg($conn, $lojaId, 'loja_descricao', ''),
+    'cpf' => cfg($conn, $lojaId, 'loja_cpf', ''),
     'cnpj' => cfg($conn, $lojaId, 'loja_cnpj', ''),
-    'link' => cfg($conn, $lojaId, 'link_loja', ''),
+    'link' => $lojaLink,
+    'link_slug' => $lojaLinkSlug,
     'instagram' => cfg($conn, $lojaId, 'loja_instagram', ''),
     'tiktok' => cfg($conn, $lojaId, 'loja_tiktok', ''),
     'cep' => cfg($conn, $lojaId, 'loja_cep', ''),

@@ -8,8 +8,10 @@ export type ConfiguracoesDetalhe = {
     nome: string;
     contato: string;
     descricao: string;
+    cpf: string;
     cnpj: string;
     link: string;
+    link_slug: string;
     instagram: string;
     tiktok: string;
     cep: string;

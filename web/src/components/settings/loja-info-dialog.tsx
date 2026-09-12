@@ -51,6 +51,31 @@ function imagemUrl(rel: string, phpAdminUrl: string): string {
   return rel.startsWith("http") ? rel : `${phpAdminUrl}/${rel}`;
 }
 
+function slugificarLink(valor: string): string {
+  return valor
+    .trim()
+    .replace(/\s+/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "");
+}
+
+function maskCpf(valor: string): string {
+  const v = valor.replace(/\D/g, "").slice(0, 11);
+  return v
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
+function maskCnpj(valor: string): string {
+  const v = valor.replace(/\D/g, "").slice(0, 14);
+  return v
+    .replace(/(\d{2})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1/$2")
+    .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+}
+
 export function LojaInfoDialog({
   open,
   onOpenChange,
@@ -68,9 +93,9 @@ export function LojaInfoDialog({
 }) {
   const [nome, setNome] = useState(loja.nome);
   const [contato, setContato] = useState(loja.contato);
-  const [descricao, setDescricao] = useState(loja.descricao);
+  const [cpf, setCpf] = useState(loja.cpf);
   const [cnpj, setCnpj] = useState(loja.cnpj);
-  const [linkSlug, setLinkSlug] = useState(loja.link);
+  const [linkSlug, setLinkSlug] = useState(loja.link_slug);
   const [instagram, setInstagram] = useState(loja.instagram);
   const [tiktok, setTiktok] = useState(loja.tiktok);
   const [cep, setCep] = useState(loja.cep);
@@ -96,9 +121,9 @@ export function LojaInfoDialog({
     if (!open) return;
     setNome(loja.nome);
     setContato(loja.contato);
-    setDescricao(loja.descricao);
+    setCpf(loja.cpf);
     setCnpj(loja.cnpj);
-    setLinkSlug(loja.link);
+    setLinkSlug(loja.link_slug);
     setInstagram(loja.instagram);
     setTiktok(loja.tiktok);
     setCep(loja.cep);
@@ -154,10 +179,14 @@ export function LojaInfoDialog({
     setPerfilRemover(true);
   }
 
-  const linkPreview = linkSlug ? `${lojaLinkBase}${linkSlug.replace(/^\/+/, "")}` : lojaLinkBase;
+  const linkCompleto = `${lojaLinkBase}${encodeURIComponent(linkSlug)}`;
+
+  function alterarLinkSlug(valor: string) {
+    setLinkSlug(slugificarLink(valor));
+  }
 
   function copiarLink() {
-    navigator.clipboard?.writeText(linkPreview).then(
+    navigator.clipboard?.writeText(linkCompleto).then(
       () => toast.success("Link copiado."),
       () => toast.error("Não foi possível copiar o link.")
     );
@@ -180,9 +209,9 @@ export function LojaInfoDialog({
         body: JSON.stringify({
           nome_loja: nome,
           loja_contato: contato,
-          loja_descricao: descricao,
+          loja_cpf: cpf,
           loja_cnpj: cnpj,
-          link_loja: linkSlug,
+          link_loja: linkCompleto,
           loja_instagram: instagram,
           loja_tiktok: tiktok,
           loja_cep: cep,
@@ -290,29 +319,26 @@ export function LojaInfoDialog({
             <Label className="text-xs">Número de contato</Label>
             <Input value={contato} onChange={(e) => setContato(e.target.value)} placeholder="(00) 00000-0000" />
           </div>
-          <div className="col-span-full space-y-1">
-            <Label className="text-xs">Descrição</Label>
-            <textarea
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              rows={2}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            />
-          </div>
 
           <div className="col-span-full mt-2 text-xs font-semibold tracking-wide text-primary uppercase">Documentos e link</div>
-          <div className="col-span-full space-y-1">
-            <Label className="text-xs">CPF ou CNPJ</Label>
-            <Input value={cnpj} onChange={(e) => setCnpj(e.target.value)} />
+          <div className="space-y-1">
+            <Label className="text-xs">CPF</Label>
+            <Input value={cpf} onChange={(e) => setCpf(maskCpf(e.target.value))} placeholder="000.000.000-00" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">CNPJ</Label>
+            <Input value={cnpj} onChange={(e) => setCnpj(maskCnpj(e.target.value))} placeholder="00.000.000/0000-00" />
           </div>
           <div className="col-span-full space-y-1">
             <Label className="text-xs">Link customizado</Label>
-            <Input value={linkSlug} onChange={(e) => setLinkSlug(e.target.value)} placeholder="ex: minhaloja" />
-            <div className="flex items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1">
-              <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{linkPreview}</span>
-              <button type="button" onClick={copiarLink} className="shrink-0 text-muted-foreground hover:text-foreground">
-                <Copy className="size-3.5" />
-              </button>
+            <div className="flex items-center gap-2">
+              <Input value={linkSlug} onChange={(e) => alterarLinkSlug(e.target.value)} placeholder="ex: minhaloja" className="flex-1" />
+              <div className="flex flex-1 items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1">
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{linkCompleto}</span>
+                <button type="button" onClick={copiarLink} className="shrink-0 text-muted-foreground hover:text-foreground">
+                  <Copy className="size-3.5" />
+                </button>
+              </div>
             </div>
           </div>
 
