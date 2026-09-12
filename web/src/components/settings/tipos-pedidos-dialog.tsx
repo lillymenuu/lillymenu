@@ -81,11 +81,11 @@ export function TiposPedidosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
+      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Tipos de pedidos</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pr-1">
           <div className="rounded-lg border p-3">
             <div className="mb-2 flex items-center justify-between">
               <div>
@@ -142,7 +142,7 @@ export function TiposPedidosDialog({
               </div>
             ) : null}
           </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="col-span-2 flex items-center justify-between rounded-lg border p-3">
             <div>
               <div className="text-sm font-medium">Consumo local</div>
               <div className="text-xs text-muted-foreground">Seus clientes poderão solicitar pedidos para consumir no seu local.</div>
