@@ -240,16 +240,16 @@ export function PedidosAgendadosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg sm:max-w-lg">
+      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Pedidos agendados</DialogTitle>
         </DialogHeader>
-        <Tabs value={aba} onValueChange={(v) => v && setAba(v as string)}>
+        <Tabs value={aba} onValueChange={(v) => v && setAba(v as string)} className="min-h-0 flex-1">
           <TabsList variant="line">
             <TabsTrigger value="delivery">Delivery</TabsTrigger>
             <TabsTrigger value="retirada">Retirada</TabsTrigger>
           </TabsList>
-          <TabsContent value="delivery" className="max-h-[55vh] overflow-y-auto pt-3">
+          <TabsContent value="delivery" className="min-h-0 flex-1 overflow-y-auto pt-3">
             <SecaoAgendamento
               titulo="Delivery"
               ativo={dAtivo}
@@ -266,7 +266,7 @@ export function PedidosAgendadosDialog({
               onHorariosChange={setDHorarios}
             />
           </TabsContent>
-          <TabsContent value="retirada" className="max-h-[55vh] overflow-y-auto pt-3">
+          <TabsContent value="retirada" className="min-h-0 flex-1 overflow-y-auto pt-3">
             <SecaoAgendamento
               titulo="Retirada"
               ativo={rAtivo}
