@@ -209,7 +209,7 @@ export function LojaInfoDialog({
         body: JSON.stringify({
           nome_loja: nome,
           loja_contato: contato,
-          loja_cpf: cpf,
+          cobranca_cpf: cpf,
           loja_cnpj: cnpj,
           link_loja: linkCompleto,
           loja_instagram: instagram,
@@ -244,12 +244,12 @@ export function LojaInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] w-[776px] max-w-[calc(100%-2rem)] sm:max-w-[776px]">
+      <DialogContent className="flex max-h-[88vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Informações da loja</DialogTitle>
         </DialogHeader>
 
-        <div className="max-h-[72vh] overflow-y-auto pr-1">
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         <div className="relative mb-9">
           <div className="relative h-28 w-full overflow-hidden rounded-lg border bg-muted">
             {capaPreview ? (

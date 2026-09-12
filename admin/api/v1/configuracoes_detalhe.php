@@ -137,7 +137,7 @@ echo json_encode([
     'nome' => cfg($conn, $lojaId, 'nome_loja', ''),
     'contato' => cfg($conn, $lojaId, 'loja_contato', ''),
     'descricao' => cfg($conn, $lojaId, 'loja_descricao', ''),
-    'cpf' => cfg($conn, $lojaId, 'loja_cpf', ''),
+    'cpf' => cfg($conn, $lojaId, 'cobranca_cpf', ''),
     'cnpj' => cfg($conn, $lojaId, 'loja_cnpj', ''),
     'link' => $lojaLink,
     'link_slug' => $lojaLinkSlug,
