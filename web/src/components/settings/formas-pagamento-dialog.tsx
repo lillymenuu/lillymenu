@@ -194,7 +194,7 @@ export function FormasPagamentoDialog({
         <DialogHeader>
           <DialogTitle>Formas de pagamento</DialogTitle>
         </DialogHeader>
-        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto pr-1 md:grid-cols-2">
+        <div className="grid max-h-[70vh] grid-cols-2 gap-3 overflow-y-auto pr-1">
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="text-sm font-medium">Dinheiro</div>
             <Switch checked={dinheiro} onCheckedChange={setDinheiro} />
