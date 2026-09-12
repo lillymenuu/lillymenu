@@ -64,32 +64,52 @@ export function CashbackDialog({
     }
   }
 
+  const percentualNum = Number(percentual.replace(",", ".")) || 0;
+  const valorPago = 50;
+  const valorCashback = (valorPago * percentualNum) / 100;
+  const formatarBRL = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cashback</DialogTitle>
         </DialogHeader>
+
+        <div>
+          <div className="text-sm font-medium">Vantagens</div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            O cashback ajuda a aumentar o ticket médio do seu negócio e a fidelizar cada vez mais o seu cliente.
+          </p>
+        </div>
+
         <div className="flex items-center justify-between rounded-lg border p-3">
-          <div>
-            <div className="text-sm font-medium">Ativar cashback</div>
-            <div className="text-xs text-muted-foreground">Devolve um percentual do pedido como crédito para o cliente.</div>
-          </div>
+          <div className="text-sm font-medium">Cashback habilitado</div>
           <Switch checked={ativo} onCheckedChange={setAtivo} />
         </div>
         {ativo ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3 rounded-lg border p-3">
             <div className="space-y-1">
-              <Label className="text-xs">Percentual de retorno (%)</Label>
+              <Label className="text-xs">O cashback deve expirar em quantos dias?</Label>
+              <Input type="number" min="1" step="1" value={expiraDias} onChange={(e) => setExpiraDias(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Cashback fica disponível para uso após quantas horas da compra?</Label>
+              <Input type="number" min="0" step="1" placeholder="12" value={carenciaHoras} onChange={(e) => setCarenciaHoras(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Porcentagem do cashback</Label>
               <Input type="number" step="0.01" min="0" max="100" value={percentual} onChange={(e) => setPercentual(e.target.value)} />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Expira em (dias)</Label>
-              <Input type="number" min="1" value={expiraDias} onChange={(e) => setExpiraDias(e.target.value)} />
-            </div>
-            <div className="col-span-2 space-y-1">
-              <Label className="text-xs">Carência para uso (horas)</Label>
-              <Input type="number" min="0" value={carenciaHoras} onChange={(e) => setCarenciaHoras(e.target.value)} />
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <div>
+                <div className="text-xs text-muted-foreground">Pago pelo cliente</div>
+                <div className="text-sm font-medium">Seu cliente receberá de cashback</div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">{formatarBRL(valorPago)}</div>
+                <div className="text-sm font-semibold">{formatarBRL(valorCashback)}</div>
+              </div>
             </div>
           </div>
         ) : null}

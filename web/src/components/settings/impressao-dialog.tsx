@@ -126,7 +126,7 @@ export function ImpressaoDialog({
       <Script src={`${phpAdminUrl}/admin/assets/js/impressao_qz.js`} strategy="afterInteractive" onLoad={() => setScriptPronto(true)} />
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Impressão</DialogTitle>
           </DialogHeader>

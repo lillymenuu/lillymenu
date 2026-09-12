@@ -97,7 +97,7 @@ export function UsuariosDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Usuários</DialogTitle>
           </DialogHeader>

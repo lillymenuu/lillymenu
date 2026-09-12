@@ -108,7 +108,7 @@ export function SeloVerificacaoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BadgeCheck className="size-4.5 text-primary" /> Selo de verificação

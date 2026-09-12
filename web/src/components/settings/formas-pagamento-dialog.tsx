@@ -190,14 +190,19 @@ export function FormasPagamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Formas de pagamento</DialogTitle>
         </DialogHeader>
-        <div className="max-h-[60vh] space-y-3 overflow-y-auto">
+        <div className="grid max-h-[70vh] grid-cols-1 gap-3 overflow-y-auto pr-1 md:grid-cols-2">
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="text-sm font-medium">Dinheiro</div>
             <Switch checked={dinheiro} onCheckedChange={setDinheiro} />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="text-sm font-medium">Voucher / vale-refeição</div>
+            <Switch checked={voucher} onCheckedChange={setVoucher} />
           </div>
 
           <div className="space-y-2 rounded-lg border p-3">
@@ -217,6 +222,11 @@ export function FormasPagamentoDialog({
                 </div>
               </div>
             ) : null}
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="text-sm font-medium">Fiado</div>
+            <Switch checked={fiado} onCheckedChange={setFiado} />
           </div>
 
           <div className="space-y-2 rounded-lg border p-3">
@@ -267,15 +277,6 @@ export function FormasPagamentoDialog({
                 ) : null}
               </>
             ) : null}
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="text-sm font-medium">Voucher / vale-refeição</div>
-            <Switch checked={voucher} onCheckedChange={setVoucher} />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="text-sm font-medium">Fiado</div>
-            <Switch checked={fiado} onCheckedChange={setFiado} />
           </div>
         </div>
         <DialogFooter>

@@ -63,7 +63,7 @@ export function UsuarioFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{usuario ? "Editar usuário" : "Novo usuário"}</DialogTitle>
         </DialogHeader>

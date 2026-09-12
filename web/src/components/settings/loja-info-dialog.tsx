@@ -218,11 +218,12 @@ export function LojaInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[88vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Informações da loja</DialogTitle>
         </DialogHeader>
 
+        <div className="flex max-h-[70vh] flex-col overflow-y-auto pr-1">
         <div className="flex items-center gap-3">
           <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted">
             {perfilPreview ? (
@@ -277,7 +278,7 @@ export function LojaInfoDialog({
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="principal" className="max-h-[42vh] space-y-3 overflow-y-auto pt-3">
+          <TabsContent value="principal" className="space-y-3 pt-3">
             <div className="space-y-1">
               <Label className="text-xs">Nome da loja</Label>
               <Input value={nome} onChange={(e) => setNome(e.target.value)} />
@@ -311,7 +312,7 @@ export function LojaInfoDialog({
             </div>
           </TabsContent>
 
-          <TabsContent value="redes" className="max-h-[42vh] space-y-3 overflow-y-auto pt-3">
+          <TabsContent value="redes" className="space-y-3 pt-3">
             <div className="space-y-1">
               <Label className="text-xs">Instagram</Label>
               <Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="Ex.: minhaloja" />
@@ -322,7 +323,7 @@ export function LojaInfoDialog({
             </div>
           </TabsContent>
 
-          <TabsContent value="endereco" className="max-h-[42vh] space-y-3 overflow-y-auto pt-3">
+          <TabsContent value="endereco" className="space-y-3 pt-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">CEP</Label>
@@ -355,6 +356,7 @@ export function LojaInfoDialog({
             </div>
           </TabsContent>
         </Tabs>
+        </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
