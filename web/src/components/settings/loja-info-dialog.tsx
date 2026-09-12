@@ -218,7 +218,7 @@ export function LojaInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-h-[88vh] max-w-lg">
         <DialogHeader>
           <DialogTitle>Informações da loja</DialogTitle>
         </DialogHeader>
@@ -359,9 +359,6 @@ export function LojaInfoDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
-            Cancelar
-          </Button>
           <Button onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>

@@ -50,7 +50,7 @@ export function MenuCustomDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-md">
         <DialogHeader>
           <DialogTitle>Customize o menu</DialogTitle>
         </DialogHeader>
@@ -76,9 +76,6 @@ export function MenuCustomDialog({
           ))}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
-            Cancelar
-          </Button>
           <Button onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>

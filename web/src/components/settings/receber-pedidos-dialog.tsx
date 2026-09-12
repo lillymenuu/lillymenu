@@ -75,9 +75,6 @@ export function ReceberPedidosDialog({
           <Linha titulo="Aceite automático" desc="Aceita pedidos automaticamente sem confirmação manual." checked={aceiteAutomatico} onCheckedChange={setAceiteAutomatico} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
-            Cancelar
-          </Button>
           <Button onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>

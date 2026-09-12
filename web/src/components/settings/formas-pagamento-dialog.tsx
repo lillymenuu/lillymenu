@@ -190,7 +190,7 @@ export function FormasPagamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-3xl">
         <DialogHeader>
           <DialogTitle>Formas de pagamento</DialogTitle>
         </DialogHeader>
@@ -280,9 +280,6 @@ export function FormasPagamentoDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
-            Cancelar
-          </Button>
           <Button onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>

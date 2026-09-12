@@ -240,7 +240,7 @@ export function PedidosAgendadosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-lg">
         <DialogHeader>
           <DialogTitle>Pedidos agendados</DialogTitle>
         </DialogHeader>
@@ -285,9 +285,6 @@ export function PedidosAgendadosDialog({
           </TabsContent>
         </Tabs>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
-            Cancelar
-          </Button>
           <Button onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>

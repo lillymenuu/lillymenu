@@ -100,9 +100,6 @@ export function ClubePontosDialog({
           <Switch checked={valor} onCheckedChange={setValor} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
-            Cancelar
-          </Button>
           <Button onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
