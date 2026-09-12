@@ -115,7 +115,7 @@ export function PausaDialog({ open, onOpenChange }: { open: boolean; onOpenChang
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] max-w-md">
+        <DialogContent className="max-h-[90vh] max-w-md sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Pausa programada</DialogTitle>
           </DialogHeader>

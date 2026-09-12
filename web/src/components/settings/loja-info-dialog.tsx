@@ -215,7 +215,7 @@ export function LojaInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] max-w-2xl">
+      <DialogContent className="max-h-[88vh] w-[776px] max-w-[calc(100%-2rem)] sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Informações da loja</DialogTitle>
         </DialogHeader>

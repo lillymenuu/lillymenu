@@ -190,7 +190,7 @@ export function FormasPagamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl">
+      <DialogContent className="max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Formas de pagamento</DialogTitle>
         </DialogHeader>

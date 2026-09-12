@@ -79,7 +79,7 @@ export function HorariosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-lg sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Horário de funcionamento</DialogTitle>
         </DialogHeader>

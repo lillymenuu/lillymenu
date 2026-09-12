@@ -56,7 +56,7 @@ export function WhatsappDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>WhatsApp</DialogTitle>
         </DialogHeader>
