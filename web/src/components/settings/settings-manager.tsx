@@ -20,7 +20,6 @@ import {
   CalendarCheck,
   MapPin,
   ShoppingCart,
-  MessageCircle,
   Webhook,
   Table2,
   Printer,
@@ -47,7 +46,6 @@ import { TiposPedidosDialog } from "@/components/settings/tipos-pedidos-dialog";
 import { ValorMinimoDialog } from "@/components/settings/valor-minimo-dialog";
 import { PedidosAgendadosDialog } from "@/components/settings/pedidos-agendados-dialog";
 import { TaxaEntregaDialog } from "@/components/settings/taxa-entrega-dialog";
-import { WhatsappDialog } from "@/components/settings/whatsapp-dialog";
 import { ImpressaoDialog } from "@/components/settings/impressao-dialog";
 
 type CardId =
@@ -65,7 +63,6 @@ type CardId =
   | "valor-minimo"
   | "pedidos-agendados"
   | "taxa-entrega"
-  | "whatsapp"
   | "impressao"
   | "versiculo-dashboard";
 
@@ -165,7 +162,6 @@ export function SettingsManager({
       title: "Integrações",
       cards: [
         { id: "ifood", icon: ShoppingCart, title: "iFood", desc: "Sincronize pedidos do marketplace.", disabled: true },
-        { id: "whatsapp", icon: MessageCircle, title: "WhatsApp", desc: "Conecte mensagens e automações." },
         { id: "facebook-pixel", icon: Webhook, title: "Facebook pixel", desc: "Acompanhe eventos do cardápio.", disabled: true },
       ],
     },
@@ -323,12 +319,6 @@ export function SettingsManager({
         open={aberto === "taxa-entrega"}
         onOpenChange={(v) => setAberto(v ? "taxa-entrega" : null)}
         taxaEntrega={dados.taxa_entrega}
-        onSalvo={recarregar}
-      />
-      <WhatsappDialog
-        open={aberto === "whatsapp"}
-        onOpenChange={(v) => setAberto(v ? "whatsapp" : null)}
-        whatsapp={dados.whatsapp}
         onSalvo={recarregar}
       />
       <ImpressaoDialog

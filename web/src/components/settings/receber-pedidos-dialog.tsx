@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import type { ConfiguracoesDetalhe } from "@/lib/settings";
 
 type Pedidos = ConfiguracoesDetalhe["pedidos"];
@@ -24,6 +26,7 @@ export function ReceberPedidosDialog({
   const [gestor, setGestor] = useState(pedidos.gestor_pedidos_ativo);
   const [notificar, setNotificar] = useState(pedidos.notificar_pedido_whatsapp_ativo);
   const [aceiteAutomatico, setAceiteAutomatico] = useState(pedidos.aceite_automatico_diggy_ativo);
+  const [whatsappNumero, setWhatsappNumero] = useState(pedidos.whatsapp_numero);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -32,6 +35,7 @@ export function ReceberPedidosDialog({
     setGestor(pedidos.gestor_pedidos_ativo);
     setNotificar(pedidos.notificar_pedido_whatsapp_ativo);
     setAceiteAutomatico(pedidos.aceite_automatico_diggy_ativo);
+    setWhatsappNumero(pedidos.whatsapp_numero);
   }, [open, pedidos]);
 
   async function salvar() {
@@ -45,6 +49,7 @@ export function ReceberPedidosDialog({
           gestor_pedidos_ativo: gestor ? "1" : "0",
           notificar_pedido_whatsapp_ativo: notificar ? "1" : "0",
           aceite_automatico_diggy_ativo: aceiteAutomatico ? "1" : "0",
+          whatsapp_numero: whatsappNumero,
         }),
       });
       const data = await res.json();
@@ -73,6 +78,10 @@ export function ReceberPedidosDialog({
           <Linha titulo="Gestor de pedidos" desc="Ativa a tela de gestão de pedidos em tempo real." checked={gestor} onCheckedChange={setGestor} />
           <Linha titulo="Notificar por WhatsApp" desc="Envia um aviso por WhatsApp a cada novo pedido." checked={notificar} onCheckedChange={setNotificar} />
           <Linha titulo="Aceite automático" desc="Aceita pedidos automaticamente sem confirmação manual." checked={aceiteAutomatico} onCheckedChange={setAceiteAutomatico} />
+          <div className="space-y-1 rounded-lg border p-3">
+            <Label className="text-xs">Número do WhatsApp para receber pedidos</Label>
+            <Input value={whatsappNumero} onChange={(e) => setWhatsappNumero(e.target.value)} placeholder="(11) 99999-9999" />
+          </div>
         </div>
         <DialogFooter>
           <Button onClick={salvar} disabled={salvando}>

@@ -96,7 +96,6 @@ export type ConfiguracoesDetalhe = {
     gratis: boolean;
     fixa: { valor: number; tempo_min: number; tempo_max: number };
   };
-  whatsapp: { numero: string; msg: string };
   versiculo_dashboard_ativo: boolean;
 };
 

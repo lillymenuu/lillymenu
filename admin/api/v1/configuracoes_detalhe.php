@@ -243,10 +243,6 @@ echo json_encode([
       'tempo_max' => (int) cfg($conn, $lojaId, 'taxa_entrega_tempo_max', '60'),
     ],
   ],
-  'whatsapp' => [
-    'numero' => cfg($conn, $lojaId, 'whatsapp_numero', ''),
-    'msg' => cfg($conn, $lojaId, 'whatsapp_msg', ''),
-  ],
   'versiculo_dashboard_ativo' => cfg($conn, $lojaId, 'versiculo_dashboard_ativo', '1') === '1',
   'horarios_semana' => $horariosSemana ?: new stdClass(),
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
