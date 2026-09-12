@@ -254,7 +254,7 @@ export function TaxaEntregaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg sm:max-w-lg">
+      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Taxa de entrega</DialogTitle>
         </DialogHeader>
@@ -280,7 +280,7 @@ export function TaxaEntregaDialog({
           ))}
         </div>
 
-        <div className="max-h-[45vh] overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {tab === "sem" ? (
             <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
               Defina sua loja sem taxa de entrega para pedidos de delivery.
