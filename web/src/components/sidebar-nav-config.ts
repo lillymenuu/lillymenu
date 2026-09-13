@@ -99,7 +99,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "modoGarcom", label: "Modo Garçom", icon: BadgeIcon, href: "/waitermode", migrated: true },
       { menuKey: "controleCaixa", label: "Controle de caixa", icon: Wallet, href: "/cashcontrol", migrated: true },
       { menuKey: "controleFiado", label: "Controle de fiado", icon: BookText, href: "/storecredittracking", migrated: true },
-      { menuKey: "cupons", label: "Cupons", icon: Ticket, href: "/cupons" },
+      { menuKey: "cupons", label: "Cupons", icon: Ticket, href: "/coupons", migrated: true },
       { menuKey: null, label: "Avaliações", icon: Star, href: "/avaliacoes", migrated: true },
       { menuKey: null, label: "Assinatura", icon: CreditCard, href: "/plan-details", migrated: true },
       { menuKey: "configuracoes", label: "Configurações", icon: Settings, href: "/settings", migrated: true },
