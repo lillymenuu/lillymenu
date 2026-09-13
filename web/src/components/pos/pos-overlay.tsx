@@ -69,6 +69,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [pagamentoDados, setPagamentoDados] = useState<PosPagamentoDados | null>(null);
   const [finalizando, setFinalizando] = useState(false);
   const [taxaEntregaConfig, setTaxaEntregaConfig] = useState<{ tipo: string; gratis: boolean; valorFixo: number } | null>(null);
+  const [temCupomDisponivel, setTemCupomDisponivel] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -76,8 +77,9 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
       fetch("/api/pos/catalogo").then((r) => r.json()),
       fetch("/api/cashcontrol/resumo").then((r) => r.json()),
       fetch("/api/settings/detalhe").then((r) => r.json()),
+      fetch("/api/coupons").then((r) => r.json()),
     ])
-      .then(([cat, cx, cfg]) => {
+      .then(([cat, cx, cfg, cup]) => {
         if (cat.ok) setCatalogo(cat);
         if (cx.ok) setCaixa(cx);
         if (cfg.ok) {
@@ -86,6 +88,14 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
             gratis: cfg.taxa_entrega.gratis,
             valorFixo: cfg.taxa_entrega.fixa.valor,
           });
+        }
+        if (cup.ok) {
+          // Mesma regra do legado: cupom so aparece se houver pelo menos um
+          // ativo e ainda nao esgotado (quantidade_total=0 = ilimitado).
+          const disponivel = (cup.cupons as { ativo: boolean; quantidade_total: number; quantidade_usada: number }[]).some(
+            (c) => c.ativo && (c.quantidade_total === 0 || c.quantidade_usada < c.quantidade_total)
+          );
+          setTemCupomDisponivel(disponivel);
         }
       })
       .finally(() => setCarregandoInicial(false));
@@ -269,76 +279,84 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
               )}
             </div>
 
-            <div className="flex min-h-0 min-w-0 flex-col overflow-y-auto p-4">
+            <div className="flex min-h-0 min-w-0 flex-col">
               {etapa === "resumo" ? (
-                <div className="space-y-3">
-                  <PosTipoPedido tipo={tipoPedido} onTipoChange={setTipoPedido} />
-                  <PosAgendamentoCard />
-                  <PosClienteSection
-                    cliente={cliente}
-                    onClienteChange={setCliente}
-                    onStatsChange={setClienteStats}
-                    cashbackAtivo={cashbackAtivo}
-                    onCashbackAtivoChange={setCashbackAtivo}
-                  />
-                  {tipoPedido === "entrega" ? (
-                    <PosEnderecoCard endereco={endereco} onEnderecoChange={setEndereco} taxaEntrega={taxaEntrega} />
-                  ) : null}
-
-                  <PosCartList itens={cart.itens} onEditar={setItemEditando} onRemover={cart.remover} />
-
-                  <div className="space-y-1 border-t pt-2.5 text-sm">
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Subtotal</span>
-                      <span>{formatBRL(cart.subtotal)}</span>
-                    </div>
-                    {taxaEntrega > 0 ? (
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>Taxa de entrega</span>
-                        <span>{formatBRL(taxaEntrega)}</span>
-                      </div>
+                <>
+                  <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+                    <PosTipoPedido tipo={tipoPedido} onTipoChange={setTipoPedido} />
+                    <PosAgendamentoCard />
+                    <PosClienteSection
+                      cliente={cliente}
+                      onClienteChange={setCliente}
+                      onStatsChange={setClienteStats}
+                      cashbackAtivo={cashbackAtivo}
+                      onCashbackAtivoChange={setCashbackAtivo}
+                    />
+                    {tipoPedido === "entrega" ? (
+                      <PosEnderecoCard endereco={endereco} onEnderecoChange={setEndereco} taxaEntrega={taxaEntrega} />
                     ) : null}
-                    <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
-                      <span>Total</span>
-                      <span>{formatBRL(totalResumo)}</span>
-                    </div>
+
+                    <PosCartList itens={cart.itens} onEditar={setItemEditando} onRemover={cart.remover} />
                   </div>
 
-                  <PosCupomField
+                  <div className="shrink-0 space-y-3 border-t bg-card p-4">
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Subtotal</span>
+                        <span>{formatBRL(cart.subtotal)}</span>
+                      </div>
+                      {taxaEntrega > 0 ? (
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Taxa de entrega</span>
+                          <span>{formatBRL(taxaEntrega)}</span>
+                        </div>
+                      ) : null}
+                      <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
+                        <span>Total</span>
+                        <span>{formatBRL(totalResumo)}</span>
+                      </div>
+                    </div>
+
+                    {temCupomDisponivel ? (
+                      <PosCupomField
+                        subtotal={cart.subtotal}
+                        taxaEntrega={taxaEntrega}
+                        tipoPedido={tipoPedido}
+                        clienteId={cliente?.id ?? null}
+                        cupom={cupom}
+                        onCupomChange={setCupom}
+                      />
+                    ) : null}
+
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Adicionar CPF/CNPJ na nota (NFC-e)?</Label>
+                      <Input value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className="h-11 rounded-xl text-sm" />
+                    </div>
+
+                    <Button
+                      className="h-12 w-full rounded-xl text-sm"
+                      onClick={irParaPagamento}
+                      disabled={cart.itens.length === 0 || !cliente}
+                    >
+                      Continuar
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                  <PosPagamentoPanel
                     subtotal={cart.subtotal}
                     taxaEntrega={taxaEntrega}
-                    tipoPedido={tipoPedido}
-                    clienteId={cliente?.id ?? null}
                     cupom={cupom}
-                    onCupomChange={setCupom}
+                    podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
+                    clienteStats={clienteStats}
+                    onDadosChange={(dados) => setPagamentoDados(dados)}
+                    onVoltar={() => setEtapa("resumo")}
+                    onFinalizar={finalizarPedido}
+                    finalizando={finalizando}
+                    desabilitado={cart.itens.length === 0 || !cliente}
                   />
-
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Adicionar CPF/CNPJ na nota (NFC-e)?</Label>
-                    <Input value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className="h-11 rounded-xl text-sm" />
-                  </div>
-
-                  <Button
-                    className="h-12 w-full rounded-xl text-sm"
-                    onClick={irParaPagamento}
-                    disabled={cart.itens.length === 0 || !cliente}
-                  >
-                    Continuar
-                  </Button>
                 </div>
-              ) : (
-                <PosPagamentoPanel
-                  subtotal={cart.subtotal}
-                  taxaEntrega={taxaEntrega}
-                  cupom={cupom}
-                  podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
-                  clienteStats={clienteStats}
-                  onDadosChange={(dados) => setPagamentoDados(dados)}
-                  onVoltar={() => setEtapa("resumo")}
-                  onFinalizar={finalizarPedido}
-                  finalizando={finalizando}
-                  desabilitado={cart.itens.length === 0 || !cliente}
-                />
               )}
             </div>
           </div>
