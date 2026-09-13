@@ -20,8 +20,8 @@ export function PosProdutoCard({
   const emPromo = produto.preco_promocional !== null;
 
   return (
-    <div className={`flex flex-col overflow-hidden rounded-xl border bg-card ${semEstoque ? "opacity-50" : ""}`}>
-      <div className="relative aspect-[4/3] bg-muted">
+    <div className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card ${semEstoque ? "opacity-50" : ""}`}>
+      <div className="relative h-[124px] shrink-0 bg-muted">
         {produto.imagem ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={produto.imagem} alt={produto.nome} className="size-full object-cover" />
@@ -36,7 +36,7 @@ export function PosProdutoCard({
           </span>
         ) : null}
       </div>
-      <div className="flex flex-1 flex-col gap-0.5 px-2 pt-1.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden px-2 pt-1.5">
         <div className="line-clamp-2 text-[12.5px] leading-tight font-medium text-foreground">{produto.nome}</div>
         <div className="mt-0.5 flex items-baseline gap-1.5">
           <span className="text-[13px] font-semibold">
@@ -46,7 +46,7 @@ export function PosProdutoCard({
           {emPromo ? <span className="text-[11px] text-muted-foreground line-through">{formatBRL(produto.preco)}</span> : null}
         </div>
       </div>
-      <div className="flex items-center justify-between gap-1 p-1.5">
+      <div className="flex shrink-0 items-center justify-between gap-1 p-1.5">
         <button
           type="button"
           disabled={semEstoque || qtd === 0 || produto.tem_variacoes}
