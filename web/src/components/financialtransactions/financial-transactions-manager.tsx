@@ -159,7 +159,9 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
           </Select>
           <Select value={dados.tipo || "all"} onValueChange={(v) => carregar({ tipo: v === "all" ? "" : (v as string), page: 1 })} disabled={carregando}>
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue>
+                {() => (dados.tipo === "income" ? "Receita" : dados.tipo === "expense" ? "Despesa" : "Todos os tipos")}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os tipos</SelectItem>
@@ -173,7 +175,9 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
             disabled={carregando}
           >
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue>
+                {() => dados.categorias.find((c) => c.id === dados.categoria_id)?.name ?? "Todas categorias"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas categorias</SelectItem>
@@ -190,7 +194,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
             disabled={carregando}
           >
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue>{() => dados.contas.find((c) => c.id === dados.conta_id)?.name ?? "Todas contas"}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas contas</SelectItem>

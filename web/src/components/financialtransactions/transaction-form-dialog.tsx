@@ -150,7 +150,7 @@ export function TransactionFormDialog({
               <Label className="text-xs">Tipo</Label>
               <Select value={type} onValueChange={(v) => v && setType(v as "income" | "expense")}>
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>{() => (type === "income" ? "Receita" : "Despesa")}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="income">Receita</SelectItem>
@@ -178,7 +178,9 @@ export function TransactionFormDialog({
               <Label className="text-xs">Conta</Label>
               <Select value={accountId} onValueChange={(v) => v && setAccountId(v as string)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder="Selecione">
+                    {() => contas.find((c) => String(c.id) === accountId)?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {contas.map((c) => (
@@ -196,7 +198,9 @@ export function TransactionFormDialog({
               <Label className="text-xs">Categoria</Label>
               <Select value={categoryId} onValueChange={(v) => v && alterarCategoria(v as string)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder="Selecione">
+                    {() => categorias.find((c) => String(c.id) === categoryId)?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {categoriasFiltradas.map((c) => (
@@ -211,7 +215,9 @@ export function TransactionFormDialog({
               <Label className="text-xs">Forma de pagamento</Label>
               <Select value={paymentMethodId || "none"} onValueChange={(v) => setPaymentMethodId(v === "none" ? "" : (v as string))}>
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {() => formasPagamento.find((p) => String(p.id) === paymentMethodId)?.name ?? "Não informar"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Não informar</SelectItem>
