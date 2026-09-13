@@ -1195,6 +1195,7 @@ function renderCarrinho(){
     footer.style.display='none';return;
   }
   footer.style.display='';
+  if(cupomPendenteAuto && !cupomAplicado){ aplicarCupom(cupomPendenteAuto, true); }
   const logoHtml=CFG.lojaPerfil
     ?`<img class="cart-store-logo-img" src="${CFG.lojaPerfil}" alt="">`
     :`<div class="cart-store-logo-txt">${CFG.nomeLoja.charAt(0)}</div>`;
@@ -1421,6 +1422,11 @@ function pedirNovamente(){
 }
 
 let cupomAplicado=null; // {codigo, tipo, desconto, valor}
+/* Cupom vindo do link "Copiar link com o cupom" (admin/coupons), CFG.cupomPreenchido
+   setado pelo servidor. Tentamos aplicar sozinho assim que houver itens no
+   carrinho (renderCarrinho) — silenciosamente, pra nao floodar toast de "abaixo
+   do minimo" a cada item adicionado; some depois do primeiro sucesso. */
+let cupomPendenteAuto=CFG.cupomPreenchido||null;
 async function toggleCupons(){
   const body=document.getElementById('cuponsBody');
   const toggle=document.getElementById('cuponsToggle');
@@ -1439,7 +1445,7 @@ async function toggleCupons(){
     /* O campo de código SEMPRE aparece, mesmo sem cupons públicos */
     const inputHtml=`
       <div id="cupomInputWrap" style="display:flex;gap:8px;margin-bottom:12px">
-        <input type="text" id="cupomCodigo" placeholder="Código do cupom" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:.84rem;font-family:inherit;outline:none;text-transform:uppercase">
+        <input type="text" id="cupomCodigo" value="${cupomPendenteAuto||''}" placeholder="Código do cupom" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:.84rem;font-family:inherit;outline:none;text-transform:uppercase">
         <button onclick="aplicarCupomManual()" style="background:var(--brown);color:#fff;border:0;border-radius:10px;padding:9px 14px;font-size:.82rem;font-weight:700;font-family:inherit;cursor:pointer">Aplicar</button>
       </div>`;
     const cupons=d.cupons||[];
@@ -1462,7 +1468,7 @@ async function aplicarCupomManual(){
   if(!codigo){toast('Digite o código do cupom');return;}
   await aplicarCupom(codigo);
 }
-async function aplicarCupom(codigo){
+async function aplicarCupom(codigo, silencioso){
   const sub  = carrinho.reduce((s,i)=>s+i.p*i.q, 0);
   const taxa = endResumoData?.taxa || 0;
   const body = new URLSearchParams({
@@ -1477,12 +1483,13 @@ async function aplicarCupom(codigo){
   try{
     const r = await fetch('api/cupons_validar.php', {method:'POST', body});
     const d = await r.json();
-    if(!d.ok){ toast(d.msg || 'Cupom inválido'); return; }
+    if(!d.ok){ if(!silencioso) toast(d.msg || 'Cupom inválido'); return; }
     cupomAplicado = {codigo:d.codigo, tipo:d.tipo, desconto:d.desconto, valor:d.valor};
+    cupomPendenteAuto = null;
     toast(`Cupom "${d.codigo}" aplicado! -${fmtR(d.valor)}`);
     renderCarrinho();       /* atualiza o carrinho e oculta o cupom aplicado */
     atualizarTotalComCupom();
-  }catch(e){ toast('Erro ao validar cupom. Tente novamente.'); }
+  }catch(e){ if(!silencioso) toast('Erro ao validar cupom. Tente novamente.'); }
 }
 function removerCupom(){
   cupomAplicado=null;
@@ -2389,7 +2396,7 @@ function renderResumo(bd){
           <span style="font-size:.82rem;font-weight:700;color:var(--brown)"><i class="bi bi-tag-fill"></i> ${cupomAplicado.codigo} aplicado</span>
           <button class="resumo-edit-btn" onclick="removerCupom();renderResumo(calcBreakdown())">Remover</button>
         </div>`:`<div style="display:flex;gap:8px">
-          <input type="text" id="resumoCupomCodigo" placeholder="Código do cupom" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:.84rem;font-family:inherit;text-transform:uppercase;outline:none">
+          <input type="text" id="resumoCupomCodigo" value="${cupomPendenteAuto||''}" placeholder="Código do cupom" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:.84rem;font-family:inherit;text-transform:uppercase;outline:none">
           <button class="cart-footer-btn" onclick="aplicarCupomResumo()">Aplicar</button>
         </div>`}
       </div>

@@ -36,6 +36,26 @@ if ($mesaIdParam > 0) {
   }
 }
 
+/* Link de cupom (admin/coupons > "Copiar link com o cupom"): a URL leva
+   ?cupom=<codigo>, que sobrevive ao rewrite do .htaccess (QSA) e chega
+   aqui em $_GET['cupom']. So repassa pro JS se o cupom existir, estiver
+   ativo e for dessa loja — mesma logica defensiva do parametro `mesa`
+   acima, pra nao pre-preencher um codigo invalido/de outra loja. */
+$cupomPreenchido = null;
+$cupomParam = strtoupper(trim((string) ($_GET['cupom'] ?? '')));
+if ($cupomParam !== '') {
+  try {
+    $stmtCupomLink = $conn->prepare("SELECT codigo FROM cupons WHERE codigo = ? AND loja_id = ? AND ativo = 1 LIMIT 1");
+    $stmtCupomLink->execute([$cupomParam, $lojaId]);
+    $cupomLinkRow = $stmtCupomLink->fetch(PDO::FETCH_ASSOC);
+    if ($cupomLinkRow) {
+      $cupomPreenchido = $cupomLinkRow['codigo'];
+    }
+  } catch (Throwable $e) {
+    // sem tabela de cupons ainda — ignora, cardapio segue normalmente.
+  }
+}
+
 function cfg(PDO $db, int $lid, string $chave, $default = ''): string {
   static $cache = [];
   $k = $lid.':'.$chave;
@@ -503,6 +523,7 @@ $cfgJS=json_encode(['lojaId'=>$lojaId,'nomeLoja'=>$nomeLoja,'lojaPerfil'=>$perfi
 'pausaAtivaFim'=>$pausaAtivaFim,
 'mesaId'=>$mesaId ?: null,
 'mesaNome'=>$mesaNome,
+'cupomPreenchido'=>$cupomPreenchido,
 ],JSON_UNESCAPED_UNICODE);
 $lojaCssVer = filemtime(__DIR__ . '/assets/css/loja.css');
 $lojaJsVer = filemtime(__DIR__ . '/assets/js/loja.js');

@@ -17,6 +17,8 @@ export type Cupom = {
 export type CuponsListarResposta = {
   ok: true;
   cupons: Cupom[];
+  loja_link_base: string;
+  link_slug: string;
 };
 
 export const CUPOM_TIPO_LABEL: Record<CupomTipo, string> = {

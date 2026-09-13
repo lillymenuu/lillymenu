@@ -8,8 +8,7 @@ export default async function CouponsPage() {
 
   try {
     const dados = await getCupons();
-    const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
-    return <CouponsManager dadosIniciais={dados} phpAdminUrl={phpAdminUrl} />;
+    return <CouponsManager dadosIniciais={dados} />;
   } catch (e) {
     erro = e instanceof PhpApiError ? e.message : "Erro ao carregar os cupons.";
   }

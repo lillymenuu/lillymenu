@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Ticket, Copy, Pencil } from "lucide-react";
+import { Plus, Ticket, Copy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +11,7 @@ import { cupomDescricao } from "@/lib/cupons";
 import type { Cupom, CuponsListarResposta } from "@/lib/cupons";
 import { CouponFormDialog } from "@/components/coupons/coupon-form-dialog";
 
-export function CouponsManager({ dadosIniciais, phpAdminUrl }: { dadosIniciais: CuponsListarResposta; phpAdminUrl: string }) {
+export function CouponsManager({ dadosIniciais }: { dadosIniciais: CuponsListarResposta }) {
   const [dados, setDados] = useState(dadosIniciais);
   const [carregando, setCarregando] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
@@ -70,7 +70,7 @@ export function CouponsManager({ dadosIniciais, phpAdminUrl }: { dadosIniciais: 
   }
 
   async function copiarLink(codigo: string) {
-    const link = `${phpAdminUrl}/admin/pdv.php?cupom=${codigo}`;
+    const link = `${dados.loja_link_base}${dados.link_slug}?cupom=${codigo}`;
     try {
       await navigator.clipboard.writeText(link);
       toast.success("Link copiado!");
@@ -148,20 +148,17 @@ export function CouponsManager({ dadosIniciais, phpAdminUrl }: { dadosIniciais: 
                   {disponivel === null ? "Cupons ilimitados para seus clientes" : `${disponivel} cupons disponíveis para seus clientes`}
                 </p>
 
-                <div className="flex items-center gap-2 border-t pt-3">
+                <div className="border-t pt-3">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 gap-1.5 text-xs"
+                    className="w-full gap-1.5 text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
                       copiarLink(c.codigo);
                     }}
                   >
                     <Copy className="size-3.5" /> Copiar link com o cupom
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => abrirEdicao(c)}>
-                    <Pencil className="size-4" />
                   </Button>
                 </div>
               </Card>
