@@ -78,7 +78,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { menuKey: "financeiro", label: "Dashboard financeiro", icon: PieChart, href: "/financialdashboard", migrated: true },
       { menuKey: "financeiro", label: "Lançamentos", icon: ArrowLeftRight, href: "/financialtransactions", migrated: true },
-      { menuKey: "financeiro", label: "Categorias", icon: Network, href: "/financeiro_categorias" },
+      { menuKey: "financeiro", label: "Categorias", icon: Network, href: "/financialcategories", migrated: true },
       { menuKey: "financeiro", label: "Contas", icon: Landmark, href: "/financeiro_contas" },
       { menuKey: "financeiro", label: "Formas de pagamento", icon: CreditCard, href: "/financeiro_formas_pagamento" },
       { menuKey: "financeiro", label: "DRE", icon: Table, href: "/financeiro_dre" },
