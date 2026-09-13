@@ -97,6 +97,7 @@ export function PosComboDialog({
     );
     onAdicionar({
       produtoId: null,
+      comboId: combo.id,
       nome: combo.nome,
       qtd: 1,
       preco: precoTotal,

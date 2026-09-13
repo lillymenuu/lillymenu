@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { X, Plus, ShoppingBag } from "lucide-react";
+import { X, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type {
   PosCartItem,
@@ -21,8 +23,12 @@ import { PosCartList } from "@/components/pos/pos-cart-list";
 import { PosVariacaoDialog } from "@/components/pos/pos-variacao-dialog";
 import { PosComboDialog } from "@/components/pos/pos-combo-dialog";
 import { PosAvulsoDialog } from "@/components/pos/pos-avulso-dialog";
+import { PosEditarItemDialog } from "@/components/pos/pos-editar-item-dialog";
 import { PosClienteSection } from "@/components/pos/pos-cliente-section";
 import { PosTipoPedido, type PosEndereco } from "@/components/pos/pos-tipo-pedido";
+import { PosEnderecoCard } from "@/components/pos/pos-endereco-card";
+import { PosAgendamentoCard } from "@/components/pos/pos-agendamento-card";
+import { PosCupomField } from "@/components/pos/pos-cupom-field";
 import { PosPagamentoPanel, type PosPagamentoDados } from "@/components/pos/pos-pagamento-panel";
 import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
 
@@ -48,12 +54,17 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [produtoVariacao, setProdutoVariacao] = useState<PosProduto | null>(null);
   const [comboAberto, setComboAberto] = useState<PosCombo | null>(null);
   const [avulsoAberto, setAvulsoAberto] = useState(false);
+  const [itemEditando, setItemEditando] = useState<PosCartItem | null>(null);
+
+  const [etapa, setEtapa] = useState<"resumo" | "pagamento">("resumo");
 
   const [cliente, setCliente] = useState<PosClienteBusca | null>(null);
   const [clienteStats, setClienteStats] = useState<PosClienteStats | null>(null);
+  const [cashbackAtivo, setCashbackAtivo] = useState(true);
   const [tipoPedido, setTipoPedido] = useState<PosTipoPedidoValor>("retirada");
   const [endereco, setEndereco] = useState<PosEndereco>(ENDERECO_VAZIO);
-  const [observacoesCliente, setObservacoesCliente] = useState("");
+  const [cpfCnpj, setCpfCnpj] = useState("");
+  const [cupom, setCupom] = useState<{ codigo: string; valor: number } | null>(null);
 
   const [pagamentoDados, setPagamentoDados] = useState<PosPagamentoDados | null>(null);
   const [finalizando, setFinalizando] = useState(false);
@@ -83,20 +94,26 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
     };
   }, []);
 
-  function adicionarProduto(produto: PosProduto) {
-    if (produto.tem_variacoes) {
-      setProdutoVariacao(produto);
-      return;
+  function abrirVariacaoOuAdicionar(produto: PosProduto) {
+    setProdutoVariacao(produto);
+  }
+
+  function alterarQtdProduto(produto: PosProduto, delta: number) {
+    const rowKey = `produto-${produto.id}`;
+    const existente = cart.itens.find((i) => i.rowKey === rowKey);
+    if (existente) {
+      cart.alterarQtd(rowKey, existente.qtd + delta);
+    } else if (delta > 0) {
+      cart.adicionar({
+        rowKey,
+        produtoId: produto.id,
+        nome: produto.nome,
+        qtd: 1,
+        preco: produto.preco_promocional ?? produto.preco,
+        observacoes: "",
+        usarPontos: false,
+      });
     }
-    cart.adicionar({
-      rowKey: `produto-${produto.id}`,
-      produtoId: produto.id,
-      nome: produto.nome,
-      qtd: 1,
-      preco: produto.preco_promocional ?? produto.preco,
-      observacoes: "",
-      usarPontos: false,
-    });
   }
 
   // Preview client-side so o total submetido bate com o que o servidor recalcula.
@@ -108,7 +125,9 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
       ? taxaEntregaConfig.valorFixo
       : 0;
 
-  async function finalizarPedido() {
+  const totalResumo = Math.max(0, cart.subtotal + taxaEntrega - (cupom?.valor ?? 0));
+
+  function irParaPagamento() {
     if (!cliente) {
       toast.error("Selecione um cliente.");
       return;
@@ -121,7 +140,11 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
       toast.error("Informe o endereço de entrega.");
       return;
     }
-    if (!pagamentoDados) return;
+    setEtapa("pagamento");
+  }
+
+  async function finalizarPedido() {
+    if (!pagamentoDados || !cliente) return;
 
     setFinalizando(true);
     try {
@@ -150,13 +173,13 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
           pagamentos: JSON.stringify(pagamentoDados.pagamentos),
           pagamento_dividido: pagamentoDados.pagamentoDividido ? "1" : "0",
           valor_pago: String(pagamentoDados.valorPago),
-          cupom: pagamentoDados.cupom,
+          cupom: cupom?.codigo ?? "",
           desconto_tipo: pagamentoDados.descontoTipo,
           desconto_valor: pagamentoDados.descontoValor,
           taxa_maquininha_percent: 0,
-          cashback_aplicado: "1",
+          cashback_aplicado: cashbackAtivo ? "1" : "0",
           cashback_usado: pagamentoDados.cashbackUsado,
-          observacoes_cliente: observacoesCliente,
+          observacoes_cliente: cpfCnpj.trim() ? `CPF/CNPJ na nota: ${cpfCnpj.trim()}` : "",
           caixa_id: caixa?.caixa?.id ?? null,
           offline_uuid: crypto.randomUUID(),
         }),
@@ -170,8 +193,10 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
       cart.limpar();
       setCliente(null);
       setClienteStats(null);
-      setObservacoesCliente("");
+      setCpfCnpj("");
+      setCupom(null);
       setEndereco(ENDERECO_VAZIO);
+      setEtapa("resumo");
       onFechar();
     } catch {
       toast.error("Erro ao finalizar pedido.");
@@ -209,44 +234,93 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
         ) : !caixaAberto ? (
           <PosCaixaGate onAberto={() => fetch("/api/cashcontrol/resumo").then((r) => r.json()).then((d) => d.ok && setCaixa(d))} />
         ) : (
-          <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_380px]">
+          <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
             <div className="min-h-0 border-b p-4 lg:border-b-0 lg:border-r">
               {catalogo ? (
-                <PosCatalog catalogo={catalogo} onAdicionarProduto={adicionarProduto} onAbrirCombo={setComboAberto} />
+                <PosCatalog
+                  catalogo={catalogo}
+                  itensCarrinho={cart.itens}
+                  onAdicionarProduto={abrirVariacaoOuAdicionar}
+                  onAlterarQtdProduto={alterarQtdProduto}
+                  onAbrirCombo={setComboAberto}
+                  onAbrirAvulso={() => setAvulsoAberto(true)}
+                />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Erro ao carregar catálogo.</div>
               )}
-              <div className="mt-3">
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setAvulsoAberto(true)}>
-                  <Plus className="size-3.5" /> Item avulso
-                </Button>
-              </div>
             </div>
 
             <div className="flex min-h-0 flex-col overflow-y-auto p-4">
-              <div className="space-y-3">
-                <PosClienteSection cliente={cliente} onClienteChange={setCliente} onStatsChange={setClienteStats} />
-                <PosTipoPedido tipo={tipoPedido} onTipoChange={setTipoPedido} endereco={endereco} onEnderecoChange={setEndereco} />
-              </div>
+              {etapa === "resumo" ? (
+                <div className="space-y-3">
+                  <PosTipoPedido tipo={tipoPedido} onTipoChange={setTipoPedido} />
+                  <PosAgendamentoCard />
+                  <PosClienteSection
+                    cliente={cliente}
+                    onClienteChange={setCliente}
+                    onStatsChange={setClienteStats}
+                    cashbackAtivo={cashbackAtivo}
+                    onCashbackAtivoChange={setCashbackAtivo}
+                  />
+                  {tipoPedido === "entrega" ? (
+                    <PosEnderecoCard endereco={endereco} onEnderecoChange={setEndereco} taxaEntrega={taxaEntrega} />
+                  ) : null}
 
-              <div className="my-3 border-t" />
+                  <PosCartList itens={cart.itens} onEditar={setItemEditando} onRemover={cart.remover} />
 
-              <PosCartList itens={cart.itens} onAlterarQtd={cart.alterarQtd} onRemover={cart.remover} />
+                  <div className="space-y-1 border-t pt-2.5 text-sm">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>{formatBRL(cart.subtotal)}</span>
+                    </div>
+                    {taxaEntrega > 0 ? (
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Taxa de entrega</span>
+                        <span>{formatBRL(taxaEntrega)}</span>
+                      </div>
+                    ) : null}
+                    <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
+                      <span>Total</span>
+                      <span>{formatBRL(totalResumo)}</span>
+                    </div>
+                  </div>
 
-              <div className="my-3 border-t" />
+                  <PosCupomField
+                    subtotal={cart.subtotal}
+                    taxaEntrega={taxaEntrega}
+                    tipoPedido={tipoPedido}
+                    clienteId={cliente?.id ?? null}
+                    cupom={cupom}
+                    onCupomChange={setCupom}
+                  />
 
-              <PosPagamentoPanel
-                subtotal={cart.subtotal}
-                taxaEntrega={taxaEntrega}
-                tipoPedido={tipoPedido}
-                clienteId={cliente?.id ?? null}
-                podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
-                clienteStats={clienteStats}
-                onDadosChange={(dados) => setPagamentoDados(dados)}
-                onFinalizar={finalizarPedido}
-                finalizando={finalizando}
-                desabilitado={cart.itens.length === 0 || !cliente}
-              />
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Adicionar CPF/CNPJ na nota (NFC-e)?</Label>
+                    <Input value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className="h-11 rounded-xl text-sm" />
+                  </div>
+
+                  <Button
+                    className="h-12 w-full rounded-xl text-sm"
+                    onClick={irParaPagamento}
+                    disabled={cart.itens.length === 0 || !cliente}
+                  >
+                    Continuar
+                  </Button>
+                </div>
+              ) : (
+                <PosPagamentoPanel
+                  subtotal={cart.subtotal}
+                  taxaEntrega={taxaEntrega}
+                  cupom={cupom}
+                  podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
+                  clienteStats={clienteStats}
+                  onDadosChange={(dados) => setPagamentoDados(dados)}
+                  onVoltar={() => setEtapa("resumo")}
+                  onFinalizar={finalizarPedido}
+                  finalizando={finalizando}
+                  desabilitado={cart.itens.length === 0 || !cliente}
+                />
+              )}
             </div>
           </div>
         )}
@@ -259,6 +333,14 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
       />
       <PosComboDialog combo={comboAberto} onOpenChange={(v) => !v && setComboAberto(null)} onAdicionar={(item) => cart.adicionar(item)} />
       <PosAvulsoDialog open={avulsoAberto} onOpenChange={setAvulsoAberto} onAdicionar={(item) => cart.adicionar(item)} />
+      <PosEditarItemDialog
+        item={itemEditando}
+        onOpenChange={(v) => !v && setItemEditando(null)}
+        onSalvar={(rowKey, qtd, observacoes) => {
+          cart.alterarQtd(rowKey, qtd);
+          cart.alterarObservacoes(rowKey, observacoes);
+        }}
+      />
     </div>
   );
 }

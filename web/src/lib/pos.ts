@@ -74,6 +74,7 @@ export type PosCartComboSel = { id: number; nome: string; qtd: number };
 export type PosCartItem = {
   rowKey: string;
   produtoId: number | null;
+  comboId?: number | null;
   nome: string;
   qtd: number;
   preco: number;

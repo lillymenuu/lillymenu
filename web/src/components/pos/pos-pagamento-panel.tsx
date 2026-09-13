@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { Banknote, CreditCard, Smartphone, Ticket, Receipt, Percent, Tag, Coins, Split } from "lucide-react";
+import { ArrowLeft, Banknote, CreditCard, Smartphone, Ticket, Receipt, Percent, Coins, Split } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,30 +26,28 @@ export type PosPagamentoDados = {
   valorPago: number;
   descontoTipo: "valor" | "percent";
   descontoValor: number;
-  cupom: string;
-  cupomDesconto: number;
   cashbackUsado: number;
 };
 
 export function PosPagamentoPanel({
   subtotal,
   taxaEntrega,
-  tipoPedido,
-  clienteId,
+  cupom,
   podeAplicarDesconto,
   clienteStats,
   onDadosChange,
+  onVoltar,
   onFinalizar,
   finalizando,
   desabilitado,
 }: {
   subtotal: number;
   taxaEntrega: number;
-  tipoPedido: string;
-  clienteId: number | null;
+  cupom: { codigo: string; valor: number } | null;
   podeAplicarDesconto: boolean;
   clienteStats: PosClienteStats | null;
   onDadosChange: (dados: PosPagamentoDados, total: number) => void;
+  onVoltar: () => void;
   onFinalizar: () => void;
   finalizando: boolean;
   desabilitado: boolean;
@@ -65,10 +62,6 @@ export function PosPagamentoPanel({
   const [descontoTipo, setDescontoTipo] = useState<"valor" | "percent">("valor");
   const [descontoValor, setDescontoValor] = useState("");
 
-  const [cupomCodigo, setCupomCodigo] = useState("");
-  const [cupomAplicado, setCupomAplicado] = useState<{ codigo: string; valor: number } | null>(null);
-  const [validandoCupom, setValidandoCupom] = useState(false);
-
   const [usarCashback, setUsarCashback] = useState(false);
   const [cashbackValor, setCashbackValor] = useState("");
 
@@ -79,7 +72,7 @@ export function PosPagamentoPanel({
   }, [descontoAberto, descontoTipo, descontoValor, subtotal]);
 
   const cashbackNum = usarCashback ? Math.min(Number(cashbackValor || 0), clienteStats?.cashback ?? 0) : 0;
-  const cupomValorAplicado = cupomAplicado?.valor ?? 0;
+  const cupomValorAplicado = cupom?.valor ?? 0;
 
   const total = Math.max(0, subtotal + taxaEntrega - descontoCalculado - cupomValorAplicado - cashbackNum);
 
@@ -103,41 +96,19 @@ export function PosPagamentoPanel({
         valorPago: formaPrimaria === "dinheiro" ? Number(valorRecebido || total) : total,
         descontoTipo,
         descontoValor: descontoCalculado > 0 ? Number(descontoValor || 0) : 0,
-        cupom: cupomAplicado?.codigo ?? "",
-        cupomDesconto: cupomValorAplicado,
         cashbackUsado: cashbackNum,
       },
       total
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formaPrimaria, dividido, formaSecundaria, valorSecundario, valorRecebido, descontoTipo, descontoValor, descontoCalculado, cupomAplicado, cashbackNum, total]);
-
-  async function validarCupom() {
-    const codigo = cupomCodigo.trim().toUpperCase();
-    if (!codigo) return;
-    setValidandoCupom(true);
-    try {
-      const res = await fetch("/api/pos/cupom-validar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codigo, subtotal, tipo: tipoPedido, taxa: taxaEntrega, cliente_id: clienteId ?? 0 }),
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        toast.error(data.msg ?? "Cupom inválido.");
-        return;
-      }
-      setCupomAplicado({ codigo: data.codigo, valor: data.valor });
-      toast.success("Cupom aplicado.");
-    } catch {
-      toast.error("Erro ao validar cupom.");
-    } finally {
-      setValidandoCupom(false);
-    }
-  }
+  }, [formaPrimaria, dividido, formaSecundaria, valorSecundario, valorRecebido, descontoTipo, descontoValor, descontoCalculado, cashbackNum, total]);
 
   return (
     <div className="space-y-3">
+      <button type="button" onClick={onVoltar} className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="size-3.5" /> Voltar ao resumo
+      </button>
+
       <div>
         <Label className="mb-1.5 block text-xs">Forma de pagamento</Label>
         <div className="grid grid-cols-3 gap-1.5">
@@ -245,28 +216,6 @@ export function PosPagamentoPanel({
         </div>
       ) : null}
 
-      <div className="flex items-center gap-1.5">
-        <div className="relative flex-1">
-          <Tag className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="h-8 pl-7 text-xs uppercase"
-            placeholder="Cupom"
-            value={cupomAplicado?.codigo ?? cupomCodigo}
-            disabled={!!cupomAplicado}
-            onChange={(e) => setCupomCodigo(e.target.value.toUpperCase())}
-          />
-        </div>
-        {cupomAplicado ? (
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setCupomAplicado(null)}>
-            Remover
-          </Button>
-        ) : (
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={validarCupom} disabled={validandoCupom || !cupomCodigo.trim()}>
-            {validandoCupom ? "..." : "Aplicar"}
-          </Button>
-        )}
-      </div>
-
       {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
         <div className="space-y-1.5 rounded-xl border p-2.5">
           <div className="flex items-center justify-between">
@@ -298,7 +247,7 @@ export function PosPagamentoPanel({
         ) : null}
         {cupomValorAplicado > 0 ? (
           <div className="flex justify-between text-emerald-600">
-            <span>Cupom {cupomAplicado?.codigo}</span>
+            <span>Cupom {cupom?.codigo}</span>
             <span>-{formatBRL(cupomValorAplicado)}</span>
           </div>
         ) : null}
