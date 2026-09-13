@@ -22,30 +22,30 @@ export function PosCartList({
           Nenhum item adicionado
         </div>
       ) : (
-        <div className="divide-y rounded-xl border">
+        <div className="space-y-2.5">
           {itens.map((item) => (
-            <div key={item.rowKey} className="flex items-start justify-between gap-2 p-2.5">
-              <div className="min-w-0">
-                <div className="text-sm">
+            <div key={item.rowKey} className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3.5 shadow-sm">
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm">
                   <span className="font-medium">{item.qtd}x</span> {item.nome}
                 </div>
                 {item.observacoes && !item.observacoes.startsWith("[combo]") ? (
                   <div className="truncate text-xs text-muted-foreground">{item.observacoes}</div>
                 ) : null}
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <span className="text-sm font-semibold tabular-nums">{formatBRL(item.preco * item.qtd)}</span>
+              <span className="shrink-0 text-sm font-semibold tabular-nums">{formatBRL(item.preco * item.qtd)}</span>
+              <div className="flex shrink-0 items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => onEditar(item)}
-                  className="flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted"
+                  className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70"
                 >
                   <Pencil className="size-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => onRemover(item.rowKey)}
-                  className="flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
                 >
                   <X className="size-3.5" />
                 </button>
