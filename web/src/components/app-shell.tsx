@@ -11,13 +11,22 @@ import { NotificationBell } from "@/components/notification-bell";
 import { LojaInfoDialog } from "@/components/loja-info-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { PosOverlayProvider, usePosOverlay } from "@/components/pos/pos-overlay-provider";
 import { cn } from "cn";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
 const SIDEBAR_BRAND_BG =
   "radial-gradient(130% 55% at 12% 0%, rgba(255,255,255,.16), transparent 60%), linear-gradient(190deg, #9c5523 0%, #7a3f10 100%)";
 
-export function AppShell({
+export function AppShell(props: { sidebarData: SidebarData; phpAdminUrl: string; children: React.ReactNode }) {
+  return (
+    <PosOverlayProvider adminPerfil={props.sidebarData.admin.perfil}>
+      <AppShellInner {...props} />
+    </PosOverlayProvider>
+  );
+}
+
+function AppShellInner({
   sidebarData,
   phpAdminUrl,
   children,
@@ -33,6 +42,7 @@ export function AppShell({
   const [lojaInfoOpen, setLojaInfoOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { abrir: abrirPos } = usePosOverlay();
 
   useEffect(() => {
     try {
@@ -276,7 +286,19 @@ export function AppShell({
                             ? "bg-primary/10 font-medium text-primary"
                             : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       );
-                      const link = item.migrated ? (
+                      const link = item.opensPos ? (
+                        <button
+                          type="button"
+                          className={className}
+                          onClick={() => {
+                            abrirPos();
+                            setMobileOpen(false);
+                          }}
+                        >
+                          <Icon size={16} />
+                          <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
+                        </button>
+                      ) : item.migrated ? (
                         <Link href={item.href} className={className} onClick={() => setMobileOpen(false)}>
                           <Icon size={16} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>

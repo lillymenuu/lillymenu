@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { Search, Plus, Filter, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePosOverlay } from "@/components/pos/pos-overlay-provider";
 import type { Motoboy, Pedido } from "@/lib/pedidos";
 import { OrderCard } from "./order-card";
 import { OrderDetailDialog } from "./order-detail-dialog";
@@ -44,6 +45,7 @@ export function OrderManager({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { abrir: abrirPos } = usePosOverlay();
 
   const [pedidos, setPedidos] = useState(pedidosIniciais);
   const [filtros, setFiltros] = useState<Record<string, FiltroColuna>>(() =>
@@ -191,14 +193,13 @@ export function OrderManager({
           <Button variant="outline" size="sm" onClick={() => setBuscaOpen(true)}>
             <Search size={14} /> Buscar pedido
           </Button>
-          <a
-            href={`${phpAdminUrl}/pdv`}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={abrirPos}
             className="inline-flex h-7 items-center gap-1 rounded-lg bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
           >
             <Plus size={14} /> Novo pedido
-          </a>
+          </button>
         </div>
       </div>
 

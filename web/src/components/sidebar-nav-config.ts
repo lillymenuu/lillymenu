@@ -37,6 +37,7 @@ export type NavItem = {
   icon: LucideIcon;
   href: string; // caminho relativo (sem "/admin"); sem extensao, igual ao PHP
   migrated?: boolean; // true = ja existe como rota Next.js
+  opensPos?: true; // abre o overlay do POS em vez de navegar
 };
 
 export type NavSection = {
@@ -54,7 +55,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Dia a dia",
     items: [
-      { menuKey: "pdv", label: "Pedidos (PDV)", icon: ShoppingBag, href: "/pdv" },
+      { menuKey: "pdv", label: "Pedidos (PDV)", icon: ShoppingBag, href: "/pdv", opensPos: true },
       { menuKey: "gestor", label: "Gestor de Pedidos", icon: Kanban, href: "/ordermanager", migrated: true },
       { menuKey: "pedidos", label: "Lista de Pedidos", icon: Receipt, href: "/order-list", migrated: true },
       { menuKey: "orcamentos", label: "Orçamento/Recibo", icon: FileText, href: "/orcamentos" },
