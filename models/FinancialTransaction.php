@@ -156,9 +156,15 @@ class FinancialTransaction
         $data['notes']
       ]);
 
+      /* lastInsertId() precisa ser lido logo apos o INSERT — o MySQL zera
+         esse valor a qualquer outra query executada na mesma conexao
+         (mesmo um SELECT/UPDATE sem auto-increment, como applyImpact()
+         faz), entao ler depois dele sempre retornava 0 e find() abaixo
+         nunca encontrava a linha recem-criada. */
+      $id = (int) $conn->lastInsertId();
+
       FinancialAccount::applyImpact($conn, $data['account_id'], $tenantId, $data['type'], $data['amount']);
 
-      $id = (int) $conn->lastInsertId();
       $conn->commit();
       return self::find($conn, $id, $tenantId);
     } catch (Throwable $e) {
