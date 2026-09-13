@@ -62,13 +62,13 @@ export function CrossSellDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
+      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Configurações do Cross-sell</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between rounded-lg border p-3">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+          <div className="flex items-center justify-between rounded-lg border p-3 sm:col-span-2">
             <div>
               <div className="text-sm font-medium">Cross-sell</div>
               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -79,7 +79,7 @@ export function CrossSellDialog({
           </div>
 
           {status?.ativo ? (
-            <div className="space-y-1 rounded-lg border p-4 text-center">
+            <div className="space-y-1 rounded-lg border p-4 text-center sm:col-span-2">
               <div className="text-xs text-muted-foreground">Seu faturamento aumentou</div>
               <div className="text-2xl font-bold">{formatBRL(status.faturamento_extra)}</div>
               <div className="text-xs text-muted-foreground">a mais com o cross-sell</div>
@@ -117,9 +117,9 @@ export function CrossSellDialog({
           </div>
 
           {status?.ativo && status.grupos.length > 0 ? (
-            <div className="rounded-lg border p-3">
+            <div className="rounded-lg border p-3 sm:col-span-2">
               <div className="mb-2 text-sm font-medium">Grupos cross-sell</div>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {status.grupos.map((g) => (
                   <div key={g.categoria} className="rounded-md border p-2.5">
                     <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background">

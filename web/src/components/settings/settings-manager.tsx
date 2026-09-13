@@ -141,6 +141,7 @@ export function SettingsManager({
         { id: "horarios", icon: Clock, title: "Horário de funcionamento", desc: "Configure abertura, fechamento e dias ativos." },
         { id: "pausa", icon: PauseCircle, title: "Pausa programada", desc: "Agende pausas automaticas da loja." },
         { id: "formas-pagamento", icon: CreditCard, title: "Formas de pagamento", desc: "Defina meios aceitos e taxas." },
+        { id: "cross-sell", icon: Shuffle, title: "Cross-sell", desc: "Gere sugestões automáticas de produtos complementares no carrinho." },
       ],
     },
     {
@@ -176,7 +177,6 @@ export function SettingsManager({
       title: "Outros",
       cards: [
         { id: "impressao", icon: Printer, title: "Impressao", desc: "Perfis, formatos e impressoras." },
-        { id: "cross-sell", icon: Shuffle, title: "Cross-sell", desc: "Gere sugestões automáticas de produtos complementares no carrinho." },
         { id: "balanca", icon: Scale, title: "Balança", desc: "Integracao com balança conectada.", disabled: true },
         { id: "eventos", icon: TrendingUp, title: "Eventos", desc: "Registros de eventos do dashboard.", disabled: true },
         { id: "versiculo-dashboard", icon: BookOpen, title: "Receber Versículo do dia", desc: "Mostrar o card do versículo no dashboard." },
