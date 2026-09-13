@@ -105,7 +105,7 @@ export function PosCatalog({
             key={s.categoria.id}
             type="button"
             onClick={() => irParaSecao(s.categoria.id)}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               categoriaAtiva === s.categoria.id
                 ? "bg-primary text-primary-foreground"
                 : "border text-muted-foreground hover:bg-muted/50"
@@ -123,13 +123,13 @@ export function PosCatalog({
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Nome ou código"
-            className="h-11 rounded-xl bg-muted/40 pl-9 text-sm"
+            className="h-10 rounded-xl bg-muted/40 pl-9 text-sm"
           />
         </div>
         <button
           type="button"
           onClick={onAbrirAvulso}
-          className="flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus className="size-4" /> Item avulso
         </button>
@@ -142,7 +142,7 @@ export function PosCatalog({
           secoes.map((s) => (
             <div key={s.categoria.id} ref={(el) => void (secaoRefs.current[s.categoria.id] = el)}>
               <h3 className="mb-2 text-sm font-semibold text-foreground">{s.categoria.nome}</h3>
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 items-start gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
                 {s.combos.map((c) => (
                   <PosComboCard key={`combo-${c.id}`} combo={c} qtd={qtdPorCombo[c.id] ?? 0} onAbrir={onAbrirCombo} />
                 ))}

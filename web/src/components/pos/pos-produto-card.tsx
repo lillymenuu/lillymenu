@@ -21,7 +21,7 @@ export function PosProdutoCard({
 
   return (
     <div className={`flex flex-col overflow-hidden rounded-xl border bg-card ${semEstoque ? "opacity-50" : ""}`}>
-      <div className="relative aspect-square bg-muted">
+      <div className="relative aspect-[4/3] bg-muted">
         {produto.imagem ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={produto.imagem} alt={produto.nome} className="size-full object-cover" />

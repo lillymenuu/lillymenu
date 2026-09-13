@@ -10,7 +10,7 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
 
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border bg-card">
-      <div className="relative aspect-square bg-muted">
+      <div className="relative aspect-[4/3] bg-muted">
         {combo.imagem ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={combo.imagem} alt={combo.nome} className="size-full object-cover" />
