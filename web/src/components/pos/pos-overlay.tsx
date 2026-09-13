@@ -31,6 +31,7 @@ import { PosAgendamentoCard } from "@/components/pos/pos-agendamento-card";
 import { PosCupomField } from "@/components/pos/pos-cupom-field";
 import { PosPagamentoPanel, type PosPagamentoDados } from "@/components/pos/pos-pagamento-panel";
 import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ENDERECO_VAZIO: PosEndereco = { rua: "", numero: "", bairro: "", cidade: "", cep: "", complemento: "" };
 
@@ -280,88 +281,89 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
             </div>
 
             <div className="flex min-h-0 min-w-0 flex-col">
-              {etapa === "resumo" ? (
-                <>
-                  <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-                    <PosTipoPedido tipo={tipoPedido} onTipoChange={setTipoPedido} />
-                    <PosAgendamentoCard />
-                    <PosClienteSection
-                      cliente={cliente}
-                      onClienteChange={setCliente}
-                      onStatsChange={setClienteStats}
-                      cashbackAtivo={cashbackAtivo}
-                      onCashbackAtivoChange={setCashbackAtivo}
-                    />
-                    {tipoPedido === "entrega" ? (
-                      <PosEnderecoCard endereco={endereco} onEnderecoChange={setEndereco} taxaEntrega={taxaEntrega} />
-                    ) : null}
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+                <PosTipoPedido tipo={tipoPedido} onTipoChange={setTipoPedido} />
+                <PosAgendamentoCard />
+                <PosClienteSection
+                  cliente={cliente}
+                  onClienteChange={setCliente}
+                  onStatsChange={setClienteStats}
+                  cashbackAtivo={cashbackAtivo}
+                  onCashbackAtivoChange={setCashbackAtivo}
+                />
+                {tipoPedido === "entrega" ? (
+                  <PosEnderecoCard endereco={endereco} onEnderecoChange={setEndereco} taxaEntrega={taxaEntrega} />
+                ) : null}
 
-                    <PosCartList itens={cart.itens} onEditar={setItemEditando} onRemover={cart.remover} />
+                <PosCartList itens={cart.itens} onEditar={setItemEditando} onRemover={cart.remover} />
+              </div>
+
+              <div className="shrink-0 space-y-3 border-t bg-card p-4">
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span>{formatBRL(cart.subtotal)}</span>
                   </div>
-
-                  <div className="shrink-0 space-y-3 border-t bg-card p-4">
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>Subtotal</span>
-                        <span>{formatBRL(cart.subtotal)}</span>
-                      </div>
-                      {taxaEntrega > 0 ? (
-                        <div className="flex justify-between text-muted-foreground">
-                          <span>Taxa de entrega</span>
-                          <span>{formatBRL(taxaEntrega)}</span>
-                        </div>
-                      ) : null}
-                      <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
-                        <span>Total</span>
-                        <span>{formatBRL(totalResumo)}</span>
-                      </div>
+                  {taxaEntrega > 0 ? (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Taxa de entrega</span>
+                      <span>{formatBRL(taxaEntrega)}</span>
                     </div>
-
-                    {temCupomDisponivel ? (
-                      <PosCupomField
-                        subtotal={cart.subtotal}
-                        taxaEntrega={taxaEntrega}
-                        tipoPedido={tipoPedido}
-                        clienteId={cliente?.id ?? null}
-                        cupom={cupom}
-                        onCupomChange={setCupom}
-                      />
-                    ) : null}
-
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Adicionar CPF/CNPJ na nota (NFC-e)?</Label>
-                      <Input value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className="h-11 rounded-xl text-sm" />
-                    </div>
-
-                    <Button
-                      className="h-12 w-full rounded-xl text-sm"
-                      onClick={irParaPagamento}
-                      disabled={cart.itens.length === 0 || !cliente}
-                    >
-                      Continuar
-                    </Button>
+                  ) : null}
+                  <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
+                    <span>Total</span>
+                    <span>{formatBRL(totalResumo)}</span>
                   </div>
-                </>
-              ) : (
-                <div className="min-h-0 flex-1 overflow-y-auto p-4">
-                  <PosPagamentoPanel
+                </div>
+
+                {temCupomDisponivel ? (
+                  <PosCupomField
                     subtotal={cart.subtotal}
                     taxaEntrega={taxaEntrega}
+                    tipoPedido={tipoPedido}
+                    clienteId={cliente?.id ?? null}
                     cupom={cupom}
-                    podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
-                    clienteStats={clienteStats}
-                    onDadosChange={(dados) => setPagamentoDados(dados)}
-                    onVoltar={() => setEtapa("resumo")}
-                    onFinalizar={finalizarPedido}
-                    finalizando={finalizando}
-                    desabilitado={cart.itens.length === 0 || !cliente}
+                    onCupomChange={setCupom}
                   />
+                ) : null}
+
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Adicionar CPF/CNPJ na nota (NFC-e)?</Label>
+                  <Input value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className="h-11 rounded-xl text-sm" />
                 </div>
-              )}
+
+                <Button
+                  className="h-12 w-full rounded-xl text-sm"
+                  onClick={irParaPagamento}
+                  disabled={cart.itens.length === 0 || !cliente}
+                >
+                  Continuar
+                </Button>
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      <Dialog open={etapa === "pagamento"} onOpenChange={(v) => !v && setEtapa("resumo")}>
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pagamento</DialogTitle>
+          </DialogHeader>
+          <PosPagamentoPanel
+            subtotal={cart.subtotal}
+            taxaEntrega={taxaEntrega}
+            cupom={cupom}
+            podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
+            clienteStats={clienteStats}
+            onDadosChange={(dados) => setPagamentoDados(dados)}
+            onVoltar={() => setEtapa("resumo")}
+            onFinalizar={finalizarPedido}
+            finalizando={finalizando}
+            desabilitado={cart.itens.length === 0 || !cliente}
+          />
+        </DialogContent>
+      </Dialog>
 
       <PosVariacaoDialog
         produto={produtoVariacao}
