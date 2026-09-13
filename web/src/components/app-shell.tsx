@@ -10,6 +10,7 @@ import { NAV_SECTIONS } from "@/components/sidebar-nav-config";
 import { NotificationBell } from "@/components/notification-bell";
 import { LojaInfoDialog } from "@/components/loja-info-dialog";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "cn";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
@@ -247,6 +248,7 @@ export function AppShell({
           )}
 
           <nav className="flex-1 px-2 py-3">
+            <TooltipProvider delay={150}>
             {NAV_SECTIONS.map((section) => {
               const items = section.items.filter(
                 (item) => item.menuKey === null || sidebarData.menu[item.menuKey]
@@ -274,18 +276,28 @@ export function AppShell({
                             ? "bg-primary/10 font-medium text-primary"
                             : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       );
+                      const link = item.migrated ? (
+                        <Link href={item.href} className={className} onClick={() => setMobileOpen(false)}>
+                          <Icon size={16} />
+                          <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
+                        </Link>
+                      ) : (
+                        <a href={`${phpAdminUrl}${item.href}`} className={className}>
+                          <Icon size={16} />
+                          <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
+                        </a>
+                      );
                       return (
                         <li key={item.href}>
-                          {item.migrated ? (
-                            <Link href={item.href} className={className} onClick={() => setMobileOpen(false)} title={collapsed ? item.label : undefined}>
-                              <Icon size={16} />
-                              <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
-                            </Link>
+                          {collapsed ? (
+                            <Tooltip>
+                              <TooltipTrigger render={link} />
+                              <TooltipContent side="right" className="hidden md:block">
+                                {item.label}
+                              </TooltipContent>
+                            </Tooltip>
                           ) : (
-                            <a href={`${phpAdminUrl}${item.href}`} className={className} title={collapsed ? item.label : undefined}>
-                              <Icon size={16} />
-                              <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
-                            </a>
+                            link
                           )}
                         </li>
                       );
@@ -294,6 +306,7 @@ export function AppShell({
                 </div>
               );
             })}
+            </TooltipProvider>
           </nav>
 
           <div
