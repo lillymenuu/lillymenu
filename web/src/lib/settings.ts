@@ -59,6 +59,7 @@ export type ConfiguracoesDetalhe = {
     percentual: number;
   };
   clube_pontos_ativo: boolean;
+  cross_sell_ativo: boolean;
   pedidos: {
     receber_pedidos_ativo: boolean;
     gestor_pedidos_ativo: boolean;

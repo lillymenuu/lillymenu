@@ -27,6 +27,7 @@ import {
   TrendingUp,
   BookOpen,
   ExternalLink,
+  Shuffle,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -47,6 +48,7 @@ import { ValorMinimoDialog } from "@/components/settings/valor-minimo-dialog";
 import { PedidosAgendadosDialog } from "@/components/settings/pedidos-agendados-dialog";
 import { TaxaEntregaDialog } from "@/components/settings/taxa-entrega-dialog";
 import { ImpressaoDialog } from "@/components/settings/impressao-dialog";
+import { CrossSellDialog } from "@/components/settings/cross-sell-dialog";
 
 type CardId =
   | "loja-info"
@@ -64,7 +66,8 @@ type CardId =
   | "pedidos-agendados"
   | "taxa-entrega"
   | "impressao"
-  | "versiculo-dashboard";
+  | "versiculo-dashboard"
+  | "cross-sell";
 
 type CardDef = {
   id: string;
@@ -173,6 +176,7 @@ export function SettingsManager({
       title: "Outros",
       cards: [
         { id: "impressao", icon: Printer, title: "Impressao", desc: "Perfis, formatos e impressoras." },
+        { id: "cross-sell", icon: Shuffle, title: "Cross-sell", desc: "Gere sugestões automáticas de produtos complementares no carrinho." },
         { id: "balanca", icon: Scale, title: "Balança", desc: "Integracao com balança conectada.", disabled: true },
         { id: "eventos", icon: TrendingUp, title: "Eventos", desc: "Registros de eventos do dashboard.", disabled: true },
         { id: "versiculo-dashboard", icon: BookOpen, title: "Receber Versículo do dia", desc: "Mostrar o card do versículo no dashboard." },
@@ -325,6 +329,12 @@ export function SettingsManager({
         open={aberto === "impressao"}
         onOpenChange={(v) => setAberto(v ? "impressao" : null)}
         phpAdminUrl={phpAdminUrl}
+      />
+      <CrossSellDialog
+        open={aberto === "cross-sell"}
+        onOpenChange={(v) => setAberto(v ? "cross-sell" : null)}
+        ativo={dados.cross_sell_ativo}
+        onSalvo={recarregar}
       />
     </div>
   );

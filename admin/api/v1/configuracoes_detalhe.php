@@ -192,6 +192,7 @@ echo json_encode([
     'percentual' => (float) cfg($conn, $lojaId, 'cashback_percentual', '1'),
   ],
   'clube_pontos_ativo' => cfg($conn, $lojaId, 'clube_pontos_ativo', '0') === '1',
+  'cross_sell_ativo' => cfg($conn, $lojaId, 'cross_sell_ativo', '0') === '1',
   'pedidos' => [
     'receber_pedidos_ativo' => cfg($conn, $lojaId, 'receber_pedidos_ativo', '1') === '1',
     'gestor_pedidos_ativo' => cfg($conn, $lojaId, 'gestor_pedidos_ativo', '1') === '1',
