@@ -33,21 +33,21 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
           {emPromo ? <span className="text-[11px] text-muted-foreground line-through">{formatBRL(combo.preco)}</span> : null}
         </div>
       </div>
-      <div className="flex shrink-0 items-center justify-between gap-1 p-1.5">
+      <div className="flex shrink-0 items-center justify-center gap-2 p-1.5">
         <button
           type="button"
           disabled
-          className="flex size-7 items-center justify-center rounded-lg border text-muted-foreground opacity-40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground opacity-40"
         >
-          <Minus className="size-3.5" />
+          <Minus className="size-4" />
         </button>
-        <span className="text-sm font-semibold tabular-nums">{qtd}</span>
+        <span className="w-7 shrink-0 text-center text-sm font-semibold tabular-nums">{qtd}</span>
         <button
           type="button"
           onClick={() => onAbrir(combo)}
-          className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          <Plus className="size-3.5" />
+          <Plus className="size-4" />
         </button>
       </div>
     </div>

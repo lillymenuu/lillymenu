@@ -14,6 +14,7 @@ export function PosCatalog({
   itensCarrinho,
   onAdicionarProduto,
   onAlterarQtdProduto,
+  onDefinirQtdProduto,
   onAbrirCombo,
   onAbrirAvulso,
 }: {
@@ -21,6 +22,7 @@ export function PosCatalog({
   itensCarrinho: PosCartItem[];
   onAdicionarProduto: (produto: PosProduto) => void;
   onAlterarQtdProduto: (produto: PosProduto, delta: number) => void;
+  onDefinirQtdProduto: (produto: PosProduto, qtd: number) => void;
   onAbrirCombo: (combo: PosCombo) => void;
   onAbrirAvulso: () => void;
 }) {
@@ -153,6 +155,7 @@ export function PosCatalog({
                     qtd={qtdPorProduto[p.id] ?? 0}
                     onAdicionar={onAdicionarProduto}
                     onAlterarQtd={(delta) => onAlterarQtdProduto(p, delta)}
+                    onDefinirQtd={(qtd) => onDefinirQtdProduto(p, qtd)}
                   />
                 ))}
               </div>

@@ -116,6 +116,24 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
     }
   }
 
+  function definirQtdProduto(produto: PosProduto, qtd: number) {
+    const rowKey = `produto-${produto.id}`;
+    const existente = cart.itens.find((i) => i.rowKey === rowKey);
+    if (existente) {
+      cart.alterarQtd(rowKey, qtd);
+    } else if (qtd > 0) {
+      cart.adicionar({
+        rowKey,
+        produtoId: produto.id,
+        nome: produto.nome,
+        qtd,
+        preco: produto.preco_promocional ?? produto.preco,
+        observacoes: "",
+        usarPontos: false,
+      });
+    }
+  }
+
   // Preview client-side so o total submetido bate com o que o servidor recalcula.
   // So cobre o modo "fixa" (sem CEP/distancia no MVP) — nos modos bairro/dinamica o
   // servidor ainda recalcula a taxa real, mas o preview aqui fica 0 (limitacao conhecida
@@ -235,13 +253,14 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
           <PosCaixaGate onAberto={() => fetch("/api/cashcontrol/resumo").then((r) => r.json()).then((d) => d.ok && setCaixa(d))} />
         ) : (
           <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
-            <div className="min-h-0 border-b p-4 lg:border-b-0 lg:border-r">
+            <div className="min-h-0 min-w-0 border-b p-4 lg:border-b-0 lg:border-r">
               {catalogo ? (
                 <PosCatalog
                   catalogo={catalogo}
                   itensCarrinho={cart.itens}
                   onAdicionarProduto={abrirVariacaoOuAdicionar}
                   onAlterarQtdProduto={alterarQtdProduto}
+                  onDefinirQtdProduto={definirQtdProduto}
                   onAbrirCombo={setComboAberto}
                   onAbrirAvulso={() => setAvulsoAberto(true)}
                 />
@@ -250,7 +269,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
               )}
             </div>
 
-            <div className="flex min-h-0 flex-col overflow-y-auto p-4">
+            <div className="flex min-h-0 min-w-0 flex-col overflow-y-auto p-4">
               {etapa === "resumo" ? (
                 <div className="space-y-3">
                   <PosTipoPedido tipo={tipoPedido} onTipoChange={setTipoPedido} />
