@@ -12,6 +12,7 @@ export type PosProduto = {
   pontos_ganho: number;
   pontos_custo: number;
   estoque: number;
+  grupo_estoque_id: number | null;
 };
 
 export type PosCombo = {

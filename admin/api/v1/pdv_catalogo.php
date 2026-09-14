@@ -25,12 +25,20 @@ $categorias = array_map(function ($c) {
   return ['id' => (int) $c['id'], 'nome' => $c['nome']];
 }, $stmt->fetchAll(PDO::FETCH_ASSOC));
 
+$stmtCheck = $conn->prepare("SHOW TABLES LIKE 'estoque_grupo_membros'");
+$stmtCheck->execute();
+$temGrupoEstoque = (bool) $stmtCheck->fetchColumn();
+
+$joinGrupo = $temGrupoEstoque ? "LEFT JOIN estoque_grupo_membros egm ON egm.produto_id = p.id AND egm.loja_id = p.loja_id" : "";
+$campoGrupo = $temGrupoEstoque ? "egm.grupo_id" : "NULL AS grupo_id";
+
 $stmt = $conn->prepare("
   SELECT p.id, p.nome, p.descricao, p.categoria_id, p.preco, p.preco_promocional, p.promo_desativado,
          p.tem_variacoes, p.imagem, p.pontos_ganho, p.pontos_custo,
-         COALESCE(e.quantidade, 0) AS estoque
+         COALESCE(e.quantidade, 0) AS estoque, $campoGrupo
   FROM produtos p
   LEFT JOIN estoque e ON e.produto_id = p.id AND e.loja_id = p.loja_id
+  $joinGrupo
   WHERE p.loja_id = ? AND p.ativo = 1 AND p.disponivel_catalogo = 1
   HAVING estoque > 0
   ORDER BY p.ordem IS NULL, p.ordem, p.nome
@@ -51,6 +59,7 @@ $produtos = array_map(function ($p) {
     'pontos_ganho' => (int) ($p['pontos_ganho'] ?? 0),
     'pontos_custo' => (int) ($p['pontos_custo'] ?? 0),
     'estoque' => (int) $p['estoque'],
+    'grupo_estoque_id' => $p['grupo_id'] !== null ? (int) $p['grupo_id'] : null,
   ];
 }, $stmt->fetchAll(PDO::FETCH_ASSOC));
 

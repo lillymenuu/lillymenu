@@ -43,6 +43,34 @@ export function PosCatalog({
     return map;
   }, [itensCarrinho]);
 
+  // Produtos que compartilham o mesmo grupo de estoque (ex.: mesmo lote
+  // fisico vendido sob nomes diferentes) precisam refletir, em tempo real,
+  // a quantidade ja reservada no carrinho de QUALQUER membro do grupo — nao
+  // so a do proprio produto — senao o card so atualiza ao reabrir o POS.
+  const estoqueRestantePorProduto = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const p of catalogo.produtos) {
+      if (p.grupo_estoque_id === null) {
+        map[p.id] = p.estoque - (qtdPorProduto[p.id] ?? 0);
+      }
+    }
+    const porGrupo = new Map<number, PosProduto[]>();
+    for (const p of catalogo.produtos) {
+      if (p.grupo_estoque_id === null) continue;
+      const lista = porGrupo.get(p.grupo_estoque_id) ?? [];
+      lista.push(p);
+      porGrupo.set(p.grupo_estoque_id, lista);
+    }
+    for (const membros of porGrupo.values()) {
+      const reservadoGrupo = membros.reduce((s, p) => s + (qtdPorProduto[p.id] ?? 0), 0);
+      const estoqueGrupo = membros[0].estoque;
+      for (const p of membros) {
+        map[p.id] = estoqueGrupo - reservadoGrupo;
+      }
+    }
+    return map;
+  }, [catalogo.produtos, qtdPorProduto]);
+
   const qtdPorCombo = useMemo(() => {
     const map: Record<number, number> = {};
     for (const item of itensCarrinho) {
@@ -153,6 +181,7 @@ export function PosCatalog({
                     key={`produto-${p.id}`}
                     produto={p}
                     qtd={qtdPorProduto[p.id] ?? 0}
+                    estoqueRestante={estoqueRestantePorProduto[p.id] ?? p.estoque}
                     onAdicionar={onAdicionarProduto}
                     onAlterarQtd={(delta) => onAlterarQtdProduto(p, delta)}
                     onDefinirQtd={(qtd) => onDefinirQtdProduto(p, qtd)}

@@ -8,12 +8,14 @@ import type { PosProduto } from "@/lib/pos";
 export function PosProdutoCard({
   produto,
   qtd,
+  estoqueRestante,
   onAdicionar,
   onAlterarQtd,
   onDefinirQtd,
 }: {
   produto: PosProduto;
   qtd: number;
+  estoqueRestante: number;
   onAdicionar: (produto: PosProduto) => void;
   onAlterarQtd: (delta: number) => void;
   onDefinirQtd: (qtd: number) => void;
@@ -21,7 +23,7 @@ export function PosProdutoCard({
   const semEstoque = produto.estoque <= 0;
   const precoExibido = produto.preco_promocional ?? produto.preco;
   const emPromo = produto.preco_promocional !== null;
-  const restante = Math.max(0, produto.estoque - qtd);
+  const restante = Math.max(0, estoqueRestante);
   const selecionado = qtd > 0;
 
   const [texto, setTexto] = useState(String(qtd));
