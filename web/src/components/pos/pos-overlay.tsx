@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { X, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type {
   PosCartItem,
@@ -67,7 +65,6 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [cashbackAtivo, setCashbackAtivo] = useState(true);
   const [tipoPedido, setTipoPedido] = useState<PosTipoPedidoValor>("retirada");
   const [endereco, setEndereco] = useState<PosEndereco>(ENDERECO_VAZIO);
-  const [cpfCnpj, setCpfCnpj] = useState("");
   const [cupom, setCupom] = useState<{ codigo: string; valor: number } | null>(null);
 
   const [pagamentoDados, setPagamentoDados] = useState<PosPagamentoDados | null>(null);
@@ -236,7 +233,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
           taxa_maquininha_percent: 0,
           cashback_aplicado: cashbackAtivo ? "1" : "0",
           cashback_usado: pagamentoDados.cashbackUsado,
-          observacoes_cliente: cpfCnpj.trim() ? `CPF/CNPJ na nota: ${cpfCnpj.trim()}` : "",
+          observacoes_cliente: "",
           caixa_id: caixa?.caixa?.id ?? null,
           offline_uuid: crypto.randomUUID(),
         }),
@@ -250,7 +247,6 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
       cart.limpar();
       setCliente(null);
       setClienteStats(null);
-      setCpfCnpj("");
       setCupom(null);
       setEndereco(ENDERECO_VAZIO);
       setTaxaEntregaCalculada(null);
@@ -344,7 +340,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
                 <PosCartList itens={cart.itens} onEditar={setItemEditando} onRemover={cart.remover} />
               </div>
 
-              <div className="shrink-0 space-y-3 border-t bg-card p-4">
+              <div className="shrink-0 space-y-3 bg-card p-4">
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
@@ -372,11 +368,6 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
                     onCupomChange={setCupom}
                   />
                 ) : null}
-
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Adicionar CPF/CNPJ na nota (NFC-e)?</Label>
-                  <Input value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className="h-11 rounded-xl text-sm" />
-                </div>
 
                 <Button
                   className="h-12 w-full rounded-xl text-sm"
