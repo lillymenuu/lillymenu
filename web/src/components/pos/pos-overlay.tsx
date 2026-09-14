@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { X, ShoppingBag, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/components/ordermanager/constants";
-import { formatDataHoraCurta } from "@/components/cliente/types";
 import type {
   PosCartItem,
   PosCatalogoResposta,
@@ -36,6 +35,19 @@ import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ENDERECO_VAZIO: PosEndereco = { rua: "", numero: "", bairro: "", cidade: "", cep: "", complemento: "" };
+
+const MESES_ABREV = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+// Le a string "YYYY-MM-DD HH:MM:SS" (ja em horario local de Brasilia, vinda
+// do backend) direto pelos digitos — nao passa pelo construtor Date, que
+// reinterpreta a string no fuso do navegador e pode mostrar a hora errada
+// dependendo de como o sistema do operador esta configurado.
+function formatCaixaAbertoEm(raw: string): string | null {
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return null;
+  const [, ano, mes, dia, hora, min] = m;
+  return `${dia} - ${MESES_ABREV[Number(mes) - 1]} - ${ano}, ${hora}:${min}`;
+}
 
 function montarEnderecoTexto(e: PosEndereco): string {
   const partes: string[] = [];
@@ -307,7 +319,9 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
               {caixaAberto ? (
                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <span className="size-1.5 rounded-full bg-emerald-500" /> Caixa aberto
-                  {caixa?.caixa?.aberto_em ? <span>· {formatDataHoraCurta(caixa.caixa.aberto_em)}</span> : null}
+                  {caixa?.caixa?.aberto_em && formatCaixaAbertoEm(caixa.caixa.aberto_em) ? (
+                    <span>· {formatCaixaAbertoEm(caixa.caixa.aberto_em)}</span>
+                  ) : null}
                 </div>
               ) : null}
             </div>
