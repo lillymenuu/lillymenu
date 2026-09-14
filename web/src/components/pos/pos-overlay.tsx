@@ -27,6 +27,7 @@ import { PosEditarItemDialog } from "@/components/pos/pos-editar-item-dialog";
 import { PosClienteSection } from "@/components/pos/pos-cliente-section";
 import { PosTipoPedido, type PosEndereco } from "@/components/pos/pos-tipo-pedido";
 import { PosEnderecoCard } from "@/components/pos/pos-endereco-card";
+import { PosEntregaDialog } from "@/components/pos/pos-entrega-dialog";
 import { PosAgendamentoCard } from "@/components/pos/pos-agendamento-card";
 import { PosCupomField } from "@/components/pos/pos-cupom-field";
 import { PosPagamentoPanel, type PosPagamentoDados } from "@/components/pos/pos-pagamento-panel";
@@ -71,6 +72,10 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [finalizando, setFinalizando] = useState(false);
   const [taxaEntregaConfig, setTaxaEntregaConfig] = useState<{ tipo: string; gratis: boolean; valorFixo: number } | null>(null);
   const [temCupomDisponivel, setTemCupomDisponivel] = useState(false);
+
+  const [entregaModalAberto, setEntregaModalAberto] = useState(false);
+  const [taxaEntregaCalculada, setTaxaEntregaCalculada] = useState<number | null>(null);
+  const [taxaEditadaManual, setTaxaEditadaManual] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -145,16 +150,27 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
     }
   }
 
-  // Preview client-side so o total submetido bate com o que o servidor recalcula.
-  // So cobre o modo "fixa" (sem CEP/distancia no MVP) — nos modos bairro/dinamica o
-  // servidor ainda recalcula a taxa real, mas o preview aqui fica 0 (limitacao conhecida
-  // do MVP, ja sinalizada no plano: modal de endereco completo com CEP fica pra depois).
+  // Pro modo "fixa" o preview e so o valor fixo configurado. Pros modos
+  // "bairro"/"dinamica" o valor real vem do modal de entrega (que consulta
+  // /api/pos/cep-lookup, mesma logica de geocodificacao/distancia do legado).
   const taxaEntrega =
-    tipoPedido === "entrega" && taxaEntregaConfig && !taxaEntregaConfig.gratis && taxaEntregaConfig.tipo === "fixa"
-      ? taxaEntregaConfig.valorFixo
-      : 0;
+    tipoPedido !== "entrega" || taxaEntregaConfig?.gratis
+      ? 0
+      : taxaEntregaCalculada !== null
+        ? taxaEntregaCalculada
+        : taxaEntregaConfig?.tipo === "fixa"
+          ? taxaEntregaConfig.valorFixo
+          : 0;
 
   const totalResumo = Math.max(0, cart.subtotal + taxaEntrega - (cupom?.valor ?? 0));
+
+  function onTipoPedidoChange(v: PosTipoPedidoValor) {
+    const jaEraEntrega = tipoPedido === "entrega";
+    setTipoPedido(v);
+    if (v === "entrega" && !jaEraEntrega) {
+      setEntregaModalAberto(true);
+    }
+  }
 
   function irParaPagamento() {
     if (!cliente) {
@@ -197,7 +213,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
           distancia_km: 0,
           itens: JSON.stringify(itensPayload),
           taxa_entrega: taxaEntrega,
-          taxa_editada: "0",
+          taxa_editada: taxaEditadaManual ? "1" : "0",
           pagamento: pagamentoDados.pagamentos[0]?.forma ?? "dinheiro",
           pagamentos: JSON.stringify(pagamentoDados.pagamentos),
           pagamento_dividido: pagamentoDados.pagamentoDividido ? "1" : "0",
@@ -225,6 +241,8 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
       setCpfCnpj("");
       setCupom(null);
       setEndereco(ENDERECO_VAZIO);
+      setTaxaEntregaCalculada(null);
+      setTaxaEditadaManual(false);
       setEtapa("resumo");
       onFechar();
     } catch {
@@ -282,7 +300,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
 
             <div className="flex min-h-0 min-w-0 flex-col">
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-                <PosTipoPedido tipo={tipoPedido} onTipoChange={setTipoPedido} />
+                <PosTipoPedido tipo={tipoPedido} onTipoChange={onTipoPedidoChange} />
                 <PosAgendamentoCard />
                 <PosClienteSection
                   cliente={cliente}
@@ -292,7 +310,16 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
                   onCashbackAtivoChange={setCashbackAtivo}
                 />
                 {tipoPedido === "entrega" ? (
-                  <PosEnderecoCard endereco={endereco} onEnderecoChange={setEndereco} taxaEntrega={taxaEntrega} />
+                  <PosEnderecoCard
+                    endereco={endereco}
+                    onLimpar={() => {
+                      setEndereco(ENDERECO_VAZIO);
+                      setTaxaEntregaCalculada(null);
+                      setTaxaEditadaManual(false);
+                    }}
+                    onAbrir={() => setEntregaModalAberto(true)}
+                    taxaEntrega={taxaEntrega}
+                  />
                 ) : null}
 
                 <PosCartList itens={cart.itens} onEditar={setItemEditando} onRemover={cart.remover} />
@@ -364,6 +391,20 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
           />
         </DialogContent>
       </Dialog>
+
+      <PosEntregaDialog
+        open={entregaModalAberto}
+        onOpenChange={setEntregaModalAberto}
+        cliente={cliente}
+        endereco={endereco}
+        taxaEntregaAtual={taxaEntrega}
+        onConfirmar={(dados) => {
+          setCliente(dados.cliente);
+          setEndereco(dados.endereco);
+          setTaxaEntregaCalculada(dados.taxaEntrega);
+          setTaxaEditadaManual(dados.taxaEditada);
+        }}
+      />
 
       <PosVariacaoDialog
         produto={produtoVariacao}

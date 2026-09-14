@@ -111,3 +111,16 @@ export type PosCupomValidado = {
 };
 
 export type PosSalvarResposta = { ok: true; pedido_id: string | number; tipo: string } | { ok: false; msg: string };
+
+export type PosCepLookupResposta =
+  | {
+      ok: true;
+      cep: string;
+      logradouro: string;
+      bairro: string;
+      cidade: string;
+      estado: string;
+      distancia_km: number;
+      taxa_entrega: number;
+    }
+  | { ok: false; msg: string };
