@@ -62,7 +62,7 @@ export function PosAgendamentoDialog({
           >
             <ChevronLeft className="size-4" />
           </button>
-          <div ref={diasScrollRef} className="scrollbar-none flex flex-1 gap-2 overflow-x-auto">
+          <div ref={diasScrollRef} className="scrollbar-none flex min-w-0 flex-1 gap-2 overflow-x-auto">
             {dias.map((d) => {
               const ativo = d.data === diaSelecionado;
               return (
