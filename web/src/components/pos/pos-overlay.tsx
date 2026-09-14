@@ -122,36 +122,39 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
     const rowKey = `produto-${produto.id}`;
     const existente = cart.itens.find((i) => i.rowKey === rowKey);
     if (existente) {
-      cart.alterarQtd(rowKey, existente.qtd + delta);
-    } else if (delta > 0) {
+      cart.alterarQtd(rowKey, Math.min(existente.qtd + delta, produto.estoque));
+    } else if (delta > 0 && produto.estoque > 0) {
       cart.adicionar({
         rowKey,
         produtoId: produto.id,
         nome: produto.nome,
-        qtd: 1,
+        qtd: Math.min(1, produto.estoque),
         preco: produto.preco_promocional ?? produto.preco,
         observacoes: "",
         usarPontos: false,
         imagem: produto.imagem,
+        estoque: produto.estoque,
       });
     }
   }
 
   function definirQtdProduto(produto: PosProduto, qtd: number) {
+    const qtdCapada = Math.min(qtd, produto.estoque);
     const rowKey = `produto-${produto.id}`;
     const existente = cart.itens.find((i) => i.rowKey === rowKey);
     if (existente) {
-      cart.alterarQtd(rowKey, qtd);
-    } else if (qtd > 0) {
+      cart.alterarQtd(rowKey, qtdCapada);
+    } else if (qtdCapada > 0) {
       cart.adicionar({
         rowKey,
         produtoId: produto.id,
         nome: produto.nome,
-        qtd,
+        qtd: qtdCapada,
         preco: produto.preco_promocional ?? produto.preco,
         observacoes: "",
         usarPontos: false,
         imagem: produto.imagem,
+        estoque: produto.estoque,
       });
     }
   }

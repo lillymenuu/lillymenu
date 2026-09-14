@@ -101,7 +101,7 @@ export function PosProdutoCard({
         )}
         <button
           type="button"
-          disabled={semEstoque}
+          disabled={semEstoque || (!produto.tem_variacoes && restante <= 0)}
           onClick={() => (produto.tem_variacoes ? onAdicionar(produto) : onAlterarQtd(1))}
           className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
         >

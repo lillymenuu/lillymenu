@@ -83,8 +83,9 @@ export function PosEditarItemDialog({
             <span className="w-4 text-center text-sm font-semibold tabular-nums">{qtd}</span>
             <button
               type="button"
-              onClick={() => setQtd((q) => q + 1)}
-              className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+              disabled={item.estoque !== undefined && qtd >= item.estoque}
+              onClick={() => setQtd((q) => (item.estoque !== undefined ? Math.min(q + 1, item.estoque) : q + 1))}
+              className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Plus className="size-3.5" />
             </button>
