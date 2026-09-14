@@ -83,10 +83,10 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   useEffect(() => {
     document.body.style.overflow = "hidden";
     Promise.all([
-      fetch("/api/pos/catalogo").then((r) => r.json()),
-      fetch("/api/cashcontrol/resumo").then((r) => r.json()),
-      fetch("/api/settings/detalhe").then((r) => r.json()),
-      fetch("/api/coupons").then((r) => r.json()),
+      fetch("/api/pos/catalogo", { cache: "no-store" }).then((r) => r.json()),
+      fetch("/api/cashcontrol/resumo", { cache: "no-store" }).then((r) => r.json()),
+      fetch("/api/settings/detalhe", { cache: "no-store" }).then((r) => r.json()),
+      fetch("/api/coupons", { cache: "no-store" }).then((r) => r.json()),
     ])
       .then(([cat, cx, cfg, cup]) => {
         if (cat.ok) setCatalogo(cat);
