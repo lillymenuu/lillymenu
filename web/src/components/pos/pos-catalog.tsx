@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { PosCartItem, PosCatalogoResposta, PosCombo, PosProduto } from "@/lib/pos";
 import { PosProdutoCard } from "@/components/pos/pos-produto-card";
@@ -31,6 +31,7 @@ export function PosCatalog({
   const scrollRef = useRef<HTMLDivElement>(null);
   const secaoRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const ignorarScrollSpy = useRef(false);
+  const categoriasScrollRef = useRef<HTMLDivElement>(null);
 
   const termo = busca.trim().toLowerCase();
 
@@ -114,6 +115,10 @@ export function PosCatalog({
     }
   }
 
+  function rolarCategorias(dir: number) {
+    categoriasScrollRef.current?.scrollBy({ left: dir * 200, behavior: "smooth" });
+  }
+
   function onScroll() {
     if (ignorarScrollSpy.current || !scrollRef.current) return;
     const containerTop = scrollRef.current.getBoundingClientRect().top;
@@ -129,21 +134,39 @@ export function PosCatalog({
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="scrollbar-none flex shrink-0 gap-1.5 overflow-x-auto pb-1">
-        {secoes.map((s) => (
-          <button
-            key={s.categoria.id}
-            type="button"
-            onClick={() => irParaSecao(s.categoria.id)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              categoriaAtiva === s.categoria.id
-                ? "bg-primary text-primary-foreground"
-                : "border text-muted-foreground hover:bg-muted/50"
-            }`}
-          >
-            {s.categoria.nome}
-          </button>
-        ))}
+      <div className="relative min-w-0 shrink-0">
+        <div ref={categoriasScrollRef} className="scrollbar-none flex gap-1.5 overflow-x-auto px-8 pb-1">
+          {secoes.map((s) => (
+            <button
+              key={s.categoria.id}
+              type="button"
+              onClick={() => irParaSecao(s.categoria.id)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                categoriaAtiva === s.categoria.id
+                  ? "bg-primary text-primary-foreground"
+                  : "border text-muted-foreground hover:bg-muted/50"
+              }`}
+            >
+              {s.categoria.nome}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => rolarCategorias(-1)}
+          className="absolute top-0 left-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-r from-background via-background/90 to-transparent text-muted-foreground"
+          aria-label="Categorias anteriores"
+        >
+          <ChevronLeft className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => rolarCategorias(1)}
+          className="absolute top-0 right-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-l from-background via-background/90 to-transparent text-muted-foreground"
+          aria-label="Próximas categorias"
+        >
+          <ChevronRight className="size-4" />
+        </button>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
