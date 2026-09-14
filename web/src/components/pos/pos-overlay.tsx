@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { X, ShoppingBag } from "lucide-react";
+import { X, ShoppingBag, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/components/ordermanager/constants";
+import { formatDataHoraCurta } from "@/components/cliente/types";
 import type {
   PosCartItem,
   PosCatalogoResposta,
@@ -81,6 +82,8 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [agendamento, setAgendamento] = useState<{ data: string; hora: string } | null>(null);
   const [agendamentoModalAberto, setAgendamentoModalAberto] = useState(false);
 
+  const [lojaLink, setLojaLink] = useState<string | null>(null);
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
     Promise.all([
@@ -99,6 +102,9 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
             valorFixo: cfg.taxa_entrega.fixa.valor,
           });
           setAgendamentoConfig(cfg.agendamento);
+          if (cfg.loja?.link_slug) {
+            setLojaLink(`${cfg.loja_link_base}${encodeURIComponent(cfg.loja.link_slug)}`);
+          }
         }
         if (cup.ok) {
           // Mesma regra do legado: cupom so aparece se houver pelo menos um
@@ -280,6 +286,14 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
 
   const caixaAberto = caixa?.caixa?.status === "aberto";
 
+  function copiarLojaLink() {
+    if (!lojaLink) return;
+    navigator.clipboard?.writeText(lojaLink).then(
+      () => toast.success("Link copiado."),
+      () => toast.error("Não foi possível copiar o link.")
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-6">
       <div className="flex h-full w-full max-w-[1440px] flex-col overflow-hidden rounded-3xl bg-background shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 duration-200">
@@ -293,13 +307,29 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
               {caixaAberto ? (
                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <span className="size-1.5 rounded-full bg-emerald-500" /> Caixa aberto
+                  {caixa?.caixa?.aberto_em ? <span>· {formatDataHoraCurta(caixa.caixa.aberto_em)}</span> : null}
                 </div>
               ) : null}
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onFechar}>
-            <X className="size-4.5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {lojaLink ? (
+              <div className="flex items-center gap-1.5 rounded-full border bg-muted/40 px-3 py-1.5">
+                <span className="max-w-40 truncate text-xs text-muted-foreground sm:max-w-56">{lojaLink}</span>
+                <button
+                  type="button"
+                  onClick={copiarLojaLink}
+                  className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label="Copiar link da loja"
+                >
+                  <Copy className="size-3.5" />
+                </button>
+              </div>
+            ) : null}
+            <Button variant="ghost" size="icon" onClick={onFechar}>
+              <X className="size-4.5" />
+            </Button>
+          </div>
         </header>
 
         {carregandoInicial ? (
