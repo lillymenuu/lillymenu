@@ -9,7 +9,11 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
   const emPromo = combo.preco_promocional !== null;
 
   return (
-    <div className="flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card">
+    <div
+      className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card transition-colors ${
+        qtd > 0 ? "border-primary bg-primary/5" : ""
+      }`}
+    >
       <div className="relative h-[124px] shrink-0 bg-muted">
         {combo.imagem ? (
           // eslint-disable-next-line @next/next/no-img-element

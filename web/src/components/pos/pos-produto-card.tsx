@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { AlertCircle, Minus, Package, Plus } from "lucide-react";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosProduto } from "@/lib/pos";
 
@@ -21,6 +21,8 @@ export function PosProdutoCard({
   const semEstoque = produto.estoque <= 0;
   const precoExibido = produto.preco_promocional ?? produto.preco;
   const emPromo = produto.preco_promocional !== null;
+  const restante = Math.max(0, produto.estoque - qtd);
+  const selecionado = qtd > 0;
 
   const [texto, setTexto] = useState(String(qtd));
 
@@ -35,7 +37,11 @@ export function PosProdutoCard({
   }
 
   return (
-    <div className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card ${semEstoque ? "opacity-50" : ""}`}>
+    <div
+      className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card transition-colors ${
+        selecionado ? "border-primary bg-primary/5" : ""
+      } ${semEstoque ? "opacity-50" : ""}`}
+    >
       <div className="relative h-[124px] shrink-0 bg-muted">
         {produto.imagem ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -59,6 +65,14 @@ export function PosProdutoCard({
             {formatBRL(precoExibido)}
           </span>
           {emPromo ? <span className="text-[11px] text-muted-foreground line-through">{formatBRL(produto.preco)}</span> : null}
+        </div>
+        <div
+          className={`mt-0.5 flex w-fit items-center gap-1 text-[10px] font-medium ${
+            restante > 0 ? "text-muted-foreground" : "rounded-full bg-destructive/10 px-1.5 py-0.5 text-destructive"
+          }`}
+        >
+          {restante > 0 ? <Package className="size-2.5 shrink-0" /> : <AlertCircle className="size-2.5 shrink-0" />}
+          {restante > 0 ? `${restante} em estoque` : "Sem estoque"}
         </div>
       </div>
       <div className="flex shrink-0 items-center justify-center gap-2 p-1.5">
