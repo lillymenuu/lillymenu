@@ -37,10 +37,16 @@ export type PosVariacao = {
   preco: number;
 };
 
+export type PosExtra = { id: number; nome: string; preco: number; obrigatorio: number };
+
 export type PosVariacoesResposta = {
   ok: boolean;
   msg?: string;
   variacoes: PosVariacao[];
+  extras: PosExtra[];
+  extras_obrigatorio: number;
+  complementos_itens: PosExtra[];
+  complementos_itens_obrigatorio: number;
 };
 
 export type PosComboOpcao = {
