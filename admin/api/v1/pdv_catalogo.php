@@ -32,6 +32,7 @@ $stmt = $conn->prepare("
   FROM produtos p
   LEFT JOIN estoque e ON e.produto_id = p.id AND e.loja_id = p.loja_id
   WHERE p.loja_id = ? AND p.ativo = 1 AND p.disponivel_catalogo = 1
+  HAVING estoque > 0
   ORDER BY p.ordem IS NULL, p.ordem, p.nome
 ");
 $stmt->execute([$lojaId]);
