@@ -53,16 +53,8 @@ export function PosAgendamentoDialog({
           <DialogTitle>Selecione o dia e a hora para agendar o pedido</DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => rolar(-1)}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground hover:bg-muted/50"
-            aria-label="Dia anterior"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <div ref={diasScrollRef} className="scrollbar-none flex min-w-0 flex-1 gap-2 overflow-x-auto">
+        <div className="relative">
+          <div ref={diasScrollRef} className="scrollbar-none flex gap-2 overflow-x-auto px-9">
             {dias.map((d) => {
               const ativo = d.data === diaSelecionado;
               return (
@@ -85,8 +77,16 @@ export function PosAgendamentoDialog({
           </div>
           <button
             type="button"
+            onClick={() => rolar(-1)}
+            className="absolute top-1/2 left-0 flex size-8 -translate-y-1/2 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:bg-muted/50"
+            aria-label="Dia anterior"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <button
+            type="button"
             onClick={() => rolar(1)}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground hover:bg-muted/50"
+            className="absolute top-1/2 right-0 flex size-8 -translate-y-1/2 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:bg-muted/50"
             aria-label="Próximo dia"
           >
             <ChevronRight className="size-4" />
