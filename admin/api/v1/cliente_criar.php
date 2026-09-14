@@ -27,8 +27,8 @@ $estado = trim($payload['estado'] ?? '');
 $complemento = trim($payload['complemento'] ?? '');
 $enderecoInput = trim($payload['endereco'] ?? '');
 
-if ($nome === '' || $telefone === '') {
-  echo json_encode(['ok' => false, 'msg' => 'Nome e telefone sao obrigatorios.']);
+if ($nome === '') {
+  echo json_encode(['ok' => false, 'msg' => 'Nome e obrigatorio.']);
   exit;
 }
 

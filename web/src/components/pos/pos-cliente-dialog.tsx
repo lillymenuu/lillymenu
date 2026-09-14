@@ -64,8 +64,8 @@ export function PosClienteDialog({
 
   async function adicionarCliente() {
     setErro("");
-    if (!telefone.trim() || !nome.trim()) {
-      setErro("Informe o telefone e o nome do cliente.");
+    if (!nome.trim()) {
+      setErro("Informe o nome do cliente.");
       return;
     }
     setSalvando(true);
@@ -103,7 +103,9 @@ export function PosClienteDialog({
 
         <div className="relative">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="pos-busca-cliente">Buscar por nome ou telefone</Label>
+            <Label htmlFor="pos-busca-cliente" className="text-primary">
+              Buscar por nome ou telefone
+            </Label>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -139,18 +141,18 @@ export function PosClienteDialog({
         </div>
 
         <div className="border-t pt-3">
-          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-primary">
             <UserPlus className="size-4" /> Ou cadastre um novo cliente
           </p>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pos-novo-telefone">
-                Telefone <span className="text-destructive">*</span>
+              <Label htmlFor="pos-novo-telefone" className="text-primary">
+                Telefone
               </Label>
               <Input id="pos-novo-telefone" placeholder="Ex.: (11) 9 3232-5454" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pos-novo-nome">
+              <Label htmlFor="pos-novo-nome" className="text-primary">
                 Nome <span className="text-destructive">*</span>
               </Label>
               <Input id="pos-novo-nome" placeholder="Ex.: Maria" value={nome} onChange={(e) => setNome(e.target.value)} />
