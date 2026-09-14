@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Minus, Plus, Search, ShoppingBag, X } from "lucide-react";
+import { Check, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosCartItem, PosExtra, PosProduto, PosVariacao, PosVariacoesResposta } from "@/lib/pos";
 
@@ -23,7 +22,6 @@ export function PosVariacaoDialog({
   const [complementosItens, setComplementosItens] = useState<PosExtra[]>([]);
   const [complementosObrigatorio, setComplementosObrigatorio] = useState(false);
 
-  const [busca, setBusca] = useState("");
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
   const [extrasIds, setExtrasIds] = useState<number[]>([]);
   const [complementoId, setComplementoId] = useState<number | null>(null);
@@ -38,7 +36,6 @@ export function PosVariacaoDialog({
     setExtrasObrigatorio(false);
     setComplementosItens([]);
     setComplementosObrigatorio(false);
-    setBusca("");
     setVariacaoId(null);
     setExtrasIds([]);
     setComplementoId(null);
@@ -62,11 +59,6 @@ export function PosVariacaoDialog({
   }, [produto]);
 
   if (!produto) return null;
-
-  const termo = busca.trim().toLowerCase();
-  const variacoesFiltradas = termo
-    ? variacoes.filter((v) => [v.tamanho, v.cor].filter(Boolean).join(" ").toLowerCase().includes(termo))
-    : variacoes;
 
   const variacaoSelecionada = variacoes.find((v) => v.id === variacaoId) ?? null;
   const precoBase = variacaoSelecionada ? (variacaoSelecionada.preco > 0 ? variacaoSelecionada.preco : produto.preco) : produto.preco;
@@ -142,26 +134,17 @@ export function PosVariacaoDialog({
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">Escolha uma das opções</span>
+                <span className="text-sm font-semibold text-primary">Escolha uma das opções</span>
                 <span className="text-xs font-semibold text-destructive">Obrigatório</span>
               </div>
-              <div className="relative mt-2">
-                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Procure por uma opção"
-                  className="h-9 bg-muted/40 pl-8 text-sm"
-                />
-              </div>
               <div className="mt-2 space-y-1.5">
-                {variacoesFiltradas.map((v) => {
+                {variacoes.map((v) => {
                   const label = [v.tamanho, v.cor].filter(Boolean).join(" - ") || `Opção #${v.id}`;
                   return (
                     <label
                       key={v.id}
-                      className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 text-sm transition-colors ${
-                        variacaoId === v.id ? "border-primary bg-primary/5" : "hover:bg-muted/40"
+                      className={`flex cursor-pointer items-center justify-between border-b p-2.5 text-sm transition-colors ${
+                        variacaoId === v.id ? "bg-primary/5" : "hover:bg-muted/40"
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -184,7 +167,7 @@ export function PosVariacaoDialog({
             {extras.length > 0 ? (
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold uppercase">Escolha seu extra</span>
+                  <span className="text-sm font-semibold text-primary uppercase">Escolha seu extra</span>
                   {extrasObrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
                 </div>
                 <div className="text-xs text-muted-foreground">Escolha 1 ou mais opções.</div>
@@ -192,7 +175,7 @@ export function PosVariacaoDialog({
                   {extras.map((e) => {
                     const ativo = extrasIds.includes(e.id);
                     return (
-                      <div key={e.id} className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
+                      <div key={e.id} className="flex items-center justify-between border-b p-2.5 text-sm">
                         <div>
                           <div>{e.nome}</div>
                           <div className="text-xs text-muted-foreground">{formatBRL(e.preco)}</div>
@@ -216,7 +199,7 @@ export function PosVariacaoDialog({
             {complementosItens.length > 0 ? (
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold uppercase">Escolha o tipo</span>
+                  <span className="text-sm font-semibold text-primary uppercase">Escolha o tipo</span>
                   {complementosObrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
                 </div>
                 <div className="text-xs text-muted-foreground">Escolha 1 opção.</div>
@@ -224,7 +207,7 @@ export function PosVariacaoDialog({
                   {complementosItens.map((c) => {
                     const ativo = complementoId === c.id;
                     return (
-                      <div key={c.id} className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
+                      <div key={c.id} className="flex items-center justify-between border-b p-2.5 text-sm">
                         <div>
                           <div>{c.nome}</div>
                           <div className="text-xs text-muted-foreground">{formatBRL(c.preco)}</div>
@@ -267,8 +250,9 @@ export function PosVariacaoDialog({
             <span className="w-4 text-center text-sm font-semibold tabular-nums">{qtd}</span>
             <button
               type="button"
-              onClick={() => setQtd((q) => q + 1)}
-              className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+              disabled={qtd >= produto.estoque}
+              onClick={() => setQtd((q) => Math.min(q + 1, produto.estoque))}
+              className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Plus className="size-3.5" />
             </button>
