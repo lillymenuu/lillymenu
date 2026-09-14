@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { MoneyInput } from "@/components/produtos/money-input";
 import { formatBRL } from "@/components/ordermanager/constants";
-import type { PosCepLookupResposta, PosClienteBusca } from "@/lib/pos";
+import type { PosCepLookupResposta, PosClienteBusca, PosClienteStats } from "@/lib/pos";
 import type { PosEndereco } from "@/components/pos/pos-tipo-pedido";
 
 const ENDERECO_VAZIO: PosEndereco = { rua: "", numero: "", bairro: "", cidade: "", cep: "", complemento: "" };
@@ -56,13 +56,42 @@ export function PosEntregaDialog({
     setClienteId(cliente?.id ?? null);
     setTelefone(cliente?.telefone ?? "");
     setNome(cliente?.nome ?? "");
-    setRascunho(endereco.rua ? endereco : ENDERECO_VAZIO);
+    const enderecoJaPreenchido = endereco.rua.trim() !== "";
+    setRascunho(enderecoJaPreenchido ? endereco : ENDERECO_VAZIO);
     setTaxaCalculada(taxaEntregaAtual);
     setEditarTaxa(false);
     setTaxaManual(taxaEntregaAtual ? String(taxaEntregaAtual) : "");
     setErro("");
+    if (cliente && !enderecoJaPreenchido) {
+      carregarEnderecoCliente(cliente.id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Se o cliente ja tiver endereco cadastrado no cadastro dele, preenche
+  // endereco + taxa de entrega automaticamente (sem sobrescrever CEP/bairro
+  // com o resultado da geocodificacao — o cadastro do cliente e a fonte).
+  async function carregarEnderecoCliente(id: number) {
+    try {
+      const res = await fetch(`/api/cliente/stats?id=${id}`);
+      const data: PosClienteStats = await res.json();
+      const end = data.endereco;
+      if (data.ok && end && end.rua.trim()) {
+        setRascunho({
+          rua: end.rua,
+          numero: end.numero,
+          bairro: end.bairro,
+          cidade: end.cidade,
+          cep: end.cep,
+          complemento: end.complemento,
+        });
+        const digitos = end.cep.replace(/\D/g, "");
+        if (digitos.length === 8) consultarCep(digitos, { atualizarEndereco: false });
+      }
+    } catch {
+      // cliente sem endereco cadastrado — mantem os campos como estao
+    }
+  }
 
   async function buscarClientes(termo: string) {
     try {
@@ -94,6 +123,35 @@ export function PosEntregaDialog({
     setBusca("");
     setMostrarResultados(false);
     setResultados(null);
+    carregarEnderecoCliente(c.id);
+  }
+
+  async function consultarCep(digitos: string, opts: { atualizarEndereco: boolean } = { atualizarEndereco: true }) {
+    setBuscandoCep(true);
+    try {
+      const res = await fetch(`/api/pos/cep-lookup?cep=${digitos}`);
+      const data: PosCepLookupResposta = await res.json();
+      if (data.ok) {
+        if (opts.atualizarEndereco) {
+          setRascunho((r) => ({
+            ...r,
+            rua: data.logradouro || r.rua,
+            bairro: data.bairro || r.bairro,
+            cidade: data.cidade || r.cidade,
+          }));
+        }
+        if (!editarTaxa) {
+          setTaxaCalculada(data.taxa_entrega);
+          setTaxaManual(String(data.taxa_entrega));
+        }
+      } else if (opts.atualizarEndereco) {
+        toast.error(data.msg ?? "Não foi possível localizar o CEP.");
+      }
+    } catch {
+      if (opts.atualizarEndereco) toast.error("Não foi possível localizar o CEP.");
+    } finally {
+      setBuscandoCep(false);
+    }
   }
 
   function handleCepChange(v: string) {
@@ -101,31 +159,7 @@ export function PosEntregaDialog({
     if (cepTimer.current) clearTimeout(cepTimer.current);
     const digitos = v.replace(/\D/g, "");
     if (digitos.length !== 8) return;
-    cepTimer.current = setTimeout(async () => {
-      setBuscandoCep(true);
-      try {
-        const res = await fetch(`/api/pos/cep-lookup?cep=${digitos}`);
-        const data: PosCepLookupResposta = await res.json();
-        if (data.ok) {
-          setRascunho((r) => ({
-            ...r,
-            rua: data.logradouro || r.rua,
-            bairro: data.bairro || r.bairro,
-            cidade: data.cidade || r.cidade,
-          }));
-          if (!editarTaxa) {
-            setTaxaCalculada(data.taxa_entrega);
-            setTaxaManual(String(data.taxa_entrega));
-          }
-        } else {
-          toast.error(data.msg ?? "Não foi possível localizar o CEP.");
-        }
-      } catch {
-        toast.error("Não foi possível localizar o CEP.");
-      } finally {
-        setBuscandoCep(false);
-      }
-    }, 400);
+    cepTimer.current = setTimeout(() => consultarCep(digitos), 400);
   }
 
   const taxaExibida = editarTaxa ? Number(taxaManual || 0) : taxaCalculada;

@@ -85,6 +85,16 @@ export type PosCartItem = {
 
 export type PosClienteBusca = { id: number; nome: string; telefone: string };
 
+export type PosClienteEndereco = {
+  rua: string;
+  numero: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  complemento: string;
+  cep: string;
+};
+
 export type PosClienteStats = {
   ok: boolean;
   nome?: string;
@@ -93,6 +103,7 @@ export type PosClienteStats = {
   pontos?: number;
   saldo_fiado?: number;
   pedidos_feitos?: number;
+  endereco?: PosClienteEndereco;
 };
 
 export type PosTipoPedido = "entrega" | "retirada" | "mesa";
