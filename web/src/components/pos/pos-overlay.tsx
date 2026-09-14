@@ -54,6 +54,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [caixa, setCaixa] = useState<CaixaResumoResposta | null>(null);
 
   const [produtoVariacao, setProdutoVariacao] = useState<PosProduto | null>(null);
+  const [itemVariacaoEditando, setItemVariacaoEditando] = useState<PosCartItem | null>(null);
   const [comboAberto, setComboAberto] = useState<PosCombo | null>(null);
   const [avulsoAberto, setAvulsoAberto] = useState(false);
   const [itemEditando, setItemEditando] = useState<PosCartItem | null>(null);
@@ -115,7 +116,18 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   }, []);
 
   function abrirVariacaoOuAdicionar(produto: PosProduto) {
+    setItemVariacaoEditando(null);
     setProdutoVariacao(produto);
+  }
+
+  function editarItemCarrinho(item: PosCartItem) {
+    const produtoDoItem = item.produtoId ? (catalogo?.produtos.find((p) => p.id === item.produtoId) ?? null) : null;
+    if (produtoDoItem?.tem_variacoes) {
+      setItemVariacaoEditando(item);
+      setProdutoVariacao(produtoDoItem);
+    } else {
+      setItemEditando(item);
+    }
   }
 
   function alterarQtdProduto(produto: PosProduto, delta: number) {
@@ -342,7 +354,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
                   />
                 ) : null}
 
-                <PosCartList itens={cart.itens} onEditar={setItemEditando} onRemover={cart.remover} />
+                <PosCartList itens={cart.itens} onEditar={editarItemCarrinho} onRemover={cart.remover} />
               </div>
 
               <div className="shrink-0 space-y-3 bg-card p-4">
@@ -433,8 +445,15 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
 
       <PosVariacaoDialog
         produto={produtoVariacao}
-        onOpenChange={(v) => !v && setProdutoVariacao(null)}
+        itemEditando={itemVariacaoEditando}
+        onOpenChange={(v) => {
+          if (!v) {
+            setProdutoVariacao(null);
+            setItemVariacaoEditando(null);
+          }
+        }}
         onAdicionar={(item) => cart.adicionar(item)}
+        onSalvar={(rowKey, item) => cart.atualizarItem(rowKey, item)}
       />
       <PosComboDialog combo={comboAberto} onOpenChange={(v) => !v && setComboAberto(null)} onAdicionar={(item) => cart.adicionar(item)} />
       <PosAvulsoDialog open={avulsoAberto} onOpenChange={setAvulsoAberto} onAdicionar={(item) => cart.adicionar(item)} />

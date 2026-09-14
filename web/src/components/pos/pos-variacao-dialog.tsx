@@ -8,12 +8,16 @@ import type { PosCartItem, PosExtra, PosProduto, PosVariacao, PosVariacoesRespos
 
 export function PosVariacaoDialog({
   produto,
+  itemEditando,
   onOpenChange,
   onAdicionar,
+  onSalvar,
 }: {
   produto: PosProduto | null;
+  itemEditando?: PosCartItem | null;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<PosCartItem, "rowKey">) => void;
+  onSalvar?: (rowKey: string, item: Omit<PosCartItem, "rowKey">) => void;
 }) {
   const [carregando, setCarregando] = useState(false);
   const [variacoes, setVariacoes] = useState<PosVariacao[]>([]);
@@ -36,11 +40,11 @@ export function PosVariacaoDialog({
     setExtrasObrigatorio(false);
     setComplementosItens([]);
     setComplementosObrigatorio(false);
-    setVariacaoId(null);
-    setExtrasIds([]);
-    setComplementoId(null);
-    setQtd(1);
-    setObservacoes("");
+    setVariacaoId(itemEditando?.variacaoId ?? null);
+    setExtrasIds(itemEditando?.extrasIds ?? []);
+    setComplementoId(itemEditando?.complementoId ?? null);
+    setQtd(itemEditando?.qtd ?? 1);
+    setObservacoes(itemEditando?.observacoes ?? "");
     fetch(`/api/pos/produto-variacoes?id=${produto.id}`)
       .then((r) => r.json())
       .then((data: PosVariacoesResposta) => {
@@ -51,12 +55,13 @@ export function PosVariacaoDialog({
           setExtrasObrigatorio(!!data.extras_obrigatorio);
           setComplementosItens(data.complementos_itens ?? []);
           setComplementosObrigatorio(!!data.complementos_itens_obrigatorio);
-          if (lista.length > 0) setVariacaoId(lista[0].id);
+          if (!itemEditando && lista.length > 0) setVariacaoId(lista[0].id);
         }
       })
       .catch(() => setVariacoes([]))
       .finally(() => setCarregando(false));
-  }, [produto]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [produto, itemEditando]);
 
   if (!produto) return null;
 
@@ -84,7 +89,7 @@ export function PosVariacaoDialog({
     if (extrasSelecionados.length > 0) nome += ` + ${extrasSelecionados.map((e) => e.nome).join(", ")}`;
     if (complementoSelecionado) nome += ` + ${complementoSelecionado.nome}`;
 
-    onAdicionar({
+    const dadosItem: Omit<PosCartItem, "rowKey"> = {
       produtoId: produto.id,
       nome,
       qtd,
@@ -92,7 +97,16 @@ export function PosVariacaoDialog({
       observacoes: observacoes.trim(),
       usarPontos: false,
       imagem: produto.imagem,
-    });
+      variacaoId,
+      extrasIds,
+      complementoId,
+    };
+
+    if (itemEditando && onSalvar) {
+      onSalvar(itemEditando.rowKey, dadosItem);
+    } else {
+      onAdicionar(dadosItem);
+    }
     onOpenChange(false);
   }
 
@@ -264,7 +278,9 @@ export function PosVariacaoDialog({
             disabled={!podeAdicionar}
             className="h-11 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {variacaoId === null ? "Selecionar variação" : `Adicionar · ${formatBRL(precoUnitario * qtd)}`}
+            {variacaoId === null
+              ? "Selecionar variação"
+              : `${itemEditando ? "Salvar" : "Adicionar"} · ${formatBRL(precoUnitario * qtd)}`}
           </button>
         </div>
       </DialogContent>

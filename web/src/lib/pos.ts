@@ -90,6 +90,9 @@ export type PosCartItem = {
   combosels?: PosCartComboSel[];
   imagem?: string | null;
   estoque?: number;
+  variacaoId?: number | null;
+  extrasIds?: number[];
+  complementoId?: number | null;
 };
 
 export type PosClienteBusca = { id: number; nome: string; telefone: string };

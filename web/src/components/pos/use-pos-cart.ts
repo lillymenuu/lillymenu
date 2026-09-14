@@ -29,11 +29,15 @@ export function usePosCart() {
     setItens((prev) => prev.map((i) => (i.rowKey === rowKey ? { ...i, observacoes } : i)));
   }, []);
 
+  const atualizarItem = useCallback((rowKey: string, dados: Partial<Omit<PosCartItem, "rowKey">>) => {
+    setItens((prev) => prev.map((i) => (i.rowKey === rowKey ? { ...i, ...dados } : i)));
+  }, []);
+
   const limpar = useCallback(() => setItens([]), []);
 
   const subtotal = useMemo(() => itens.reduce((s, i) => s + i.preco * i.qtd, 0), [itens]);
 
-  return { itens, adicionar, remover, alterarQtd, alterarObservacoes, limpar, subtotal };
+  return { itens, adicionar, remover, alterarQtd, alterarObservacoes, atualizarItem, limpar, subtotal };
 }
 
 export type UsePosCartReturn = ReturnType<typeof usePosCart>;
