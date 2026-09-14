@@ -12,10 +12,12 @@ export function PosClienteDialog({
   open,
   onOpenChange,
   onSelecionado,
+  clienteAtual,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onSelecionado: (cliente: PosClienteBusca) => void;
+  clienteAtual?: PosClienteBusca | null;
 }) {
   const [busca, setBusca] = useState("");
   const [resultados, setResultados] = useState<PosClienteBusca[] | null>(null);
@@ -29,11 +31,12 @@ export function PosClienteDialog({
   useEffect(() => {
     if (!open) return;
     setBusca("");
-    setTelefone("");
-    setNome("");
+    setTelefone(clienteAtual?.telefone ?? "");
+    setNome(clienteAtual?.nome ?? "");
     setErro("");
     setResultados(null);
     setMostrarResultados(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   async function buscar(termo: string) {

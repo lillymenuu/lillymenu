@@ -58,7 +58,7 @@ export function PosClienteSection({
         </button>
       )}
 
-      <PosClienteDialog open={dialogAberto} onOpenChange={setDialogAberto} onSelecionado={(c) => onClienteChange(c)} />
+      <PosClienteDialog open={dialogAberto} onOpenChange={setDialogAberto} onSelecionado={(c) => onClienteChange(c)} clienteAtual={cliente} />
     </>
   );
 }
