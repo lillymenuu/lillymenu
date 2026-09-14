@@ -81,6 +81,7 @@ export type PosCartItem = {
   observacoes: string;
   usarPontos: boolean;
   combosels?: PosCartComboSel[];
+  imagem?: string | null;
 };
 
 export type PosClienteBusca = { id: number; nome: string; telefone: string };

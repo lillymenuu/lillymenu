@@ -132,6 +132,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
         preco: produto.preco_promocional ?? produto.preco,
         observacoes: "",
         usarPontos: false,
+        imagem: produto.imagem,
       });
     }
   }
@@ -150,6 +151,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
         preco: produto.preco_promocional ?? produto.preco,
         observacoes: "",
         usarPontos: false,
+        imagem: produto.imagem,
       });
     }
   }

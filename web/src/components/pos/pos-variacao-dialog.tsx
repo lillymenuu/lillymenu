@@ -56,6 +56,7 @@ export function PosVariacaoDialog({
       preco,
       observacoes: observacoes.trim(),
       usarPontos: false,
+      imagem: produto.imagem,
     });
     onOpenChange(false);
   }

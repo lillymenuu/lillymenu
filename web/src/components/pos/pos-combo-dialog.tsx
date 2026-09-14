@@ -104,6 +104,7 @@ export function PosComboDialog({
       observacoes: `[combo]\n${combosels.map((c) => `${c.qtd}x ${c.nome}`).join("\n")}`,
       usarPontos: false,
       combosels,
+      imagem: combo.imagem,
     });
     onOpenChange(false);
   }
