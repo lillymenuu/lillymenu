@@ -38,15 +38,15 @@ const ENDERECO_VAZIO: PosEndereco = { rua: "", numero: "", bairro: "", cidade: "
 
 const MESES_ABREV = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
-// Le a string "YYYY-MM-DD HH:MM:SS" (ja em horario local de Brasilia, vinda
-// do backend) direto pelos digitos — nao passa pelo construtor Date, que
-// reinterpreta a string no fuso do navegador e pode mostrar a hora errada
-// dependendo de como o sistema do operador esta configurado.
-function formatCaixaAbertoEm(raw: string): string | null {
-  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
-  if (!m) return null;
-  const [, ano, mes, dia, hora, min] = m;
-  return `${dia} - ${MESES_ABREV[Number(mes) - 1]} - ${ano}, ${hora}:${min}`;
+// Relogio ao vivo do cabecalho — le direto os campos locais do Date (sem
+// passar por string/Date parsing), entao usa o fuso que o navegador do
+// operador ja estiver configurado, sem ambiguidade nenhuma.
+function formatAgora(d: Date): string {
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = MESES_ABREV[d.getMonth()];
+  const hora = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dia} - ${mes} - ${d.getFullYear()}, ${hora}:${min}`;
 }
 
 function montarEnderecoTexto(e: PosEndereco): string {
@@ -95,6 +95,13 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [agendamentoModalAberto, setAgendamentoModalAberto] = useState(false);
 
   const [lojaLink, setLojaLink] = useState<string | null>(null);
+
+  const [agora, setAgora] = useState<Date | null>(null);
+  useEffect(() => {
+    setAgora(new Date());
+    const intervalo = setInterval(() => setAgora(new Date()), 30000);
+    return () => clearInterval(intervalo);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -319,9 +326,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
               {caixaAberto ? (
                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <span className="size-1.5 rounded-full bg-emerald-500" /> Caixa aberto
-                  {caixa?.caixa?.aberto_em && formatCaixaAbertoEm(caixa.caixa.aberto_em) ? (
-                    <span>· {formatCaixaAbertoEm(caixa.caixa.aberto_em)}</span>
-                  ) : null}
+                  {agora ? <span>· {formatAgora(agora)}</span> : null}
                 </div>
               ) : null}
             </div>
