@@ -53,8 +53,8 @@ export function PosAgendamentoDialog({
           <DialogTitle>Selecione o dia e a hora para agendar o pedido</DialogTitle>
         </DialogHeader>
 
-        <div className="relative">
-          <div ref={diasScrollRef} className="scrollbar-none flex gap-2 overflow-x-auto px-9">
+        <div className="relative min-w-0">
+          <div ref={diasScrollRef} className="scrollbar-none flex min-w-0 gap-2 overflow-x-auto px-9">
             {dias.map((d) => {
               const ativo = d.data === diaSelecionado;
               return (
