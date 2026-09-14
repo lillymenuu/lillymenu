@@ -3,6 +3,7 @@ export type PosCategoria = { id: number; nome: string };
 export type PosProduto = {
   id: number;
   nome: string;
+  descricao: string | null;
   categoria_id: number | null;
   preco: number;
   preco_promocional: number | null;

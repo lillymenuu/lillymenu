@@ -26,7 +26,7 @@ $categorias = array_map(function ($c) {
 }, $stmt->fetchAll(PDO::FETCH_ASSOC));
 
 $stmt = $conn->prepare("
-  SELECT p.id, p.nome, p.categoria_id, p.preco, p.preco_promocional, p.promo_desativado,
+  SELECT p.id, p.nome, p.descricao, p.categoria_id, p.preco, p.preco_promocional, p.promo_desativado,
          p.tem_variacoes, p.imagem, p.pontos_ganho, p.pontos_custo,
          COALESCE(e.quantidade, 0) AS estoque
   FROM produtos p
@@ -41,6 +41,7 @@ $produtos = array_map(function ($p) {
   return [
     'id' => (int) $p['id'],
     'nome' => $p['nome'],
+    'descricao' => $p['descricao'] !== null && trim($p['descricao']) !== '' ? $p['descricao'] : null,
     'categoria_id' => $p['categoria_id'] !== null ? (int) $p['categoria_id'] : null,
     'preco' => (float) $p['preco'],
     'preco_promocional' => $emPromo ? $precoPromo : null,

@@ -122,6 +122,9 @@ export function PosVariacaoDialog({
           </div>
           <div className="min-w-0 flex-1 pt-1">
             <div className="line-clamp-2 text-sm leading-tight font-semibold">{produto.nome}</div>
+            {produto.descricao ? (
+              <div className="mt-0.5 line-clamp-2 text-xs leading-tight text-muted-foreground">{produto.descricao}</div>
+            ) : null}
           </div>
           <button
             type="button"

@@ -38,9 +38,10 @@ export function PosProdutoCard({
 
   return (
     <div
+      onClick={() => produto.tem_variacoes && !semEstoque && onAdicionar(produto)}
       className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card transition-colors ${
         selecionado ? "border-primary bg-primary/5" : ""
-      } ${semEstoque ? "opacity-50" : ""}`}
+      } ${semEstoque ? "opacity-50" : ""} ${produto.tem_variacoes && !semEstoque ? "cursor-pointer" : ""}`}
     >
       <div className="relative h-[124px] shrink-0 bg-muted">
         {produto.imagem ? (
@@ -102,7 +103,10 @@ export function PosProdutoCard({
         <button
           type="button"
           disabled={semEstoque || (!produto.tem_variacoes && restante <= 0)}
-          onClick={() => (produto.tem_variacoes ? onAdicionar(produto) : onAlterarQtd(1))}
+          onClick={(e) => {
+            e.stopPropagation();
+            produto.tem_variacoes ? onAdicionar(produto) : onAlterarQtd(1);
+          }}
           className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Plus className="size-4" />
