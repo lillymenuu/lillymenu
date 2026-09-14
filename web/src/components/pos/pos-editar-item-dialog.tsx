@@ -38,7 +38,7 @@ export function PosEditarItemDialog({
       <DialogContent className="max-w-sm gap-4 sm:max-w-sm" showCloseButton={false}>
         <DialogTitle className="sr-only">{item.nome}</DialogTitle>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3">
           <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-muted">
             {item.imagem ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -49,8 +49,8 @@ export function PosEditarItemDialog({
               </div>
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold">{item.nome}</div>
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <div className="line-clamp-2 text-sm leading-tight font-semibold">{item.nome}</div>
             <div className="text-sm font-semibold text-emerald-600">{formatBRL(item.preco)}</div>
           </div>
           <button
