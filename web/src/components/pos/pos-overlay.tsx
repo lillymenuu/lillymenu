@@ -29,6 +29,8 @@ import { PosTipoPedido, type PosEndereco } from "@/components/pos/pos-tipo-pedid
 import { PosEnderecoCard } from "@/components/pos/pos-endereco-card";
 import { PosEntregaDialog } from "@/components/pos/pos-entrega-dialog";
 import { PosAgendamentoCard } from "@/components/pos/pos-agendamento-card";
+import { PosAgendamentoDialog } from "@/components/pos/pos-agendamento-dialog";
+import type { AgendamentoConfig } from "@/lib/agendamento";
 import { PosCupomField } from "@/components/pos/pos-cupom-field";
 import { PosPagamentoPanel, type PosPagamentoDados } from "@/components/pos/pos-pagamento-panel";
 import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
@@ -77,6 +79,10 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [taxaEntregaCalculada, setTaxaEntregaCalculada] = useState<number | null>(null);
   const [taxaEditadaManual, setTaxaEditadaManual] = useState(false);
 
+  const [agendamentoConfig, setAgendamentoConfig] = useState<{ delivery: AgendamentoConfig; retirada: AgendamentoConfig } | null>(null);
+  const [agendamento, setAgendamento] = useState<{ data: string; hora: string } | null>(null);
+  const [agendamentoModalAberto, setAgendamentoModalAberto] = useState(false);
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
     Promise.all([
@@ -94,6 +100,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
             gratis: cfg.taxa_entrega.gratis,
             valorFixo: cfg.taxa_entrega.fixa.valor,
           });
+          setAgendamentoConfig(cfg.agendamento);
         }
         if (cup.ok) {
           // Mesma regra do legado: cupom so aparece se houver pelo menos um
@@ -164,6 +171,10 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
 
   const totalResumo = Math.max(0, cart.subtotal + taxaEntrega - (cupom?.valor ?? 0));
 
+  // Agendamento nao existe pra consumo local (mesa), igual ao legado.
+  const agendamentoCfgAtual =
+    tipoPedido === "entrega" ? agendamentoConfig?.delivery : tipoPedido === "retirada" ? agendamentoConfig?.retirada : null;
+
   function onTipoPedidoChange(v: PosTipoPedidoValor) {
     const jaEraEntrega = tipoPedido === "entrega";
     setTipoPedido(v);
@@ -214,6 +225,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
           itens: JSON.stringify(itensPayload),
           taxa_entrega: taxaEntrega,
           taxa_editada: taxaEditadaManual ? "1" : "0",
+          agendamento: agendamentoCfgAtual?.ativo && agendamento ? `${agendamento.data}T${agendamento.hora}` : "",
           pagamento: pagamentoDados.pagamentos[0]?.forma ?? "dinheiro",
           pagamentos: JSON.stringify(pagamentoDados.pagamentos),
           pagamento_dividido: pagamentoDados.pagamentoDividido ? "1" : "0",
@@ -243,6 +255,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
       setEndereco(ENDERECO_VAZIO);
       setTaxaEntregaCalculada(null);
       setTaxaEditadaManual(false);
+      setAgendamento(null);
       setEtapa("resumo");
       onFechar();
     } catch {
@@ -301,7 +314,13 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
             <div className="flex min-h-0 min-w-0 flex-col">
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
                 <PosTipoPedido tipo={tipoPedido} onTipoChange={onTipoPedidoChange} />
-                <PosAgendamentoCard />
+                {agendamentoCfgAtual?.ativo ? (
+                  <PosAgendamentoCard
+                    valor={agendamento}
+                    onAbrir={() => setAgendamentoModalAberto(true)}
+                    onLimpar={() => setAgendamento(null)}
+                  />
+                ) : null}
                 <PosClienteSection
                   cliente={cliente}
                   onClienteChange={setCliente}
@@ -405,6 +424,16 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
           setTaxaEditadaManual(dados.taxaEditada);
         }}
       />
+
+      {agendamentoCfgAtual?.ativo ? (
+        <PosAgendamentoDialog
+          open={agendamentoModalAberto}
+          onOpenChange={setAgendamentoModalAberto}
+          cfg={agendamentoCfgAtual}
+          valorAtual={agendamento}
+          onConfirmar={setAgendamento}
+        />
+      ) : null}
 
       <PosVariacaoDialog
         produto={produtoVariacao}
