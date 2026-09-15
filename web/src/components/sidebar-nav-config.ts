@@ -58,7 +58,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "pdv", label: "Pedidos (PDV)", icon: ShoppingBag, href: "/pdv", opensPos: true },
       { menuKey: "gestor", label: "Gestor de Pedidos", icon: Kanban, href: "/ordermanager", migrated: true },
       { menuKey: "pedidos", label: "Lista de Pedidos", icon: Receipt, href: "/order-list", migrated: true },
-      { menuKey: "orcamentos", label: "Orçamento/Recibo", icon: FileText, href: "/orcamentos" },
+      { menuKey: "orcamentos", label: "Quotes", icon: FileText, href: "/quotes", migrated: true },
       { menuKey: "produtos", label: "Produtos", icon: Package, href: "/produtos", migrated: true },
       { menuKey: "promo", label: "Promo", icon: Gift, href: "/promotion", migrated: true },
       { menuKey: "estoque", label: "Estoque", icon: Boxes, href: "/stock", migrated: true },
