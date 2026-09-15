@@ -7,11 +7,13 @@
 
 require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../helpers/api_auth.php';
+require_once __DIR__ . '/../../helpers/orcamentos_module.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
 $auth   = apiAuthExigir($conn);
 $lojaId = $auth['loja_id'];
+garantirOrcamentosTabelas($conn);
 
 $id = (int) ($_GET['id'] ?? 0);
 if ($id <= 0) {
