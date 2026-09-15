@@ -17,7 +17,15 @@ export function usePosOverlay() {
   return ctx;
 }
 
-export function PosOverlayProvider({ children, adminPerfil }: { children: React.ReactNode; adminPerfil: string }) {
+export function PosOverlayProvider({
+  children,
+  adminPerfil,
+  phpAdminUrl,
+}: {
+  children: React.ReactNode;
+  adminPerfil: string;
+  phpAdminUrl: string;
+}) {
   const [aberto, setAberto] = useState(false);
 
   const abrir = useCallback(() => setAberto(true), []);
@@ -26,7 +34,7 @@ export function PosOverlayProvider({ children, adminPerfil }: { children: React.
   return (
     <PosOverlayContext.Provider value={{ aberto, abrir, fechar }}>
       {children}
-      {aberto ? <PosOverlay onFechar={fechar} adminPerfil={adminPerfil} /> : null}
+      {aberto ? <PosOverlay onFechar={fechar} adminPerfil={adminPerfil} phpAdminUrl={phpAdminUrl} /> : null}
     </PosOverlayContext.Provider>
   );
 }

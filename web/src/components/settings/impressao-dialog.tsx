@@ -11,31 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
-
-type Perfil = {
-  id: string | null;
-  nome: string;
-  qzPrinterName: string;
-  tipo: string;
-  usoPara: string;
-  papel: string;
-  copias: number;
-  tipoImpressao: string;
-  impressaoAutomatica: boolean;
-};
-
-declare global {
-  interface Window {
-    impressaoQZ?: {
-      listarPerfis: () => Perfil[];
-      salvarPerfil: (p: Perfil) => Perfil;
-      excluirPerfil: (id: string) => void;
-      listarImpressorasSistema: () => Promise<string[]>;
-      imprimirTeste: (perfil: Perfil, lojaNome: string) => Promise<void>;
-      garantirConexao: () => Promise<void>;
-    };
-  }
-}
+import type { PerfilImpressao as Perfil } from "@/lib/impressao";
 
 const PERFIL_VAZIO: Perfil = {
   id: null,

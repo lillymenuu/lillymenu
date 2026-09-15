@@ -20,7 +20,7 @@ const SIDEBAR_BRAND_BG =
 
 export function AppShell(props: { sidebarData: SidebarData; phpAdminUrl: string; children: React.ReactNode }) {
   return (
-    <PosOverlayProvider adminPerfil={props.sidebarData.admin.perfil}>
+    <PosOverlayProvider adminPerfil={props.sidebarData.admin.perfil} phpAdminUrl={props.phpAdminUrl}>
       <AppShellInner {...props} />
     </PosOverlayProvider>
   );

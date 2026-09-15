@@ -18,20 +18,31 @@ const LABELS: Record<PosTipoPedidoValor, string> = {
   mesa: "Consumo local",
 };
 
-export function PosTipoPedido({ tipo, onTipoChange }: { tipo: PosTipoPedidoValor; onTipoChange: (t: PosTipoPedidoValor) => void }) {
+export function PosTipoPedido({
+  tipo,
+  onTipoChange,
+  rightSlot,
+}: {
+  tipo: PosTipoPedidoValor;
+  onTipoChange: (t: PosTipoPedidoValor) => void;
+  rightSlot?: React.ReactNode;
+}) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-medium text-muted-foreground">Tipo do pedido</label>
-      <Select value={tipo} onValueChange={(v) => v && onTipoChange(v as PosTipoPedidoValor)}>
-        <SelectTrigger className="h-12 w-full rounded-xl text-sm">
-          <SelectValue>{() => LABELS[tipo]}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="entrega">Entrega</SelectItem>
-          <SelectItem value="retirada">Retirada</SelectItem>
-          <SelectItem value="mesa">Consumo local</SelectItem>
-        </SelectContent>
-      </Select>
+    <div className="flex items-end gap-2">
+      <div className="min-w-0 flex-1 space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Tipo do pedido</label>
+        <Select value={tipo} onValueChange={(v) => v && onTipoChange(v as PosTipoPedidoValor)}>
+          <SelectTrigger className="h-12 w-full rounded-xl text-sm">
+            <SelectValue>{() => LABELS[tipo]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="entrega">Entrega</SelectItem>
+            <SelectItem value="retirada">Retirada</SelectItem>
+            <SelectItem value="mesa">Consumo local</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {rightSlot}
     </div>
   );
 }

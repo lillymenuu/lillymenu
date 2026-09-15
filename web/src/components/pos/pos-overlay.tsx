@@ -32,6 +32,7 @@ import type { AgendamentoConfig } from "@/lib/agendamento";
 import { PosCupomField } from "@/components/pos/pos-cupom-field";
 import { PosPagamentoPanel, type PosPagamentoDados } from "@/components/pos/pos-pagamento-panel";
 import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
+import { PosImpressaoToggle } from "@/components/pos/pos-impressao-toggle";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ENDERECO_VAZIO: PosEndereco = { rua: "", numero: "", bairro: "", cidade: "", cep: "", complemento: "" };
@@ -59,7 +60,15 @@ function montarEnderecoTexto(e: PosEndereco): string {
   return partes.join(" | ");
 }
 
-export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; adminPerfil: string }) {
+export function PosOverlay({
+  onFechar,
+  adminPerfil,
+  phpAdminUrl,
+}: {
+  onFechar: () => void;
+  adminPerfil: string;
+  phpAdminUrl: string;
+}) {
   const cart = usePosCart();
 
   const [carregandoInicial, setCarregandoInicial] = useState(true);
@@ -95,6 +104,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
   const [agendamentoModalAberto, setAgendamentoModalAberto] = useState(false);
 
   const [lojaLink, setLojaLink] = useState<string | null>(null);
+  const [lojaNome, setLojaNome] = useState("");
 
   const [agora, setAgora] = useState<Date | null>(null);
   useEffect(() => {
@@ -124,6 +134,7 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
           if (cfg.loja?.link_slug) {
             setLojaLink(`${cfg.loja_link_base}${encodeURIComponent(cfg.loja.link_slug)}`);
           }
+          if (cfg.loja?.nome) setLojaNome(cfg.loja.nome);
         }
         if (cup.ok) {
           // Mesma regra do legado: cupom so aparece se houver pelo menos um
@@ -286,6 +297,16 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
         return;
       }
       toast.success(`Pedido #${data.pedido_id} criado com sucesso!`);
+      if (window.impressaoQZ) {
+        try {
+          await Promise.race([
+            window.impressaoQZ.imprimirAutomaticoPedido("pdv", data.pedido_id, lojaNome),
+            new Promise((resolve) => setTimeout(resolve, 6000)),
+          ]);
+        } catch (e) {
+          console.warn("Falha na impressão automática:", e);
+        }
+      }
       cart.limpar();
       setCliente(null);
       setClienteStats(null);
@@ -375,7 +396,11 @@ export function PosOverlay({ onFechar, adminPerfil }: { onFechar: () => void; ad
 
             <div className="flex min-h-0 min-w-0 flex-col">
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-                <PosTipoPedido tipo={tipoPedido} onTipoChange={onTipoPedidoChange} />
+                <PosTipoPedido
+                  tipo={tipoPedido}
+                  onTipoChange={onTipoPedidoChange}
+                  rightSlot={<PosImpressaoToggle phpAdminUrl={phpAdminUrl} />}
+                />
                 {agendamentoCfgAtual?.ativo ? (
                   <PosAgendamentoCard
                     valor={agendamento}

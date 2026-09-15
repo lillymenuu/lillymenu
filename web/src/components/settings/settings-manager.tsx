@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   Store,
@@ -90,6 +91,13 @@ export function SettingsManager({
 }) {
   const [dados, setDados] = useState(dadosIniciais);
   const [aberto, setAberto] = useState<CardId | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const abrirParam = searchParams.get("abrir");
+    if (abrirParam) setAberto(abrirParam as CardId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [versiculoAtivo, setVersiculoAtivo] = useState(dados.versiculo_dashboard_ativo);
   const [salvandoVersiculo, setSalvandoVersiculo] = useState(false);
 
