@@ -115,7 +115,7 @@ export function QuotesManager({ dadosIniciais }: { dadosIniciais: OrcamentosList
     <div className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Quotes</h1>
+          <h1 className="text-xl font-semibold">Gerar orçamentos</h1>
           <p className="text-sm text-muted-foreground">Monte, salve e acompanhe orçamentos e recibos para seus clientes.</p>
         </div>
         <Button className="gap-1.5" onClick={abrirNovo}>

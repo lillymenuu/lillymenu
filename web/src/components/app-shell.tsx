@@ -128,12 +128,7 @@ function AppShellInner({
         />
 
         <div className="scrollbar-thin relative z-10 flex h-full flex-col overflow-y-auto overflow-x-hidden">
-          <div
-            className={cn(
-              "flex items-center justify-between gap-2 border-b p-4",
-              collapsed ? "border-white/15" : "border-border"
-            )}
-          >
+          <div className="flex items-center justify-between gap-2 p-4">
             {!collapsed && (
               <div className="flex min-w-0 items-center gap-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -192,7 +187,7 @@ function AppShellInner({
                     "flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold",
                     collapsed
                       ? "size-10 bg-white/15 text-sm text-white"
-                      : "size-14 border border-border bg-muted text-base text-foreground"
+                      : "size-16 border border-border bg-muted text-base text-foreground"
                   )}
                 >
                   {sidebarData.loja.logo ? (
@@ -267,7 +262,7 @@ function AppShellInner({
               return (
                 <div key={section.title} className="mb-4">
                   {!collapsed && (
-                    <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-foreground">
                       {section.title}
                     </div>
                   )}
