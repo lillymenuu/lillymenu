@@ -35,6 +35,7 @@ export function PosPagamentoPanel({
   cupom,
   podeAplicarDesconto,
   clienteStats,
+  valoresIniciais,
   onDadosChange,
   onVoltar,
   onFinalizar,
@@ -46,6 +47,7 @@ export function PosPagamentoPanel({
   cupom: { codigo: string; valor: number } | null;
   podeAplicarDesconto: boolean;
   clienteStats: PosClienteStats | null;
+  valoresIniciais?: { descontoTipo?: "valor" | "percent"; descontoValor?: number; cashbackUsado?: number };
   onDadosChange: (dados: PosPagamentoDados, total: number) => void;
   onVoltar: () => void;
   onFinalizar: () => void;
@@ -58,12 +60,21 @@ export function PosPagamentoPanel({
   const [valorSecundario, setValorSecundario] = useState("");
   const [valorRecebido, setValorRecebido] = useState("");
 
-  const [descontoAberto, setDescontoAberto] = useState(false);
-  const [descontoTipo, setDescontoTipo] = useState<"valor" | "percent">("valor");
-  const [descontoValor, setDescontoValor] = useState("");
+  // Usados quando reabrindo o painel pra editar um pedido existente — sem
+  // isso, um desconto manual (sem cupom) ou cashback usado no pedido
+  // original ficam de fora do total recalculado aqui, e o total do
+  // cliente diverge do que o servidor recalcula ao salvar (erro "soma dos
+  // pagamentos precisa ser igual ao total").
+  const [descontoAberto, setDescontoAberto] = useState(() => (valoresIniciais?.descontoValor ?? 0) > 0);
+  const [descontoTipo, setDescontoTipo] = useState<"valor" | "percent">(valoresIniciais?.descontoTipo ?? "valor");
+  const [descontoValor, setDescontoValor] = useState(() =>
+    (valoresIniciais?.descontoValor ?? 0) > 0 ? String(valoresIniciais!.descontoValor) : ""
+  );
 
-  const [usarCashback, setUsarCashback] = useState(false);
-  const [cashbackValor, setCashbackValor] = useState("");
+  const [usarCashback, setUsarCashback] = useState(() => (valoresIniciais?.cashbackUsado ?? 0) > 0);
+  const [cashbackValor, setCashbackValor] = useState(() =>
+    (valoresIniciais?.cashbackUsado ?? 0) > 0 ? String(valoresIniciais!.cashbackUsado) : ""
+  );
 
   const descontoCalculado = useMemo(() => {
     const v = Number(descontoValor || 0);

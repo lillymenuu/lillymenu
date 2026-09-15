@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X, ShoppingBag, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -110,6 +110,9 @@ export function PosOverlay({
 
   const [pedidoEditandoCodigo, setPedidoEditandoCodigo] = useState<number | null>(null);
   const [temItemComboNaEdicao, setTemItemComboNaEdicao] = useState(false);
+  const [pagamentoValoresIniciais, setPagamentoValoresIniciais] = useState<
+    { descontoTipo?: "valor" | "percent"; descontoValor?: number; cashbackUsado?: number } | undefined
+  >(undefined);
 
   const [agora, setAgora] = useState<Date | null>(null);
   useEffect(() => {
@@ -161,8 +164,15 @@ export function PosOverlay({
   // legado nunca persistiu essa composicao pra leitura posterior — so texto
   // solto em observacoes) — cada item volta "achatado" (produtoId/nome/qtd/
   // preco/observacoes), igual ao que o PDV antigo tambem faz hoje.
+  //
+  // So roda depois do catalogo carregar (precisa dele pra achar o estoque
+  // de cada produto restaurado — sem isso o campo de quantidade do carrinho
+  // nao respeita o estoque em tempo real) e so uma vez (ref, nao dep no
+  // array de deps) pra nao duplicar itens se o efeito rodar de novo.
+  const itensEdicaoAplicadosRef = useRef(false);
   useEffect(() => {
-    if (!pedidoEditandoId) return;
+    if (!pedidoEditandoId || !catalogo || itensEdicaoAplicadosRef.current) return;
+    itensEdicaoAplicadosRef.current = true;
     fetch(`/api/ordermanager/pedido-detalhe?id=${pedidoEditandoId}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
@@ -176,20 +186,47 @@ export function PosOverlay({
 
         setPedidoEditandoCodigo(pedido.codigo ?? pedido.id);
         setCliente({ id: pedido.cliente_id, nome: pedido.nome, telefone: pedido.telefone });
+        setCashbackAtivo(!!pedido.cashback_aplicado);
         if (pedido.tipo === "entrega" || pedido.tipo === "retirada" || pedido.tipo === "mesa") {
           setTipoPedido(pedido.tipo);
         }
         if (pedido.endereco_entrega) {
           setEndereco({ ...ENDERECO_VAZIO, rua: pedido.endereco_entrega });
         }
+
+        // Taxa de entrega e desconto/cupom do pedido original precisam ser
+        // restaurados pro total calculado aqui bater com o que o servidor
+        // recalcula ao salvar — senao a soma dos pagamentos (montada em cima
+        // desse total) diverge do total real e o servidor rejeita o salvamento
+        // ("a soma dos pagamentos precisa ser igual ao total").
+        const taxaEntregaOriginal = Number(pedido.taxa_entrega) || 0;
+        if (taxaEntregaOriginal > 0) {
+          setTaxaEntregaCalculada(taxaEntregaOriginal);
+          // Sem isso o servidor ignora o valor restaurado e recalcula a taxa
+          // de entrega do zero a partir da config da loja (que pode nao bater
+          // com a taxa original do pedido, ex.: modo dinamica sem regras
+          // configuradas) — mesma causa raiz da divergencia de total.
+          setTaxaEditadaManual(true);
+        }
+        const descontoOriginal = Number(pedido.desconto) || 0;
         if (pedido.cupom) {
-          setCupom({ codigo: pedido.cupom, valor: 0 });
+          // Cupom sobrescreve qualquer desconto manual no servidor (mutuamente
+          // exclusivos) — o valor aqui e so uma estimativa pra fechar o total
+          // client-side; ao salvar, o codigo e revalidado de verdade.
+          setCupom({ codigo: pedido.cupom, valor: descontoOriginal });
+        } else if (descontoOriginal > 0) {
+          setPagamentoValoresIniciais({ descontoTipo: "valor", descontoValor: descontoOriginal });
+        }
+        const cashbackUsadoOriginal = Number(pedido.cashback_usado) || 0;
+        if (cashbackUsadoOriginal > 0) {
+          setPagamentoValoresIniciais((prev) => ({ ...prev, cashbackUsado: cashbackUsadoOriginal }));
         }
 
         setTemItemComboNaEdicao(itens.some((i) => (i.observacoes ?? "").startsWith("[combo]")));
 
         itens.forEach((i, idx) => {
           if (!i.produto_nome || i.quantidade <= 0) return;
+          const produtoCatalogo = i.produto_id ? catalogo.produtos.find((p) => p.id === i.produto_id) : undefined;
           cart.adicionar({
             rowKey: `edicao-${pedidoEditandoId}-${idx}`,
             produtoId: i.produto_id,
@@ -198,12 +235,14 @@ export function PosOverlay({
             preco: Number(i.preco) || 0,
             observacoes: i.observacoes ?? "",
             usarPontos: false,
+            imagem: produtoCatalogo?.imagem,
+            estoque: produtoCatalogo?.estoque,
           });
         });
       })
       .catch(() => toast.error("Não foi possível carregar o pedido para edição."));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pedidoEditandoId]);
+  }, [pedidoEditandoId, catalogo]);
 
   function abrirVariacaoOuAdicionar(produto: PosProduto) {
     setItemVariacaoEditando(null);
@@ -547,6 +586,7 @@ export function PosOverlay({
             cupom={cupom}
             podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
             clienteStats={clienteStats}
+            valoresIniciais={pagamentoValoresIniciais}
             onDadosChange={(dados) => setPagamentoDados(dados)}
             onVoltar={() => setEtapa("resumo")}
             onFinalizar={finalizarPedido}
