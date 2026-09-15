@@ -30,6 +30,7 @@ const ORIGEM_LABELS: Record<string, string> = {
 import { ClientePerfilDialog } from "@/components/cliente/cliente-perfil-dialog";
 import type { Motoboy } from "@/lib/pedidos";
 import { cn } from "cn";
+import { usePosOverlay } from "@/components/pos/pos-overlay-provider";
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-md bg-muted", className)} />;
@@ -70,7 +71,7 @@ function DetalheSkeleton() {
   );
 }
 
-type ItemPedido = { produto_nome: string; quantidade: number; preco: number; observacoes: string | null };
+type ItemPedido = { produto_id: number | null; produto_nome: string; quantidade: number; preco: number; observacoes: string | null };
 type Pagamento = { forma: string; valor: number; taxa_maquininha?: number };
 type ClienteStats = {
   pedidos_feitos: number;
@@ -105,6 +106,11 @@ type PedidoDetalhe = {
   motoboy_nome: string | null;
   motoboy_whatsapp: string | null;
   editado_por: string | null;
+  caixa_id: number | null;
+  forma_pagamento: string | null;
+  valor_pago: number | null;
+  cupom: string | null;
+  cashback_aplicado: number | boolean | null;
 };
 
 export function OrderDetailDialog({
@@ -122,6 +128,7 @@ export function OrderDetailDialog({
   phpAdminUrl: string;
   onAtualizado: () => void;
 }) {
+  const { abrir: abrirPos } = usePosOverlay();
   const [carregando, setCarregando] = useState(false);
   const [pedido, setPedido] = useState<PedidoDetalhe | null>(null);
   const [stats, setStats] = useState<ClienteStats | null>(null);
@@ -230,14 +237,16 @@ export function OrderDetailDialog({
                 <DialogTitle>Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>
                 {pedido && (
                   <div className="flex items-center gap-1.5">
-                    <a
-                      href={`${phpAdminUrl}/pdv?pedido_id=${pedido.id}`}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        abrirPos(pedido.id);
+                        onOpenChange(false);
+                      }}
                       className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
                     >
                       Editar pedido
-                    </a>
+                    </button>
                     <button
                       type="button"
                       onClick={() => window.print()}

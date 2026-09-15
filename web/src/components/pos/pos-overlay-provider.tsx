@@ -5,7 +5,7 @@ import { PosOverlay } from "@/components/pos/pos-overlay";
 
 type PosOverlayContextValue = {
   aberto: boolean;
-  abrir: () => void;
+  abrir: (pedidoIdParaEditar?: number) => void;
   fechar: () => void;
 };
 
@@ -27,14 +27,23 @@ export function PosOverlayProvider({
   phpAdminUrl: string;
 }) {
   const [aberto, setAberto] = useState(false);
+  const [pedidoEditandoId, setPedidoEditandoId] = useState<number | null>(null);
 
-  const abrir = useCallback(() => setAberto(true), []);
-  const fechar = useCallback(() => setAberto(false), []);
+  const abrir = useCallback((pedidoIdParaEditar?: number) => {
+    setPedidoEditandoId(pedidoIdParaEditar ?? null);
+    setAberto(true);
+  }, []);
+  const fechar = useCallback(() => {
+    setAberto(false);
+    setPedidoEditandoId(null);
+  }, []);
 
   return (
     <PosOverlayContext.Provider value={{ aberto, abrir, fechar }}>
       {children}
-      {aberto ? <PosOverlay onFechar={fechar} adminPerfil={adminPerfil} phpAdminUrl={phpAdminUrl} /> : null}
+      {aberto ? (
+        <PosOverlay onFechar={fechar} adminPerfil={adminPerfil} phpAdminUrl={phpAdminUrl} pedidoEditandoId={pedidoEditandoId} />
+      ) : null}
     </PosOverlayContext.Provider>
   );
 }

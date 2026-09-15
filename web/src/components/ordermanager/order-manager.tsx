@@ -195,7 +195,7 @@ export function OrderManager({
           </Button>
           <button
             type="button"
-            onClick={abrirPos}
+            onClick={() => abrirPos()}
             className="inline-flex h-7 items-center gap-1 rounded-lg bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
           >
             <Plus size={14} /> Novo pedido

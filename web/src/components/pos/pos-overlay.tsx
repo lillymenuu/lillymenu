@@ -64,10 +64,12 @@ export function PosOverlay({
   onFechar,
   adminPerfil,
   phpAdminUrl,
+  pedidoEditandoId,
 }: {
   onFechar: () => void;
   adminPerfil: string;
   phpAdminUrl: string;
+  pedidoEditandoId?: number | null;
 }) {
   const cart = usePosCart();
 
@@ -105,6 +107,9 @@ export function PosOverlay({
 
   const [lojaLink, setLojaLink] = useState<string | null>(null);
   const [lojaNome, setLojaNome] = useState("");
+
+  const [pedidoEditandoCodigo, setPedidoEditandoCodigo] = useState<number | null>(null);
+  const [temItemComboNaEdicao, setTemItemComboNaEdicao] = useState(false);
 
   const [agora, setAgora] = useState<Date | null>(null);
   useEffect(() => {
@@ -150,6 +155,55 @@ export function PosOverlay({
       document.body.style.overflow = "";
     };
   }, []);
+
+  // Modo edicao: carrega os dados do pedido existente e povoa o carrinho/
+  // cliente/tipo. Combos/variacoes/extras nao sao reconstituiveis (o schema
+  // legado nunca persistiu essa composicao pra leitura posterior — so texto
+  // solto em observacoes) — cada item volta "achatado" (produtoId/nome/qtd/
+  // preco/observacoes), igual ao que o PDV antigo tambem faz hoje.
+  useEffect(() => {
+    if (!pedidoEditandoId) return;
+    fetch(`/api/ordermanager/pedido-detalhe?id=${pedidoEditandoId}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.ok) {
+          toast.error(data.msg ?? "Não foi possível carregar o pedido para edição.");
+          return;
+        }
+        const pedido = data.pedido;
+        const itens: { produto_id: number | null; produto_nome: string; quantidade: number; preco: number; observacoes: string | null }[] =
+          data.itens ?? [];
+
+        setPedidoEditandoCodigo(pedido.codigo ?? pedido.id);
+        setCliente({ id: pedido.cliente_id, nome: pedido.nome, telefone: pedido.telefone });
+        if (pedido.tipo === "entrega" || pedido.tipo === "retirada" || pedido.tipo === "mesa") {
+          setTipoPedido(pedido.tipo);
+        }
+        if (pedido.endereco_entrega) {
+          setEndereco({ ...ENDERECO_VAZIO, rua: pedido.endereco_entrega });
+        }
+        if (pedido.cupom) {
+          setCupom({ codigo: pedido.cupom, valor: 0 });
+        }
+
+        setTemItemComboNaEdicao(itens.some((i) => (i.observacoes ?? "").startsWith("[combo]")));
+
+        itens.forEach((i, idx) => {
+          if (!i.produto_nome || i.quantidade <= 0) return;
+          cart.adicionar({
+            rowKey: `edicao-${pedidoEditandoId}-${idx}`,
+            produtoId: i.produto_id,
+            nome: i.produto_nome,
+            qtd: i.quantidade,
+            preco: Number(i.preco) || 0,
+            observacoes: i.observacoes ?? "",
+            usarPontos: false,
+          });
+        });
+      })
+      .catch(() => toast.error("Não foi possível carregar o pedido para edição."));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedidoEditandoId]);
 
   function abrirVariacaoOuAdicionar(produto: PosProduto) {
     setItemVariacaoEditando(null);
@@ -289,6 +343,7 @@ export function PosOverlay({
           observacoes_cliente: "",
           caixa_id: caixa?.caixa?.id ?? null,
           offline_uuid: crypto.randomUUID(),
+          pedido_edicao_id: pedidoEditandoId ?? null,
         }),
       });
       const data = await res.json();
@@ -296,7 +351,7 @@ export function PosOverlay({
         toast.error(data.msg ?? "Erro ao finalizar pedido.");
         return;
       }
-      toast.success(`Pedido #${data.pedido_id} criado com sucesso!`);
+      toast.success(pedidoEditandoId ? "Pedido atualizado com sucesso!" : `Pedido #${data.pedido_id} criado com sucesso!`);
       if (window.impressaoQZ) {
         try {
           await Promise.race([
@@ -343,7 +398,9 @@ export function PosOverlay({
               <ShoppingBag className="size-4" />
             </div>
             <div>
-              <div className="text-sm font-semibold leading-tight">Lançar pedido no balcão</div>
+              <div className="text-sm font-semibold leading-tight">
+                {pedidoEditandoCodigo ? `Editar pedido #${pedidoEditandoCodigo}` : "Lançar pedido no balcão"}
+              </div>
               {caixaAberto ? (
                 <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <span className="size-1.5 rounded-full bg-emerald-500" /> Caixa aberto
@@ -396,6 +453,12 @@ export function PosOverlay({
 
             <div className="flex min-h-0 min-w-0 flex-col">
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+                {temItemComboNaEdicao ? (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">
+                    Este pedido tem um item de combo — a composição original (quais componentes) não pôde ser
+                    restaurada no carrinho. Revise os itens antes de salvar.
+                  </div>
+                ) : null}
                 <PosTipoPedido
                   tipo={tipoPedido}
                   onTipoChange={onTipoPedidoChange}

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../helpers/offline_module.php';
 require_once __DIR__ . '/../helpers/cashback_module.php';
 require_once __DIR__ . '/../helpers/combo_estoque_module.php';
 require_once __DIR__ . '/../helpers/estoque_vinculo_module.php';
+require_once __DIR__ . '/../helpers/pedido_estoque_module.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../helpers/operacao.php';
 require_once __DIR__ . '/../../services/SaleFinancialIntegrationService.php';
@@ -1354,39 +1355,13 @@ try {
   }
 
   if ($pedidoEdicaoId) {
-    if ($temProdutoId) {
-      $stmtItensAntigos = $conn->prepare("
-        SELECT produto_id, quantidade
-        FROM pedido_itens
-        WHERE pedido_id = ? AND loja_id = ?
-          AND produto_id IS NOT NULL
-      ");
-      $stmtItensAntigos->execute([$pedidoEdicaoId, $lojaId]);
-      $itensAntigos = $stmtItensAntigos->fetchAll(PDO::FETCH_ASSOC);
-
-      $stmtEstoqueRepor = $conn->prepare("
-        UPDATE estoque
-        SET quantidade = quantidade + ?
-        WHERE produto_id = ? AND loja_id = ?
-      ");
-      $stmtMovRepor = $conn->prepare("
-        INSERT INTO estoque_movimentacoes
-          (produto_id, tipo, quantidade, origem, referencia_id, loja_id)
-        VALUES (?, 'entrada', ?, 'pedido_editado', ?, ?)
-      ");
-
-      foreach ($itensAntigos as $old) {
-        $produtoIdOld = (int) ($old['produto_id'] ?? 0);
-        $qtdOld = (int) ($old['quantidade'] ?? 0);
-        if ($produtoIdOld <= 0 || $qtdOld <= 0) {
-          continue;
-        }
-        $stmtEstoqueInsert->execute([$produtoIdOld, $lojaId]);
-        $stmtEstoqueRepor->execute([$qtdOld, $produtoIdOld, $lojaId]);
-        $stmtMovRepor->execute([$produtoIdOld, $qtdOld, $pedidoEdicaoId, $lojaId]);
-        estoqueVinculoSincronizar($conn, $produtoIdOld, $lojaId, ['tipo' => 'entrada', 'quantidade' => $qtdOld, 'origem' => 'pedido_editado', 'referencia_id' => $pedidoEdicaoId]);
-      }
-    }
+    // Reposicao do pedido antigo — reaproveita o mesmo helper usado por
+    // pedidos_cancelar.php/pedidos_status.php, que exclui itens de combo da
+    // reposicao normal (o produto_id de um item de combo e o id da tabela
+    // "combos", nao de um produto real) e repoe os componentes reais deles.
+    // Um loop manual aqui antes fazia UPDATE estoque direto no produto_id
+    // bruto do item, corrompendo o estoque quando o pedido tinha combo.
+    pedidoRestaurarEstoqueCancelado($conn, $pedidoEdicaoId, $lojaId);
 
     $conn->prepare("UPDATE pedidos SET status = ? WHERE id = ? AND loja_id = ?")
       ->execute([$statusCanceladoPedidos, $pedidoEdicaoId, $lojaId]);
