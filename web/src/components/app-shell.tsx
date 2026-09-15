@@ -40,9 +40,30 @@ function AppShellInner({
   const [lojaAberta, setLojaAberta] = useState(sidebarData.loja.aberta);
   const [alternandoLoja, setAlternandoLoja] = useState(false);
   const [lojaInfoOpen, setLojaInfoOpen] = useState(false);
+  const [wlNaoLidas, setWlNaoLidas] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
   const { abrir: abrirPos } = usePosOverlay();
+
+  useEffect(() => {
+    if (!sidebarData.menu.whatslilly) return;
+    let ativo = true;
+    async function carregar() {
+      try {
+        const res = await fetch("/api/whatslilly/nao-lidas");
+        const data = await res.json();
+        if (ativo && data.ok) setWlNaoLidas(data.total_nao_lidas);
+      } catch {
+        // silencioso — proximo poll tenta de novo
+      }
+    }
+    carregar();
+    const interval = setInterval(carregar, 15000);
+    return () => {
+      ativo = false;
+      clearInterval(interval);
+    };
+  }, [sidebarData.menu.whatslilly]);
 
   useEffect(() => {
     try {
@@ -281,6 +302,12 @@ function AppShellInner({
                             ? "bg-primary/10 font-medium text-primary"
                             : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       );
+                      const badge =
+                        item.menuKey === "whatslilly" && wlNaoLidas > 0 ? (
+                          <span className="ml-auto flex size-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">
+                            {wlNaoLidas > 99 ? "99+" : wlNaoLidas}
+                          </span>
+                        ) : null;
                       const link = item.opensPos ? (
                         <button
                           type="button"
@@ -292,16 +319,19 @@ function AppShellInner({
                         >
                           <Icon size={16} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
+                          {!collapsed && badge}
                         </button>
                       ) : item.migrated ? (
                         <Link href={item.href} className={className} onClick={() => setMobileOpen(false)}>
                           <Icon size={16} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
+                          {!collapsed && badge}
                         </Link>
                       ) : (
                         <a href={`${phpAdminUrl}${item.href}`} className={className}>
                           <Icon size={16} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
+                          {!collapsed && badge}
                         </a>
                       );
                       return (

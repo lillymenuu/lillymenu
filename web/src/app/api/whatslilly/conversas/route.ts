@@ -1,0 +1,16 @@
+import { NextResponse } from "next/server";
+import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
+import type { WlConversasResposta } from "@/lib/whatslilly";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const busca = searchParams.get("busca") ?? "";
+  try {
+    const data = await phpApiFetch<WlConversasResposta>(`/admin/api/v1/whatslilly_conversas.php?busca=${encodeURIComponent(busca)}`);
+    return NextResponse.json(data);
+  } catch (e) {
+    const status = e instanceof PhpApiError ? e.status : 500;
+    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
+    return NextResponse.json({ ok: false, msg: erro }, { status });
+  }
+}
