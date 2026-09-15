@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Script from "next/script";
 import Link from "next/link";
-import { Printer } from "lucide-react";
+import { Settings } from "lucide-react";
 import type { PerfilImpressao } from "@/lib/impressao";
 
 function perfisPdv(): PerfilImpressao[] {
@@ -49,7 +49,7 @@ export function PosImpressaoToggle({ phpAdminUrl }: { phpAdminUrl: string }) {
             ligada ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50"
           }`}
         >
-          <Printer className="size-5" />
+          <Settings className="size-5" />
         </button>
       ) : (
         <Link
@@ -57,7 +57,7 @@ export function PosImpressaoToggle({ phpAdminUrl }: { phpAdminUrl: string }) {
           title="Nenhuma impressora configurada para o PDV — configurar agora"
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border text-muted-foreground transition-colors hover:bg-muted/50"
         >
-          <Printer className="size-5" />
+          <Settings className="size-5" />
         </Link>
       )}
     </>
