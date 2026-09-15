@@ -82,14 +82,20 @@ export function PosCatalog({
   }, [itensCarrinho]);
 
   const secoes = useMemo(() => {
+    // Produtos sem estoque ficam fora da grade de compra (mesma regra de
+    // antes, so que aplicada aqui em vez de no servidor — o catalogo
+    // completo, incluindo zerados, precisa continuar disponivel pro resto
+    // do POS, ex.: restaurar foto/estoque de um item ao editar um pedido
+    // existente que inclua um produto atualmente sem estoque).
+    const produtosDisponiveis = catalogo.produtos.filter((p) => p.estoque > 0);
     const grupos = catalogo.categorias.map((cat) => ({
       categoria: cat,
-      produtos: catalogo.produtos.filter((p) => p.categoria_id === cat.id),
+      produtos: produtosDisponiveis.filter((p) => p.categoria_id === cat.id),
       combos: catalogo.combos.filter((c) => c.categoria_id === cat.id),
     }));
     const semCategoria = {
       categoria: { id: SEM_CATEGORIA, nome: "Sem categoria" },
-      produtos: catalogo.produtos.filter((p) => p.categoria_id === null),
+      produtos: produtosDisponiveis.filter((p) => p.categoria_id === null),
       combos: catalogo.combos.filter((c) => c.categoria_id === null),
     };
     const todas = semCategoria.produtos.length + semCategoria.combos.length > 0 ? [...grupos, semCategoria] : grupos;
