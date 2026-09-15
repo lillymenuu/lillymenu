@@ -99,7 +99,6 @@ export function PosOverlay({
 
   const [entregaModalAberto, setEntregaModalAberto] = useState(false);
   const [taxaEntregaCalculada, setTaxaEntregaCalculada] = useState<number | null>(null);
-  const [taxaEditadaManual, setTaxaEditadaManual] = useState(false);
 
   const [agendamentoConfig, setAgendamentoConfig] = useState<{ delivery: AgendamentoConfig; retirada: AgendamentoConfig } | null>(null);
   const [agendamento, setAgendamento] = useState<{ data: string; hora: string } | null>(null);
@@ -202,11 +201,6 @@ export function PosOverlay({
         const taxaEntregaOriginal = Number(pedido.taxa_entrega) || 0;
         if (taxaEntregaOriginal > 0) {
           setTaxaEntregaCalculada(taxaEntregaOriginal);
-          // Sem isso o servidor ignora o valor restaurado e recalcula a taxa
-          // de entrega do zero a partir da config da loja (que pode nao bater
-          // com a taxa original do pedido, ex.: modo dinamica sem regras
-          // configuradas) — mesma causa raiz da divergencia de total.
-          setTaxaEditadaManual(true);
         }
         const descontoOriginal = Number(pedido.desconto) || 0;
         if (pedido.cupom) {
@@ -367,7 +361,16 @@ export function PosOverlay({
           distancia_km: 0,
           itens: JSON.stringify(itensPayload),
           taxa_entrega: taxaEntrega,
-          taxa_editada: taxaEditadaManual ? "1" : "0",
+          // Sempre manda "1" (nao so quando o operador mexeu manualmente na
+          // taxa): o POS nunca envia a distancia_km real calculada no lookup
+          // de CEP (so o valor final da taxa), entao se o servidor tentasse
+          // recalcular do zero pro modo dinamica/area ele usaria distancia 0
+          // — divergindo do valor que o operador viu na tela e usou pra
+          // montar os pagamentos ("soma dos pagamentos precisa ser igual ao
+          // total"). O valor mostrado na tela (calculado via /api/pos/cep-
+          // lookup, que ja roda a mesma logica do servidor com a distancia
+          // real) e sempre a fonte da verdade.
+          taxa_editada: tipoPedido === "entrega" ? "1" : "0",
           agendamento: agendamentoCfgAtual?.ativo && agendamento ? `${agendamento.data}T${agendamento.hora}` : "",
           pagamento: pagamentoDados.pagamentos[0]?.forma ?? "dinheiro",
           pagamentos: JSON.stringify(pagamentoDados.pagamentos),
@@ -407,7 +410,6 @@ export function PosOverlay({
       setCupom(null);
       setEndereco(ENDERECO_VAZIO);
       setTaxaEntregaCalculada(null);
-      setTaxaEditadaManual(false);
       setAgendamento(null);
       setEtapa("resumo");
       onFechar();
@@ -523,7 +525,6 @@ export function PosOverlay({
                     onLimpar={() => {
                       setEndereco(ENDERECO_VAZIO);
                       setTaxaEntregaCalculada(null);
-                      setTaxaEditadaManual(false);
                     }}
                     onAbrir={() => setEntregaModalAberto(true)}
                     taxaEntrega={taxaEntrega}
@@ -606,7 +607,6 @@ export function PosOverlay({
           setCliente(dados.cliente);
           setEndereco(dados.endereco);
           setTaxaEntregaCalculada(dados.taxaEntrega);
-          setTaxaEditadaManual(dados.taxaEditada);
         }}
       />
 
