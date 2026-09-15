@@ -187,7 +187,7 @@ function AppShellInner({
                     "flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold",
                     collapsed
                       ? "size-10 bg-white/15 text-sm text-white"
-                      : "size-16 border border-border bg-muted text-base text-foreground"
+                      : "size-20 border border-border bg-muted text-base text-foreground"
                   )}
                 >
                   {sidebarData.loja.logo ? (
@@ -262,7 +262,7 @@ function AppShellInner({
               return (
                 <div key={section.title} className="mb-4">
                   {!collapsed && (
-                    <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-foreground">
+                    <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
                       {section.title}
                     </div>
                   )}
