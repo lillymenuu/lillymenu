@@ -1,9 +1,11 @@
 <?php
 /*
- * Item picker da tela Quotes (orcamentos) — mesma query de
- * admin/orcamentos.php (produtos de categorias com nome contendo
- * "encomenda"), Bearer-scoped. Endpoint novo, sem equivalente legado
- * dedicado (o legado inlina isso no HTML da pagina).
+ * Item picker da tela Quotes (orcamentos) — catalogo completo de produtos
+ * ativos da loja, Bearer-scoped. O legado (admin/orcamentos.php) restringia
+ * a produtos de categorias com nome contendo "encomenda", mas isso deixa o
+ * picker vazio pra qualquer loja que nao tenha uma categoria com esse nome
+ * ativa (o caso comum) — Quotes e uma reconstrucao de verdade, nao um port
+ * fiel, entao aqui mostramos o catalogo inteiro, igual ao POS.
  */
 
 require_once __DIR__ . '/../../../config/database.php';
@@ -35,8 +37,6 @@ $stmt = $conn->prepare("
   LEFT JOIN estoque e ON e.produto_id = p.id AND e.loja_id = p.loja_id
   WHERE p.ativo = 1
     AND p.loja_id = ?
-    AND c.ativo = 1
-    AND LOWER(c.nome) LIKE '%encomenda%'
   $ordenacaoProdutos
 ");
 $stmt->execute([$lojaId]);
