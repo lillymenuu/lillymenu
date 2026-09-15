@@ -71,6 +71,7 @@ function orcamentoPdfImagemParaDataUri(string $path): string {
  */
 function orcamentoPdfRenderHtml(
   PDO $conn,
+  int $lojaId,
   string $outputType,
   string $clienteNome,
   string $clienteWhatsapp,
@@ -81,16 +82,20 @@ function orcamentoPdfRenderHtml(
   float $descontoValor,
   array $itens
 ): string {
-  $lojaNome = config($conn, 'nome_loja', 'T&W Confeitaria');
-  $lojaContato = config($conn, 'loja_contato', '');
-  $lojaLogo = config($conn, 'loja_perfil', '');
-  $lojaCapa = config($conn, 'loja_capa', '');
-  $lojaRua = config($conn, 'loja_rua', '');
-  $lojaNumero = config($conn, 'loja_numero', '');
-  $lojaBairro = config($conn, 'loja_bairro', '');
-  $lojaCidade = config($conn, 'loja_cidade', '');
-  $lojaEstado = config($conn, 'loja_estado', '');
-  $lojaCep = config($conn, 'loja_cep', '');
+  // $lojaId sempre explicito (nunca deixar o config() cair no fallback
+  // $_SESSION['loja_id']) — o endpoint novo (admin/api/v1/orcamentos_pdf.php)
+  // autentica por Bearer token, sem sessao PHP, entao o fallback sempre
+  // resolvia pra loja_id=1 e mostrava os dados da loja errada no PDF.
+  $lojaNome = config($conn, 'nome_loja', 'T&W Confeitaria', $lojaId);
+  $lojaContato = config($conn, 'loja_contato', '', $lojaId);
+  $lojaLogo = config($conn, 'loja_perfil', '', $lojaId);
+  $lojaCapa = config($conn, 'loja_capa', '', $lojaId);
+  $lojaRua = config($conn, 'loja_rua', '', $lojaId);
+  $lojaNumero = config($conn, 'loja_numero', '', $lojaId);
+  $lojaBairro = config($conn, 'loja_bairro', '', $lojaId);
+  $lojaCidade = config($conn, 'loja_cidade', '', $lojaId);
+  $lojaEstado = config($conn, 'loja_estado', '', $lojaId);
+  $lojaCep = config($conn, 'loja_cep', '', $lojaId);
 
   $enderecoLoja = trim(sprintf(
     '%s, %s - %s, %s/%s - CEP: %s',

@@ -29,6 +29,7 @@ if (!is_array($itens)) {
 
 $html = orcamentoPdfRenderHtml(
   $conn,
+  (int) ($_SESSION['loja_id'] ?? 1),
   $outputType,
   $clienteNome,
   $clienteWhatsapp,

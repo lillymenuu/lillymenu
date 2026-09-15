@@ -52,6 +52,7 @@ $documentoLabel = $orcamento['cliente_tipo_documento'] === 'juridica' ? 'CNPJ' :
 
 $html = orcamentoPdfRenderHtml(
   $conn,
+  $lojaId,
   $outputType,
   (string) $orcamento['cliente_nome'],
   (string) ($orcamento['cliente_whatsapp'] ?? ''),
