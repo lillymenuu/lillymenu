@@ -90,8 +90,12 @@ export function OrderManager({
       setDetalheId(Number(pedidoParam));
       router.replace(pathname);
     }
+    // Deps so em searchParams (nao []): clicar numa notificacao enquanto ja
+    // se esta em /ordermanager navega pra mesma rota com query diferente,
+    // sem remontar o componente — com deps vazio esse efeito so rodava no
+    // mount inicial e o modal nunca abria nesse caso.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   async function moverStatus(id: number, status: string) {
     ultimoSnapshotRef.current = ""; // forca re-render mesmo se o poll ainda nao pegou a mudanca

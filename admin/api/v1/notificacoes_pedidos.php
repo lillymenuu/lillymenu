@@ -72,14 +72,14 @@ try {
       break;
     }
   }
-  $codigoCol = null;
-  foreach (['codigo', 'codigo_pedido', 'pedido_hash', 'hash', 'pedido_codigo', 'uuid'] as $col) {
-    if (in_array($col, $colunasPedido, true)) {
-      $codigoCol = $col;
-      break;
-    }
-  }
-  $selectCodigo = $codigoCol ? "p.{$codigoCol} AS codigo" : "NULL AS codigo";
+  // O numero exibido do pedido (afetado por "zerar sequencia") nunca foi
+  // uma coluna da tabela pedidos — e sempre calculado a partir do id via
+  // getPedidoCodigoBase()/calcCodigoDisplay() (mesma logica ja usada
+  // corretamente abaixo pras notificacoes de avaliacao, e em
+  // pedido_detalhe.php). Tentar selecionar uma coluna "codigo" direto daqui
+  // sempre caia no fallback NULL, e o frontend mostrava o id bruto (que
+  // nunca muda ao zerar a sequencia).
+  $codigoBase = getPedidoCodigoBase($conn, $lojaId);
   $selectData = $dataColPedido ? "p.{$dataColPedido} AS criado_em" : "NOW() AS criado_em";
   $colunasClientes = $conn->query("SHOW COLUMNS FROM clientes")->fetchAll(PDO::FETCH_COLUMN, 0);
   $temLojaCliente = in_array('loja_id', $colunasClientes, true);
@@ -99,7 +99,7 @@ try {
   $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
   $orderCol = $dataColPedido ? "p.{$dataColPedido}" : "p.id";
   $stmt = $conn->prepare("
-    SELECT p.id, {$selectCodigo}, {$selectData}, c.nome AS cliente, p.status, {$selectOrigem}
+    SELECT p.id, {$selectData}, c.nome AS cliente, p.status, {$selectOrigem}
     FROM pedidos p
     {$joinClientes}
     {$whereSql}
@@ -111,6 +111,7 @@ try {
   $filtrados = [];
   foreach ($pedidos as $pedido) {
     $pedidoId = (int) ($pedido['id'] ?? 0);
+    $pedido['codigo'] = calcCodigoDisplay($pedidoId, $codigoBase);
     $pedido['tipo'] = $pedidoId && isset($editados[$pedidoId]) ? 'editado' : 'novo';
     $pedido['chave'] = 'pedido-' . $pedidoId;
     if (empty($pedido['cliente'])) {
@@ -132,13 +133,12 @@ try {
       LIMIT 50
     ");
     $stmtAv->execute([$lojaId]);
-    $codigoBaseAv = getPedidoCodigoBase($conn, $lojaId);
     foreach ($stmtAv->fetchAll(PDO::FETCH_ASSOC) as $av) {
       $avId = (int) ($av['id'] ?? 0);
       $pedidoIdAv = (int) ($av['pedido_id'] ?? 0);
       $filtrados[] = [
         'id' => $avId,
-        'codigo' => calcCodigoDisplay($pedidoIdAv, $codigoBaseAv),
+        'codigo' => calcCodigoDisplay($pedidoIdAv, $codigoBase),
         'criado_em' => $av['criado_em'],
         'cliente' => $av['cliente'] ?: 'Cliente',
         'status' => null,
