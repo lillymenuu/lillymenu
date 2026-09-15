@@ -89,7 +89,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Monitorar",
     items: [
       { menuKey: "whatslilly", label: "WhatsLilly", icon: MessageCircle, href: "/whatslilly", migrated: true },
-      { menuKey: "listaTransmissao", label: "BroadcastList", icon: Radio, href: "/broadcastlist", migrated: true },
+      { menuKey: "listaTransmissao", label: "Lista de Transmissão", icon: Radio, href: "/broadcastlist", migrated: true },
     ],
   },
   {
