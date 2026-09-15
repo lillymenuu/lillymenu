@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { OrderDetailDialog } from "@/components/ordermanager/order-detail-dialog";
+import { usePosOverlay } from "@/components/pos/pos-overlay-provider";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 import { STATUS_CORES, formatBRL, formatDataHora } from "@/components/ordermanager/constants";
 import { DateRangePicker } from "./date-range-picker";
@@ -82,6 +83,7 @@ export function OrderListTable({
   motoboys: Motoboy[];
   phpAdminUrl: string;
 }) {
+  const { abrir: abrirPos } = usePosOverlay();
   const [status, setStatus] = useState("");
   const [dataIni, setDataIni] = useState(hojeISO());
   const [dataFim, setDataFim] = useState(hojeISO());
@@ -173,14 +175,13 @@ export function OrderListTable({
           <Button variant="outline" size="sm" onClick={() => setZerarOpen(true)}>
             <RotateCcw size={14} /> Zerar sequência de pedidos
           </Button>
-          <a
-            href={`${phpAdminUrl}/pdv`}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => abrirPos()}
             className="inline-flex h-7 items-center gap-1 rounded-lg bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
           >
             <Plus size={14} /> PDV - Lançar pedido
-          </a>
+          </button>
         </div>
       </div>
 
