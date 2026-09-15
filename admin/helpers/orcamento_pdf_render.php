@@ -248,7 +248,13 @@ function orcamentoPdfRenderHtml(
     </div>
   ";
 
-  $logoHeaderHtml = $isRecibo ? ($logoHtml !== '' ? "<div class='receipt-logo-wrap'>{$logoHtml}</div>" : '') : $logoHtml;
+  // No orcamento (nao-recibo), quando ha capa configurada ela ja mostra a
+  // logo sobreposta (capa-logo) — repetir no cabecalho duplicava a mesma
+  // logo duas vezes seguidas. So mostra a logo isolada no cabecalho quando
+  // nao ha capa pra sobrepor.
+  $logoHeaderHtml = $isRecibo
+    ? ($logoHtml !== '' ? "<div class='receipt-logo-wrap'>{$logoHtml}</div>" : '')
+    : ($capaHtml === '' ? $logoHtml : '');
   $capaTopoHtml = $isRecibo ? '' : $capaHtml;
   $classeBody = $isRecibo ? 'receipt-body' : 'budget-body';
   $headerTituloHtml = $isRecibo ? '' : "<div class='title'>{$tituloDocumento}</div>";
