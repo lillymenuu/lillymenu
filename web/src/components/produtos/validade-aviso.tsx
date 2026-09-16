@@ -49,6 +49,17 @@ export function ValidadeAviso({ lojaId }: { lojaId: number }) {
         toast.warning("Prazo de validade", {
           description: `${sub} — confira em Produtos › Prazo de validade`,
           duration: 8000,
+          style: {
+            background: "#dc2626",
+            borderColor: "#dc2626",
+            color: "#fff",
+          },
+          classNames: {
+            title: "!text-white",
+            description: "!text-white/90",
+            icon: "!text-white",
+            actionButton: "!bg-white !text-red-600 hover:!bg-white/90",
+          },
           action: {
             label: "Ver",
             onClick: () => router.push("/produtos"),
