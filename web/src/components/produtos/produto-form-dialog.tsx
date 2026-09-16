@@ -40,6 +40,7 @@ import { ImageCropDialog } from "./image-crop-dialog";
 import { ConfigurarDiasDialog } from "./configurar-dias-dialog";
 import { MoneyInput } from "./money-input";
 import { EstoqueDialog } from "./estoque-dialog";
+import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 import type { Categoria, Produto } from "@/lib/produtos";
 
 const DIAS_LABEL: Record<string, string> = {
@@ -113,6 +114,7 @@ export function ProdutoFormDialog({
   const [cropOpen, setCropOpen] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
+  const [confirmExcluirOpen, setConfirmExcluirOpen] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -269,7 +271,6 @@ export function ProdutoFormDialog({
 
   async function excluir() {
     if (!produto) return;
-    if (!confirm(`Excluir "${produto.nome}"? Essa ação não pode ser desfeita.`)) return;
     setExcluindo(true);
     try {
       await fetch("/api/produtos", {
@@ -278,6 +279,7 @@ export function ProdutoFormDialog({
         body: JSON.stringify({ id: produto.id }),
       });
       toast.success("Produto excluído com sucesso");
+      setConfirmExcluirOpen(false);
       onOpenChange(false);
       router.refresh();
     } finally {
@@ -328,19 +330,8 @@ export function ProdutoFormDialog({
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] max-w-4xl overflow-x-hidden sm:max-w-4xl">
-        <DialogHeader className="flex-row items-center justify-between pr-8">
+        <DialogHeader>
           <DialogTitle>{produto ? "Editar produto" : "Novo produto"} - detalhes</DialogTitle>
-          {produto && (
-            <button
-              onClick={excluir}
-              disabled={excluindo}
-              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
-              aria-label="Excluir produto"
-              title="Excluir produto"
-            >
-              <Trash2 size={15} />
-            </button>
-          )}
         </DialogHeader>
 
         <div className="flex max-h-[65vh] flex-col overflow-y-auto overflow-x-hidden">
@@ -740,7 +731,17 @@ export function ProdutoFormDialog({
         {erro && <p className="text-sm text-destructive">{erro}</p>}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className={produto ? "sm:justify-between" : undefined}>
+          {produto && (
+            <Button
+              variant="destructive"
+              onClick={() => setConfirmExcluirOpen(true)}
+              disabled={excluindo}
+              className="gap-1.5"
+            >
+              <Trash2 size={14} /> Deletar produto
+            </Button>
+          )}
           <Button onClick={handleSalvarClick} disabled={salvando} className="w-full sm:w-auto">
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
@@ -767,6 +768,15 @@ export function ProdutoFormDialog({
       phpAdminUrl={phpAdminUrl}
       onSaved={(novaQuantidade) => setEstoqueAtual(novaQuantidade)}
       onDeleted={() => setEstoqueAtual(0)}
+    />
+    <ConfirmDialog
+      open={confirmExcluirOpen}
+      onOpenChange={setConfirmExcluirOpen}
+      titulo="Deletar produto"
+      descricao={`Tem certeza que deseja excluir "${produto?.nome}"? Essa ação não pode ser desfeita.`}
+      confirmando={excluindo}
+      textoConfirmar="Deletar"
+      onConfirmar={excluir}
     />
     </>
   );
