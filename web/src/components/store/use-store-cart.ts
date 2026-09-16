@@ -1,0 +1,54 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { StoreCartItem } from "@/lib/store/types";
+
+function storageKey(lojaId: number): string {
+  return `lillymenu_store_cart_${lojaId}`;
+}
+
+export function useStoreCart(lojaId: number) {
+  const [itens, setItens] = useState<StoreCartItem[]>([]);
+  const [carregado, setCarregado] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey(lojaId));
+      if (raw) setItens(JSON.parse(raw));
+    } catch {
+      // localStorage indisponivel (janela privada etc.) — carrinho comeca vazio
+    }
+    setCarregado(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lojaId]);
+
+  useEffect(() => {
+    if (!carregado) return;
+    try {
+      localStorage.setItem(storageKey(lojaId), JSON.stringify(itens));
+    } catch {
+      // ignora — carrinho segue funcionando so na memoria da sessao
+    }
+  }, [itens, lojaId, carregado]);
+
+  const adicionar = useCallback((item: Omit<StoreCartItem, "key">) => {
+    setItens((atual) => [...atual, { ...item, key: `${Date.now()}_${Math.random().toString(36).slice(2)}` }]);
+  }, []);
+
+  const atualizarQtd = useCallback((key: string, qtd: number) => {
+    setItens((atual) =>
+      qtd <= 0 ? atual.filter((i) => i.key !== key) : atual.map((i) => (i.key === key ? { ...i, qtd } : i))
+    );
+  }, []);
+
+  const remover = useCallback((key: string) => {
+    setItens((atual) => atual.filter((i) => i.key !== key));
+  }, []);
+
+  const limpar = useCallback(() => setItens([]), []);
+
+  const subtotal = itens.reduce((acc, i) => acc + i.precoUnit * i.qtd, 0);
+  const totalItens = itens.reduce((acc, i) => acc + i.qtd, 0);
+
+  return { itens, carregado, adicionar, atualizarQtd, remover, limpar, subtotal, totalItens };
+}
