@@ -105,7 +105,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
   return (
     <div className="min-h-screen bg-white pb-[86px]" style={{ ["--store-pink" as string]: "#e63770" }}>
       {/* Banner */}
-      <div className="relative mx-auto max-w-[680px]">
+      <div className="relative mx-auto max-w-[901px]">
         <div className="h-[210px] w-full bg-neutral-100">
           {perfil.capaLoja ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -130,7 +130,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
       </div>
 
       {/* Header row */}
-      <div className="relative mx-auto flex max-w-[680px] items-start justify-between px-4" style={{ marginTop: -34 }}>
+      <div className="relative mx-auto flex max-w-[901px] items-start justify-between px-4" style={{ marginTop: -34 }}>
         <div
           className="inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
           style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
@@ -166,7 +166,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
       </div>
 
       {/* Meta */}
-      <div className="mx-auto max-w-[680px] px-4 pt-2.5">
+      <div className="mx-auto max-w-[901px] px-4 pt-2.5">
         <div className="mb-0.5 flex items-center gap-1.5 text-[1.15rem] font-extrabold text-neutral-900">
           {perfil.nomeLoja}
           {perfil.lojaVerificada && (
@@ -186,7 +186,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
 
       {/* Chips */}
       {(perfil.entAtiva || (perfil.cashbackAtivo && perfil.cashbackPct > 0) || perfil.pedidoMinExibir > 0) && (
-        <div className="mx-auto mt-3.5 flex max-w-[680px] gap-2 px-4">
+        <div className="mx-auto mt-3.5 flex max-w-[901px] gap-2 px-4">
           {perfil.entAtiva && (
             <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-50 px-2 py-2.5">
               <Clock3 size={16} style={{ color: brown }} className="shrink-0" />
@@ -222,7 +222,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
       )}
 
       {!perfil.lojaAberta && (
-        <div className="mx-auto mt-3.5 max-w-[680px] px-4">
+        <div className="mx-auto mt-3.5 max-w-[901px] px-4">
           <div className="flex items-start gap-2.5 border-l-[3px] border-amber-300 bg-amber-50 px-4 py-3 text-[.8rem] text-amber-800">
             Loja fechada no momento{perfil.proximoHorario ? ` — abre ${perfil.proximoHorario}` : ""}.
           </div>
@@ -231,7 +231,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
 
       {/* Category nav */}
       <div ref={catNavRef} className="sticky top-0 z-30 mt-4 border-b border-neutral-100 bg-white">
-        <div className="mx-auto flex max-w-[680px] items-center px-2">
+        <div className="mx-auto flex max-w-[901px] items-center px-2">
           <div className="flex flex-1 gap-1.5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {catalogo.categorias.map((cat) => {
               const ativa = categoriaAtiva === cat.id;
@@ -257,7 +257,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
           </button>
         </div>
         {buscaAberta && (
-          <div className="mx-auto max-w-[680px] px-3.5 pb-2">
+          <div className="mx-auto max-w-[901px] px-3.5 pb-2">
             <input
               autoFocus
               value={busca}
@@ -272,7 +272,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
 
       {/* Destaques */}
       {!termoBusca && catalogo.destaques.length > 0 && (
-        <div className="mx-auto max-w-[680px]">
+        <div className="mx-auto max-w-[901px]">
           <h2 className="px-4 pt-4 pb-2 text-[.95rem] font-bold text-neutral-900">Destaques</h2>
           <div className="flex gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {catalogo.destaques.map((item) => (
@@ -318,7 +318,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
       )}
 
       {/* Categorias / produtos */}
-      <div className="mx-auto max-w-[680px]">
+      <div className="mx-auto max-w-[901px]">
         {categoriasFiltradas.map(({ cat, produtos, combos }) => {
           if (produtos.length === 0 && combos.length === 0) return null;
           return (
@@ -438,7 +438,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
       {/* Cart bar */}
       {cart.totalItens > 0 && (
         <div className="fixed inset-x-0 bottom-[60px] z-40 flex justify-center border-t border-neutral-100 bg-white px-4 py-2.5">
-          <div className="flex w-full max-w-[680px] items-center justify-between gap-3">
+          <div className="flex w-full max-w-[901px] items-center justify-between gap-3">
             <div>
               <p className="text-[.72rem] text-neutral-500">Subtotal</p>
               <p className="flex items-baseline gap-1 text-[.9rem] font-bold text-neutral-900">
@@ -460,7 +460,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
 
       {/* Bottom nav */}
       <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-neutral-200 bg-white shadow-[0_-6px_20px_rgba(0,0,0,.07)]">
-        <div className="flex w-full max-w-[680px]">
+        <div className="flex w-full max-w-[901px]">
           <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide" style={{ color: brown }}>
             <List size={20} />
             Menu

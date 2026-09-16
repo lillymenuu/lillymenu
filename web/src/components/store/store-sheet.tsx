@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 /**
  * Chrome de "sheet" usado por todos os modais da loja publica (produto,
  * combo, carrinho, checkout) — painel de altura total, largura maxima de
- * 680px e centralizado no desktop, ocupando a tela inteira no mobile.
+ * 901px e centralizado no desktop, ocupando a tela inteira no mobile.
  * Replica o padrao `.sheet` de public/assets/css/loja.css.
  */
 export function StoreSheet({
@@ -31,7 +31,7 @@ export function StoreSheet({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="top-0 left-1/2 h-dvh w-full max-w-[680px] translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0"
+        className="top-0 left-1/2 h-dvh w-full max-w-[901px] translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0"
       >
         <div className="flex h-full flex-col">
           {(title || onBack || rightAction) && (

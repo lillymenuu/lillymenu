@@ -29,7 +29,7 @@ export function StoreSuccessDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="top-0 left-1/2 h-dvh w-full max-w-[680px] translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0"
+        className="top-0 left-1/2 h-dvh w-full max-w-[901px] translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0"
       >
         <div className="flex h-full flex-col items-center justify-center overflow-hidden px-6 py-8 text-center">
           <div className="relative mb-7">
