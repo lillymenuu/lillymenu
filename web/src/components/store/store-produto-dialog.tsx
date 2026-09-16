@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Expand, ImageIcon } from "lucide-react";
+import { Expand, ImageIcon, X } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -29,6 +30,7 @@ export function StoreProdutoDialog({
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
   const [extrasIds, setExtrasIds] = useState<number[]>([]);
   const [complementoId, setComplementoId] = useState<number | null>(null);
+  const [imagemAmpliada, setImagemAmpliada] = useState(false);
 
   const temVariacoes = produto?.tem_variacoes === 1;
 
@@ -216,7 +218,7 @@ export function StoreProdutoDialog({
 
   if (temVariacoes) {
     return (
-      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer}>
+      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidthClass="max-w-[615px]">
         <div className="flex h-full flex-col sm:flex-row">
           <div className="relative h-[220px] shrink-0 bg-neutral-100 sm:h-full sm:w-[300px]">
             {produto.imagem ? (
@@ -249,16 +251,23 @@ export function StoreProdutoDialog({
   }
 
   return (
-    <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer}>
+    <>
+      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidthClass="max-w-[615px]">
       <div className="p-4">
         <div className="group relative mb-3 h-[190px] w-full overflow-hidden rounded-xl bg-neutral-100">
           {produto.imagem ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={produto.imagem} alt="" className="size-full object-cover" />
               <button
                 type="button"
-                onClick={() => window.open(produto.imagem, "_blank")}
+                onClick={() => setImagemAmpliada(true)}
+                className="block size-full cursor-zoom-in"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={produto.imagem} alt="" className="size-full object-cover" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setImagemAmpliada(true)}
                 className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white"
               >
                 <Expand size={12} />
@@ -286,6 +295,21 @@ export function StoreProdutoDialog({
         {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
         {obsField}
       </div>
-    </StoreSheet>
+      </StoreSheet>
+
+      <Dialog open={imagemAmpliada} onOpenChange={setImagemAmpliada}>
+        <DialogContent showCloseButton={false} className="max-w-[90vw] border-0 bg-transparent p-0 shadow-none sm:max-w-2xl">
+          <button
+            type="button"
+            onClick={() => setImagemAmpliada(false)}
+            className="absolute -top-10 right-0 flex size-8 items-center justify-center rounded-full bg-white/90 text-neutral-700"
+          >
+            <X size={16} />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={produto.imagem} alt="" className="max-h-[80vh] w-full rounded-xl object-contain" />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

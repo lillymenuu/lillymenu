@@ -18,6 +18,7 @@ export function StoreSheet({
   rightAction,
   footer,
   children,
+  maxWidthClass = "max-w-[901px]",
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -26,12 +27,13 @@ export function StoreSheet({
   rightAction?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
+  maxWidthClass?: string;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="top-0 left-1/2 h-dvh w-full max-w-[901px] translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0"
+        className={`top-0 left-1/2 h-dvh w-full ${maxWidthClass} translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0`}
       >
         <div className="flex h-full flex-col">
           {(title || onBack || rightAction) && (
