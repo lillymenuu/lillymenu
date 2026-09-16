@@ -40,8 +40,10 @@ import { ImageCropDialog } from "./image-crop-dialog";
 import { ConfigurarDiasDialog } from "./configurar-dias-dialog";
 import { MoneyInput } from "./money-input";
 import { EstoqueDialog } from "./estoque-dialog";
+import { ProdutoVariacoesManageDialog } from "./produto-variacoes-manage-dialog";
+import { ProdutoItensManageDialog } from "./produto-itens-manage-dialog";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
-import type { Categoria, Produto } from "@/lib/produtos";
+import type { Categoria, Produto, ProdutoVariacaoItem, ProdutoItemExtra, ProdutoVariacoesDetalheResposta } from "@/lib/produtos";
 
 const DIAS_LABEL: Record<string, string> = {
   dom: "Dom",
@@ -83,6 +85,14 @@ export function ProdutoFormDialog({
   const [preco, setPreco] = useState("");
   const [promoAtiva, setPromoAtiva] = useState(false);
   const [precoPromocional, setPrecoPromocional] = useState("");
+
+  const [temVariacoes, setTemVariacoes] = useState(false);
+  const [variacoes, setVariacoes] = useState<ProdutoVariacaoItem[]>([]);
+  const [extras, setExtras] = useState<ProdutoItemExtra[]>([]);
+  const [complementosItens, setComplementosItens] = useState<ProdutoItemExtra[]>([]);
+  const [variacoesDialogOpen, setVariacoesDialogOpen] = useState(false);
+  const [extrasDialogOpen, setExtrasDialogOpen] = useState(false);
+  const [complementosDialogOpen, setComplementosDialogOpen] = useState(false);
 
   const [ativo, setAtivo] = useState(true);
   const [disponivelCatalogo, setDisponivelCatalogo] = useState(true);
@@ -148,6 +158,21 @@ export function ProdutoFormDialog({
       setEstoqueAtual(produto.estoque_quantidade ?? 0);
       setDataFabricacao(produto.data_fabricacao ?? "");
       setDataValidade(produto.data_validade ?? "");
+      setTemVariacoes(produto.tem_variacoes === 1);
+      setVariacoes([]);
+      setExtras([]);
+      setComplementosItens([]);
+      fetch(`/api/produtos/variacoes-detalhe?id=${produto.id}`)
+        .then((r) => r.json())
+        .then((data: ProdutoVariacoesDetalheResposta | { ok: false }) => {
+          if (!data.ok) return;
+          setVariacoes(data.variacoes.map((v) => ({ id: v.id, tamanho: v.tamanho, cor: v.cor, preco: v.preco })));
+          setExtras(data.extras.map((e) => ({ id: e.id, nome: e.nome, preco: e.preco, obrigatorio: e.obrigatorio === 1 })));
+          setComplementosItens(
+            data.complementos_itens.map((c) => ({ id: c.id, nome: c.nome, preco: c.preco, obrigatorio: c.obrigatorio === 1 }))
+          );
+        })
+        .catch(() => {});
       setCategoriaTransferir(produto.categoria_id ? String(produto.categoria_id) : "");
       setImagemPreview(
         produto.imagem
@@ -180,6 +205,10 @@ export function ProdutoFormDialog({
       setEstoqueAtual(0);
       setDataFabricacao("");
       setDataValidade("");
+      setTemVariacoes(false);
+      setVariacoes([]);
+      setExtras([]);
+      setComplementosItens([]);
       setImagemPreview(null);
     }
   }, [open, produto, categoriaPadrao, phpAdminUrl]);
@@ -217,6 +246,11 @@ export function ProdutoFormDialog({
       setErro("Informe um preço válido.");
       return false;
     }
+    if (temVariacoes && variacoes.length === 0) {
+      setAba("preco");
+      setErro("Informe ao menos uma variação antes de salvar.");
+      return false;
+    }
 
     setSalvando(true);
     try {
@@ -241,6 +275,16 @@ export function ProdutoFormDialog({
         horario_fim: horarioFim,
         data_fabricacao: dataFabricacao,
         data_validade: dataValidade,
+        tem_variacoes: temVariacoes,
+        variacoes: temVariacoes
+          ? variacoes.map((v) => ({ tamanho: v.tamanho, cor: v.cor, preco: Number(String(v.preco).replace(",", ".")) || 0 }))
+          : [],
+        extras: extras.map((e) => ({ nome: e.nome, preco: Number(String(e.preco).replace(",", ".")) || 0, obrigatorio: e.obrigatorio })),
+        complementos_itens: complementosItens.map((c) => ({
+          nome: c.nome,
+          preco: Number(String(c.preco).replace(",", ".")) || 0,
+          obrigatorio: c.obrigatorio,
+        })),
         imagem_base64: imagemBase64 ?? "",
         imagem_remover: imagemRemover,
       };
@@ -482,15 +526,66 @@ export function ProdutoFormDialog({
                 )}
               </div>
 
-              <div className="flex items-center justify-between gap-3 rounded-lg border p-3 opacity-60">
+              <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
                 <div>
                   <div className="text-sm font-medium">Seu produto possui diferentes preços, tamanhos ou cores?</div>
                   <div className="text-xs text-muted-foreground">
-                    Variações chegam em breve nesta versão — cadastre pelo admin atual por enquanto.
+                    Habilite essa opção caso seu produto tenha diferentes preços, tamanhos, cores
                   </div>
                 </div>
-                <Switch disabled checked={false} />
+                <Switch checked={temVariacoes} onCheckedChange={(v) => setTemVariacoes(v === true)} />
               </div>
+
+              {temVariacoes && (
+                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div>
+                    <div className="text-sm font-medium">Preços e variações</div>
+                    <div className="text-xs text-muted-foreground">Adicione tamanhos, cores ou preços diferentes para este produto.</div>
+                    <div className="mt-1 text-xs font-medium text-primary">
+                      {variacoes.length === 0
+                        ? "Nenhuma variação cadastrada."
+                        : `${variacoes.length} variação${variacoes.length > 1 ? "ões" : ""} cadastrada${variacoes.length > 1 ? "s" : ""}.`}
+                    </div>
+                  </div>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setVariacoesDialogOpen(true)} className="shrink-0">
+                    Gerenciar
+                  </Button>
+                </div>
+              )}
+
+              {(temVariacoes || extras.length > 0) && (
+                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div>
+                    <div className="text-sm font-medium">Escolha seu extra</div>
+                    <div className="text-xs text-muted-foreground">Cadastre extras opcionais ou obrigatórios para este produto.</div>
+                    <div className="mt-1 text-xs font-medium text-primary">
+                      {extras.length === 0 ? "Nenhum extra cadastrado." : `${extras.length} extra${extras.length > 1 ? "s" : ""} cadastrado${extras.length > 1 ? "s" : ""}.`}
+                    </div>
+                  </div>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setExtrasDialogOpen(true)} className="shrink-0">
+                    Gerenciar
+                  </Button>
+                </div>
+              )}
+
+              {(temVariacoes || complementosItens.length > 0) && (
+                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div>
+                    <div className="text-sm font-medium">Escolha o tipo</div>
+                    <div className="text-xs text-muted-foreground">
+                      Cadastre os tipos disponíveis para este produto (ex.: massa amanteigada, massa chocolate).
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-primary">
+                      {complementosItens.length === 0
+                        ? "Nenhum tipo cadastrado."
+                        : `${complementosItens.length} tipo${complementosItens.length > 1 ? "s" : ""} cadastrado${complementosItens.length > 1 ? "s" : ""}.`}
+                    </div>
+                  </div>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setComplementosDialogOpen(true)} className="shrink-0">
+                    Gerenciar
+                  </Button>
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -777,6 +872,30 @@ export function ProdutoFormDialog({
       confirmando={excluindo}
       textoConfirmar="Deletar"
       onConfirmar={excluir}
+    />
+    <ProdutoVariacoesManageDialog
+      open={variacoesDialogOpen}
+      onOpenChange={setVariacoesDialogOpen}
+      variacoes={variacoes}
+      onSalvar={setVariacoes}
+    />
+    <ProdutoItensManageDialog
+      open={extrasDialogOpen}
+      onOpenChange={setExtrasDialogOpen}
+      titulo="Extras do produto"
+      descricao="Cadastre extras e marque quando forem obrigatórios."
+      labelNome="Extra"
+      itens={extras}
+      onSalvar={setExtras}
+    />
+    <ProdutoItensManageDialog
+      open={complementosDialogOpen}
+      onOpenChange={setComplementosDialogOpen}
+      titulo="Tipos do produto"
+      descricao="Cadastre os tipos e marque quando forem obrigatórios."
+      labelNome="Tipo"
+      itens={complementosItens}
+      onSalvar={setComplementosItens}
     />
     </>
   );

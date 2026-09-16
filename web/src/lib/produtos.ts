@@ -40,6 +40,7 @@ export type Produto = {
   horario_fim?: string | null;
   data_fabricacao?: string | null;
   data_validade?: string | null;
+  tem_variacoes?: number;
 };
 
 export type ProdutoValidade = {
@@ -48,6 +49,27 @@ export type ProdutoValidade = {
   data_validade: string;
   dias_restantes: number;
   vencido: boolean;
+};
+
+export type ProdutoVariacaoItem = {
+  id?: number;
+  tamanho: string;
+  cor: string;
+  preco: number | string;
+};
+
+export type ProdutoItemExtra = {
+  id?: number;
+  nome: string;
+  preco: number | string;
+  obrigatorio: boolean;
+};
+
+export type ProdutoVariacoesDetalheResposta = {
+  ok: true;
+  variacoes: { id: number; tamanho: string; cor: string; preco: number }[];
+  extras: { id: number; nome: string; preco: number; obrigatorio: number }[];
+  complementos_itens: { id: number; nome: string; preco: number; obrigatorio: number }[];
 };
 
 export function getCategorias() {

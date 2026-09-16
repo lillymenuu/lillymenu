@@ -7,8 +7,13 @@
  * promocao, ativo/inativo, agendamento (apenas_agendamento), quantidade
  * minima, pontos de fidelidade (ganho/custo), disponibilidade por
  * catalogo/mesa e agendamento por dia da semana/horario.
- * Fora do escopo (ficam so no admin/produtos.php por enquanto): variacoes,
- * extras/complementos, combos, vinculo de estoque entre produtos.
+ * Cobre tambem variacoes (tamanho/cor/preco), extras e complementos
+ * ("escolha o tipo") — mesmas tabelas produto_variacoes/produto_extras/
+ * produto_complementos_itens ja usadas pelo POS (pdv_produto_variacoes.php),
+ * mesma logica de persistencia (delete-all + reinsert) de
+ * admin/api/produtos_save.php.
+ * Fora do escopo (ficam so no admin/produtos.php por enquanto): combos,
+ * vinculo de estoque entre produtos.
  */
 
 require_once __DIR__ . '/../../../config/database.php';
@@ -24,6 +29,69 @@ $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 function produtosColunas(PDO $conn): array {
   return $conn->query("SHOW COLUMNS FROM produtos")->fetchAll(PDO::FETCH_COLUMN, 0);
+}
+
+function produtosTabelaExiste(PDO $conn, string $tabela): bool {
+  try {
+    $stmt = $conn->prepare("SHOW TABLES LIKE ?");
+    $stmt->execute([$tabela]);
+    return (bool) $stmt->fetchColumn();
+  } catch (Throwable $e) {
+    return false;
+  }
+}
+
+/*
+ * Mesma logica de admin/api/produtos_save.php::salvarVariacoes() — delete-all
+ * + reinsert por produto_id/loja_id, ordem sequencial, so grava linha com
+ * conteudo real.
+ */
+function produtosSalvarVariacoes(PDO $conn, int $produtoId, int $lojaId, array $variacoes): void {
+  if (!produtosTabelaExiste($conn, 'produto_variacoes')) return;
+  $conn->prepare("DELETE FROM produto_variacoes WHERE produto_id = ? AND loja_id = ?")->execute([$produtoId, $lojaId]);
+  if (!$variacoes) return;
+  $ordem = 1;
+  $stmt = $conn->prepare("INSERT INTO produto_variacoes (produto_id, tamanho, cor, preco, ordem, loja_id) VALUES (?, ?, ?, ?, ?, ?)");
+  foreach ($variacoes as $v) {
+    $tamanho = trim((string) ($v['tamanho'] ?? ''));
+    $cor = trim((string) ($v['cor'] ?? ''));
+    $preco = (float) ($v['preco'] ?? 0);
+    if ($tamanho === '' && $cor === '' && $preco <= 0) continue;
+    $stmt->execute([$produtoId, $tamanho, $cor, $preco, $ordem, $lojaId]);
+    $ordem++;
+  }
+}
+
+function produtosSalvarExtras(PDO $conn, int $produtoId, int $lojaId, array $extras): void {
+  if (!produtosTabelaExiste($conn, 'produto_extras')) return;
+  $conn->prepare("DELETE FROM produto_extras WHERE produto_id = ? AND loja_id = ?")->execute([$produtoId, $lojaId]);
+  if (!$extras) return;
+  $ordem = 1;
+  $stmt = $conn->prepare("INSERT INTO produto_extras (produto_id, nome, preco, obrigatorio, ordem, loja_id) VALUES (?, ?, ?, ?, ?, ?)");
+  foreach ($extras as $e) {
+    $nome = trim((string) ($e['nome'] ?? ''));
+    $preco = (float) ($e['preco'] ?? 0);
+    $obrigatorio = !empty($e['obrigatorio']) ? 1 : 0;
+    if ($nome === '' && $preco <= 0) continue;
+    $stmt->execute([$produtoId, $nome, $preco, $obrigatorio, $ordem, $lojaId]);
+    $ordem++;
+  }
+}
+
+function produtosSalvarComplementosItens(PDO $conn, int $produtoId, int $lojaId, array $itens): void {
+  if (!produtosTabelaExiste($conn, 'produto_complementos_itens')) return;
+  $conn->prepare("DELETE FROM produto_complementos_itens WHERE produto_id = ? AND loja_id = ?")->execute([$produtoId, $lojaId]);
+  if (!$itens) return;
+  $ordem = 1;
+  $stmt = $conn->prepare("INSERT INTO produto_complementos_itens (produto_id, nome, preco, obrigatorio, ordem, loja_id) VALUES (?, ?, ?, ?, ?, ?)");
+  foreach ($itens as $it) {
+    $nome = trim((string) ($it['nome'] ?? ''));
+    $preco = (float) ($it['preco'] ?? 0);
+    $obrigatorio = !empty($it['obrigatorio']) ? 1 : 0;
+    if ($nome === '' && $preco <= 0) continue;
+    $stmt->execute([$produtoId, $nome, $preco, $obrigatorio, $ordem, $lojaId]);
+    $ordem++;
+  }
 }
 
 if ($metodo === 'GET') {
@@ -45,6 +113,7 @@ if ($metodo === 'GET') {
   $temHorarioFim = in_array('horario_fim', $colunas, true);
   $temDataFabricacao = in_array('data_fabricacao', $colunas, true);
   $temDataValidade = in_array('data_validade', $colunas, true);
+  $temVariacoesCol = in_array('tem_variacoes', $colunas, true);
 
   $precoExpr = ($temPrecoPromocional && $temPromoDesativado)
     ? "IF(p.promo_desativado = 0 AND p.preco_promocional IS NOT NULL AND p.preco_promocional > 0, p.preco_promocional, p.preco)"
@@ -71,6 +140,7 @@ if ($metodo === 'GET') {
   if ($temHorarioFim) $selectCampos[] = 'p.horario_fim';
   if ($temDataFabricacao) $selectCampos[] = 'p.data_fabricacao';
   if ($temDataValidade) $selectCampos[] = 'p.data_validade';
+  if ($temVariacoesCol) $selectCampos[] = 'p.tem_variacoes';
 
   $ordenacao = $temOrdem
     ? "ORDER BY c.ordem IS NULL, c.ordem, c.nome, p.ordem IS NULL, p.ordem, p.nome"
@@ -100,6 +170,7 @@ if ($metodo === 'GET') {
     if (isset($p['pontos_custo'])) $p['pontos_custo'] = (int) $p['pontos_custo'];
     if (isset($p['disponivel_catalogo'])) $p['disponivel_catalogo'] = (int) $p['disponivel_catalogo'];
     if (isset($p['disponivel_mesa'])) $p['disponivel_mesa'] = (int) $p['disponivel_mesa'];
+    if (isset($p['tem_variacoes'])) $p['tem_variacoes'] = (int) $p['tem_variacoes'];
     if (array_key_exists('dias_semana', $p)) {
       $decoded = $p['dias_semana'] ? json_decode($p['dias_semana'], true) : [];
       $p['dias_semana'] = is_array($decoded) ? $decoded : [];
@@ -177,6 +248,10 @@ if ($metodo === 'POST') {
   $horarioFim = trim((string) ($dados['horario_fim'] ?? '')) ?: null;
   $dataFabricacao = trim((string) ($dados['data_fabricacao'] ?? '')) ?: null;
   $dataValidade = trim((string) ($dados['data_validade'] ?? '')) ?: null;
+  $temVariacoes = !empty($dados['tem_variacoes']) ? 1 : 0;
+  $variacoesArr = is_array($dados['variacoes'] ?? null) ? $dados['variacoes'] : [];
+  $extrasArr = is_array($dados['extras'] ?? null) ? $dados['extras'] : [];
+  $complementosItensArr = is_array($dados['complementos_itens'] ?? null) ? $dados['complementos_itens'] : [];
 
   if ($nome === '') {
     echo json_encode(['ok' => false, 'msg' => 'Informe o nome do produto.']);
@@ -209,6 +284,7 @@ if ($metodo === 'POST') {
   $temHorarioFim = in_array('horario_fim', $colunas, true);
   $temDataFabricacao = in_array('data_fabricacao', $colunas, true);
   $temDataValidade = in_array('data_validade', $colunas, true);
+  $temVariacoesCol = in_array('tem_variacoes', $colunas, true);
   if (!$temDataFabricacao) {
     try { $conn->exec("ALTER TABLE produtos ADD COLUMN data_fabricacao DATE NULL"); $temDataFabricacao = true; } catch (Throwable $e2) {}
   }
@@ -241,6 +317,7 @@ if ($metodo === 'POST') {
     if ($temHorarioFim) $campos['horario_fim'] = $horarioFim;
     if ($temDataFabricacao) $campos['data_fabricacao'] = $dataFabricacao;
     if ($temDataValidade) $campos['data_validade'] = $dataValidade;
+    if ($temVariacoesCol) $campos['tem_variacoes'] = $temVariacoes;
     if ($temImagem) {
       if ($imagemRemover) {
         $campos['imagem'] = null;
@@ -267,6 +344,10 @@ if ($metodo === 'POST') {
     $values[] = $idInt;
     $values[] = $lojaId;
     $conn->prepare("UPDATE produtos SET " . implode(', ', $setParts) . " WHERE id = ? AND loja_id = ? LIMIT 1")->execute($values);
+
+    produtosSalvarVariacoes($conn, $idInt, $lojaId, $temVariacoes ? $variacoesArr : []);
+    produtosSalvarExtras($conn, $idInt, $lojaId, $extrasArr);
+    produtosSalvarComplementosItens($conn, $idInt, $lojaId, $complementosItensArr);
 
     bumpCatalogoVersao($conn, $lojaId);
     echo json_encode(['ok' => true, 'action' => 'update', 'id' => $idInt, 'imagem' => $imagemAtual]);
@@ -304,6 +385,7 @@ if ($metodo === 'POST') {
   if ($temHorarioFim) { $campos[] = 'horario_fim'; $values[] = $horarioFim; }
   if ($temDataFabricacao) { $campos[] = 'data_fabricacao'; $values[] = $dataFabricacao; }
   if ($temDataValidade) { $campos[] = 'data_validade'; $values[] = $dataValidade; }
+  if ($temVariacoesCol) { $campos[] = 'tem_variacoes'; $values[] = $temVariacoes; }
   if ($temOrdem) { $campos[] = 'ordem'; $values[] = $novaOrdem; }
   if ($temImagem && $imagemBase64 !== '') {
     $imagemSalva = storage_save_base64($imagemBase64, 'produtos', 'produto', $lojaId);
@@ -318,6 +400,10 @@ if ($metodo === 'POST') {
   $placeholders = implode(',', array_fill(0, count($campos), '?'));
   $conn->prepare("INSERT INTO produtos (" . implode(',', $campos) . ") VALUES ($placeholders)")->execute($values);
   $novoId = (int) $conn->lastInsertId();
+
+  produtosSalvarVariacoes($conn, $novoId, $lojaId, $temVariacoes ? $variacoesArr : []);
+  produtosSalvarExtras($conn, $novoId, $lojaId, $extrasArr);
+  produtosSalvarComplementosItens($conn, $novoId, $lojaId, $complementosItensArr);
 
   bumpCatalogoVersao($conn, $lojaId);
   echo json_encode(['ok' => true, 'action' => 'insert', 'id' => $novoId, 'imagem' => $imagemSalva]);
