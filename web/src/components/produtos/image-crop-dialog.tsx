@@ -13,7 +13,6 @@ const FRAME_H = 315;
 const OUTPUT_W = 800;
 const OUTPUT_H = 600;
 const ZOOM_MIN = 1;
-const ZOOM_MAX = 3;
 
 export function ImageCropDialog({
   open,
@@ -30,6 +29,7 @@ export function ImageCropDialog({
   const [src, setSrc] = useState<string | null>(null);
   const [natural, setNatural] = useState({ w: 0, h: 0 });
   const [zoom, setZoom] = useState(1);
+  const [zoomMax, setZoomMax] = useState(3);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
 
@@ -37,15 +37,23 @@ export function ImageCropDialog({
     if (!open || !file) return;
     const url = URL.createObjectURL(file);
     setSrc(url);
-    setZoom(1);
     return () => URL.revokeObjectURL(url);
   }, [open, file]);
 
-  // "contain" (nao "cover"): a imagem inteira cabe no quadro por padrao —
-  // o usuario ve a foto completa antes de decidir se quer aproximar pra
-  // cortar mais justo.
+  // Referencia ("zoom" = 1) e "contain": a imagem inteira cabe no quadro,
+  // pra poder ser revelada por completo se o usuario puxar o zoom pro
+  // minimo. Mas o valor INICIAL do zoom (definido em onImgLoad, abaixo)
+  // pula direto pra "cover" — preenche o quadro sem sobra branca, igual
+  // ao comportamento anterior — pra nao piorar a aparencia padrao de quem
+  // nao mexe no zoom.
   function baseScale(w: number, h: number) {
     return Math.min(FRAME_W / w, FRAME_H / h);
+  }
+
+  function coverRatio(w: number, h: number) {
+    const contain = baseScale(w, h);
+    const cover = Math.max(FRAME_W / w, FRAME_H / h);
+    return contain > 0 ? cover / contain : 1;
   }
 
   function clampAxis(pos: number, disp: number, frame: number) {
@@ -73,7 +81,10 @@ export function ImageCropDialog({
     const w = img.naturalWidth;
     const h = img.naturalHeight;
     setNatural({ w, h });
-    const scale = baseScale(w, h);
+    const ratio = coverRatio(w, h);
+    setZoomMax(ratio * 3);
+    setZoom(ratio);
+    const scale = baseScale(w, h) * ratio;
     setOffset({ x: (FRAME_W - w * scale) / 2, y: (FRAME_H - h * scale) / 2 });
   }
 
@@ -159,7 +170,7 @@ export function ImageCropDialog({
           <input
             type="range"
             min={ZOOM_MIN}
-            max={ZOOM_MAX}
+            max={zoomMax}
             step={0.01}
             value={zoom}
             onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
