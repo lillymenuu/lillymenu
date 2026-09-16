@@ -18,7 +18,7 @@ export function StoreSheet({
   rightAction,
   footer,
   children,
-  maxWidthClass = "max-w-[901px]",
+  maxWidth = 901,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -27,13 +27,22 @@ export function StoreSheet({
   rightAction?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
-  maxWidthClass?: string;
+  /**
+   * Largura maxima em px. Aplicada via `style` (nao via classe Tailwind
+   * arbitraria) porque essa classe precisaria vencer o `sm:max-w-sm` que ja
+   * vem por padrao em DialogContent — uma classe `sm:max-w-[Npx]` montada em
+   * runtime (template literal) nunca é extraida pelo scanner estatico do
+   * Tailwind, entao nunca ganharia CSS gerado. Estilo inline sempre vence
+   * por especificidade, sem depender de o Tailwind "ver" a classe.
+   */
+  maxWidth?: number;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className={`top-0 left-1/2 h-dvh w-full ${maxWidthClass} translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0`}
+        style={{ maxWidth }}
+        className="top-0 left-1/2 h-dvh w-full translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0"
       >
         <div className="flex h-full flex-col">
           {(title || onBack || rightAction) && (

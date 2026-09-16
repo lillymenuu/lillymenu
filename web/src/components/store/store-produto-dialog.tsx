@@ -218,7 +218,7 @@ export function StoreProdutoDialog({
 
   if (temVariacoes) {
     return (
-      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidthClass="max-w-[615px]">
+      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={615}>
         <div className="flex h-full flex-col sm:flex-row">
           <div className="relative h-[220px] shrink-0 bg-neutral-100 sm:h-full sm:w-[300px]">
             {produto.imagem ? (
@@ -252,7 +252,7 @@ export function StoreProdutoDialog({
 
   return (
     <>
-      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidthClass="max-w-[615px]">
+      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={615}>
       <div className="p-4">
         <div className="group relative mb-3 h-[190px] w-full overflow-hidden rounded-xl bg-neutral-100">
           {produto.imagem ? (
@@ -279,6 +279,13 @@ export function StoreProdutoDialog({
               <ImageIcon size={32} />
             </div>
           )}
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600"
+          >
+            <X size={14} />
+          </button>
         </div>
         <h2 className="mb-1.5 text-[1rem] font-bold text-neutral-900">{produto.nome}</h2>
         {produto.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}

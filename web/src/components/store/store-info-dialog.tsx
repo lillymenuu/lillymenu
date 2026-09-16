@@ -40,7 +40,7 @@ export function StoreInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="flex max-h-[88dvh] w-[calc(100%-24px)] max-w-[420px] flex-col gap-0 overflow-hidden rounded-[20px] p-0">
+      <DialogContent showCloseButton={false} className="flex max-h-[88dvh] w-[calc(100%-24px)] max-w-[420px] flex-col gap-0 overflow-hidden rounded-[20px] p-0 sm:max-w-[420px]">
         <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 px-[18px] py-3.5">
           <DialogTitle className="text-[.92rem] font-bold text-neutral-900">Informacoes da loja</DialogTitle>
           <button type="button" onClick={() => onOpenChange(false)} className="flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
