@@ -73,7 +73,7 @@ export function ComboPassoDialog({
     });
   }
 
-  const produtosAtivos = produtos.filter((p) => p.ativo === 1);
+  const produtosAtivos = produtos.filter((p) => p.ativo === 1 && p.estoque_quantidade > 0);
   const termo = busca.trim().toLowerCase();
   const produtosFiltrados = termo ? produtosAtivos.filter((p) => p.nome.toLowerCase().includes(termo)) : produtosAtivos;
 
