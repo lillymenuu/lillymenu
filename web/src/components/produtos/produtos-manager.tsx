@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Categoria, Produto } from "@/lib/produtos";
+import { produtoProximoValidade } from "@/lib/produtoValidade";
 import { ProdutoFormDialog } from "./produto-form-dialog";
 import { CriarCategoriaDialog } from "./criar-categoria-dialog";
 import { ReordenarCategoriasDialog } from "./reordenar-categorias-dialog";
@@ -241,6 +242,7 @@ export function ProdutosManager({
                       : `${phpAdminUrl}/${p.imagem}`
                     : null;
                   const emPromo = Boolean(p.preco_promocional) && p.promo_desativado !== 1;
+                  const proximoValidade = produtoProximoValidade(p.data_validade);
                   return (
                     <div
                       key={p.id}
@@ -249,7 +251,9 @@ export function ProdutosManager({
                         setCategoriaParaNovoProduto(null);
                         setFormOpen(true);
                       }}
-                      className="flex cursor-pointer flex-col overflow-hidden rounded-xl border transition-shadow hover:shadow-md"
+                      className={`flex cursor-pointer flex-col overflow-hidden rounded-xl border transition-shadow hover:shadow-md ${
+                        proximoValidade ? "border-red-600" : ""
+                      }`}
                     >
                       <div className="aspect-[4/3] w-full bg-muted">
                         {imagemUrl ? (
