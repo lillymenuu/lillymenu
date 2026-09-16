@@ -23,6 +23,7 @@ import { StoreComboDialog } from "@/components/store/store-combo-dialog";
 import { StoreCartSheet } from "@/components/store/store-cart-sheet";
 import { StoreCheckoutDialog } from "@/components/store/store-checkout-dialog";
 import { StoreSuccessDialog } from "@/components/store/store-success-dialog";
+import { StoreInfoDialog } from "@/components/store/store-info-dialog";
 
 function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
   return "tipo" in item && item.tipo === "combo";
@@ -47,6 +48,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
   const [pedidoConfirmado, setPedidoConfirmado] = useState<{ codigo: number | string } | null>(null);
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [busca, setBusca] = useState("");
+  const [infoAberto, setInfoAberto] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(catalogo.categorias[0]?.id ?? null);
 
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -131,7 +133,9 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
 
       {/* Header row */}
       <div className="relative mx-auto flex max-w-[901px] items-start justify-between px-4" style={{ marginTop: -34 }}>
-        <div
+        <button
+          type="button"
+          onClick={() => setInfoAberto(true)}
           className="inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
           style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
         >
@@ -148,7 +152,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
               </div>
             )}
           </div>
-        </div>
+        </button>
         <div className="flex flex-col items-end gap-1 pt-[52px]">
           {perfil.avaliacaoMedia > 0 && (
             <span className="flex items-center gap-1 text-[.82rem] font-bold text-neutral-900">
@@ -176,8 +180,10 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
             </svg>
           )}
         </div>
-        {(perfil.lojaContato || perfil.enderecoLoja) && (
-          <p className="mb-1 text-[.78rem] text-neutral-500">{perfil.enderecoLoja || perfil.lojaContato}</p>
+        {(perfil.lojaBairro || perfil.lojaCidade) && (
+          <p className="mb-1 text-[.78rem] text-neutral-500">
+            {[perfil.lojaCidade, perfil.lojaBairro].filter(Boolean).join(", ")}
+          </p>
         )}
         <p className={`text-[.82rem] font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`} style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}>
           {perfil.lojaAberta ? "Aberto agora" : `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`}
@@ -435,6 +441,22 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
         )}
       </div>
 
+      {/* Rodape */}
+      <div className="mx-auto max-w-[901px] border-t border-neutral-100 px-5 py-6 text-center">
+        <p className="mb-3 text-[.8rem] leading-relaxed text-neutral-500">
+          Tem um negocio e precisa de um cardapio digital simples e facil? O <strong className="font-semibold text-neutral-700">Lilly</strong> e a solucao.
+        </p>
+        <a
+          href="https://lillymenu.com/public/home"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block rounded-full border-[1.5px] px-5 py-1.5 text-[.8rem] font-semibold transition-colors"
+          style={{ borderColor: "var(--store-pink)", color: "var(--store-pink)" }}
+        >
+          Saiba mais
+        </a>
+      </div>
+
       {/* Cart bar */}
       {cart.totalItens > 0 && (
         <div className="fixed inset-x-0 bottom-[60px] z-40 flex justify-center border-t border-neutral-100 bg-white px-4 py-2.5">
@@ -527,6 +549,8 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
         tempoEstimado={`${perfil.tEntMin}-${perfil.tEntMax} min`}
         numeroWhatsapp={perfil.lojaContato}
       />
+
+      <StoreInfoDialog open={infoAberto} onOpenChange={setInfoAberto} perfil={perfil} />
     </div>
   );
 }

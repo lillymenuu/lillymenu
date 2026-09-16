@@ -48,11 +48,27 @@ export type StorePerfil = {
   lojaContato: string;
   lojaInstagram: string;
   lojaTiktok: string;
+  lojaRua: string;
+  lojaNumero: string;
+  lojaBairro: string;
+  lojaCidade: string;
+  lojaEstado: string;
+  lojaCep: string;
   enderecoLoja: string;
   catalogoVersao: string;
   mesaId: number | null;
   mesaNome: string | null;
   cupomPreenchido: string | null;
+  semanaHorarios: StoreHorarioDia[];
+};
+
+export type StoreHorarioDia = {
+  dia: string;
+  hoje: boolean;
+  aberto: boolean;
+  inicio: string;
+  fim: string;
+  fechaBreve: boolean;
 };
 
 export type StoreProduto = {

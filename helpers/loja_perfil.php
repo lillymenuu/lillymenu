@@ -245,6 +245,46 @@ function montarPerfilLoja(PDO $conn, int $lojaId): array {
 
   $catalogoVersao = cfg($conn,$lojaId,'catalogo_versao','');
 
+  /* Semana completa de horarios (aba "Horario" do modal "Informacoes da
+     loja") — mesma logica ja usada em public/loja.php (painel #ipHorario)
+     e public/api/loja_status.php, repetida aqui pra nao exigir uma segunda
+     chamada de API so pra abrir o modal. */
+  $horSemanaInfo   = json_decode(cfg($conn,$lojaId,'horarios_semana',''),true) ?: [];
+  $horaAbInfo      = cfg($conn,$lojaId,'horario_abertura','');
+  $horaFeInfo      = cfg($conn,$lojaId,'horario_fechamento','');
+  $diasFuncRawInfo = cfg($conn,$lojaId,'dias_funcionamento','');
+  $diasFuncInfo    = $diasFuncRawInfo ? array_map('intval', array_filter(explode(',', $diasFuncRawInfo))) : [];
+  $diasNomesInfo   = [1=>'Domingo',2=>'Segunda',3=>'Terça',4=>'Quarta',5=>'Quinta',6=>'Sexta',7=>'Sábado'];
+  $agoraInfo       = new DateTime('now', new DateTimeZone('America/Fortaleza'));
+  $ckHojeInfo      = (((int)$agoraInfo->format('N'))%7)+1;
+  $horaAtualMinInfo= (int)$agoraInfo->format('H') * 60 + (int)$agoraInfo->format('i');
+  $semanaHorarios  = [];
+  for ($dk=1; $dk<=7; $dk++) {
+    $hd = $horSemanaInfo[$dk] ?? $horSemanaInfo[(string)$dk] ?? null;
+    if (!$hd && $horaAbInfo && $horaFeInfo) {
+      if (!$diasFuncInfo || in_array($dk, $diasFuncInfo)) {
+        $hd = ['inicio'=>$horaAbInfo,'fim'=>$horaFeInfo];
+      }
+    }
+    $isHojeInfo = ($dk === $ckHojeInfo);
+    $abertoInfo = $hd && !empty($hd['inicio']) && !empty($hd['fim']);
+    $fechaBreveInfo = false;
+    if ($isHojeInfo && $abertoInfo && !empty($hd['fim'])) {
+      $fimPartsInfo = explode(':', $hd['fim']);
+      $fimMinInfo = (int)($fimPartsInfo[0] ?? 0) * 60 + (int)($fimPartsInfo[1] ?? 0);
+      $diffInfo = $fimMinInfo - $horaAtualMinInfo;
+      $fechaBreveInfo = ($diffInfo > 0 && $diffInfo <= 60);
+    }
+    $semanaHorarios[] = [
+      'dia' => $diasNomesInfo[$dk],
+      'hoje' => $isHojeInfo,
+      'aberto' => $abertoInfo,
+      'inicio' => $abertoInfo ? $hd['inicio'] : '',
+      'fim' => $abertoInfo ? $hd['fim'] : '',
+      'fechaBreve' => $fechaBreveInfo,
+    ];
+  }
+
   return compact(
     'mesaId','mesaNome','cupomPreenchido',
     'nomeLoja','lojaVerificada','lojaAtiva',
@@ -267,6 +307,6 @@ function montarPerfilLoja(PDO $conn, int $lojaId): array {
     'agendRetiradaMinTipo','agendRetiradaMinVal','agendRetiradaMaxVal','agendRetiradaMaxTipo',
     'agendDeliveryHorarios','agendRetiradaHorarios',
     'agendamentoDeliveryAtivo','agendamentoRetiradaAtivo',
-    'catalogoVersao'
+    'catalogoVersao','semanaHorarios'
   );
 }
