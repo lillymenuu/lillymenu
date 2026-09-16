@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   Star,
   Box,
+  Hourglass,
   Info,
   ImagePlus,
   Trash2,
@@ -98,6 +99,9 @@ export function ProdutoFormDialog({
   const [estoqueAtual, setEstoqueAtual] = useState(0);
   const [estoqueDialogOpen, setEstoqueDialogOpen] = useState(false);
 
+  const [dataFabricacao, setDataFabricacao] = useState("");
+  const [dataValidade, setDataValidade] = useState("");
+
   const [transferindo, setTransferindo] = useState(false);
   const [categoriaTransferir, setCategoriaTransferir] = useState<string>("");
   const [duplicando, setDuplicando] = useState(false);
@@ -140,6 +144,8 @@ export function ProdutoFormDialog({
       setPontosCustoAtivo((produto.pontos_custo ?? 0) > 0);
       setPontosCusto(String(produto.pontos_custo || 1));
       setEstoqueAtual(produto.estoque_quantidade ?? 0);
+      setDataFabricacao(produto.data_fabricacao ?? "");
+      setDataValidade(produto.data_validade ?? "");
       setCategoriaTransferir(produto.categoria_id ? String(produto.categoria_id) : "");
       setImagemPreview(
         produto.imagem
@@ -170,6 +176,8 @@ export function ProdutoFormDialog({
       setPontosCustoAtivo(false);
       setPontosCusto("1");
       setEstoqueAtual(0);
+      setDataFabricacao("");
+      setDataValidade("");
       setImagemPreview(null);
     }
   }, [open, produto, categoriaPadrao, phpAdminUrl]);
@@ -229,6 +237,8 @@ export function ProdutoFormDialog({
         dias_semana: diasSemana,
         horario_ini: horarioIni,
         horario_fim: horarioFim,
+        data_fabricacao: dataFabricacao,
+        data_validade: dataValidade,
         imagem_base64: imagemBase64 ?? "",
         imagem_remover: imagemRemover,
       };
@@ -351,6 +361,9 @@ export function ProdutoFormDialog({
               </TabsTrigger>
               <TabsTrigger value="estoque">
                 <Box size={14} /> Estoque
+              </TabsTrigger>
+              <TabsTrigger value="validade">
+                <Hourglass size={14} /> Prazo de validade
               </TabsTrigger>
               <TabsTrigger value="outros">
                 <Info size={14} /> Outros
@@ -619,6 +632,39 @@ export function ProdutoFormDialog({
                 </div>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="validade">
+            <div className="flex flex-col gap-4">
+              <div className="rounded-lg border p-3">
+                <div className="text-sm font-medium">Prazo de validade</div>
+                <div className="text-xs text-muted-foreground">
+                  Informe a data de fabricação e até quando o produto pode ser vendido. Quando a validade estiver
+                  próxima do vencimento, você recebe um aviso no painel administrativo — essa informação não
+                  aparece para o cliente no cardápio.
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="p-data-fabricacao">Data de fabricação</Label>
+                  <Input
+                    id="p-data-fabricacao"
+                    type="date"
+                    value={dataFabricacao}
+                    onChange={(e) => setDataFabricacao(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="p-data-validade">Data de validade</Label>
+                  <Input
+                    id="p-data-validade"
+                    type="date"
+                    value={dataValidade}
+                    onChange={(e) => setDataValidade(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="outros">

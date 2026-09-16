@@ -38,6 +38,8 @@ export type Produto = {
   dias_semana?: string[];
   horario_ini?: string | null;
   horario_fim?: string | null;
+  data_fabricacao?: string | null;
+  data_validade?: string | null;
 };
 
 export function getCategorias() {

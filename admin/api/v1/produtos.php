@@ -8,8 +8,7 @@
  * minima, pontos de fidelidade (ganho/custo), disponibilidade por
  * catalogo/mesa e agendamento por dia da semana/horario.
  * Fora do escopo (ficam so no admin/produtos.php por enquanto): variacoes,
- * extras/complementos, combos, vinculo de estoque entre produtos, datas de
- * validade/fabricacao.
+ * extras/complementos, combos, vinculo de estoque entre produtos.
  */
 
 require_once __DIR__ . '/../../../config/database.php';
@@ -44,6 +43,8 @@ if ($metodo === 'GET') {
   $temDiasSemana = in_array('dias_semana', $colunas, true);
   $temHorarioIni = in_array('horario_ini', $colunas, true);
   $temHorarioFim = in_array('horario_fim', $colunas, true);
+  $temDataFabricacao = in_array('data_fabricacao', $colunas, true);
+  $temDataValidade = in_array('data_validade', $colunas, true);
 
   $precoExpr = ($temPrecoPromocional && $temPromoDesativado)
     ? "IF(p.promo_desativado = 0 AND p.preco_promocional IS NOT NULL AND p.preco_promocional > 0, p.preco_promocional, p.preco)"
@@ -68,6 +69,8 @@ if ($metodo === 'GET') {
   if ($temDiasSemana) $selectCampos[] = 'p.dias_semana';
   if ($temHorarioIni) $selectCampos[] = 'p.horario_ini';
   if ($temHorarioFim) $selectCampos[] = 'p.horario_fim';
+  if ($temDataFabricacao) $selectCampos[] = 'p.data_fabricacao';
+  if ($temDataValidade) $selectCampos[] = 'p.data_validade';
 
   $ordenacao = $temOrdem
     ? "ORDER BY c.ordem IS NULL, c.ordem, c.nome, p.ordem IS NULL, p.ordem, p.nome"
@@ -172,6 +175,8 @@ if ($metodo === 'POST') {
   $diasSemanaJson = $diasSemanaArr ? json_encode(array_values($diasSemanaArr)) : null;
   $horarioIni = trim((string) ($dados['horario_ini'] ?? '')) ?: null;
   $horarioFim = trim((string) ($dados['horario_fim'] ?? '')) ?: null;
+  $dataFabricacao = trim((string) ($dados['data_fabricacao'] ?? '')) ?: null;
+  $dataValidade = trim((string) ($dados['data_validade'] ?? '')) ?: null;
 
   if ($nome === '') {
     echo json_encode(['ok' => false, 'msg' => 'Informe o nome do produto.']);
@@ -202,6 +207,14 @@ if ($metodo === 'POST') {
   $temDiasSemana = in_array('dias_semana', $colunas, true);
   $temHorarioIni = in_array('horario_ini', $colunas, true);
   $temHorarioFim = in_array('horario_fim', $colunas, true);
+  $temDataFabricacao = in_array('data_fabricacao', $colunas, true);
+  $temDataValidade = in_array('data_validade', $colunas, true);
+  if (!$temDataFabricacao) {
+    try { $conn->exec("ALTER TABLE produtos ADD COLUMN data_fabricacao DATE NULL"); $temDataFabricacao = true; } catch (Throwable $e2) {}
+  }
+  if (!$temDataValidade) {
+    try { $conn->exec("ALTER TABLE produtos ADD COLUMN data_validade DATE NULL"); $temDataValidade = true; } catch (Throwable $e2) {}
+  }
 
   if ($id !== '' && (int) $id > 0) {
     $idInt = (int) $id;
@@ -226,6 +239,8 @@ if ($metodo === 'POST') {
     if ($temDiasSemana) $campos['dias_semana'] = $diasSemanaJson;
     if ($temHorarioIni) $campos['horario_ini'] = $horarioIni;
     if ($temHorarioFim) $campos['horario_fim'] = $horarioFim;
+    if ($temDataFabricacao) $campos['data_fabricacao'] = $dataFabricacao;
+    if ($temDataValidade) $campos['data_validade'] = $dataValidade;
     if ($temImagem) {
       if ($imagemRemover) {
         $campos['imagem'] = null;
@@ -287,6 +302,8 @@ if ($metodo === 'POST') {
   if ($temDiasSemana) { $campos[] = 'dias_semana'; $values[] = $diasSemanaJson; }
   if ($temHorarioIni) { $campos[] = 'horario_ini'; $values[] = $horarioIni; }
   if ($temHorarioFim) { $campos[] = 'horario_fim'; $values[] = $horarioFim; }
+  if ($temDataFabricacao) { $campos[] = 'data_fabricacao'; $values[] = $dataFabricacao; }
+  if ($temDataValidade) { $campos[] = 'data_validade'; $values[] = $dataValidade; }
   if ($temOrdem) { $campos[] = 'ordem'; $values[] = $novaOrdem; }
   if ($temImagem && $imagemBase64 !== '') {
     $imagemSalva = storage_save_base64($imagemBase64, 'produtos', 'produto', $lojaId);
