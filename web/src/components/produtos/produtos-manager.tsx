@@ -29,6 +29,7 @@ import { ProdutoFormDialog } from "./produto-form-dialog";
 import { ComboFormDialog } from "./combo-form-dialog";
 import { CriarCategoriaDialog } from "./criar-categoria-dialog";
 import { ReordenarCategoriasDialog } from "./reordenar-categorias-dialog";
+import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 
 function formatBRL(v: number) {
   return `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -59,6 +60,8 @@ export function ProdutosManager({
   const [comboFormOpen, setComboFormOpen] = useState(false);
   const [comboEditando, setComboEditando] = useState<Combo | null>(null);
   const [categoriaParaNovoCombo, setCategoriaParaNovoCombo] = useState<number | null>(null);
+  const [categoriaParaExcluir, setCategoriaParaExcluir] = useState<Categoria | null>(null);
+  const [excluindoCategoria, setExcluindoCategoria] = useState(false);
 
   const produtosFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -149,15 +152,21 @@ export function ProdutosManager({
     router.refresh();
   }
 
-  async function excluirCategoria(cat: Categoria) {
-    if (!confirm(`Excluir a categoria "${cat.nome}"? Os produtos dela ficam sem categoria.`)) return;
-    await fetch("/api/categorias", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: cat.id }),
-    });
-    toast.success("Categoria excluída com sucesso");
-    router.refresh();
+  async function confirmarExclusaoCategoria() {
+    if (!categoriaParaExcluir) return;
+    setExcluindoCategoria(true);
+    try {
+      await fetch("/api/categorias", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: categoriaParaExcluir.id }),
+      });
+      toast.success("Categoria excluída com sucesso");
+      setCategoriaParaExcluir(null);
+      router.refresh();
+    } finally {
+      setExcluindoCategoria(false);
+    }
   }
 
   return (
@@ -261,7 +270,7 @@ export function ProdutosManager({
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <button
-                    onClick={() => excluirCategoria(categoria)}
+                    onClick={() => setCategoriaParaExcluir(categoria)}
                     className="rounded-md border p-2 text-muted-foreground hover:bg-muted hover:text-destructive"
                     aria-label="Excluir categoria"
                   >
@@ -395,6 +404,15 @@ export function ProdutosManager({
         categoriaPadrao={categoriaParaNovoCombo}
         phpAdminUrl={phpAdminUrl}
         onSalvo={() => router.refresh()}
+      />
+      <ConfirmDialog
+        open={categoriaParaExcluir !== null}
+        onOpenChange={(v) => !v && setCategoriaParaExcluir(null)}
+        titulo="Excluir categoria"
+        descricao={`Excluir a categoria "${categoriaParaExcluir?.nome}"? Os produtos dela ficam sem categoria.`}
+        confirmando={excluindoCategoria}
+        textoConfirmar="Excluir"
+        onConfirmar={confirmarExclusaoCategoria}
       />
     </div>
   );
