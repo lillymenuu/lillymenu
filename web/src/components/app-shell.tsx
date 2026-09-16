@@ -12,6 +12,7 @@ import { LojaInfoDialog } from "@/components/loja-info-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PosOverlayProvider, usePosOverlay } from "@/components/pos/pos-overlay-provider";
+import { ValidadeAviso } from "@/components/produtos/validade-aviso";
 import { cn } from "cn";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
@@ -404,6 +405,7 @@ function AppShellInner({
         loja={sidebarData.loja}
         phpAdminUrl={phpAdminUrl}
       />
+      <ValidadeAviso lojaId={sidebarData.loja.id} />
     </div>
   );
 }

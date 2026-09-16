@@ -42,6 +42,14 @@ export type Produto = {
   data_validade?: string | null;
 };
 
+export type ProdutoValidade = {
+  id: number;
+  nome: string;
+  data_validade: string;
+  dias_restantes: number;
+  vencido: boolean;
+};
+
 export function getCategorias() {
   return phpApiFetch<{ ok: true; categorias: Categoria[] }>("/admin/api/v1/categorias.php");
 }
