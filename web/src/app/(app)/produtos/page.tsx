@@ -1,17 +1,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { PhpApiError } from "@/lib/phpApi";
 import { getCategorias, getProdutos } from "@/lib/produtos";
+import { getCombos } from "@/lib/combosServer";
 import { ProdutosManager } from "@/components/produtos/produtos-manager";
 
 export default async function ProdutosPage() {
   let erro: string | null = null;
 
   try {
-    const [{ categorias }, { produtos }] = await Promise.all([getCategorias(), getProdutos()]);
+    const [{ categorias }, { produtos }, { combos }] = await Promise.all([getCategorias(), getProdutos(), getCombos()]);
     const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
 
     return (
-      <ProdutosManager categorias={categorias} produtos={produtos} phpAdminUrl={phpAdminUrl} />
+      <ProdutosManager categorias={categorias} produtos={produtos} combos={combos} phpAdminUrl={phpAdminUrl} />
     );
   } catch (e) {
     erro = e instanceof PhpApiError ? e.message : "Erro ao carregar produtos.";

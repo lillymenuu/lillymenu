@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   CheckCircle2,
+  Layers,
   ListOrdered,
   MoreVertical,
   Package,
@@ -23,7 +24,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Categoria, Produto } from "@/lib/produtos";
 import { produtoProximoValidade } from "@/lib/produtoValidade";
+import type { Combo } from "@/lib/combos";
 import { ProdutoFormDialog } from "./produto-form-dialog";
+import { ComboFormDialog } from "./combo-form-dialog";
 import { CriarCategoriaDialog } from "./criar-categoria-dialog";
 import { ReordenarCategoriasDialog } from "./reordenar-categorias-dialog";
 
@@ -36,10 +39,12 @@ const SEM_CATEGORIA: Categoria = { id: 0, nome: "Sem categoria", ativo: 1, ordem
 export function ProdutosManager({
   categorias,
   produtos,
+  combos,
   phpAdminUrl,
 }: {
   categorias: Categoria[];
   produtos: Produto[];
+  combos: Combo[];
   phpAdminUrl: string;
 }) {
   const router = useRouter();
@@ -51,6 +56,9 @@ export function ProdutosManager({
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
   const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(null);
   const [categoriaParaNovoProduto, setCategoriaParaNovoProduto] = useState<number | null>(null);
+  const [comboFormOpen, setComboFormOpen] = useState(false);
+  const [comboEditando, setComboEditando] = useState<Combo | null>(null);
+  const [categoriaParaNovoCombo, setCategoriaParaNovoCombo] = useState<number | null>(null);
 
   const produtosFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -74,20 +82,49 @@ export function ProdutosManager({
       if (!porCategoria.has(key)) porCategoria.set(key, []);
       porCategoria.get(key)!.push(p);
     }
+    const combosPorCategoria = new Map<number | null, Combo[]>();
+    for (const c of combos) {
+      const key = c.categoria_id;
+      if (!combosPorCategoria.has(key)) combosPorCategoria.set(key, []);
+      combosPorCategoria.get(key)!.push(c);
+    }
     const ordenados = categorias
-      .map((c) => ({ categoria: c, produtos: porCategoria.get(c.id) ?? [] }))
-      .filter((g) => g.produtos.length > 0 || (!busca && !somentePromo));
+      .map((c) => ({ categoria: c, produtos: porCategoria.get(c.id) ?? [], combos: combosPorCategoria.get(c.id) ?? [] }))
+      .filter((g) => g.produtos.length > 0 || g.combos.length > 0 || (!busca && !somentePromo));
     const semCategoria = porCategoria.get(null) ?? [];
-    if (semCategoria.length > 0) {
-      ordenados.push({ categoria: SEM_CATEGORIA, produtos: semCategoria });
+    const combosSemCategoria = combosPorCategoria.get(null) ?? [];
+    if (semCategoria.length > 0 || combosSemCategoria.length > 0) {
+      ordenados.push({ categoria: SEM_CATEGORIA, produtos: semCategoria, combos: combosSemCategoria });
     }
     return ordenados;
-  }, [categorias, produtosFiltrados, busca, somentePromo]);
+  }, [categorias, produtosFiltrados, combos, busca, somentePromo]);
 
   function abrirNovoProduto(categoriaId?: number) {
     setProdutoEditando(null);
     setCategoriaParaNovoProduto(categoriaId ?? null);
     setFormOpen(true);
+  }
+
+  function abrirNovoCombo(categoriaId?: number) {
+    setComboEditando(null);
+    setCategoriaParaNovoCombo(categoriaId ?? null);
+    setComboFormOpen(true);
+  }
+
+  function abrirEdicaoCombo(combo: Combo) {
+    setComboEditando(combo);
+    setComboFormOpen(true);
+  }
+
+  async function toggleAtivoCombo(combo: Combo) {
+    const novoAtivo = combo.ativo === 1 ? 0 : 1;
+    await fetch("/api/combos/toggle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: combo.id, ativo: novoAtivo }),
+    });
+    toast.success(novoAtivo ? "Combo ativado com sucesso" : "Combo desativado com sucesso");
+    router.refresh();
   }
 
   async function toggleAtivoProduto(produto: Produto) {
@@ -174,7 +211,7 @@ export function ProdutosManager({
         </div>
       )}
 
-      {grupos.map(({ categoria, produtos: itens }) => {
+      {grupos.map(({ categoria, produtos: itens, combos: comboItens }) => {
         const isSemCategoria = categoria.id === 0;
         return (
           <div key={categoria.id} className="flex flex-col gap-3">
@@ -200,6 +237,9 @@ export function ProdutosManager({
                 <div className="flex items-center gap-1.5">
                   <Button size="sm" onClick={() => abrirNovoProduto(categoria.id)}>
                     <Plus size={14} /> Adicionar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => abrirNovoCombo(categoria.id)}>
+                    <Layers size={14} /> Combo
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger
@@ -231,10 +271,51 @@ export function ProdutosManager({
               )}
             </div>
 
-            {itens.length === 0 ? (
+            {itens.length === 0 && comboItens.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum produto nesta categoria ainda.</p>
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
+                {comboItens.map((c) => {
+                  const imagemUrl = c.imagem ? (c.imagem.startsWith("http") ? c.imagem : `${phpAdminUrl}/${c.imagem}`) : null;
+                  const emPromo = Boolean(c.preco_promocional) && c.promo_desativado !== 1;
+                  return (
+                    <div
+                      key={`combo-${c.id}`}
+                      onClick={() => abrirEdicaoCombo(c)}
+                      className="flex cursor-pointer flex-col overflow-hidden rounded-xl border transition-shadow hover:shadow-md"
+                    >
+                      <div className="relative aspect-[4/3] w-full bg-muted">
+                        {imagemUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={imagemUrl} alt={c.nome} className="size-full object-cover" />
+                        ) : (
+                          <div className="flex size-full items-center justify-center">
+                            <Layers size={24} className="text-muted-foreground" />
+                          </div>
+                        )}
+                        <span className="absolute top-1.5 left-1.5 flex items-center gap-1 rounded-full bg-background/90 px-2 py-0.5 text-[11px] font-medium">
+                          <Layers size={11} /> Combo
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1 p-3">
+                        <span className="truncate text-sm font-medium">{c.nome}</span>
+                        <div className="flex items-center gap-1.5 text-sm">
+                          {emPromo ? (
+                            <>
+                              <span className="text-muted-foreground line-through">{formatBRL(c.preco)}</span>
+                              <span className="font-semibold text-primary">{formatBRL(c.preco_promocional!)}</span>
+                            </>
+                          ) : (
+                            <span className="font-semibold">{formatBRL(c.preco)}</span>
+                          )}
+                        </div>
+                        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                          <Switch checked={c.ativo === 1} onCheckedChange={() => toggleAtivoCombo(c)} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
                 {itens.map((p) => {
                   const imagemUrl = p.imagem
                     ? p.imagem.startsWith("http")
@@ -305,6 +386,16 @@ export function ProdutosManager({
       />
       <CriarCategoriaDialog open={categoriaDialogOpen} onOpenChange={setCategoriaDialogOpen} categoria={categoriaEditando} />
       <ReordenarCategoriasDialog open={reordenarOpen} onOpenChange={setReordenarOpen} categorias={categorias} />
+      <ComboFormDialog
+        open={comboFormOpen}
+        onOpenChange={setComboFormOpen}
+        categorias={categorias}
+        produtos={produtos}
+        combo={comboEditando}
+        categoriaPadrao={categoriaParaNovoCombo}
+        phpAdminUrl={phpAdminUrl}
+        onSalvo={() => router.refresh()}
+      />
     </div>
   );
 }
