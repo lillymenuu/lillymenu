@@ -1,14 +1,17 @@
 "use client";
 
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { ImageIcon, ShoppingBag } from "lucide-react";
+import { StoreSheet } from "@/components/store/store-sheet";
+import { QtyStepper } from "@/components/store/qty-stepper";
+import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem } from "@/lib/store/types";
 
 export function StoreCartSheet({
   open,
   onOpenChange,
+  nomeLoja,
+  logoLoja,
   itens,
   subtotal,
   onAtualizarQtd,
@@ -17,89 +20,105 @@ export function StoreCartSheet({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  nomeLoja: string;
+  logoLoja: string;
   itens: StoreCartItem[];
   subtotal: number;
   onAtualizarQtd: (key: string, qtd: number) => void;
   onRemover: (key: string) => void;
   onFinalizar: () => void;
 }) {
+  const { brown } = useStoreTheme();
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-md flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
-        <div className="border-b p-4">
-          <DialogTitle>Seu carrinho</DialogTitle>
+    <StoreSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Meu carrinho"
+      rightAction={
+        itens.length > 0 ? (
+          <button type="button" onClick={() => itens.forEach((i) => onRemover(i.key))} className="text-[.8rem] text-neutral-400">
+            Limpar
+          </button>
+        ) : undefined
+      }
+      footer={
+        itens.length > 0 ? (
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[.72rem] text-neutral-500">Total da compra</p>
+              <p className="text-[.98rem] font-bold text-neutral-900">
+                {formatarPreco(subtotal)} <span className="text-[.72rem] font-normal text-neutral-500">/ {itens.length} itens</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onFinalizar}
+              className="shrink-0 rounded-[10px] px-6 py-3 text-[.86rem] font-bold text-white"
+              style={{ background: brown }}
+            >
+              Continuar
+            </button>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="p-4">
+        <div className="mb-3 flex items-center gap-2.5">
+          <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-xs font-bold text-neutral-500">
+            {logoLoja ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoLoja} alt="" className="size-full object-cover" />
+            ) : (
+              nomeLoja.charAt(0)
+            )}
+          </div>
+          <div>
+            <p className="text-[.86rem] font-bold text-neutral-900">{nomeLoja}</p>
+            <p className="text-[.74rem] text-neutral-400">Adicionar mais itens</p>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          {itens.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
-              <ShoppingBag size={28} />
-              <p className="text-sm">Nenhum item adicionado</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
+        {itens.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-16 text-neutral-300">
+            <ShoppingBag size={30} />
+            <p className="text-[.86rem] text-neutral-400">Nenhum item adicionado</p>
+          </div>
+        ) : (
+          <>
+            <p className="mb-2 text-[.68rem] font-bold tracking-wide text-neutral-400 uppercase">Itens adicionados</p>
+            <div>
               {itens.map((item) => {
-                const obsExibivel = item.obs.startsWith("[combo]")
-                  ? item.obs.replace(/^\[combo\]\n?/, "")
-                  : item.obs;
+                const obsExibivel = item.obs.startsWith("[combo]") ? item.obs.replace(/^\[combo\]\n?/, "") : item.obs;
                 return (
-                  <div key={item.key} className="rounded-lg border border-border p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-foreground">{item.nome}</div>
-                        {obsExibivel && (
-                          <div className="mt-0.5 whitespace-pre-line text-xs text-muted-foreground">{obsExibivel}</div>
-                        )}
-                        <div className="mt-1 text-sm font-medium text-foreground">{formatarPreco(item.precoUnit)}</div>
+                  <div key={item.key} className="flex gap-2.5 border-b border-neutral-100 py-2.5 last:border-0">
+                    <div className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+                      <div className="flex size-full items-center justify-center text-neutral-300">
+                        <ImageIcon size={16} />
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={() => onRemover(item.key)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
                     </div>
-                    <div className="mt-2 flex items-center gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => onAtualizarQtd(item.key, item.qtd - 1)}
-                      >
-                        <Minus size={12} />
-                      </Button>
-                      <span className="w-5 text-center text-sm">{item.qtd}</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => onAtualizarQtd(item.key, item.qtd + 1)}
-                      >
-                        <Plus size={12} />
-                      </Button>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[.82rem] font-semibold text-neutral-900">{item.nome}</p>
+                      {obsExibivel && <p className="mt-0.5 line-clamp-2 text-[.72rem] whitespace-pre-line text-neutral-400">{obsExibivel}</p>}
+                      <p className="mt-0.5 text-[.82rem] font-bold" style={{ color: brown }}>
+                        {formatarPreco(item.precoUnit)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center">
+                      <QtyStepper
+                        size="sm"
+                        value={item.qtd}
+                        min={0}
+                        onChange={(v) => (v <= 0 ? onRemover(item.key) : onAtualizarQtd(item.key, v))}
+                      />
                     </div>
                   </div>
                 );
               })}
             </div>
-          )}
-        </div>
-
-        {itens.length > 0 && (
-          <div className="border-t p-4">
-            <div className="mb-3 flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-semibold text-foreground">{formatarPreco(subtotal)}</span>
-            </div>
-            <Button type="button" className="w-full" onClick={onFinalizar}>
-              Continuar
-            </Button>
-          </div>
+          </>
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+    </StoreSheet>
   );
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Minus, Plus, ImageIcon, Layers } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { ImageIcon, Layers } from "lucide-react";
+import { StoreSheet } from "@/components/store/store-sheet";
+import { QtyStepper } from "@/components/store/qty-stepper";
+import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem, StoreCombo, StoreComboPasso } from "@/lib/store/types";
 
-type Selecao = Record<number, number>; // opcao_id -> qty
+type Selecao = Record<number, number>;
 
 export function StoreComboDialog({
   combo,
@@ -22,11 +23,12 @@ export function StoreComboDialog({
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
 }) {
+  const { brown } = useStoreTheme();
   const [qtd, setQtd] = useState(1);
   const [obs, setObs] = useState("");
   const [passos, setPassos] = useState<StoreComboPasso[]>([]);
   const [carregando, setCarregando] = useState(false);
-  const [selecoes, setSelecoes] = useState<Record<number, Selecao>>({}); // passo_id -> {opcao_id: qty}
+  const [selecoes, setSelecoes] = useState<Record<number, Selecao>>({});
 
   useEffect(() => {
     if (!open || !combo) return;
@@ -74,172 +76,146 @@ export function StoreComboDialog({
     if (!combo || !podeAdicionar) return;
     const combosels = passos.flatMap((p) => {
       const sel = selecoes[p.id] ?? {};
-      return p.opcoes
-        .filter((o) => (sel[o.id] ?? 0) > 0)
-        .map((o) => ({ id: o.id, nome: o.nome, qtd: sel[o.id] }));
+      return p.opcoes.filter((o) => (sel[o.id] ?? 0) > 0).map((o) => ({ id: o.id, nome: o.nome, qtd: sel[o.id] }));
     });
     const comboLines = combosels.map((s) => s.nome + (s.qtd > 1 ? ` x${s.qtd}` : "")).join("\n");
     const obsFinal = combosels.length ? `[combo]\n${comboLines}${obs ? `\n${obs}` : ""}` : obs;
 
-    onAdicionar({
-      id: combo.id,
-      tipo: "combo",
-      nome: combo.nome,
-      precoUnit: combo.preco_final,
-      qtd,
-      obs: obsFinal,
-      combosels,
-    });
+    onAdicionar({ id: combo.id, tipo: "combo", nome: combo.nome, precoUnit: combo.preco_final, qtd, obs: obsFinal, combosels });
     onOpenChange(false);
   }
 
+  const footer = (
+    <div className="flex items-center justify-between gap-3">
+      <QtyStepper value={qtd} onChange={setQtd} />
+      <button
+        type="button"
+        disabled={!podeAdicionar}
+        onClick={adicionar}
+        className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-opacity disabled:opacity-40"
+        style={{ background: brown }}
+      >
+        {passosFaltando.length > 0 ? `Selecione "${passosFaltando[0].nome}"` : `Adicionar ${formatarPreco(combo.preco_final * qtd)}`}
+      </button>
+    </div>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-md gap-0 overflow-hidden p-0 sm:max-w-md">
-        <div className="max-h-[85vh] overflow-y-auto">
-          <div className="h-44 w-full shrink-0 bg-muted">
-            {combo.imagem ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={combo.imagem} alt="" className="size-full object-cover" />
-            ) : (
-              <div className="flex size-full items-center justify-center text-muted-foreground">
-                <Layers size={28} />
-              </div>
-            )}
-          </div>
-
-          <div className="p-4">
-            <div className="mb-1 flex items-center gap-2">
-              <DialogTitle className="text-base">{combo.nome}</DialogTitle>
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                Combo
-              </span>
+    <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer}>
+      <div className="p-4">
+        <div className="mb-3 h-[190px] w-full overflow-hidden rounded-xl bg-neutral-100">
+          {combo.imagem ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={combo.imagem} alt="" className="size-full object-cover" />
+          ) : (
+            <div className="flex size-full items-center justify-center text-neutral-300">
+              <Layers size={32} />
             </div>
-            {combo.descricao && <p className="mt-1 text-sm text-muted-foreground">{combo.descricao}</p>}
-            <div className="mt-2">
-              {combo.em_promo ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground line-through">{formatarPreco(combo.preco_base)}</span>
-                  <span className="text-base font-semibold text-foreground">{formatarPreco(combo.preco_final)}</span>
-                </div>
-              ) : (
-                <span className="text-base font-semibold text-foreground">{formatarPreco(combo.preco_final)}</span>
-              )}
-            </div>
-
-            {carregando ? (
-              <p className="mt-4 text-sm text-muted-foreground">Carregando opcoes...</p>
-            ) : (
-              <div className="mt-4 space-y-5">
-                {passos.map((passo) => {
-                  const total = totalSelecionado(passo.id);
-                  const min = passo.min_itens || 0;
-                  const max = passo.max_itens || 0;
-                  let sub = "";
-                  if (min > 0 && max > 0 && min === max) sub = `Escolha exatamente ${min} ${min === 1 ? "opcao" : "opcoes"}`;
-                  else if (min > 0 && max > 0) sub = `Escolha entre ${min} e ${max} opcoes`;
-                  else if (min > 0) sub = `Escolha ao menos ${min} ${min === 1 ? "opcao" : "opcoes"}`;
-                  else if (max > 0) sub = `Escolha ate ${max} ${max === 1 ? "opcao" : "opcoes"}`;
-                  if (passo.permite_repetir !== 1) sub += sub ? ". Opcoes nao podem ser repetidas" : "Opcoes nao podem ser repetidas";
-
-                  return (
-                    <div key={passo.id}>
-                      <div className="mb-2 flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-foreground">{passo.nome}</h3>
-                        {passo.obrigatorio === 1 && (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">
-                            Obrigatorio
-                          </span>
-                        )}
-                      </div>
-                      {sub && <p className="mb-2 text-xs text-muted-foreground">{sub}</p>}
-                      <div className="space-y-1.5">
-                        {passo.opcoes.map((opc) => {
-                          const qty = selecoes[passo.id]?.[opc.id] ?? 0;
-                          const podeAdd = !opc.esgotado && (max === 0 || total < max) && (passo.permite_repetir === 1 || qty === 0);
-                          return (
-                            <div
-                              key={opc.id}
-                              className={`flex items-center gap-2.5 rounded-lg border p-2.5 ${
-                                opc.esgotado ? "opacity-50" : "border-border"
-                              }`}
-                            >
-                              <div className="size-10 shrink-0 overflow-hidden rounded-md bg-muted">
-                                {opc.imagem ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={opc.imagem} alt="" className="size-full object-cover" />
-                                ) : (
-                                  <div className="flex size-full items-center justify-center text-muted-foreground">
-                                    <ImageIcon size={14} />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm">{opc.nome}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {opc.esgotado ? "Esgotado" : "Incluido no valor do combo"}
-                                </div>
-                              </div>
-                              <div className="flex shrink-0 items-center gap-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon-sm"
-                                  disabled={qty <= 0}
-                                  onClick={() => alterarQty(passo, opc.id, -1)}
-                                >
-                                  <Minus size={12} />
-                                </Button>
-                                <span className="w-4 text-center text-sm">{qty}</span>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon-sm"
-                                  disabled={!podeAdd}
-                                  onClick={() => alterarQty(passo, opc.id, 1)}
-                                >
-                                  <Plus size={12} />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="mt-4">
-              <label className="mb-1.5 block text-sm font-medium text-foreground">Observacoes</label>
-              <textarea
-                value={obs}
-                onChange={(e) => setObs(e.target.value)}
-                rows={2}
-                className="w-full resize-none rounded-lg border border-border bg-background p-2.5 text-sm outline-none focus:border-ring"
-              />
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button type="button" variant="outline" size="icon" disabled={qtd <= 1} onClick={() => setQtd((q) => Math.max(1, q - 1))}>
-                  <Minus size={14} />
-                </Button>
-                <span className="w-6 text-center text-sm font-medium">{qtd}</span>
-                <Button type="button" variant="outline" size="icon" onClick={() => setQtd((q) => q + 1)}>
-                  <Plus size={14} />
-                </Button>
-              </div>
-              <Button type="button" disabled={!podeAdicionar} onClick={adicionar}>
-                {passosFaltando.length > 0
-                  ? `Selecione "${passosFaltando[0].nome}"`
-                  : `Adicionar ${formatarPreco(combo.preco_final * qtd)}`}
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
-      </DialogContent>
-    </Dialog>
+        <div className="mb-1 flex items-center gap-2">
+          <h2 className="text-[1rem] font-bold text-neutral-900">{combo.nome}</h2>
+          <span className="rounded bg-amber-500 px-1.5 py-px text-[.62rem] font-bold tracking-wide text-white uppercase">Combo</span>
+        </div>
+        {combo.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{combo.descricao}</p>}
+        <div className="mb-4">
+          {combo.em_promo ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
+              <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
+            </div>
+          ) : (
+            <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
+          )}
+        </div>
+
+        {carregando ? (
+          <p className="text-[.86rem] text-neutral-500">Carregando opcoes...</p>
+        ) : (
+          <div className="space-y-5">
+            {passos.map((passo) => {
+              const total = totalSelecionado(passo.id);
+              const min = passo.min_itens || 0;
+              const max = passo.max_itens || 0;
+              let sub = "";
+              if (min > 0 && max > 0 && min === max) sub = `Escolha exatamente ${min} ${min === 1 ? "opcao" : "opcoes"}`;
+              else if (min > 0 && max > 0) sub = `Escolha entre ${min} e ${max} opcoes`;
+              else if (min > 0) sub = `Escolha ao menos ${min} ${min === 1 ? "opcao" : "opcoes"}`;
+              else if (max > 0) sub = `Escolha ate ${max} ${max === 1 ? "opcao" : "opcoes"}`;
+              if (passo.permite_repetir !== 1) sub += sub ? ". Opcoes nao podem ser repetidas" : "Opcoes nao podem ser repetidas";
+
+              return (
+                <div key={passo.id}>
+                  <div className="mb-0.5 flex items-center gap-2">
+                    <h3 className="text-[.86rem] font-bold text-neutral-900">{passo.nome}</h3>
+                    {passo.obrigatorio === 1 && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.67rem] font-bold text-amber-700">Obrigatorio</span>
+                    )}
+                  </div>
+                  {sub && <p className="mb-2 text-[.72rem] text-neutral-400">{sub}</p>}
+                  <div className="space-y-2">
+                    {passo.opcoes.map((opc) => {
+                      const qty = selecoes[passo.id]?.[opc.id] ?? 0;
+                      const podeAdd = !opc.esgotado && (max === 0 || total < max) && (passo.permite_repetir === 1 || qty === 0);
+                      return (
+                        <div key={opc.id} className={`flex items-center gap-2.5 ${opc.esgotado ? "opacity-50" : ""}`}>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[.86rem] text-neutral-900">{opc.nome}</div>
+                            <div className="text-[.76rem] text-neutral-400">
+                              {opc.esgotado ? "Esgotado" : "Incluido no valor do combo"}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={qty <= 0}
+                              onClick={() => alterarQty(passo, opc.id, -1)}
+                              className="flex size-7 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 disabled:opacity-40"
+                            >
+                              −
+                            </button>
+                            <span className="w-4 text-center text-[.86rem] font-semibold">{qty}</span>
+                            <button
+                              type="button"
+                              disabled={!podeAdd}
+                              onClick={() => alterarQty(passo, opc.id, 1)}
+                              className="flex size-7 items-center justify-center rounded-full text-white disabled:opacity-40"
+                              style={{ background: brown }}
+                            >
+                              +
+                            </button>
+                          </div>
+                          <div className="size-10 shrink-0 overflow-hidden rounded-md bg-neutral-100">
+                            {opc.imagem ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={opc.imagem} alt="" className="size-full object-cover" />
+                            ) : (
+                              <div className="flex size-full items-center justify-center text-neutral-300">
+                                <ImageIcon size={14} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-5">
+          <label className="mb-1.5 block text-[.86rem] font-bold text-neutral-900">Alguma observacao?</label>
+          <textarea
+            value={obs}
+            onChange={(e) => setObs(e.target.value)}
+            placeholder="Observacoes do cliente"
+            rows={2}
+            className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-[.84rem] outline-none"
+          />
+        </div>
+      </div>
+    </StoreSheet>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Minus, Plus, ImageIcon } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Expand, ImageIcon } from "lucide-react";
+import { StoreSheet } from "@/components/store/store-sheet";
+import { QtyStepper } from "@/components/store/qty-stepper";
+import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem, StoreProduto, StoreProdutoVariacoes } from "@/lib/store/types";
 
@@ -20,6 +21,7 @@ export function StoreProdutoDialog({
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
 }) {
+  const { brown } = useStoreTheme();
   const [qtd, setQtd] = useState(1);
   const [obs, setObs] = useState("");
   const [detalhe, setDetalhe] = useState<StoreProdutoVariacoes | null>(null);
@@ -85,23 +87,15 @@ export function StoreProdutoDialog({
     if (!produto || !podeAdicionar) return;
 
     if (!temVariacoes) {
-      onAdicionar({
-        id: produto.id,
-        tipo: "produto",
-        nome: produto.nome,
-        precoUnit: produto.preco_final,
-        qtd,
-        obs: obs.trim(),
-      });
+      onAdicionar({ id: produto.id, tipo: "produto", nome: produto.nome, precoUnit: produto.preco_final, qtd, obs: obs.trim() });
     } else if (variacaoSelecionada) {
       const nomeVariacao = [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ");
       const extraLabel = extrasSelecionados.map((e) => ` + ${e.nome}`).join("");
       const complementoLabel = complementoSelecionado ? ` + ${complementoSelecionado.nome}` : "";
-      const nome = `${produto.nome} - ${nomeVariacao}${extraLabel}${complementoLabel}`;
       onAdicionar({
         id: produto.id,
         tipo: "produto",
-        nome,
+        nome: `${produto.nome} - ${nomeVariacao}${extraLabel}${complementoLabel}`,
         precoUnit: precoUnitario,
         qtd,
         obs: obs.trim(),
@@ -111,175 +105,187 @@ export function StoreProdutoDialog({
     onOpenChange(false);
   }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-md gap-0 overflow-hidden p-0 sm:max-w-md">
-        <div className="max-h-[85vh] overflow-y-auto">
-          <div className="h-44 w-full shrink-0 bg-muted">
+  const footer = (
+    <div className="flex items-center justify-between gap-3">
+      <QtyStepper value={qtd} min={Math.max(1, produto.quantidade_minima ?? 0)} onChange={setQtd} />
+      <button
+        type="button"
+        disabled={!podeAdicionar}
+        onClick={adicionar}
+        className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-opacity disabled:opacity-40"
+        style={{ background: brown }}
+      >
+        {produto.esgotado ? "Esgotado" : `Adicionar ${formatarPreco(total)}`}
+      </button>
+    </div>
+  );
+
+  const opcoesConteudo = carregando ? (
+    <p className="text-[.86rem] text-neutral-500">Carregando opcoes...</p>
+  ) : (
+    <>
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-[.86rem] font-bold text-neutral-900">Escolha uma das opcoes</h3>
+          <span className="text-[.7rem] font-bold text-red-600">Obrigatorio</span>
+        </div>
+        <div className="space-y-0">
+          {(detalhe?.variacoes ?? []).map((v) => {
+            const nome = [v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opcao";
+            return (
+              <label key={v.id} className="flex cursor-pointer items-center justify-between border-b border-neutral-100 py-3 text-[.86rem]">
+                <div>
+                  <div className="text-neutral-900">{nome}</div>
+                  <div className="text-[.78rem] text-neutral-400">{formatarPreco(v.preco)}</div>
+                </div>
+                <input
+                  type="radio"
+                  name="variacao"
+                  checked={variacaoId === v.id}
+                  onChange={() => setVariacaoId(v.id)}
+                  className="size-[18px] accent-current"
+                  style={{ color: brown }}
+                />
+              </label>
+            );
+          })}
+          {detalhe?.variacoes.length === 0 && <p className="py-2 text-[.8rem] text-neutral-400">Sem variacoes cadastradas.</p>}
+        </div>
+      </div>
+
+      {(detalhe?.extras.length ?? 0) > 0 && (
+        <div className="mt-5">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-[.86rem] font-bold text-neutral-900">Escolha seu extra</h3>
+            {detalhe?.extras_obrigatorio === 1 && <span className="text-[.7rem] font-bold text-red-600">Obrigatorio</span>}
+          </div>
+          <div>
+            {detalhe?.extras.map((e) => (
+              <label key={e.id} className="flex cursor-pointer items-center justify-between border-b border-neutral-100 py-3 text-[.86rem]">
+                <div>
+                  <div className="text-neutral-900">{e.nome}</div>
+                  <div className="text-[.78rem] text-neutral-400">{formatarPreco(e.preco)}</div>
+                </div>
+                <input type="checkbox" checked={extrasIds.includes(e.id)} onChange={() => alternarExtra(e.id)} className="size-[18px]" />
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(detalhe?.complementos_itens.length ?? 0) > 0 && (
+        <div className="mt-5">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-[.86rem] font-bold text-neutral-900">Escolha o tipo</h3>
+            {detalhe?.complementos_itens_obrigatorio === 1 && <span className="text-[.7rem] font-bold text-red-600">Obrigatorio</span>}
+          </div>
+          <div>
+            {detalhe?.complementos_itens.map((c) => (
+              <label key={c.id} className="flex cursor-pointer items-center justify-between border-b border-neutral-100 py-3 text-[.86rem]">
+                <div>
+                  <div className="text-neutral-900">{c.nome}</div>
+                  <div className="text-[.78rem] text-neutral-400">{formatarPreco(c.preco)}</div>
+                </div>
+                <input
+                  type="radio"
+                  name="complemento"
+                  checked={complementoId === c.id}
+                  onChange={() => setComplementoId(c.id)}
+                  className="size-[18px]"
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  const obsField = (
+    <div className="mt-5">
+      <label className="mb-1.5 block text-[.86rem] font-bold text-neutral-900">Alguma observacao?</label>
+      <textarea
+        value={obs}
+        onChange={(e) => setObs(e.target.value)}
+        placeholder="Observacoes do cliente"
+        rows={2}
+        className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-[.84rem] outline-none"
+      />
+    </div>
+  );
+
+  if (temVariacoes) {
+    return (
+      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer}>
+        <div className="flex h-full flex-col sm:flex-row">
+          <div className="relative h-[220px] shrink-0 bg-neutral-100 sm:h-full sm:w-[300px]">
             {produto.imagem ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={produto.imagem} alt="" className="size-full object-cover" />
             ) : (
-              <div className="flex size-full items-center justify-center text-muted-foreground">
-                <ImageIcon size={28} />
+              <div className="flex size-full items-center justify-center text-neutral-300">
+                <ImageIcon size={32} />
               </div>
             )}
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="absolute top-3 right-3 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600"
+            >
+              ×
+            </button>
           </div>
-
-          <div className="p-4">
-            <DialogTitle className="text-base">{produto.nome}</DialogTitle>
-            {produto.descricao && <p className="mt-1 text-sm text-muted-foreground">{produto.descricao}</p>}
-
-            {!temVariacoes && (
-              <div className="mt-2">
-                {produto.em_promo ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground line-through">
-                      {formatarPreco(produto.preco_base)}
-                    </span>
-                    <span className="text-base font-semibold text-foreground">
-                      {formatarPreco(produto.preco_final)}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-base font-semibold text-foreground">{formatarPreco(produto.preco_final)}</span>
-                )}
-              </div>
-            )}
-
-            {produto.esgotado && (
-              <p className="mt-2 text-sm font-medium text-destructive">Produto esgotado no momento.</p>
-            )}
-
-            {temVariacoes && (
-              <div className="mt-4 space-y-4">
-                {carregando ? (
-                  <p className="text-sm text-muted-foreground">Carregando opcoes...</p>
-                ) : (
-                  <>
-                    <div>
-                      <h3 className="mb-2 text-sm font-semibold text-foreground">Escolha o tamanho / cor</h3>
-                      <div className="space-y-1.5">
-                        {(detalhe?.variacoes ?? []).map((v) => {
-                          const nome = [v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opcao";
-                          return (
-                            <label
-                              key={v.id}
-                              className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 text-sm ${
-                                variacaoId === v.id ? "border-primary bg-primary/5" : "border-border"
-                              }`}
-                            >
-                              <span>{nome}</span>
-                              <span className="flex items-center gap-2">
-                                <span className="text-muted-foreground">{formatarPreco(v.preco)}</span>
-                                <input
-                                  type="radio"
-                                  name="variacao"
-                                  checked={variacaoId === v.id}
-                                  onChange={() => setVariacaoId(v.id)}
-                                />
-                              </span>
-                            </label>
-                          );
-                        })}
-                        {detalhe?.variacoes.length === 0 && (
-                          <p className="text-xs text-muted-foreground">Sem variacoes cadastradas.</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {(detalhe?.extras.length ?? 0) > 0 && (
-                      <div>
-                        <h3 className="mb-2 text-sm font-semibold text-foreground">
-                          Escolha seu extra {detalhe?.extras_obrigatorio === 1 && <span className="text-destructive">*</span>}
-                        </h3>
-                        <div className="space-y-1.5">
-                          {detalhe?.extras.map((e) => (
-                            <label
-                              key={e.id}
-                              className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 text-sm ${
-                                extrasIds.includes(e.id) ? "border-primary bg-primary/5" : "border-border"
-                              }`}
-                            >
-                              <span>{e.nome}</span>
-                              <span className="flex items-center gap-2">
-                                <span className="text-muted-foreground">{formatarPreco(e.preco)}</span>
-                                <input type="checkbox" checked={extrasIds.includes(e.id)} onChange={() => alternarExtra(e.id)} />
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {(detalhe?.complementos_itens.length ?? 0) > 0 && (
-                      <div>
-                        <h3 className="mb-2 text-sm font-semibold text-foreground">
-                          Escolha o tipo{" "}
-                          {detalhe?.complementos_itens_obrigatorio === 1 && <span className="text-destructive">*</span>}
-                        </h3>
-                        <div className="space-y-1.5">
-                          {detalhe?.complementos_itens.map((c) => (
-                            <label
-                              key={c.id}
-                              className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 text-sm ${
-                                complementoId === c.id ? "border-primary bg-primary/5" : "border-border"
-                              }`}
-                            >
-                              <span>{c.nome}</span>
-                              <span className="flex items-center gap-2">
-                                <span className="text-muted-foreground">{formatarPreco(c.preco)}</span>
-                                <input
-                                  type="radio"
-                                  name="complemento"
-                                  checked={complementoId === c.id}
-                                  onChange={() => setComplementoId(c.id)}
-                                />
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-
-            <div className="mt-4">
-              <label className="mb-1.5 block text-sm font-medium text-foreground">Observacoes</label>
-              <textarea
-                value={obs}
-                onChange={(e) => setObs(e.target.value)}
-                placeholder="Ex: sem cebola, ponto da carne, etc."
-                rows={2}
-                className="w-full resize-none rounded-lg border border-border bg-background p-2.5 text-sm outline-none focus:border-ring"
-              />
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled={qtd <= Math.max(1, produto.quantidade_minima ?? 0)}
-                  onClick={() => setQtd((q) => Math.max(1, q - 1))}
-                >
-                  <Minus size={14} />
-                </Button>
-                <span className="w-6 text-center text-sm font-medium">{qtd}</span>
-                <Button type="button" variant="outline" size="icon" onClick={() => setQtd((q) => q + 1)}>
-                  <Plus size={14} />
-                </Button>
-              </div>
-              <Button type="button" disabled={!podeAdicionar} onClick={adicionar}>
-                {produto.esgotado ? "Esgotado" : `Adicionar ${formatarPreco(total)}`}
-              </Button>
-            </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <h2 className="mb-1 text-[1rem] font-bold text-neutral-900">{produto.nome}</h2>
+            <p className="mb-4 text-[.86rem] font-semibold text-neutral-900">
+              a partir de {formatarPreco(produto.preco_produto)}
+            </p>
+            {opcoesConteudo}
+            {obsField}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </StoreSheet>
+    );
+  }
+
+  return (
+    <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer}>
+      <div className="p-4">
+        <div className="group relative mb-3 h-[190px] w-full overflow-hidden rounded-xl bg-neutral-100">
+          {produto.imagem ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={produto.imagem} alt="" className="size-full object-cover" />
+              <button
+                type="button"
+                onClick={() => window.open(produto.imagem, "_blank")}
+                className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white"
+              >
+                <Expand size={12} />
+                Ver maior
+              </button>
+            </>
+          ) : (
+            <div className="flex size-full items-center justify-center text-neutral-300">
+              <ImageIcon size={32} />
+            </div>
+          )}
+        </div>
+        <h2 className="mb-1.5 text-[1rem] font-bold text-neutral-900">{produto.nome}</h2>
+        {produto.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
+        <div className="mb-3.5">
+          {produto.em_promo ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
+              <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
+            </div>
+          ) : (
+            <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
+          )}
+        </div>
+        {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
+        {obsField}
+      </div>
+    </StoreSheet>
   );
 }

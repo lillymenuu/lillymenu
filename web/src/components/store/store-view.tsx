@@ -1,28 +1,78 @@
 "use client";
 
-import { useState } from "react";
-import { ImageIcon, Layers, ShoppingBag, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from "react";
+import {
+  AtSign,
+  Clock3,
+  Gift,
+  ImageIcon,
+  Layers,
+  List,
+  Percent,
+  Search,
+  Share2,
+  ShoppingBag,
+  Star,
+} from "lucide-react";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCatalogo, StoreCombo, StorePerfil, StoreProduto } from "@/lib/store/types";
+import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-theme";
 import { useStoreCart } from "@/components/store/use-store-cart";
 import { StoreProdutoDialog } from "@/components/store/store-produto-dialog";
 import { StoreComboDialog } from "@/components/store/store-combo-dialog";
 import { StoreCartSheet } from "@/components/store/store-cart-sheet";
 import { StoreCheckoutDialog } from "@/components/store/store-checkout-dialog";
+import { StoreSuccessDialog } from "@/components/store/store-success-dialog";
 
 function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
   return "tipo" in item && item.tipo === "combo";
 }
 
 export function StoreView({ perfil, catalogo }: { perfil: StorePerfil; catalogo: StoreCatalogo }) {
+  return (
+    <StoreThemeProvider brown={perfil.temaCorMenu}>
+      <StoreViewInner perfil={perfil} catalogo={catalogo} />
+    </StoreThemeProvider>
+  );
+}
+
+function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: StoreCatalogo }) {
+  const { brown } = useStoreTheme();
   const cart = useStoreCart(perfil.loja_id);
 
   const [produtoAberto, setProdutoAberto] = useState<StoreProduto | null>(null);
   const [comboAberto, setComboAberto] = useState<StoreCombo | null>(null);
   const [cartAberto, setCartAberto] = useState(false);
   const [checkoutAberto, setCheckoutAberto] = useState(false);
-  const [pedidoConfirmado, setPedidoConfirmado] = useState<number | string | null>(null);
+  const [pedidoConfirmado, setPedidoConfirmado] = useState<{ codigo: number | string } | null>(null);
+  const [buscaAberta, setBuscaAberta] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(catalogo.categorias[0]?.id ?? null);
+
+  const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const catNavRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onScroll() {
+      const entries = Object.entries(sectionRefs.current);
+      let closest: { id: number; top: number } | null = null;
+      for (const [idStr, el] of entries) {
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top;
+        if (top <= 140 && (closest === null || top > closest.top)) {
+          closest = { id: Number(idStr), top };
+        }
+      }
+      if (closest) setCategoriaAtiva(closest.id);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  function irParaCategoria(id: number) {
+    setCategoriaAtiva(id);
+    sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function abrirItem(item: StoreProduto | StoreCombo) {
     if (isCombo(item)) setComboAberto(item);
@@ -32,192 +82,399 @@ export function StoreView({ perfil, catalogo }: { perfil: StorePerfil; catalogo:
   function onSucessoPedido(codigo: number | string) {
     cart.limpar();
     setCheckoutAberto(false);
-    setPedidoConfirmado(codigo);
+    setPedidoConfirmado({ codigo });
   }
 
-  const semAgendamento = !perfil.lojaAberta;
+  const termoBusca = busca.trim().toLowerCase();
+  const categoriasFiltradas = termoBusca
+    ? catalogo.categorias
+        .map((cat) => ({
+          cat,
+          produtos: (catalogo.produtosPorCat[cat.id] ?? []).filter((p) => p.nome.toLowerCase().includes(termoBusca)),
+          combos: (catalogo.combosPorCat[cat.id] ?? []).filter((c) => c.nome.toLowerCase().includes(termoBusca)),
+        }))
+        .filter((x) => x.produtos.length > 0 || x.combos.length > 0)
+    : catalogo.categorias.map((cat) => ({
+        cat,
+        produtos: catalogo.produtosPorCat[cat.id] ?? [],
+        combos: catalogo.combosPorCat[cat.id] ?? [],
+      }));
+
+  const instagramHandle = perfil.lojaInstagram.replace(/^@/, "");
 
   return (
-    <div className="min-h-screen bg-[#f7f5f2] pb-24">
-      <div className="h-40 w-full bg-muted sm:h-52">
-        {perfil.capaLoja ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
-        ) : (
-          <div className="flex size-full items-center justify-center text-muted-foreground">
-            <ImageIcon size={28} />
-          </div>
-        )}
+    <div className="min-h-screen bg-white pb-[86px]" style={{ ["--store-pink" as string]: "#e63770" }}>
+      {/* Banner */}
+      <div className="relative mx-auto max-w-[680px]">
+        <div className="h-[210px] w-full bg-neutral-100">
+          {perfil.capaLoja ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
+          ) : (
+            <div className="size-full" style={{ background: `linear-gradient(135deg, ${brown}, #a07050)` }} />
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof navigator !== "undefined" && navigator.share) {
+              navigator.share({ title: perfil.nomeLoja, url: window.location.href }).catch(() => {});
+            } else if (typeof navigator !== "undefined") {
+              navigator.clipboard?.writeText(window.location.href);
+            }
+          }}
+          className="absolute top-3 right-3 flex size-[38px] items-center justify-center rounded-full bg-white/90 text-neutral-700 shadow-md"
+        >
+          <Share2 size={15} />
+        </button>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4">
-        <div className="-mt-8 flex items-end gap-3">
-          <div className="size-16 shrink-0 overflow-hidden rounded-full border-4 border-[#f7f5f2] bg-white shadow-sm">
+      {/* Header row */}
+      <div className="relative mx-auto flex max-w-[680px] items-start justify-between px-4" style={{ marginTop: -34 }}>
+        <div
+          className="inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
+          style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
+        >
+          <div className="size-[88px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-md">
             {perfil.perfilLoja ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={perfil.perfilLoja} alt={perfil.nomeLoja} className="size-full object-cover" />
             ) : (
-              <div className="flex size-full items-center justify-center text-lg font-bold text-muted-foreground">
+              <div
+                className="flex size-full items-center justify-center text-2xl font-extrabold text-white"
+                style={{ background: brown }}
+              >
                 {perfil.nomeLoja.charAt(0)}
               </div>
             )}
           </div>
-          <div className="min-w-0 pb-1">
-            <h1 className="truncate text-lg font-semibold text-neutral-900">{perfil.nomeLoja}</h1>
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
-              <span className={perfil.lojaAberta ? "text-emerald-600" : "text-destructive"}>
-                {perfil.lojaAberta ? "Aberto agora" : `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`}
-              </span>
-              {perfil.avaliacaoMedia > 0 && (
-                <span className="flex items-center gap-0.5">
-                  <Star size={11} className="fill-amber-400 text-amber-400" />
-                  {perfil.avaliacaoMedia.toLocaleString("pt-BR")}
-                </span>
-              )}
-            </div>
-          </div>
         </div>
+        <div className="flex flex-col items-end gap-1 pt-[52px]">
+          {perfil.avaliacaoMedia > 0 && (
+            <span className="flex items-center gap-1 text-[.82rem] font-bold text-neutral-900">
+              <Star size={13} className="fill-amber-500 text-amber-500" />
+              {perfil.avaliacaoMedia.toLocaleString("pt-BR")}
+            </span>
+          )}
+          {instagramHandle && (
+            <span className="flex items-center gap-1 text-[.78rem] text-neutral-600">
+              <AtSign size={14} className="text-[#c13584]" />
+              {instagramHandle}
+            </span>
+          )}
+        </div>
+      </div>
 
-        {perfil.descLoja && <p className="mt-3 text-sm text-neutral-600">{perfil.descLoja}</p>}
+      {/* Meta */}
+      <div className="mx-auto max-w-[680px] px-4 pt-2.5">
+        <div className="mb-0.5 flex items-center gap-1.5 text-[1.15rem] font-extrabold text-neutral-900">
+          {perfil.nomeLoja}
+          {perfil.lojaVerificada && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6" className="shrink-0">
+              <path d="M12 2l2.4 1.6 2.8-.6 1.4 2.5 2.5 1.4-.6 2.8L22 12l-1.6 2.4.6 2.8-2.5 1.4-1.4 2.5-2.8-.6L12 22l-2.4-1.6-2.8.6-1.4-2.5-2.5-1.4.6-2.8L2 12l1.6-2.4-.6-2.8 2.5-1.4 1.4-2.5 2.8.6z" />
+              <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
+        {(perfil.lojaContato || perfil.enderecoLoja) && (
+          <p className="mb-1 text-[.78rem] text-neutral-500">{perfil.enderecoLoja || perfil.lojaContato}</p>
+        )}
+        <p className={`text-[.82rem] font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`} style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}>
+          {perfil.lojaAberta ? "Aberto agora" : `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`}
+        </p>
+      </div>
 
-        {semAgendamento && (
-          <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+      {/* Chips */}
+      {(perfil.entAtiva || (perfil.cashbackAtivo && perfil.cashbackPct > 0) || perfil.pedidoMinExibir > 0) && (
+        <div className="mx-auto mt-3.5 flex max-w-[680px] gap-2 px-4">
+          {perfil.entAtiva && (
+            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-50 px-2 py-2.5">
+              <Clock3 size={16} style={{ color: brown }} className="shrink-0" />
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-[.73rem] font-bold text-neutral-900">
+                  {perfil.tEntMin}-{perfil.tEntMax} min
+                </span>
+                <span className="text-[.62rem] text-neutral-500">Entrega</span>
+              </div>
+            </div>
+          )}
+          {perfil.cashbackAtivo && perfil.cashbackPct > 0 && (
+            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-50 px-2 py-2.5">
+              <Percent size={16} style={{ color: brown }} className="shrink-0" />
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-[.73rem] font-bold text-neutral-900">{perfil.cashbackPct}%</span>
+                <span className="text-[.62rem] text-neutral-500">Cashback</span>
+              </div>
+            </div>
+          )}
+          {perfil.pedidoMinExibir > 0 && (
+            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-50 px-2 py-2.5">
+              <ShoppingBag size={16} style={{ color: brown }} className="shrink-0" />
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-[.73rem] font-bold text-neutral-900">
+                  {formatarPreco(perfil.pedidoMinExibir)}
+                </span>
+                <span className="text-[.62rem] text-neutral-500">Pedido min.</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!perfil.lojaAberta && (
+        <div className="mx-auto mt-3.5 max-w-[680px] px-4">
+          <div className="flex items-start gap-2.5 border-l-[3px] border-amber-300 bg-amber-50 px-4 py-3 text-[.8rem] text-amber-800">
             Loja fechada no momento{perfil.proximoHorario ? ` — abre ${perfil.proximoHorario}` : ""}.
           </div>
-        )}
+        </div>
+      )}
 
-        {catalogo.destaques.length > 0 && (
-          <div className="mt-6">
-            <h2 className="mb-2 text-sm font-semibold text-neutral-900">Destaques</h2>
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
-              {catalogo.destaques.map((item) => (
+      {/* Category nav */}
+      <div ref={catNavRef} className="sticky top-0 z-30 mt-4 border-b border-neutral-100 bg-white">
+        <div className="mx-auto flex max-w-[680px] items-center px-2">
+          <div className="flex flex-1 gap-1.5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {catalogo.categorias.map((cat) => {
+              const ativa = categoriaAtiva === cat.id;
+              return (
                 <button
-                  key={`${isCombo(item) ? "combo" : "produto"}-${item.id}`}
+                  key={cat.id}
                   type="button"
-                  onClick={() => abrirItem(item)}
-                  className="w-32 shrink-0 rounded-xl border border-border bg-white text-left shadow-sm"
+                  onClick={() => irParaCategoria(cat.id)}
+                  className="shrink-0 rounded-full px-4 py-1.5 text-[.8rem] font-semibold whitespace-nowrap transition-colors"
+                  style={ativa ? { color: "#fff", background: brown } : { color: "#888" }}
                 >
-                  <div className="h-24 w-full overflow-hidden rounded-t-xl bg-muted">
-                    {item.imagem ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imagem} alt="" className="size-full object-cover" />
-                    ) : (
-                      <div className="flex size-full items-center justify-center text-muted-foreground">
-                        <ImageIcon size={20} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-2">
-                    <p className="truncate text-xs font-medium text-neutral-900">{item.nome}</p>
-                    <p className="text-xs text-neutral-500">{formatarPreco(item.preco_final)}</p>
-                  </div>
+                  {cat.nome}
                 </button>
-              ))}
-            </div>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => setBuscaAberta((v) => !v)}
+            className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${buscaAberta ? "border-neutral-300 bg-neutral-100" : "border-neutral-200 bg-white"} text-neutral-600`}
+          >
+            <Search size={15} />
+          </button>
+        </div>
+        {buscaAberta && (
+          <div className="mx-auto max-w-[680px] px-3.5 pb-2">
+            <input
+              autoFocus
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar no cardapio"
+              className="w-full rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-2 text-[.86rem] outline-none focus:bg-white"
+              style={{ borderColor: undefined }}
+            />
           </div>
         )}
+      </div>
 
-        <div className="mt-6 space-y-8">
-          {catalogo.categorias.map((cat) => {
-            const produtos = catalogo.produtosPorCat[cat.id] ?? [];
-            const combos = catalogo.combosPorCat[cat.id] ?? [];
-            if (produtos.length === 0 && combos.length === 0) return null;
-            return (
-              <div key={cat.id} id={`cat-${cat.id}`}>
-                <h2 className="mb-3 text-base font-semibold text-neutral-900">{cat.nome}</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {combos.map((combo) => (
-                    <button
-                      key={`combo-${combo.id}`}
-                      type="button"
-                      onClick={() => abrirItem(combo)}
-                      className="overflow-hidden rounded-xl border border-border bg-white text-left shadow-sm"
-                    >
-                      <div className="relative h-28 w-full bg-muted">
+      {/* Destaques */}
+      {!termoBusca && catalogo.destaques.length > 0 && (
+        <div className="mx-auto max-w-[680px]">
+          <h2 className="px-4 pt-4 pb-2 text-[.95rem] font-bold text-neutral-900">Destaques</h2>
+          <div className="flex gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {catalogo.destaques.map((item) => (
+              <button
+                key={`${isCombo(item) ? "combo" : "produto"}-${item.id}`}
+                type="button"
+                onClick={() => abrirItem(item)}
+                className="w-[140px] shrink-0 cursor-pointer text-left"
+              >
+                <div className="mb-1.5 h-[110px] w-[140px] overflow-hidden rounded-xl bg-neutral-100">
+                  {item.imagem ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.imagem} alt="" className="size-full object-cover" />
+                  ) : (
+                    <div className="flex size-full items-center justify-center text-neutral-300">
+                      {isCombo(item) ? <Layers size={26} /> : <ImageIcon size={26} />}
+                    </div>
+                  )}
+                </div>
+                {(item.em_promo || isCombo(item)) && (
+                  <div className="mb-0.5 flex gap-1">
+                    {isCombo(item) && (
+                      <span className="rounded bg-amber-500 px-1.5 py-px text-[.62rem] font-bold tracking-wide text-white uppercase">
+                        Combo
+                      </span>
+                    )}
+                    {item.em_promo && (
+                      <span className="rounded bg-emerald-600 px-1.5 py-px text-[.62rem] font-bold text-white">Promo</span>
+                    )}
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5">
+                  {item.em_promo && (
+                    <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(item.preco_base)}</span>
+                  )}
+                  <span className="text-[.9rem] font-bold text-neutral-900">{formatarPreco(item.preco_final)}</span>
+                </div>
+                <p className="mt-0.5 truncate text-[.78rem] text-neutral-600">{item.nome}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Categorias / produtos */}
+      <div className="mx-auto max-w-[680px]">
+        {categoriasFiltradas.map(({ cat, produtos, combos }) => {
+          if (produtos.length === 0 && combos.length === 0) return null;
+          return (
+            <div
+              key={cat.id}
+              ref={(el) => {
+                sectionRefs.current[cat.id] = el;
+              }}
+            >
+              <h2 className="px-4 pt-3.5 pb-1 text-[.95rem] font-bold text-neutral-900">{cat.nome}</h2>
+              <div>
+                {combos.map((combo) => (
+                  <button
+                    key={`combo-${combo.id}`}
+                    type="button"
+                    onClick={() => abrirItem(combo)}
+                    className="mx-3 mb-2 flex w-[calc(100%-24px)] items-center gap-3 rounded-xl border border-neutral-100 p-3.5 text-left transition-shadow hover:border-neutral-200 hover:shadow-sm"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-0.5 flex items-center gap-1.5">
+                        <span className="text-[.88rem] font-semibold text-neutral-900">{combo.nome}</span>
+                        <span className="rounded bg-amber-500 px-1.5 py-px text-[.6rem] font-bold tracking-wide text-white uppercase">
+                          Combo
+                        </span>
+                      </div>
+                      {combo.descricao && (
+                        <p className="mb-1.5 line-clamp-2 text-[.76rem] leading-snug text-neutral-500">{combo.descricao}</p>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        {combo.em_promo && (
+                          <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
+                        )}
+                        <span className="text-[.88rem] font-bold" style={{ color: brown }}>
+                          {formatarPreco(combo.preco_final)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="relative shrink-0">
+                      <div className="size-[88px] overflow-hidden rounded-[10px] bg-neutral-100">
                         {combo.imagem ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={combo.imagem} alt="" className="size-full object-cover" />
                         ) : (
-                          <div className="flex size-full items-center justify-center text-muted-foreground">
-                            <Layers size={22} />
+                          <div className="flex size-full items-center justify-center text-neutral-300">
+                            <Layers size={26} />
                           </div>
                         )}
-                        <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
-                          Combo
+                      </div>
+                      <span
+                        className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                        style={{ background: brown }}
+                      >
+                        +
+                      </span>
+                    </div>
+                  </button>
+                ))}
+                {produtos.map((produto) => (
+                  <button
+                    key={`produto-${produto.id}`}
+                    type="button"
+                    onClick={() => abrirItem(produto)}
+                    className={`mx-3 mb-2 flex w-[calc(100%-24px)] items-center gap-3 rounded-xl border border-neutral-100 p-3.5 text-left transition-shadow hover:border-neutral-200 hover:shadow-sm ${produto.esgotado ? "opacity-65" : ""}`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-0.5 text-[.88rem] font-semibold text-neutral-900">{produto.nome}</div>
+                      {produto.descricao && (
+                        <p className="mb-1.5 line-clamp-2 text-[.76rem] leading-snug text-neutral-500">{produto.descricao}</p>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        {produto.em_promo && (
+                          <span className="text-[.72rem] text-neutral-400 line-through">
+                            {formatarPreco(produto.preco_base)}
+                          </span>
+                        )}
+                        <span className="text-[.88rem] font-bold" style={{ color: brown }}>
+                          {produto.tem_variacoes === 1 && !produto.em_promo ? "a partir de " : ""}
+                          {formatarPreco(produto.preco_final)}
                         </span>
                       </div>
-                      <div className="p-2.5">
-                        <p className="truncate text-sm font-medium text-neutral-900">{combo.nome}</p>
-                        <p className="mt-0.5 text-sm text-neutral-700">{formatarPreco(combo.preco_final)}</p>
-                      </div>
-                    </button>
-                  ))}
-                  {produtos.map((produto) => (
-                    <button
-                      key={`produto-${produto.id}`}
-                      type="button"
-                      onClick={() => abrirItem(produto)}
-                      disabled={produto.esgotado}
-                      className="overflow-hidden rounded-xl border border-border bg-white text-left shadow-sm disabled:opacity-60"
-                    >
-                      <div className="relative h-28 w-full bg-muted">
+                    </div>
+                    <div className="relative shrink-0">
+                      <div className="size-[88px] overflow-hidden rounded-[10px] bg-neutral-100">
                         {produto.imagem ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={produto.imagem} alt="" className="size-full object-cover" />
                         ) : (
-                          <div className="flex size-full items-center justify-center text-muted-foreground">
-                            <ImageIcon size={22} />
+                          <div className="flex size-full items-center justify-center text-neutral-300">
+                            <ImageIcon size={26} />
                           </div>
                         )}
-                        {produto.esgotado && (
-                          <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-xs font-medium text-white">
-                            Esgotado
-                          </span>
-                        )}
-                        {produto.em_promo && !produto.esgotado && (
-                          <span className="absolute left-1.5 top-1.5 rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-medium text-white">
-                            -{produto.desc_pct}%
-                          </span>
-                        )}
                       </div>
-                      <div className="p-2.5">
-                        <p className="truncate text-sm font-medium text-neutral-900">{produto.nome}</p>
-                        {produto.em_promo ? (
-                          <div className="mt-0.5 flex items-center gap-1.5">
-                            <span className="text-xs text-neutral-400 line-through">
-                              {formatarPreco(produto.preco_base)}
-                            </span>
-                            <span className="text-sm text-neutral-700">{formatarPreco(produto.preco_final)}</span>
-                          </div>
-                        ) : (
-                          <p className="mt-0.5 text-sm text-neutral-700">
-                            {produto.tem_variacoes === 1 ? "a partir de " : ""}
-                            {formatarPreco(produto.preco_final)}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                      {produto.esgotado ? (
+                        <span className="absolute -right-1.5 -bottom-1.5 rounded-full border-2 border-white bg-red-600 px-2.5 py-[5px] text-[.6rem] font-bold tracking-wide text-white uppercase whitespace-nowrap">
+                          Esgotado
+                        </span>
+                      ) : (
+                        <span
+                          className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                          style={{ background: brown }}
+                        >
+                          +
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
+        {termoBusca && categoriasFiltradas.length === 0 && (
+          <p className="px-4 py-10 text-center text-[.86rem] text-neutral-400">Nenhum item encontrado.</p>
+        )}
       </div>
 
+      {/* Cart bar */}
       {cart.totalItens > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 flex justify-center p-4">
-          <Button
-            type="button"
-            className="w-full max-w-md gap-2 shadow-lg"
-            size="lg"
-            onClick={() => setCartAberto(true)}
-          >
-            <ShoppingBag size={16} />
-            Ver carrinho ({cart.totalItens}) — {formatarPreco(cart.subtotal)}
-          </Button>
+        <div className="fixed inset-x-0 bottom-[60px] z-40 flex justify-center border-t border-neutral-100 bg-white px-4 py-2.5">
+          <div className="flex w-full max-w-[680px] items-center justify-between gap-3">
+            <div>
+              <p className="text-[.72rem] text-neutral-500">Subtotal</p>
+              <p className="flex items-baseline gap-1 text-[.9rem] font-bold text-neutral-900">
+                {formatarPreco(cart.subtotal)}
+                <span className="text-[.72rem] font-normal text-neutral-500">{cart.totalItens} itens</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCartAberto(true)}
+              className="shrink-0 rounded-[10px] px-5 py-2.5 text-[.86rem] font-bold text-white"
+              style={{ background: brown }}
+            >
+              Ver carrinho
+            </button>
+          </div>
         </div>
       )}
+
+      {/* Bottom nav */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-neutral-200 bg-white shadow-[0_-6px_20px_rgba(0,0,0,.07)]">
+        <div className="flex w-full max-w-[680px]">
+          <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide" style={{ color: brown }}>
+            <List size={20} />
+            Menu
+          </button>
+          <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide text-neutral-400">
+            <Gift size={20} />
+            Promo
+          </button>
+          <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide text-neutral-400">
+            <ShoppingBag size={20} />
+            Pedidos
+          </button>
+        </div>
+      </div>
 
       <StoreProdutoDialog
         produto={produtoAberto}
@@ -238,6 +495,8 @@ export function StoreView({ perfil, catalogo }: { perfil: StorePerfil; catalogo:
       <StoreCartSheet
         open={cartAberto}
         onOpenChange={setCartAberto}
+        nomeLoja={perfil.nomeLoja}
+        logoLoja={perfil.perfilLoja}
         itens={cart.itens}
         subtotal={cart.subtotal}
         onAtualizarQtd={cart.atualizarQtd}
@@ -255,24 +514,19 @@ export function StoreView({ perfil, catalogo }: { perfil: StorePerfil; catalogo:
         itens={cart.itens}
         subtotal={cart.subtotal}
         onSucesso={onSucessoPedido}
+        onVoltarCarrinho={() => {
+          setCheckoutAberto(false);
+          setCartAberto(true);
+        }}
       />
 
-      {pedidoConfirmado !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
-            <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-              <Star size={24} className="fill-current" />
-            </div>
-            <h2 className="text-lg font-semibold text-neutral-900">Pedido enviado!</h2>
-            <p className="mt-1 text-sm text-neutral-500">
-              Pedido #{pedidoConfirmado} recebido. Acompanhe pelo WhatsApp.
-            </p>
-            <Button type="button" className="mt-4 w-full" onClick={() => setPedidoConfirmado(null)}>
-              Fechar
-            </Button>
-          </div>
-        </div>
-      )}
+      <StoreSuccessDialog
+        open={pedidoConfirmado !== null}
+        onOpenChange={(v) => !v && setPedidoConfirmado(null)}
+        codigo={pedidoConfirmado?.codigo ?? ""}
+        tempoEstimado={`${perfil.tEntMin}-${perfil.tEntMax} min`}
+        numeroWhatsapp={perfil.lojaContato}
+      />
     </div>
   );
 }
