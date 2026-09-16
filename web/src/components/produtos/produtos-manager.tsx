@@ -11,6 +11,7 @@ import {
   Package,
   Plus,
   Search,
+  Star,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -138,6 +139,17 @@ export function ProdutosManager({
       body: JSON.stringify({ id: produto.id, ativo: novoAtivo }),
     });
     toast.success(novoAtivo ? "Produto ativado com sucesso" : "Produto desativado com sucesso");
+    router.refresh();
+  }
+
+  async function toggleDestaqueProduto(produto: Produto) {
+    const novoDestaque = produto.destaque === 1 ? 0 : 1;
+    await fetch("/api/produtos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: produto.id, destaque: novoDestaque }),
+    });
+    toast.success(novoDestaque ? "Produto adicionado aos destaques" : "Produto removido dos destaques");
     router.refresh();
   }
 
@@ -345,7 +357,7 @@ export function ProdutosManager({
                         proximoValidade ? "border-red-600" : ""
                       }`}
                     >
-                      <div className="aspect-[4/3] w-full bg-muted">
+                      <div className="relative aspect-[4/3] w-full bg-muted">
                         {imagemUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={imagemUrl} alt={p.nome} className="size-full object-cover" />
@@ -354,6 +366,19 @@ export function ProdutosManager({
                             <Package size={24} className="text-muted-foreground" />
                           </div>
                         )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleDestaqueProduto(p);
+                          }}
+                          title={p.destaque === 1 ? "Remover dos destaques da loja" : "Marcar como destaque na loja"}
+                          className={`absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-background/90 shadow-sm transition-colors ${
+                            p.destaque === 1 ? "text-amber-500" : "text-muted-foreground hover:text-amber-500"
+                          }`}
+                        >
+                          <Star size={15} fill={p.destaque === 1 ? "currentColor" : "none"} />
+                        </button>
                       </div>
                       <div className="flex flex-col gap-1 p-3">
                         <span className="truncate text-sm font-medium">{p.nome}</span>

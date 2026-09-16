@@ -12,6 +12,9 @@
  * produto_complementos_itens ja usadas pelo POS (pdv_produto_variacoes.php),
  * mesma logica de persistencia (delete-all + reinsert) de
  * admin/api/produtos_save.php.
+ * `destaque` (coluna nova, auto-criada sob demanda no PATCH) marca o
+ * produto pra aparecer na secao "Destaques" da loja publica
+ * (public/loja.php), junto com produtos em promocao e combos.
  * Fora do escopo (ficam so no admin/produtos.php por enquanto): combos,
  * vinculo de estoque entre produtos.
  */
@@ -114,6 +117,7 @@ if ($metodo === 'GET') {
   $temDataFabricacao = in_array('data_fabricacao', $colunas, true);
   $temDataValidade = in_array('data_validade', $colunas, true);
   $temVariacoesCol = in_array('tem_variacoes', $colunas, true);
+  $temDestaque = in_array('destaque', $colunas, true);
 
   $precoExpr = ($temPrecoPromocional && $temPromoDesativado)
     ? "IF(p.promo_desativado = 0 AND p.preco_promocional IS NOT NULL AND p.preco_promocional > 0, p.preco_promocional, p.preco)"
@@ -141,6 +145,7 @@ if ($metodo === 'GET') {
   if ($temDataFabricacao) $selectCampos[] = 'p.data_fabricacao';
   if ($temDataValidade) $selectCampos[] = 'p.data_validade';
   if ($temVariacoesCol) $selectCampos[] = 'p.tem_variacoes';
+  if ($temDestaque) $selectCampos[] = 'p.destaque';
 
   $ordenacao = $temOrdem
     ? "ORDER BY c.ordem IS NULL, c.ordem, c.nome, p.ordem IS NULL, p.ordem, p.nome"
@@ -171,6 +176,7 @@ if ($metodo === 'GET') {
     if (isset($p['disponivel_catalogo'])) $p['disponivel_catalogo'] = (int) $p['disponivel_catalogo'];
     if (isset($p['disponivel_mesa'])) $p['disponivel_mesa'] = (int) $p['disponivel_mesa'];
     if (isset($p['tem_variacoes'])) $p['tem_variacoes'] = (int) $p['tem_variacoes'];
+    if (isset($p['destaque'])) $p['destaque'] = (int) $p['destaque'];
     if (array_key_exists('dias_semana', $p)) {
       $decoded = $p['dias_semana'] ? json_decode($p['dias_semana'], true) : [];
       $p['dias_semana'] = is_array($decoded) ? $decoded : [];
@@ -186,11 +192,36 @@ if ($metodo === 'PATCH') {
   $dados = json_decode(file_get_contents('php://input'), true) ?: [];
   $id = (int) ($dados['id'] ?? 0);
   $ativo = isset($dados['ativo']) ? (int) $dados['ativo'] : null;
-  if ($id <= 0 || ($ativo !== 0 && $ativo !== 1)) {
+  $destaque = isset($dados['destaque']) ? (int) $dados['destaque'] : null;
+
+  if ($id <= 0) {
     echo json_encode(['ok' => false, 'msg' => 'Dados invalidos.']);
     exit;
   }
-  $conn->prepare("UPDATE produtos SET ativo = ? WHERE id = ? AND loja_id = ?")->execute([$ativo, $id, $lojaId]);
+
+  $setParts = [];
+  $values = [];
+  if ($ativo === 0 || $ativo === 1) {
+    $setParts[] = 'ativo = ?';
+    $values[] = $ativo;
+  }
+  if ($destaque === 0 || $destaque === 1) {
+    $colunas = produtosColunas($conn);
+    if (!in_array('destaque', $colunas, true)) {
+      try { $conn->exec("ALTER TABLE produtos ADD COLUMN destaque TINYINT(1) NOT NULL DEFAULT 0"); } catch (Throwable $e2) {}
+    }
+    $setParts[] = 'destaque = ?';
+    $values[] = $destaque;
+  }
+
+  if (!$setParts) {
+    echo json_encode(['ok' => false, 'msg' => 'Dados invalidos.']);
+    exit;
+  }
+
+  $values[] = $id;
+  $values[] = $lojaId;
+  $conn->prepare("UPDATE produtos SET " . implode(', ', $setParts) . " WHERE id = ? AND loja_id = ?")->execute($values);
   bumpCatalogoVersao($conn, $lojaId);
   echo json_encode(['ok' => true]);
   exit;

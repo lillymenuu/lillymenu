@@ -322,6 +322,7 @@ $temDiasCol = in_array('dias_semana',$cols);
 $temHIniCol = in_array('horario_ini',$cols);
 $temHFimCol = in_array('horario_fim',$cols);
 $temVariacoesCol = in_array('tem_variacoes',$cols);
+$temDestaqueCol = in_array('destaque',$cols);
 $si =$temImg    ?', p.imagem':'';
 $sp =$temProm   ?', p.preco_promocional, p.promo_desativado':'';
 $spd=$temPromoDur?', p.promo_dias, p.promo_inicio':'';
@@ -333,6 +334,7 @@ $sds=$temDiasCol?', p.dias_semana':'';
 $shi=$temHIniCol?', p.horario_ini':'';
 $shf=$temHFimCol?', p.horario_fim':'';
 $svr=$temVariacoesCol?', p.tem_variacoes':'';
+$sdest=$temDestaqueCol?', p.destaque':'';
 
 /* Dia e hora atual no fuso da loja */
 $_diasCod=['dom','seg','ter','qua','qui','sex','sab'];
@@ -368,7 +370,7 @@ if($temVariacoesCol){
 $produtosPorCat=[];
 foreach($categorias as $cat){
   if(!$_categoriaDisponivelAgora($cat)) continue;
-  $s=$conn->prepare("SELECT p.id,p.nome,p.descricao,p.preco{$si}{$sp}{$spd}{$spe}{$spet}{$sqm}{$spg}{$sds}{$shi}{$shf}{$svr},IFNULL(e.quantidade,0) AS estoque FROM produtos p LEFT JOIN estoque e ON e.produto_id=p.id AND e.loja_id=p.loja_id WHERE p.categoria_id=? AND p.ativo=1 AND p.loja_id=? ORDER BY p.ordem IS NULL,p.ordem,p.nome");
+  $s=$conn->prepare("SELECT p.id,p.nome,p.descricao,p.preco{$si}{$sp}{$spd}{$spe}{$spet}{$sqm}{$spg}{$sds}{$shi}{$shf}{$svr}{$sdest},IFNULL(e.quantidade,0) AS estoque FROM produtos p LEFT JOIN estoque e ON e.produto_id=p.id AND e.loja_id=p.loja_id WHERE p.categoria_id=? AND p.ativo=1 AND p.loja_id=? ORDER BY p.ordem IS NULL,p.ordem,p.nome");
   $s->execute([$cat['id'],$lojaId]);
   $prods=$s->fetchAll(PDO::FETCH_ASSOC);
   if($prods){
@@ -450,7 +452,7 @@ try{
 
 $categorias=array_values(array_filter($categorias,fn($c)=>isset($produtosPorCat[$c['id']])||isset($combosPorCat[$c['id']])));
 $destaques=[];
-foreach($produtosPorCat as $ps) foreach($ps as $p) if($p['em_promo']) $destaques[]=$p;
+foreach($produtosPorCat as $ps) foreach($ps as $p) if($p['em_promo']||!empty($p['destaque'])) $destaques[]=$p;
 foreach($combosPorCat as $cs) foreach($cs as $c) $destaques[]=$c;
 
 /* Produtos em promocao (so produtos simples, combo nao entra em Promo) — usado

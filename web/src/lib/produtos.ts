@@ -41,6 +41,7 @@ export type Produto = {
   data_fabricacao?: string | null;
   data_validade?: string | null;
   tem_variacoes?: number;
+  destaque?: number;
 };
 
 export type ProdutoValidade = {
