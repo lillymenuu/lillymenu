@@ -5,9 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 
 // Moldura de recorte na mesma proporcao usada nos cards de produto (aspect-[4/3]),
-// pra nao cortar de novo na exibicao depois de cortar aqui.
-const FRAME_W = 280;
-const FRAME_H = 210;
+// pra nao cortar de novo na exibicao depois de cortar aqui. Area maior que o
+// card real (mesma proporcao, so escalada) pra dar mais espaco na tela pra
+// escolher o angulo/enquadramento com precisao.
+const FRAME_W = 420;
+const FRAME_H = 315;
 const OUTPUT_W = 800;
 const OUTPUT_H = 600;
 const ZOOM_MIN = 1;
@@ -108,7 +110,7 @@ export function ImageCropDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-md">
+      <DialogContent className="max-w-lg sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Imagem do produto</DialogTitle>
         </DialogHeader>
