@@ -62,28 +62,20 @@ export function LojaInfoDialog({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t p-4 text-sm">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-muted-foreground">Contato</span>
-            <span className="text-right font-medium text-foreground">
-              {loja.contato !== "" ? loja.contato : "Não informado"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-muted-foreground">CNPJ</span>
-            <span className="text-right font-medium text-foreground">
-              {loja.cnpj !== "" ? loja.cnpj : "Não informado"}
-            </span>
-          </div>
-          <div className="flex items-start justify-between gap-3">
-            <span className="shrink-0 text-muted-foreground">Endereço</span>
-            <div className="text-right font-medium text-foreground">
-              {loja.enderecoLinhas.length > 0 ? (
-                loja.enderecoLinhas.map((linha, i) => <div key={i}>{linha}</div>)
-              ) : (
-                <div>Não informado</div>
-              )}
-            </div>
+        <div className="grid grid-cols-[76px_1fr] gap-x-3 gap-y-2 border-t p-4 text-xs">
+          <span className="text-muted-foreground">Contato</span>
+          <span className="font-medium text-foreground">{loja.contato !== "" ? loja.contato : "Não informado"}</span>
+
+          <span className="text-muted-foreground">CNPJ</span>
+          <span className="font-medium text-foreground">{loja.cnpj !== "" ? loja.cnpj : "Não informado"}</span>
+
+          <span className="text-muted-foreground">Endereço</span>
+          <div className="font-medium text-foreground">
+            {loja.enderecoLinhas.length > 0 ? (
+              loja.enderecoLinhas.map((linha, i) => <div key={i}>{linha}</div>)
+            ) : (
+              <div>Não informado</div>
+            )}
           </div>
         </div>
       </DialogContent>
