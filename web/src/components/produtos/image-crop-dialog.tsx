@@ -41,8 +41,19 @@ export function ImageCropDialog({
     return () => URL.revokeObjectURL(url);
   }, [open, file]);
 
+  // "contain" (nao "cover"): a imagem inteira cabe no quadro por padrao —
+  // o usuario ve a foto completa antes de decidir se quer aproximar pra
+  // cortar mais justo.
   function baseScale(w: number, h: number) {
-    return Math.max(FRAME_W / w, FRAME_H / h);
+    return Math.min(FRAME_W / w, FRAME_H / h);
+  }
+
+  function clampAxis(pos: number, disp: number, frame: number) {
+    // imagem mais estreita/baixa que o quadro nesse eixo: fica centralizada,
+    // sem arrastar (nao ha mais nada pra revelar nesse eixo)
+    if (disp <= frame) return (frame - disp) / 2;
+    const min = frame - disp;
+    return Math.min(0, Math.max(min, pos));
   }
 
   function clampOffset(x: number, y: number, z: number) {
@@ -50,11 +61,9 @@ export function ImageCropDialog({
     const scale = baseScale(natural.w, natural.h) * z;
     const dispW = natural.w * scale;
     const dispH = natural.h * scale;
-    const minX = FRAME_W - dispW;
-    const minY = FRAME_H - dispH;
     return {
-      x: Math.min(0, Math.max(minX, x)),
-      y: Math.min(0, Math.max(minY, y)),
+      x: clampAxis(x, dispW, FRAME_W),
+      y: clampAxis(y, dispH, FRAME_H),
     };
   }
 
@@ -103,6 +112,10 @@ export function ImageCropDialog({
     canvas.height = OUTPUT_H;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    // preenche de branco antes — se a imagem nao cobrir o quadro inteiro
+    // (usuario nao aproximou o zoom), a sobra fica branca em vez de preta
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, OUTPUT_W, OUTPUT_H);
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, OUTPUT_W, OUTPUT_H);
     onConfirm(canvas.toDataURL("image/jpeg", 0.9));
     onOpenChange(false);
