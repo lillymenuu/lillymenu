@@ -445,8 +445,8 @@ export function StoreCheckoutDialog({
                   type="button"
                   disabled={avancarDesabilitado}
                   onClick={avancar}
-                  className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-opacity disabled:opacity-40"
-                  style={{ background: brown }}
+                  className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+                  style={{ background: avancarDesabilitado ? "#c0a88a" : brown }}
                 >
                   Continuar
                 </button>
@@ -455,8 +455,8 @@ export function StoreCheckoutDialog({
                   type="button"
                   disabled={formaPagamento === "" || enviando}
                   onClick={finalizarPedido}
-                  className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-opacity disabled:opacity-40"
-                  style={{ background: brown }}
+                  className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+                  style={{ background: formaPagamento === "" || enviando ? "#c0a88a" : brown }}
                 >
                   {enviando ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Enviar pedido"}
                 </button>
@@ -500,8 +500,8 @@ export function StoreCheckoutDialog({
               type="button"
               disabled={!rua.trim() || !numero.trim()}
               onClick={confirmarEndereco}
-              className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-opacity disabled:opacity-40"
-              style={{ background: brown }}
+              className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+              style={{ background: !rua.trim() || !numero.trim() ? "#c0a88a" : brown }}
             >
               Proximo
             </button>

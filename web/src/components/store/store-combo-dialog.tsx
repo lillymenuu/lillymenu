@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ImageIcon, Layers, Minus, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Expand, ImageIcon, Layers, Minus, Plus, Shrink, X } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -29,11 +29,13 @@ export function StoreComboDialog({
   const [passos, setPassos] = useState<StoreComboPasso[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [selecoes, setSelecoes] = useState<Record<number, Selecao>>({});
+  const [imagemAmpliada, setImagemAmpliada] = useState(false);
 
   useEffect(() => {
     if (!open || !combo) return;
     setQtd(1);
     setObs("");
+    setImagemAmpliada(false);
     setPassos([]);
     setSelecoes({});
     setCarregando(true);
@@ -73,6 +75,32 @@ export function StoreComboDialog({
   });
   const podeAdicionar = !carregando && passosFaltando.length === 0;
 
+  /* Quantas unidades do combo inteiro dao pra montar com o estoque das
+     opcoes ja escolhidas (ex.: se so tem 1 unidade do item selecionado,
+     nao da pra pedir 2 combos com ele dentro). Sem selecao ainda = sem
+     limite conhecido. */
+  const maxCombosPorEstoque = useMemo(() => {
+    let limite: number | null = null;
+    for (const passo of passos) {
+      const sel = selecoes[passo.id] ?? {};
+      for (const opc of passo.opcoes) {
+        const qtdSelecionada = sel[opc.id] ?? 0;
+        if (qtdSelecionada > 0) {
+          const limiteOpcao = Math.floor(opc.estoque / qtdSelecionada);
+          limite = limite === null ? limiteOpcao : Math.min(limite, limiteOpcao);
+        }
+      }
+    }
+    return limite;
+  }, [passos, selecoes]);
+
+  useEffect(() => {
+    if (maxCombosPorEstoque !== null && qtd > maxCombosPorEstoque) {
+      setQtd(Math.max(1, maxCombosPorEstoque));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxCombosPorEstoque]);
+
   function adicionar() {
     if (!combo || !podeAdicionar) return;
     const combosels = passos.flatMap((p) => {
@@ -88,13 +116,13 @@ export function StoreComboDialog({
 
   const footer = (
     <div className="flex items-center justify-between gap-3">
-      <QtyStepper value={qtd} onChange={setQtd} />
+      <QtyStepper value={qtd} onChange={setQtd} max={maxCombosPorEstoque ?? undefined} />
       <button
         type="button"
         disabled={!podeAdicionar}
         onClick={adicionar}
-        className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-opacity disabled:opacity-40"
-        style={{ background: brown }}
+        className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+        style={{ background: podeAdicionar ? brown : "#c0a88a" }}
       >
         {passosFaltando.length > 0 ? `Selecione "${passosFaltando[0].nome}"` : `Adicionar ${formatarPreco(combo.preco_final * qtd)}`}
       </button>
@@ -104,29 +132,60 @@ export function StoreComboDialog({
   return (
     <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={613}>
       <div className="p-4">
-        <div className="mb-3 h-[190px] w-full overflow-hidden rounded-xl bg-neutral-100">
+        <div
+          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-[height] duration-300 ease-out ${
+            imagemAmpliada ? "h-[380px]" : "h-[190px]"
+          }`}
+        >
           {combo.imagem ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={combo.imagem} alt="" className="size-full object-cover" />
+            <>
+              <button
+                type="button"
+                onClick={() => setImagemAmpliada((v) => !v)}
+                className={`block size-full ${imagemAmpliada ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={combo.imagem}
+                  alt=""
+                  className={`size-full ${imagemAmpliada ? "object-contain" : "object-cover"}`}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={() => setImagemAmpliada((v) => !v)}
+                className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white"
+              >
+                {imagemAmpliada ? <Shrink size={12} /> : <Expand size={12} />}
+                {imagemAmpliada ? "Recolher" : "Ver maior"}
+              </button>
+            </>
           ) : (
             <div className="flex size-full items-center justify-center text-neutral-300">
               <Layers size={32} />
             </div>
           )}
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600"
+          >
+            <X size={14} />
+          </button>
         </div>
         <div className="mb-1 flex items-center gap-2">
-          <h2 className="text-[1rem] font-bold text-neutral-900">{combo.nome}</h2>
-          <span className="rounded bg-amber-500 px-1.5 py-px text-[.62rem] font-bold tracking-wide text-white uppercase">Combo</span>
+          <h2 className="text-[.95rem] font-bold text-neutral-900">{combo.nome}</h2>
+          <span className="rounded bg-amber-500 px-1.5 py-px text-[.6rem] font-bold tracking-wide text-white uppercase">Combo</span>
         </div>
-        {combo.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{combo.descricao}</p>}
+        {combo.descricao && <p className="mb-2.5 text-[.76rem] leading-relaxed text-neutral-500">{combo.descricao}</p>}
         <div className="mb-4">
           {combo.em_promo ? (
             <div className="flex items-center gap-2">
-              <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
-              <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
+              <span className="text-[.8rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
+              <span className="text-[1rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
             </div>
           ) : (
-            <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
+            <span className="text-[1rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
           )}
         </div>
 
@@ -147,14 +206,14 @@ export function StoreComboDialog({
 
               return (
                 <div key={passo.id}>
-                  <div className="mb-1 rounded-[10px] bg-neutral-100 px-3 py-2.5">
-                    <div className="flex flex-wrap items-center gap-1.5 text-[.86rem] font-bold text-neutral-900">
+                  <div className="mb-1 rounded-[10px] bg-neutral-100 px-3 py-2">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[.8rem] font-bold text-neutral-900">
                       {passo.nome}
                       {passo.obrigatorio === 1 && (
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.67rem] font-bold text-amber-700">Obrigatorio</span>
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.62rem] font-bold text-amber-700">Obrigatorio</span>
                       )}
                     </div>
-                    {sub && <p className="mt-0.5 text-[.72rem] text-neutral-500">{sub}</p>}
+                    {sub && <p className="mt-0.5 text-[.68rem] text-neutral-500">{sub}</p>}
                   </div>
                   <div>
                     {passo.opcoes.map((opc) => {
@@ -167,15 +226,15 @@ export function StoreComboDialog({
                       return (
                         <div
                           key={opc.id}
-                          className={`flex items-center gap-2.5 border-b border-neutral-100 py-2.5 last:border-0 ${opc.esgotado ? "opacity-55" : ""}`}
+                          className={`flex items-center gap-2.5 border-b border-neutral-100 py-2 last:border-0 ${opc.esgotado ? "opacity-55" : ""}`}
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="text-[.84rem] leading-tight text-neutral-900">{opc.nome}</div>
-                            <div className="mt-0.5 text-[.71rem] text-neutral-400">
+                            <div className="text-[.8rem] leading-tight text-neutral-900">{opc.nome}</div>
+                            <div className="mt-0.5 text-[.68rem] text-neutral-400">
                               {opc.esgotado ? "Esgotado" : "Incluido no valor do combo"}
                             </div>
                           </div>
-                          <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+                          <div className="size-[64px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
                             {opc.imagem ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={opc.imagem} alt="" className="size-full object-cover" />
@@ -194,7 +253,7 @@ export function StoreComboDialog({
                             >
                               <Minus size={13} />
                             </button>
-                            <span className="min-w-[24px] px-0.5 text-center text-[.83rem] font-medium text-neutral-900">{qty}</span>
+                            <span className="min-w-[22px] px-0.5 text-center text-[.78rem] font-medium text-neutral-900">{qty}</span>
                             <button
                               type="button"
                               disabled={!podeAdd}
@@ -215,13 +274,13 @@ export function StoreComboDialog({
         )}
 
         <div className="mt-5">
-          <label className="mb-1.5 block text-[.86rem] font-bold text-neutral-900">Alguma observacao?</label>
+          <label className="mb-1.5 block text-[.8rem] font-bold text-neutral-900">Alguma observacao?</label>
           <textarea
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             placeholder="Observacoes do cliente"
             rows={2}
-            className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-[.84rem] outline-none"
+            className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-[.8rem] outline-none"
           />
         </div>
       </div>
