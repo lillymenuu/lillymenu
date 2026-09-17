@@ -25,6 +25,15 @@ if (!$stmtLoja->fetchColumn()) {
   exit;
 }
 
+/* estaAberto() (admin/helpers/whatsapp.php) e a funcao config() que ela usa
+   por baixo (admin/helpers/config.php) le a config da loja via
+   $_SESSION['loja_id'] internamente (nao aceita loja_id explicito nesses
+   pontos) — sem isso ela cai no default ?? 1 e calcula "aberto" com o
+   horario de uma loja errada. public/loja.php sempre setava isso antes de
+   renderizar; este endpoint stateless precisa fazer o mesmo antes de
+   chamar montarPerfilLoja(). */
+$_SESSION['loja_id'] = $lojaId;
+
 $perfil = montarPerfilLoja($conn, $lojaId);
 
 echo json_encode(['ok' => true, 'loja_id' => $lojaId] + $perfil, JSON_UNESCAPED_UNICODE);
