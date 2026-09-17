@@ -736,7 +736,9 @@ export function StoreCheckoutDialog({
                           return (
                             <div key={item.key}>
                               <div className="flex items-baseline gap-2 text-[.86rem]">
-                                <span className="shrink-0 font-light text-neutral-400">{i + 1}</span>
+                                <span className="flex size-[18px] shrink-0 items-center justify-center rounded-full border border-neutral-400 text-[.7rem] font-light text-neutral-500">
+                                  {i + 1}
+                                </span>
                                 <span className="min-w-0 flex-1 font-normal text-neutral-900">{item.nome}</span>
                                 <span className="shrink-0 font-normal text-neutral-900">{formatarPreco(item.precoUnit * item.qtd)}</span>
                               </div>
