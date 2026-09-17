@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bike, ChevronDown, CreditCard, Info, Loader2, MapPin, QrCode, Wallet } from "lucide-react";
+import { Bike, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -434,6 +434,27 @@ export function StoreCheckoutDialog({
                           Informar endereco de entrega
                         </button>
                       )}
+                    </div>
+                  )}
+
+                  {isRetiradaTipo && (
+                    <div className="mt-4">
+                      <p className="mb-3 text-[.86rem] font-normal text-neutral-900">Endereco para retirada do pedido</p>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="min-w-0 flex-1 text-[.78rem] font-light text-neutral-500">
+                          {perfil.lojaRua}
+                          {perfil.lojaNumero ? `, ${perfil.lojaNumero}` : ""}
+                          {perfil.lojaBairro ? ` - ${perfil.lojaBairro}` : ""}
+                          {perfil.lojaCidade ? ` / ${perfil.lojaCidade}` : ""}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(perfil.enderecoLoja || perfil.nomeLoja)}`, "_blank", "noopener")}
+                          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
+                        >
+                          <Map size={18} />
+                        </button>
+                      </div>
                     </div>
                   )}
 
