@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bike, ChevronDown, CreditCard, Loader2, MapPin, QrCode, Store as StoreIcon, Wallet } from "lucide-react";
+import { Bike, ChevronDown, CreditCard, Info, Loader2, MapPin, QrCode, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -51,7 +51,11 @@ export function StoreCheckoutDialog({
   const [etapa, setEtapa] = useState<Etapa>("dados");
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [tipo, setTipo] = useState<"entrega" | "retirada">(perfil.entAtiva ? "entrega" : "retirada");
+  /* "" = nenhum tipo escolhido ainda (mesmo estado inicial do loja.js legado,
+     mostra o aviso "Escolha o tipo de entrega!" ate o cliente clicar um card). */
+  const [tipo, setTipo] = useState<"" | "entrega" | "entrega_agendada" | "retirada" | "retirada_agendada">("");
+  const isEntregaTipo = tipo === "entrega" || tipo === "entrega_agendada";
+  const isRetiradaTipo = tipo === "retirada" || tipo === "retirada_agendada";
 
   const [enderecoModalAberto, setEnderecoModalAberto] = useState(false);
   const [cep, setCep] = useState("");
@@ -91,13 +95,13 @@ export function StoreCheckoutDialog({
   const bairroNaoAtendido = perfil.taxaEntregaTipo === "bairro" && bairro.trim() !== "" && bairroChaveEncontrada === undefined;
 
   const taxaEntrega = useMemo(() => {
-    if (tipo === "retirada") return 0;
+    if (!isEntregaTipo) return 0;
     if (perfil.taxaEntregaGratis) return 0;
     if (perfil.taxaEntregaTipo === "bairro") {
       return bairroChaveEncontrada !== undefined ? perfil.taxasBairro[bairroChaveEncontrada] : 0;
     }
     return perfil.taxaEntrega;
-  }, [tipo, perfil, bairroChaveEncontrada]);
+  }, [isEntregaTipo, perfil, bairroChaveEncontrada]);
 
   /* Texto exibido pro cliente (resumo do endereco confirmado + dentro do modal
      enquanto digita), espelhando calcularTaxaEntrega() do loja.js legado. */
@@ -123,7 +127,15 @@ export function StoreCheckoutDialog({
   const cashbackEstimado = perfil.cashbackAtivo && perfil.cashbackPct > 0 ? (total * perfil.cashbackPct) / 100 : 0;
 
   const pedidoMinAtivo =
-    tipo === "entrega" ? (perfil.pedidoMinEntregaAtivo ? perfil.pedidoMinEntrega : 0) : perfil.pedidoMinRetiradaAtivo ? perfil.pedidoMinRetirada : 0;
+    tipo === ""
+      ? 0
+      : isEntregaTipo
+        ? perfil.pedidoMinEntregaAtivo
+          ? perfil.pedidoMinEntrega
+          : 0
+        : perfil.pedidoMinRetiradaAtivo
+          ? perfil.pedidoMinRetirada
+          : 0;
   const abaixoDoMinimo = pedidoMinAtivo > 0 && subtotal < pedidoMinAtivo;
 
   async function buscarCep() {
@@ -227,7 +239,7 @@ export function StoreCheckoutDialog({
   }
 
   const podeAvancarDados = nome.trim().length >= 2 && telefone.replace(/\D/g, "").length >= 10;
-  const podeAvancarEntrega = tipo === "retirada" || enderecoConfirmado;
+  const podeAvancarEntrega = tipo !== "" && (isRetiradaTipo || enderecoConfirmado);
 
   async function finalizarPedido() {
     if (formaPagamento === "" || abaixoDoMinimo) return;
@@ -241,9 +253,11 @@ export function StoreCheckoutDialog({
           loja_id: perfil.loja_id,
           cliente_nome: nome.trim(),
           cliente_telefone: telefone.replace(/\D/g, ""),
-          tipo,
+          /* pedido_criar.php so reconhece "entrega"/"retirada"/"mesa" no campo tipo;
+             a variante "_agendada" (usada so pra UI/cupom) e normalizada aqui. */
+          tipo: isEntregaTipo ? "entrega" : "retirada",
           forma_pagamento: formaPagamento,
-          endereco: tipo === "entrega" ? enderecoTexto() : "",
+          endereco: isEntregaTipo ? enderecoTexto() : "",
           subtotal,
           taxa_entrega: taxaFinal,
           total,
@@ -335,6 +349,19 @@ export function StoreCheckoutDialog({
                         }}
                       />
                     )}
+                    {perfil.entAtiva && perfil.agendamentoDeliveryAtivo && (
+                      <TipoCard
+                        ativo={tipo === "entrega_agendada"}
+                        brown={brown}
+                        titulo="Entrega agendada"
+                        sub="Selecione um horario especifico para entregar seu pedido"
+                        min={perfil.pedidoMinEntregaAtivo ? perfil.pedidoMinEntrega : 0}
+                        onClick={() => {
+                          setTipo("entrega_agendada");
+                          if (!enderecoConfirmado) setEnderecoModalAberto(true);
+                        }}
+                      />
+                    )}
                     {perfil.retAtiva && (
                       <TipoCard
                         ativo={tipo === "retirada"}
@@ -345,9 +372,26 @@ export function StoreCheckoutDialog({
                         onClick={() => setTipo("retirada")}
                       />
                     )}
+                    {perfil.retAtiva && perfil.agendamentoRetiradaAtivo && (
+                      <TipoCard
+                        ativo={tipo === "retirada_agendada"}
+                        brown={brown}
+                        titulo="Retirada agendada"
+                        sub="Selecione um horario especifico para retirar seu pedido"
+                        min={perfil.pedidoMinRetiradaAtivo ? perfil.pedidoMinRetirada : 0}
+                        onClick={() => setTipo("retirada_agendada")}
+                      />
+                    )}
                   </div>
 
-                  {tipo === "entrega" && (
+                  {tipo === "" && (
+                    <div className="mt-1 flex items-center gap-1.5 rounded-r-lg border-l-[3px] border-blue-300 bg-blue-50 px-3 py-2.5 text-[.78rem] text-blue-800">
+                      <Info size={14} className="shrink-0" />
+                      Escolha o tipo de entrega!
+                    </div>
+                  )}
+
+                  {isEntregaTipo && (
                     <div className="mt-4">
                       {enderecoConfirmado ? (
                         <div>
@@ -383,7 +427,7 @@ export function StoreCheckoutDialog({
 
                   {abaixoDoMinimo && (
                     <p className="mt-3 text-[.82rem] text-red-600">
-                      Pedido minimo de {formatarPreco(pedidoMinAtivo)} para {tipo === "entrega" ? "entrega" : "retirada"}.
+                      Pedido minimo de {formatarPreco(pedidoMinAtivo)} para {isEntregaTipo ? "entrega" : "retirada"}.
                     </p>
                   )}
                 </div>
@@ -482,7 +526,7 @@ export function StoreCheckoutDialog({
                     <p className="text-[.82rem] text-neutral-500">{telefone}</p>
                   </ResumoSecao>
 
-                  {tipo === "entrega" && (
+                  {isEntregaTipo && (
                     <ResumoSecao titulo="Endereco para entrega do pedido" onEditar={() => setEtapa("entrega")}>
                       <p className="text-[.86rem] font-bold text-neutral-900">{rua}, {numero}</p>
                       <p className="text-[.82rem] text-neutral-500">{bairro}, {cidade}/{estado}, CEP {cep}</p>
@@ -714,16 +758,17 @@ function TipoCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between rounded-2xl border-2 p-4 text-left transition-colors"
-      style={ativo ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#eee" }}
+      className="flex w-full items-center justify-between rounded-xl border-[1.5px] p-4 text-left transition-colors"
+      style={ativo ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#e5e7eb" }}
     >
       <div>
-        <div className="flex items-center gap-2">
-          {titulo === "Entrega" ? <MapPin size={15} style={{ color: ativo ? brown : "#aaa" }} /> : <StoreIcon size={15} style={{ color: ativo ? brown : "#aaa" }} />}
-          <span className="text-[.86rem] font-bold text-neutral-900">{titulo}</span>
-        </div>
-        <p className="mt-1 text-[.72rem] text-neutral-400">{sub}</p>
-        {min > 0 && <p className="mt-0.5 text-[.76rem] font-semibold text-neutral-700">Pedido minimo: {formatarPreco(min)}</p>}
+        <p className="text-[.9rem] font-bold text-neutral-900">{titulo}</p>
+        <p className="mt-0.5 text-[.76rem] text-neutral-400">{sub}</p>
+        {min > 0 && (
+          <p className="mt-0.5 text-[.74rem] font-semibold" style={{ color: brown }}>
+            Pedido minimo: {formatarPreco(min)}
+          </p>
+        )}
       </div>
       <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full border-2" style={ativo ? { borderColor: brown, background: brown } : { borderColor: "#ddd" }}>
         {ativo && <span className="size-2 rounded-full bg-white" />}

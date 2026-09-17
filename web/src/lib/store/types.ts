@@ -61,6 +61,8 @@ export type StorePerfil = {
   cupomPreenchido: string | null;
   semanaHorarios: StoreHorarioDia[];
   geoAtivo: boolean;
+  agendamentoDeliveryAtivo: boolean;
+  agendamentoRetiradaAtivo: boolean;
 };
 
 export type StoreHorarioDia = {
