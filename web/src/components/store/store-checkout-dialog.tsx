@@ -307,7 +307,12 @@ export function StoreCheckoutDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* Fecha (sem soltar o onOpenChange do pai) enquanto o modal de Agendamento
+          esta aberto por cima — dois <Dialog> full-screen no mesmo padrao
+          "top-0/h-dvh/translate-x-1/2" abertos ao mesmo tempo quebram a
+          centralizacao do segundo (o Agendamento aparecia desalinhado a
+          esquerda, vazando o checkout por baixo). */}
+      <Dialog open={open && !agendamentoModalAberto} onOpenChange={onOpenChange}>
         <DialogContent
           showCloseButton={false}
           className="top-0 left-1/2 h-dvh w-full max-w-[901px] translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:max-w-[901px]"
