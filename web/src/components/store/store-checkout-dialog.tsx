@@ -398,13 +398,13 @@ export function StoreCheckoutDialog({
                           <p className="mb-3 text-[.86rem] font-normal text-neutral-900">Entregar no endereco</p>
                           <div className="space-y-3.5">
                             <div className="flex items-start gap-2.5">
-                              <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-900" fill="currentColor" />
+                              <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-500" fill="currentColor" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-[.86rem] font-normal text-neutral-900">
+                                <p className="text-[.86rem] font-normal text-neutral-500">
                                   {rua}
                                   {numero ? `, ${numero}` : ""}
                                 </p>
-                                <p className="text-[.78rem] font-light text-blue-600">
+                                <p className="text-[.78rem] font-light text-neutral-500">
                                   {[bairro, cidade].filter(Boolean).join(", ")}
                                   {cep ? ` - ${cep.replace(/\D/g, "")}` : ""}
                                 </p>
@@ -415,10 +415,10 @@ export function StoreCheckoutDialog({
                             </div>
                             {taxaInfo && (
                               <div className="flex items-start gap-2.5">
-                                <Bike size={16} className="mt-0.5 shrink-0 text-neutral-900" fill="currentColor" />
+                                <Bike size={16} className="mt-0.5 shrink-0 text-neutral-500" fill="currentColor" />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-[.78rem] font-light text-neutral-500">Taxa de entrega</p>
-                                  <p className="text-[.86rem] font-normal text-neutral-900">{taxaEntrega === 0 ? "Gratis" : formatarPreco(taxaEntrega)}</p>
+                                  <p className="text-[.86rem] font-normal text-neutral-500">{taxaEntrega === 0 ? "Gratis" : formatarPreco(taxaEntrega)}</p>
                                 </div>
                               </div>
                             )}
