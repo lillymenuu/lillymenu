@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, Wallet } from "lucide-react";
+import { AlertCircle, Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { StoreAgendamentoOverlay } from "@/components/store/store-agendamento-dialog";
@@ -78,6 +78,8 @@ export function StoreCheckoutDialog({
 
   const [formaPagamento, setFormaPagamento] = useState("");
   const [trocoPara, setTrocoPara] = useState("");
+  const [trocoModalAberto, setTrocoModalAberto] = useState(false);
+  const [precisaTroco, setPrecisaTroco] = useState(false);
 
   const [cupomCodigo, setCupomCodigo] = useState(cupomAplicado?.codigo ?? perfil.cupomPreenchido ?? "");
   const [cupomErro, setCupomErro] = useState("");
@@ -130,6 +132,9 @@ export function StoreCheckoutDialog({
 
   const total = Math.max(0, subtotal - desconto) + taxaFinal;
   const cashbackEstimado = perfil.cashbackAtivo && perfil.cashbackPct > 0 ? (total * perfil.cashbackPct) / 100 : 0;
+
+  const trocoValorNumerico = Number(trocoPara.replace(",", "."));
+  const trocoValorValido = trocoPara.trim() !== "" && !isNaN(trocoValorNumerico) && trocoValorNumerico > total;
 
   const pedidoMinAtivo =
     tipo === ""
@@ -207,6 +212,12 @@ export function StoreCheckoutDialog({
     if (tipo === "entrega_agendada" && !agendamento) {
       setTimeout(() => setAgendamentoModalAberto(true), 300);
     }
+  }
+
+  function confirmarTroco() {
+    if (precisaTroco && !trocoValorValido) return;
+    if (!precisaTroco) setTrocoPara("");
+    setTrocoModalAberto(false);
   }
 
   async function validarCupom() {
@@ -526,6 +537,9 @@ export function StoreCheckoutDialog({
                       return (
                         <label
                           key={f.valor}
+                          onClick={() => {
+                            if (f.valor === "dinheiro") setTrocoModalAberto(true);
+                          }}
                           className="flex cursor-pointer items-center gap-3.5 rounded-xl border-[1.5px] p-3.5 transition-colors"
                           style={ativo ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#e5e7eb" }}
                         >
@@ -554,13 +568,6 @@ export function StoreCheckoutDialog({
                       );
                     })}
                   </div>
-
-                  {formaPagamento === "dinheiro" && (
-                    <div className="mt-3.5">
-                      <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">Troco para quanto? (opcional)</label>
-                      <input value={trocoPara} onChange={(e) => setTrocoPara(e.target.value)} placeholder="R$ 0,00" className={fieldClass()} />
-                    </div>
-                  )}
 
                   {perfil.cuponsAtivo && (
                     <div className="mt-3.5">
@@ -822,6 +829,71 @@ export function StoreCheckoutDialog({
               }}
             >
               Proximo
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={trocoModalAberto} onOpenChange={setTrocoModalAberto}>
+        <DialogContent showCloseButton={false} className="max-w-md gap-0 p-5 sm:max-w-md">
+          <p className="text-[.9rem] leading-relaxed text-neutral-800">
+            O total do seu pagamento em dinheiro é de <strong className="font-bold">{formatarPreco(total)}</strong>. Precisa de troco?
+          </p>
+
+          <div className="mt-4 space-y-2.5">
+            <label className="flex cursor-pointer items-center gap-2.5">
+              <span
+                className="flex size-[18px] shrink-0 items-center justify-center rounded-full border-2"
+                style={precisaTroco ? { borderColor: brown, background: brown } : { borderColor: "#ccc" }}
+              >
+                {precisaTroco && <span className="size-2 rounded-full bg-white" />}
+              </span>
+              <span className="text-[.86rem] text-neutral-800">Sim</span>
+              <input type="radio" name="precisaTroco" checked={precisaTroco} onChange={() => setPrecisaTroco(true)} className="sr-only" />
+            </label>
+            <label className="flex cursor-pointer items-center gap-2.5">
+              <span
+                className="flex size-[18px] shrink-0 items-center justify-center rounded-full border-2"
+                style={!precisaTroco ? { borderColor: brown, background: brown } : { borderColor: "#ccc" }}
+              >
+                {!precisaTroco && <span className="size-2 rounded-full bg-white" />}
+              </span>
+              <span className="text-[.86rem] text-neutral-800">Não</span>
+              <input
+                type="radio"
+                name="precisaTroco"
+                checked={!precisaTroco}
+                onChange={() => {
+                  setPrecisaTroco(false);
+                  setTrocoPara("");
+                }}
+                className="sr-only"
+              />
+            </label>
+          </div>
+
+          {precisaTroco && (
+            <div className="mt-4">
+              <label className="mb-1.5 block text-[.78rem] text-neutral-600">Informe o valor a ser pago</label>
+              <input value={trocoPara} onChange={(e) => setTrocoPara(e.target.value)} placeholder="Troco para quanto? *" className={fieldClass()} />
+              {!trocoValorValido && (
+                <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-[.78rem] text-red-700">
+                  <AlertCircle size={14} className="shrink-0" />
+                  O valor a ser pago precisa ser maior que o valor do pagamento em dinheiro
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mt-5 flex justify-end">
+            <button
+              type="button"
+              disabled={precisaTroco && !trocoValorValido}
+              onClick={confirmarTroco}
+              className="rounded-lg px-5 py-2.5 text-[.86rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+              style={{ background: precisaTroco && !trocoValorValido ? "#c0a88a" : brown }}
+            >
+              CONFIRMAR
             </button>
           </div>
         </DialogContent>
