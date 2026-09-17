@@ -7,7 +7,7 @@ import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { StoreAgendamentoOverlay } from "@/components/store/store-agendamento-dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { buscarEnderecoPorCep, formatarCep } from "@/lib/cep";
-import { formatarPreco, formatarTelefone } from "@/lib/store/format";
+import { formatarPreco, formatarTelefone, maskValorDigitado, parseValorMascarado } from "@/lib/store/format";
 import type { StoreCartItem, StoreCupomResultado, StorePerfil } from "@/lib/store/types";
 
 type Etapa = "dados" | "entrega" | "pagamento" | "resumo";
@@ -133,7 +133,7 @@ export function StoreCheckoutDialog({
   const total = Math.max(0, subtotal - desconto) + taxaFinal;
   const cashbackEstimado = perfil.cashbackAtivo && perfil.cashbackPct > 0 ? (total * perfil.cashbackPct) / 100 : 0;
 
-  const trocoValorNumerico = Number(trocoPara.replace(",", "."));
+  const trocoValorNumerico = parseValorMascarado(trocoPara);
   const trocoValorValido = trocoPara.trim() !== "" && !isNaN(trocoValorNumerico) && trocoValorNumerico > total;
 
   const pedidoMinAtivo =
@@ -285,7 +285,7 @@ export function StoreCheckoutDialog({
           total,
           itens: itens.map((i) => ({ id: i.id, nome: i.nome, preco: i.precoUnit, qtd: i.qtd, obs: i.obs, combosels: i.combosels })),
           troco_solicitado: formaPagamento === "dinheiro" && trocoPara.trim() !== "",
-          troco_valor: formaPagamento === "dinheiro" ? Number(trocoPara.replace(",", ".")) || 0 : 0,
+          troco_valor: formaPagamento === "dinheiro" ? parseValorMascarado(trocoPara) || 0 : 0,
           cupom_codigo: cupomAplicado?.codigo ?? "",
           cupom_desconto: desconto,
           tipo_agendamento: isAgendadaTipo ? tipo : "",
@@ -875,7 +875,13 @@ export function StoreCheckoutDialog({
           {precisaTroco && (
             <div className="mt-4">
               <label className="mb-1.5 block text-[.78rem] text-neutral-600">Informe o valor a ser pago</label>
-              <input value={trocoPara} onChange={(e) => setTrocoPara(e.target.value)} placeholder="Troco para quanto? *" className={fieldClass()} />
+              <input
+                value={trocoPara}
+                onChange={(e) => setTrocoPara(maskValorDigitado(e.target.value))}
+                inputMode="decimal"
+                placeholder="Troco para quanto? *"
+                className={fieldClass()}
+              />
               {trocoValorValido ? (
                 <div className="mt-2 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-[.78rem] text-blue-700">
                   <Info size={14} className="shrink-0" />
