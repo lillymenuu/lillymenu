@@ -52,6 +52,35 @@ export function StoreComboDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, combo?.id, lojaId]);
 
+  /* Quantas unidades do combo inteiro dao pra montar com o estoque das
+     opcoes ja escolhidas (ex.: se so tem 1 unidade do item selecionado,
+     nao da pra pedir 2 combos com ele dentro). Sem selecao ainda = sem
+     limite conhecido. Precisa ficar ANTES do "if (!combo) return null"
+     abaixo — hooks nao podem vir depois de um return condicional, senao
+     a contagem de hooks muda entre o render com combo=null e o render
+     seguinte, e o React quebra (erro #310). */
+  const maxCombosPorEstoque = useMemo(() => {
+    let limite: number | null = null;
+    for (const passo of passos) {
+      const sel = selecoes[passo.id] ?? {};
+      for (const opc of passo.opcoes) {
+        const qtdSelecionada = sel[opc.id] ?? 0;
+        if (qtdSelecionada > 0) {
+          const limiteOpcao = Math.floor(opc.estoque / qtdSelecionada);
+          limite = limite === null ? limiteOpcao : Math.min(limite, limiteOpcao);
+        }
+      }
+    }
+    return limite;
+  }, [passos, selecoes]);
+
+  useEffect(() => {
+    if (maxCombosPorEstoque !== null && qtd > maxCombosPorEstoque) {
+      setQtd(Math.max(1, maxCombosPorEstoque));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxCombosPorEstoque]);
+
   if (!combo) return null;
 
   function totalSelecionado(passoId: number): number {
@@ -78,32 +107,6 @@ export function StoreComboDialog({
     return totalSelecionado(p.id) < min;
   });
   const podeAdicionar = !carregando && !erroCarregar && passosFaltando.length === 0;
-
-  /* Quantas unidades do combo inteiro dao pra montar com o estoque das
-     opcoes ja escolhidas (ex.: se so tem 1 unidade do item selecionado,
-     nao da pra pedir 2 combos com ele dentro). Sem selecao ainda = sem
-     limite conhecido. */
-  const maxCombosPorEstoque = useMemo(() => {
-    let limite: number | null = null;
-    for (const passo of passos) {
-      const sel = selecoes[passo.id] ?? {};
-      for (const opc of passo.opcoes) {
-        const qtdSelecionada = sel[opc.id] ?? 0;
-        if (qtdSelecionada > 0) {
-          const limiteOpcao = Math.floor(opc.estoque / qtdSelecionada);
-          limite = limite === null ? limiteOpcao : Math.min(limite, limiteOpcao);
-        }
-      }
-    }
-    return limite;
-  }, [passos, selecoes]);
-
-  useEffect(() => {
-    if (maxCombosPorEstoque !== null && qtd > maxCombosPorEstoque) {
-      setQtd(Math.max(1, maxCombosPorEstoque));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maxCombosPorEstoque]);
 
   function adicionar() {
     if (!combo || !podeAdicionar) return;
