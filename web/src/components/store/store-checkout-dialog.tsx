@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, Loader2, MapPin, QrCode, Store as StoreIcon, Wallet } from "lucide-react";
+import { ChevronDown, CreditCard, Loader2, MapPin, QrCode, Store as StoreIcon, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -70,6 +70,7 @@ export function StoreCheckoutDialog({
 
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState("");
+  const [resumoAberto, setResumoAberto] = useState(false);
 
   const taxaEntrega = useMemo(() => {
     if (tipo === "retirada") return 0;
@@ -238,8 +239,8 @@ export function StoreCheckoutDialog({
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
               {etapa === "dados" && (
                 <div className="mx-auto max-w-xs space-y-3 pt-6">
-                  <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome *" className={`${fieldClass()} text-center`} />
-                  <input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="Telefone *" inputMode="tel" className={`${fieldClass()} text-center`} />
+                  <FloatingField label="Nome*" value={nome} onChange={setNome} />
+                  <FloatingField label="Telefone*" value={telefone} onChange={setTelefone} inputMode="tel" />
                 </div>
               )}
 
@@ -426,33 +427,43 @@ export function StoreCheckoutDialog({
             </div>
 
             <div className="shrink-0 border-t border-neutral-100 px-5 py-3.5">
-              <div className="mb-2.5 space-y-1 text-[.78rem]">
-                <div className="flex justify-between text-neutral-500">
-                  <span>Subtotal</span>
-                  <span>{formatarPreco(subtotal)}</span>
-                </div>
-                {taxaFinal > 0 && (
+              {resumoAberto && (
+                <div className="mb-1.5 space-y-1 text-[.78rem]">
                   <div className="flex justify-between text-neutral-500">
-                    <span>Taxa de entrega</span>
-                    <span>{formatarPreco(taxaFinal)}</span>
+                    <span>Subtotal</span>
+                    <span>{formatarPreco(subtotal)}</span>
                   </div>
-                )}
-                {desconto > 0 && (
-                  <div className="flex justify-between" style={{ color: "#7c3aed" }}>
-                    <span>Desconto</span>
-                    <span>-{formatarPreco(desconto)}</span>
-                  </div>
-                )}
-                {cashbackEstimado > 0 && (
-                  <div className="flex justify-between text-emerald-600">
-                    <span>Cashback a receber (apos 12 horas da compra)</span>
-                    <span>{formatarPreco(cashbackEstimado)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between pt-1 text-[.86rem] font-bold text-neutral-900">
-                  <span>Total da compra</span>
-                  <span>{formatarPreco(total)}</span>
+                  {taxaFinal > 0 && (
+                    <div className="flex justify-between text-neutral-500">
+                      <span>Taxa de entrega</span>
+                      <span>{formatarPreco(taxaFinal)}</span>
+                    </div>
+                  )}
+                  {desconto > 0 && (
+                    <div className="flex justify-between" style={{ color: "#7c3aed" }}>
+                      <span>Desconto</span>
+                      <span>-{formatarPreco(desconto)}</span>
+                    </div>
+                  )}
+                  {cashbackEstimado > 0 && (
+                    <div className="flex justify-between text-emerald-600">
+                      <span>Cashback a receber (apos 12 horas da compra)</span>
+                      <span>{formatarPreco(cashbackEstimado)}</span>
+                    </div>
+                  )}
                 </div>
+              )}
+
+              <div className="mb-2.5 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setResumoAberto((v) => !v)}
+                  className="flex items-center gap-1.5"
+                >
+                  <ChevronDown size={14} className={`text-neutral-400 transition-transform ${resumoAberto ? "rotate-180" : ""}`} />
+                  <span className="text-[.72rem] text-neutral-500">Total da compra</span>
+                </button>
+                <span className="text-[.86rem] font-bold text-neutral-900">{formatarPreco(total)}</span>
               </div>
 
               {etapa !== "resumo" ? (
@@ -561,6 +572,30 @@ function TipoCard({
         {ativo && <span className="size-2 rounded-full bg-white" />}
       </span>
     </button>
+  );
+}
+
+function FloatingField({
+  label,
+  value,
+  onChange,
+  inputMode,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  inputMode?: "text" | "tel";
+}) {
+  return (
+    <div className="relative rounded-xl border-[1.5px] border-neutral-200 bg-white focus-within:border-neutral-400">
+      <label className="pointer-events-none absolute top-2 left-3.5 text-[.68rem] text-neutral-400">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        inputMode={inputMode}
+        className="w-full bg-transparent px-3.5 pt-6 pb-2.5 text-left text-[.9rem] text-neutral-900 outline-none"
+      />
+    </div>
   );
 }
 
