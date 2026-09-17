@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { buscarEnderecoPorCep, formatarCep } from "@/lib/cep";
-import { formatarPreco } from "@/lib/store/format";
+import { formatarPreco, formatarTelefone } from "@/lib/store/format";
 import type { StoreCartItem, StoreCupomResultado, StorePerfil } from "@/lib/store/types";
 
 type Etapa = "dados" | "entrega" | "pagamento" | "resumo";
@@ -76,7 +76,7 @@ export function StoreCheckoutDialog({
 
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState("");
-  const [resumoAberto, setResumoAberto] = useState(false);
+  const [resumoAberto, setResumoAberto] = useState(true);
 
   const wppNum = perfil.lojaContato.replace(/\D/g, "");
 
@@ -310,7 +310,7 @@ export function StoreCheckoutDialog({
                   <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome*" className={fieldClass()} />
                   <input
                     value={telefone}
-                    onChange={(e) => setTelefone(e.target.value)}
+                    onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
                     inputMode="tel"
                     placeholder="Telefone*"
                     className={fieldClass()}
@@ -548,7 +548,7 @@ export function StoreCheckoutDialog({
                   onClick={() => setResumoAberto((v) => !v)}
                   className="flex items-center gap-1.5"
                 >
-                  <ChevronDown size={14} className={`text-neutral-400 transition-transform ${resumoAberto ? "rotate-180" : ""}`} />
+                  <ChevronDown size={14} className={`text-neutral-400 transition-transform ${resumoAberto ? "" : "rotate-180"}`} />
                   <span className="text-[.72rem] text-neutral-500">Total da compra</span>
                 </button>
                 <span className="text-[.86rem] font-bold text-neutral-900">{formatarPreco(total)}</span>
