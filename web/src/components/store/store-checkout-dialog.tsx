@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, CreditCard, Loader2, MapPin, QrCode, Store as StoreIcon, Wallet } from "lucide-react";
+import { Bike, ChevronDown, CreditCard, Loader2, MapPin, QrCode, Store as StoreIcon, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -78,15 +78,40 @@ export function StoreCheckoutDialog({
   const [erroEnvio, setErroEnvio] = useState("");
   const [resumoAberto, setResumoAberto] = useState(false);
 
+  const wppNum = perfil.lojaContato.replace(/\D/g, "");
+
+  /* Busca case-insensitive do bairro digitado contra os bairros cadastrados em
+     Configuracoes > Taxa de entrega. undefined = bairro nao cadastrado (loja nao
+     atende esse bairro), diferente de "" (bairro ainda nao digitado). */
+  const bairroChaveEncontrada = useMemo(() => {
+    if (perfil.taxaEntregaTipo !== "bairro" || !bairro.trim()) return undefined;
+    return Object.keys(perfil.taxasBairro).find((k) => k.toLowerCase() === bairro.trim().toLowerCase());
+  }, [perfil.taxaEntregaTipo, perfil.taxasBairro, bairro]);
+
+  const bairroNaoAtendido = perfil.taxaEntregaTipo === "bairro" && bairro.trim() !== "" && bairroChaveEncontrada === undefined;
+
   const taxaEntrega = useMemo(() => {
     if (tipo === "retirada") return 0;
     if (perfil.taxaEntregaGratis) return 0;
-    if (perfil.taxaEntregaTipo === "bairro" && bairro.trim()) {
-      const chave = Object.keys(perfil.taxasBairro).find((k) => k.toLowerCase() === bairro.trim().toLowerCase());
-      if (chave) return perfil.taxasBairro[chave];
+    if (perfil.taxaEntregaTipo === "bairro") {
+      return bairroChaveEncontrada !== undefined ? perfil.taxasBairro[bairroChaveEncontrada] : 0;
     }
     return perfil.taxaEntrega;
-  }, [tipo, bairro, perfil]);
+  }, [tipo, perfil, bairroChaveEncontrada]);
+
+  /* Texto exibido pro cliente (resumo do endereco confirmado + dentro do modal
+     enquanto digita), espelhando calcularTaxaEntrega() do loja.js legado. */
+  const taxaInfo = useMemo(() => {
+    if (perfil.taxaEntregaGratis) return { texto: "Entrega gratis! 🎉", gratis: true };
+    if (perfil.taxaEntregaTipo === "bairro") {
+      if (!bairro.trim()) return { texto: "Informe seu bairro para calcular a taxa.", gratis: false };
+      if (bairroChaveEncontrada === undefined) return null;
+      return taxaEntrega === 0
+        ? { texto: `Entrega gratis para ${bairro.trim()} 🎉`, gratis: true }
+        : { texto: `Taxa de entrega para ${bairro.trim()}: ${formatarPreco(taxaEntrega)}`, gratis: false };
+    }
+    return taxaEntrega === 0 ? { texto: "Entrega gratis!", gratis: true } : { texto: `Taxa de entrega: ${formatarPreco(taxaEntrega)}`, gratis: false };
+  }, [perfil, bairro, bairroChaveEncontrada, taxaEntrega]);
 
   const { desconto, taxaFinal } = useMemo(() => {
     if (!cupomAplicado) return { desconto: 0, taxaFinal: taxaEntrega };
@@ -156,6 +181,7 @@ export function StoreCheckoutDialog({
 
   function confirmarEndereco() {
     if (!rua.trim() || !numero.trim()) return;
+    if (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) return;
     setEnderecoConfirmado(true);
     setEnderecoModalAberto(false);
   }
@@ -318,12 +344,23 @@ export function StoreCheckoutDialog({
                   {tipo === "entrega" && (
                     <div className="mt-4">
                       {enderecoConfirmado ? (
-                        <div className="flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3.5 py-3">
-                          <MapPin size={16} className="shrink-0 text-neutral-500" />
-                          <span className="flex-1 text-[.82rem] text-neutral-700">{enderecoTexto()}</span>
-                          <button type="button" onClick={() => setEnderecoModalAberto(true)} className="text-[.8rem] font-semibold" style={{ color: brown }}>
-                            Editar
-                          </button>
+                        <div>
+                          <p className="mb-2 text-[.72rem] font-bold tracking-wide text-neutral-400 uppercase">Entregar no endereco</p>
+                          <div className="rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-3">
+                            <div className="flex items-start gap-2.5">
+                              <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-500" />
+                              <span className="flex-1 text-[.82rem] text-neutral-700">{enderecoTexto()}</span>
+                              <button type="button" onClick={() => setEnderecoModalAberto(true)} className="shrink-0 text-[.8rem] font-semibold" style={{ color: brown }}>
+                                Editar
+                              </button>
+                            </div>
+                            {taxaInfo && (
+                              <div className="mt-2 flex items-center gap-2.5 border-t border-neutral-200 pt-2">
+                                <Bike size={16} className="shrink-0 text-neutral-500" />
+                                <span className="text-[.82rem] text-neutral-700">{taxaInfo.texto}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <button
@@ -582,9 +619,22 @@ export function StoreCheckoutDialog({
             </div>
             <input value={rua} onChange={(e) => setRua(e.target.value)} placeholder="Rua/Avenida" className={fieldClass()} />
             <div className="grid grid-cols-2 gap-2.5">
-              <input value={bairro} onChange={(e) => setBairro(e.target.value)} placeholder="Bairro" className={fieldClass()} />
+              <input
+                value={bairro}
+                onChange={(e) => setBairro(e.target.value)}
+                placeholder="Bairro"
+                list={perfil.taxaEntregaTipo === "bairro" ? "storeListaBairros" : undefined}
+                className={fieldClass()}
+              />
               <input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Cidade" className={fieldClass()} />
             </div>
+            {perfil.taxaEntregaTipo === "bairro" && (
+              <datalist id="storeListaBairros">
+                {Object.keys(perfil.taxasBairro).map((b) => (
+                  <option key={b} value={b} />
+                ))}
+              </datalist>
+            )}
             <div className="grid grid-cols-2 gap-2.5">
               <input value={numero} onChange={(e) => setNumero(e.target.value)} placeholder="Numero" inputMode="numeric" className={fieldClass()} />
               <select value={estado} onChange={(e) => setEstado(e.target.value)} className={fieldClass()}>
@@ -595,14 +645,40 @@ export function StoreCheckoutDialog({
               </select>
             </div>
             <input value={complemento} onChange={(e) => setComplemento(e.target.value)} placeholder="Complemento" className={fieldClass()} />
+
+            {bairroNaoAtendido ? (
+              <div className="rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2.5 text-[.78rem] text-orange-800">
+                <p>Bairro fora da area de entrega. Entre em contato conosco.</p>
+                {wppNum && (
+                  <a
+                    href={`https://wa.me/55${wppNum}?text=${encodeURIComponent("Olá! Meu bairro não está na área de entrega cadastrada, gostaria de combinar a forma de entrega do meu pedido.")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-flex items-center gap-1 font-semibold text-emerald-700"
+                  >
+                    Falar no WhatsApp
+                  </a>
+                )}
+              </div>
+            ) : (
+              taxaInfo && (
+                <div className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[.78rem] ${taxaInfo.gratis ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"}`}>
+                  <Bike size={15} className="shrink-0" />
+                  <span>{taxaInfo.texto}</span>
+                </div>
+              )
+            )}
           </div>
           <div className="border-t border-neutral-100 p-4">
             <button
               type="button"
-              disabled={!rua.trim() || !numero.trim()}
+              disabled={!rua.trim() || !numero.trim() || (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido))}
               onClick={confirmarEndereco}
               className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
-              style={{ background: !rua.trim() || !numero.trim() ? "#c0a88a" : brown }}
+              style={{
+                background:
+                  !rua.trim() || !numero.trim() || (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) ? "#c0a88a" : brown,
+              }}
             >
               Proximo
             </button>
