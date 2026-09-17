@@ -439,8 +439,8 @@ export function StoreCheckoutDialog({
 
                   {isRetiradaTipo && (
                     <div className="mt-4">
-                      <p className="mb-3 text-[.86rem] font-normal text-neutral-900">Endereco para retirada do pedido</p>
-                      <div className="flex items-center justify-between gap-3">
+                      <p className="mb-1.5 text-[.86rem] font-normal text-neutral-900">Endereco para retirada do pedido</p>
+                      <div className="flex items-center justify-between gap-2">
                         <p className="min-w-0 flex-1 text-[.78rem] font-light text-neutral-500">
                           {perfil.lojaRua}
                           {perfil.lojaNumero ? `, ${perfil.lojaNumero}` : ""}
@@ -450,9 +450,9 @@ export function StoreCheckoutDialog({
                         <button
                           type="button"
                           onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(perfil.enderecoLoja || perfil.nomeLoja)}`, "_blank", "noopener")}
-                          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
+                          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
                         >
-                          <Map size={18} />
+                          <Map size={16} />
                         </button>
                       </div>
                     </div>
