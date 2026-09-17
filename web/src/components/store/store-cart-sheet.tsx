@@ -159,7 +159,7 @@ export function StoreCartSheet({
                         onChange={(e) => setCupomCodigo(e.target.value.toUpperCase())}
                         placeholder="Ex.: 10OFFHOJE"
                         disabled={!!cupomAplicado}
-                        className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-[.82rem] outline-none focus:bg-white"
+                        className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-base outline-none focus:bg-white"
                       />
                       {cupomAplicado ? (
                         <button

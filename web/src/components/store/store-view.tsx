@@ -270,7 +270,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar no cardapio"
-              className="w-full rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-2 text-[.86rem] outline-none focus:bg-white"
+              className="w-full rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-2 text-base outline-none focus:bg-white"
               style={{ borderColor: undefined }}
             />
           </div>

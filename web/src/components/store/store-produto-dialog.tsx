@@ -234,7 +234,7 @@ export function StoreProdutoDialog({
         onChange={(e) => setObs(e.target.value)}
         placeholder="Observacoes do cliente"
         rows={2}
-        className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-[.84rem] outline-none"
+        className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-base outline-none"
       />
     </div>
   );

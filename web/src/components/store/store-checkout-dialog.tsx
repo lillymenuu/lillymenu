@@ -20,7 +20,10 @@ const FORMAS_PAGAMENTO: { valor: string; label: string; sub: string; icon: typeo
 ];
 
 function fieldClass() {
-  return "w-full rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-3 text-[.86rem] text-neutral-900 outline-none transition-colors focus:bg-white";
+  /* text-base (16px) e nao um valor menor — abaixo de 16px o iOS/Android
+     tratam o campo como "dificil de ler" e da zoom automatico na tela ao
+     focar, obrigando o usuario a dar zoom out manualmente depois. */
+  return "w-full rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-3 text-base text-neutral-900 outline-none transition-colors focus:bg-white";
 }
 
 export function StoreCheckoutDialog({
@@ -593,7 +596,7 @@ function FloatingField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         inputMode={inputMode}
-        className="w-full bg-transparent px-3.5 pt-6 pb-2.5 text-left text-[.9rem] text-neutral-900 outline-none"
+        className="w-full bg-transparent px-3.5 pt-6 pb-2.5 text-left text-base text-neutral-900 outline-none"
       />
     </div>
   );
