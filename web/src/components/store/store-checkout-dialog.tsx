@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, Wallet } from "lucide-react";
+import { AlertCircle, Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, User, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { StoreAgendamentoOverlay } from "@/components/store/store-agendamento-dialog";
@@ -88,6 +88,7 @@ export function StoreCheckoutDialog({
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState("");
   const [resumoAberto, setResumoAberto] = useState(true);
+  const [itensResumoAberto, setItensResumoAberto] = useState(true);
 
   const wppNum = perfil.lojaContato.replace(/\D/g, "");
 
@@ -599,7 +600,7 @@ export function StoreCheckoutDialog({
 
               {etapa === "resumo" && (
                 <div>
-                  <div className="mb-3 flex items-center gap-2.5 border-b border-neutral-100 pb-4">
+                  <div className="mb-1 flex items-center gap-2.5 border-b border-neutral-100 pb-4">
                     <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-xs font-bold text-neutral-500">
                       {perfil.perfilLoja ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -608,47 +609,154 @@ export function StoreCheckoutDialog({
                         perfil.nomeLoja.charAt(0)
                       )}
                     </div>
-                    <p className="text-[.86rem] font-bold text-neutral-900">{perfil.nomeLoja}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[.86rem] font-normal text-neutral-900">{perfil.nomeLoja}</p>
+                      <button type="button" onClick={onVoltarCarrinho} className="text-[.8rem] font-light" style={{ color: brown }}>
+                        Adicionar mais itens
+                      </button>
+                    </div>
                   </div>
 
-                  <ResumoSecao titulo="Seus dados" onEditar={() => setEtapa("dados")}>
-                    <p className="text-[.86rem] font-bold text-neutral-900">{nome}</p>
-                    <p className="text-[.82rem] text-neutral-500">{telefone}</p>
-                  </ResumoSecao>
+                  <div className="border-b border-neutral-100 py-3.5">
+                    <p className="mb-1.5 text-[.86rem] font-normal text-neutral-900">Seus dados</p>
+                    <div className="flex items-start gap-2.5">
+                      <User size={16} className="mt-0.5 shrink-0 text-neutral-500" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[.86rem] font-normal text-neutral-900">{nome}</p>
+                        <p className="text-[.78rem] font-light text-neutral-500">{telefone}</p>
+                      </div>
+                      <button type="button" onClick={() => setEtapa("dados")} className="shrink-0 text-[.8rem] font-light" style={{ color: brown }}>
+                        Editar
+                      </button>
+                    </div>
+                  </div>
 
                   {isEntregaTipo && (
-                    <ResumoSecao titulo="Endereco para entrega do pedido" onEditar={() => setEtapa("entrega")}>
-                      <p className="text-[.86rem] font-bold text-neutral-900">{rua}, {numero}</p>
-                      <p className="text-[.82rem] text-neutral-500">{bairro}, {cidade}/{estado}, CEP {cep}</p>
-                    </ResumoSecao>
+                    <div className="border-b border-neutral-100 py-3.5">
+                      <p className="mb-1.5 text-[.86rem] font-normal text-neutral-900">Endereco para entrega do pedido</p>
+                      <div className="flex items-start gap-2.5">
+                        <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-500" fill="currentColor" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[.86rem] font-normal text-neutral-500">
+                            {rua}
+                            {numero ? `, ${numero}` : ""}
+                          </p>
+                          <p className="text-[.78rem] font-light text-neutral-500">
+                            {[bairro, cidade].filter(Boolean).join(", ")}
+                            {cep ? ` - ${cep.replace(/\D/g, "")}` : ""}
+                          </p>
+                        </div>
+                        <button type="button" onClick={() => setEtapa("entrega")} className="shrink-0 text-[.8rem] font-light" style={{ color: brown }}>
+                          Editar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isRetiradaTipo && (
+                    <div className="border-b border-neutral-100 py-3.5">
+                      <p className="mb-1.5 text-[.86rem] font-normal text-neutral-900">Endereco para retirada do pedido</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="min-w-0 flex-1 text-[.78rem] font-light text-neutral-500">
+                          {perfil.lojaRua}
+                          {perfil.lojaNumero ? `, ${perfil.lojaNumero}` : ""}
+                          {perfil.lojaBairro ? ` - ${perfil.lojaBairro}` : ""}
+                          {perfil.lojaCidade ? ` / ${perfil.lojaCidade}` : ""}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(perfil.enderecoLoja || perfil.nomeLoja)}`, "_blank", "noopener")}
+                          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
+                        >
+                          <Map size={16} />
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                   {isAgendadaTipo && agendamento && (
-                    <ResumoSecao titulo="Agendamento" onEditar={() => setEtapa("entrega")}>
-                      <p className="text-[.86rem] font-bold text-neutral-900">
-                        {agendamento.data.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })} {agendamento.slot}
-                      </p>
-                    </ResumoSecao>
+                    <div className="border-b border-neutral-100 py-3.5">
+                      <p className="mb-1.5 text-[.86rem] font-normal text-neutral-900">Agendamento</p>
+                      <div className="flex items-center gap-2.5">
+                        <Calendar size={16} className="shrink-0 text-neutral-500" />
+                        <span className="min-w-0 flex-1 text-[.78rem] font-light text-neutral-500">
+                          {agendamento.data.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })} {agendamento.slot}
+                        </span>
+                        <button type="button" onClick={() => setEtapa("entrega")} className="shrink-0 text-[.8rem] font-light" style={{ color: brown }}>
+                          Editar
+                        </button>
+                      </div>
+                    </div>
                   )}
 
-                  <ResumoSecao titulo="Forma(s) de pagamento" onEditar={() => setEtapa("pagamento")}>
-                    <p className="text-[.86rem] font-bold text-neutral-900 capitalize">{formaPagamento}</p>
-                    <p className="text-[.82rem] text-neutral-500">Valor: {formatarPreco(total)}</p>
-                  </ResumoSecao>
-
-                  <div className="py-3">
-                    <p className="mb-1.5 text-[.72rem] font-semibold tracking-wide text-neutral-400 uppercase">Itens do pedido ({itens.length})</p>
-                    <div className="space-y-1.5">
-                      {itens.map((item, i) => (
-                        <div key={item.key} className="flex items-baseline gap-2 text-[.84rem]">
-                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full text-[.68rem] font-bold" style={{ color: brown, border: `1.5px solid ${brown}` }}>
-                            {i + 1}
-                          </span>
-                          <span className="min-w-0 flex-1 text-neutral-700">{item.nome}</span>
-                          <span className="shrink-0 font-semibold text-neutral-900">{formatarPreco(item.precoUnit * item.qtd)}</span>
-                        </div>
-                      ))}
+                  <div className="border-b border-neutral-100 py-3.5">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <p className="text-[.86rem] font-normal text-neutral-900">Forma(s) de pagamento</p>
+                      <button type="button" onClick={() => setEtapa("pagamento")} className="text-[.8rem] font-light" style={{ color: brown }}>
+                        Editar
+                      </button>
                     </div>
+                    <div className="flex items-start gap-2.5">
+                      {(() => {
+                        const PagIcon = FORMAS_PAGAMENTO.find((f) => f.valor === formaPagamento)?.icon ?? Wallet;
+                        return <PagIcon size={16} className="mt-0.5 shrink-0 text-neutral-500" />;
+                      })()}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[.86rem] font-normal text-neutral-900 capitalize">{formaPagamento}</p>
+                        <p className="text-[.78rem] font-light text-neutral-500">Forma de pagamento do pedido</p>
+                        <p className="text-[.78rem] font-light text-neutral-500">Valor: {formatarPreco(total)}</p>
+                        {formaPagamento === "dinheiro" && trocoValorValido && (
+                          <p className="text-[.78rem] font-light text-neutral-500">Troco para {formatarPreco(trocoValorNumerico)}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-b border-neutral-100 py-3.5">
+                    <button type="button" onClick={() => setItensResumoAberto((v) => !v)} className="flex w-full items-center justify-between">
+                      <div className="text-left">
+                        <p className="text-[.86rem] font-normal text-neutral-900">Itens do pedido</p>
+                        <p className="mt-0.5 text-[.78rem] font-light text-neutral-500">
+                          {itens.length} {itens.length === 1 ? "item" : "itens"} no seu pedido
+                        </p>
+                      </div>
+                      <ChevronDown size={16} className={`shrink-0 text-neutral-400 transition-transform ${itensResumoAberto ? "" : "rotate-180"}`} />
+                    </button>
+
+                    {itensResumoAberto && (
+                      <div className="mt-3 space-y-3">
+                        {itens.map((item, i) => {
+                          const grupos = item.combosels
+                            ? item.combosels.reduce<Record<string, typeof item.combosels>>((acc, s) => {
+                                const chave = s.passoNome ?? "";
+                                (acc[chave] ??= []).push(s);
+                                return acc;
+                              }, {})
+                            : null;
+                          return (
+                            <div key={item.key}>
+                              <div className="flex items-baseline gap-2 text-[.86rem]">
+                                <span className="shrink-0 font-light text-neutral-400">{i + 1}</span>
+                                <span className="min-w-0 flex-1 font-normal text-neutral-900">{item.nome}</span>
+                                <span className="shrink-0 font-normal text-neutral-900">{formatarPreco(item.precoUnit * item.qtd)}</span>
+                              </div>
+                              {grupos &&
+                                Object.entries(grupos).map(([passoNome, sels]) => (
+                                  <div key={passoNome} className="mt-1.5 pl-5">
+                                    {passoNome && <p className="text-[.8rem] font-semibold text-neutral-800">{passoNome}</p>}
+                                    {sels?.map((s) => (
+                                      <p key={s.id} className="flex items-baseline gap-1.5 text-[.8rem] font-light text-neutral-600">
+                                        <span className="text-neutral-400">{s.qtd}</span>
+                                        {s.nome}
+                                      </p>
+                                    ))}
+                                  </div>
+                                ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {erroEnvio && <p className="mt-2 text-[.84rem] text-red-600">{erroEnvio}</p>}
@@ -951,16 +1059,3 @@ function TipoCard({
   );
 }
 
-function ResumoSecao({ titulo, onEditar, children }: { titulo: string; onEditar: () => void; children: React.ReactNode }) {
-  return (
-    <div className="border-b border-neutral-100 py-3">
-      <div className="mb-1 flex items-center justify-between">
-        <p className="text-[.72rem] font-semibold tracking-wide text-neutral-400 uppercase">{titulo}</p>
-        <button type="button" onClick={onEditar} className="text-[.78rem] font-semibold text-neutral-500 hover:text-neutral-700">
-          Editar
-        </button>
-      </div>
-      {children}
-    </div>
-  );
-}
