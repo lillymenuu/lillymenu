@@ -876,7 +876,12 @@ export function StoreCheckoutDialog({
             <div className="mt-4">
               <label className="mb-1.5 block text-[.78rem] text-neutral-600">Informe o valor a ser pago</label>
               <input value={trocoPara} onChange={(e) => setTrocoPara(e.target.value)} placeholder="Troco para quanto? *" className={fieldClass()} />
-              {!trocoValorValido && (
+              {trocoValorValido ? (
+                <div className="mt-2 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-[.78rem] text-blue-700">
+                  <Info size={14} className="shrink-0" />
+                  Seu troco será de {formatarPreco(trocoValorNumerico - total)}
+                </div>
+              ) : (
                 <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-[.78rem] text-red-700">
                   <AlertCircle size={14} className="shrink-0" />
                   O valor a ser pago precisa ser maior que o valor do pagamento em dinheiro
