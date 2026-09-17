@@ -37,6 +37,8 @@ export async function POST(request: Request) {
           cashback_valor: b.cashback_valor as number | undefined,
           cupom_codigo: b.cupom_codigo as string | undefined,
           cupom_desconto: b.cupom_desconto as number | undefined,
+          tipo_agendamento: b.tipo_agendamento as string | undefined,
+          agendamento: b.agendamento as string | undefined,
         }),
       }
     );

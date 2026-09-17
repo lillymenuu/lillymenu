@@ -63,7 +63,19 @@ export type StorePerfil = {
   geoAtivo: boolean;
   agendamentoDeliveryAtivo: boolean;
   agendamentoRetiradaAtivo: boolean;
+  agendDeliveryMinTipo: "horas" | "dias";
+  agendDeliveryMinVal: number;
+  agendDeliveryMaxVal: number;
+  agendDeliveryMaxTipo: "horas" | "dias";
+  agendRetiradaMinTipo: "horas" | "dias";
+  agendRetiradaMinVal: number;
+  agendRetiradaMaxVal: number;
+  agendRetiradaMaxTipo: "horas" | "dias";
+  agendDeliveryHorarios: Record<string, StoreAgendHorario>;
+  agendRetiradaHorarios: Record<string, StoreAgendHorario>;
 };
+
+export type StoreAgendHorario = { inicio: string; fim: string };
 
 export type StoreHorarioDia = {
   dia: string;

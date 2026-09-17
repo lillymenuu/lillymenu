@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bike, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, Wallet } from "lucide-react";
+import { Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
+import { StoreAgendamentoDialog } from "@/components/store/store-agendamento-dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { buscarEnderecoPorCep, formatarCep } from "@/lib/cep";
 import { formatarPreco, formatarTelefone } from "@/lib/store/format";
@@ -56,6 +57,10 @@ export function StoreCheckoutDialog({
   const [tipo, setTipo] = useState<"" | "entrega" | "entrega_agendada" | "retirada" | "retirada_agendada">("");
   const isEntregaTipo = tipo === "entrega" || tipo === "entrega_agendada";
   const isRetiradaTipo = tipo === "retirada" || tipo === "retirada_agendada";
+  const isAgendadaTipo = tipo === "entrega_agendada" || tipo === "retirada_agendada";
+
+  const [agendamento, setAgendamento] = useState<{ data: Date; slot: string } | null>(null);
+  const [agendamentoModalAberto, setAgendamentoModalAberto] = useState(false);
 
   const [enderecoModalAberto, setEnderecoModalAberto] = useState(false);
   const [cep, setCep] = useState("");
@@ -196,6 +201,12 @@ export function StoreCheckoutDialog({
     if (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) return;
     setEnderecoConfirmado(true);
     setEnderecoModalAberto(false);
+    /* Entrega agendada so pede o horario depois que o endereco ja foi
+       confirmado, mesma ordem do abrirEnderecoSheet()/confirmarEndereco()
+       do loja.js legado. */
+    if (tipo === "entrega_agendada" && !agendamento) {
+      setTimeout(() => setAgendamentoModalAberto(true), 300);
+    }
   }
 
   async function validarCupom() {
@@ -239,7 +250,7 @@ export function StoreCheckoutDialog({
   }
 
   const podeAvancarDados = nome.trim().length >= 2 && telefone.replace(/\D/g, "").length >= 10;
-  const podeAvancarEntrega = tipo !== "" && (isRetiradaTipo || enderecoConfirmado);
+  const podeAvancarEntrega = tipo !== "" && (isRetiradaTipo || enderecoConfirmado) && (!isAgendadaTipo || agendamento !== null);
 
   async function finalizarPedido() {
     if (formaPagamento === "" || abaixoDoMinimo) return;
@@ -266,6 +277,8 @@ export function StoreCheckoutDialog({
           troco_valor: formaPagamento === "dinheiro" ? Number(trocoPara.replace(",", ".")) || 0 : 0,
           cupom_codigo: cupomAplicado?.codigo ?? "",
           cupom_desconto: desconto,
+          tipo_agendamento: isAgendadaTipo ? tipo : "",
+          agendamento: isAgendadaTipo && agendamento ? JSON.stringify({ data: agendamento.data.toISOString().slice(0, 10), slot: agendamento.slot }) : "",
         }),
       });
       const data = await res.json();
@@ -359,6 +372,7 @@ export function StoreCheckoutDialog({
                         onClick={() => {
                           setTipo("entrega_agendada");
                           if (!enderecoConfirmado) setEnderecoModalAberto(true);
+                          else if (!agendamento) setAgendamentoModalAberto(true);
                         }}
                       />
                     )}
@@ -379,7 +393,10 @@ export function StoreCheckoutDialog({
                         titulo="Retirada agendada"
                         sub="Selecione um horario especifico para retirar seu pedido"
                         min={perfil.pedidoMinRetiradaAtivo ? perfil.pedidoMinRetirada : 0}
-                        onClick={() => setTipo("retirada_agendada")}
+                        onClick={() => {
+                          setTipo("retirada_agendada");
+                          if (!agendamento) setAgendamentoModalAberto(true);
+                        }}
                       />
                     )}
                   </div>
@@ -460,6 +477,21 @@ export function StoreCheckoutDialog({
                             <Map size={16} />
                           </button>
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isAgendadaTipo && agendamento && (
+                    <div className="mt-4">
+                      <p className="mb-0.5 text-[.86rem] leading-tight font-normal text-neutral-900">Agendamento</p>
+                      <div className="flex items-center gap-2.5">
+                        <Calendar size={16} className="shrink-0 text-neutral-500" />
+                        <span className="min-w-0 flex-1 text-[.78rem] leading-snug font-light text-neutral-500">
+                          {agendamento.data.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })} {agendamento.slot}
+                        </span>
+                        <button type="button" onClick={() => setAgendamentoModalAberto(true)} className="shrink-0 text-[.8rem] font-light" style={{ color: brown }}>
+                          Editar
+                        </button>
                       </div>
                     </div>
                   )}
@@ -569,6 +601,14 @@ export function StoreCheckoutDialog({
                     <ResumoSecao titulo="Endereco para entrega do pedido" onEditar={() => setEtapa("entrega")}>
                       <p className="text-[.86rem] font-bold text-neutral-900">{rua}, {numero}</p>
                       <p className="text-[.82rem] text-neutral-500">{bairro}, {cidade}/{estado}, CEP {cep}</p>
+                    </ResumoSecao>
+                  )}
+
+                  {isAgendadaTipo && agendamento && (
+                    <ResumoSecao titulo="Agendamento" onEditar={() => setEtapa("entrega")}>
+                      <p className="text-[.86rem] font-bold text-neutral-900">
+                        {agendamento.data.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })} {agendamento.slot}
+                      </p>
                     </ResumoSecao>
                   )}
 
@@ -774,6 +814,20 @@ export function StoreCheckoutDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      {isAgendadaTipo && (
+        <StoreAgendamentoDialog
+          open={agendamentoModalAberto}
+          onOpenChange={setAgendamentoModalAberto}
+          brown={brown}
+          perfil={perfil}
+          tipo={tipo as "entrega_agendada" | "retirada_agendada"}
+          onConfirmar={(data, slot) => {
+            setAgendamento({ data, slot });
+            setAgendamentoModalAberto(false);
+          }}
+        />
+      )}
     </>
   );
 }
