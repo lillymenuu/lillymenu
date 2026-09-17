@@ -245,6 +245,11 @@ function montarPerfilLoja(PDO $conn, int $lojaId): array {
 
   $catalogoVersao = cfg($conn,$lojaId,'catalogo_versao','');
 
+  /* Config global (loja_id=0, nivel SaaS) que liga/desliga a localizacao
+     automatica via Nominatim — mesma flag lida por public/api/geo_reverso.php
+     e pelo cfgJS de public/loja.php ("geoAtivo"). */
+  $geoAtivo = cfg($conn,0,'saas_nominatim_ativo','1') === '1';
+
   /* Semana completa de horarios (aba "Horario" do modal "Informacoes da
      loja") — mesma logica ja usada em public/loja.php (painel #ipHorario)
      e public/api/loja_status.php, repetida aqui pra nao exigir uma segunda
@@ -307,6 +312,6 @@ function montarPerfilLoja(PDO $conn, int $lojaId): array {
     'agendRetiradaMinTipo','agendRetiradaMinVal','agendRetiradaMaxVal','agendRetiradaMaxTipo',
     'agendDeliveryHorarios','agendRetiradaHorarios',
     'agendamentoDeliveryAtivo','agendamentoRetiradaAtivo',
-    'catalogoVersao','semanaHorarios'
+    'catalogoVersao','semanaHorarios','geoAtivo'
   );
 }

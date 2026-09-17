@@ -60,6 +60,7 @@ export type StorePerfil = {
   mesaNome: string | null;
   cupomPreenchido: string | null;
   semanaHorarios: StoreHorarioDia[];
+  geoAtivo: boolean;
 };
 
 export type StoreHorarioDia = {

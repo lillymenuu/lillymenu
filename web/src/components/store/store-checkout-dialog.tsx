@@ -63,6 +63,9 @@ export function StoreCheckoutDialog({
   const [estado, setEstado] = useState("");
   const [enderecoConfirmado, setEnderecoConfirmado] = useState(false);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(false);
+  const [geoDispensado, setGeoDispensado] = useState(false);
+  const [geoErro, setGeoErro] = useState("");
 
   const [formaPagamento, setFormaPagamento] = useState("");
   const [trocoPara, setTrocoPara] = useState("");
@@ -113,6 +116,42 @@ export function StoreCheckoutDialog({
     } finally {
       setBuscandoCep(false);
     }
+  }
+
+  function usarLocalizacaoAtual() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoErro("Seu navegador nao suporta localizacao.");
+      return;
+    }
+    setBuscandoLocalizacao(true);
+    setGeoErro("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        fetch(`/api/store/geo-reverso?lat=${latitude}&lng=${longitude}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (!data.ok) {
+              setGeoErro(data.msg ?? "Nao foi possivel identificar seu endereco.");
+              return;
+            }
+            setCep(formatarCep(data.cep ?? ""));
+            setRua(data.rua ?? "");
+            setBairro(data.bairro ?? "");
+            setCidade(data.cidade ?? "");
+            setEstado(data.estado ?? "");
+            if (data.numero) setNumero(data.numero);
+            setGeoDispensado(true);
+          })
+          .catch(() => setGeoErro("Erro ao buscar seu endereco."))
+          .finally(() => setBuscandoLocalizacao(false));
+      },
+      (err) => {
+        setBuscandoLocalizacao(false);
+        setGeoErro(err?.code === 1 ? "Permissao de localizacao negada." : "Nao foi possivel obter sua localizacao.");
+      },
+      { timeout: 8000, maximumAge: 60000 }
+    );
   }
 
   function confirmarEndereco() {
@@ -258,7 +297,10 @@ export function StoreCheckoutDialog({
                         titulo="Entrega"
                         sub={`Tempo para entrega de ${perfil.tEntMin} a ${perfil.tEntMax} minutos`}
                         min={perfil.pedidoMinEntregaAtivo ? perfil.pedidoMinEntrega : 0}
-                        onClick={() => setTipo("entrega")}
+                        onClick={() => {
+                          setTipo("entrega");
+                          if (!enderecoConfirmado) setEnderecoModalAberto(true);
+                        }}
                       />
                     )}
                     {perfil.retAtiva && (
@@ -504,6 +546,36 @@ export function StoreCheckoutDialog({
             </button>
           </div>
           <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4">
+            {perfil.geoAtivo && !geoDispensado && (
+              <div className="border-b border-neutral-100 pb-3">
+                <div className="flex items-start gap-2.5">
+                  <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-500" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[.86rem] font-bold text-neutral-900">Usar minha localizacao atual?</p>
+                    <p className="mt-0.5 text-[.76rem] text-neutral-500">
+                      Preenchemos o endereco automaticamente, voce so confirma o numero.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={buscandoLocalizacao}
+                    onClick={usarLocalizacaoAtual}
+                    className="shrink-0 rounded-full px-3.5 py-1.5 text-[.78rem] font-bold text-white disabled:opacity-70"
+                    style={{ background: brown }}
+                  >
+                    {buscandoLocalizacao ? "Buscando..." : "Usar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGeoDispensado(true)}
+                    className="shrink-0 text-neutral-400 hover:text-neutral-600"
+                  >
+                    ×
+                  </button>
+                </div>
+                {geoErro && <p className="mt-1.5 text-[.74rem] text-red-600">{geoErro}</p>}
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <input value={cep} onChange={(e) => setCep(formatarCep(e.target.value))} onBlur={buscarCep} placeholder="CEP" inputMode="numeric" className={fieldClass()} />
               {buscandoCep && <Loader2 size={16} className="shrink-0 animate-spin text-neutral-400" />}
