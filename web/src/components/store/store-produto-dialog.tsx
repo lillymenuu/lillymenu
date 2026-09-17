@@ -31,6 +31,7 @@ export function StoreProdutoDialog({
   const [complementoId, setComplementoId] = useState<number | null>(null);
   const [imagemAmpliada, setImagemAmpliada] = useState(false);
   const [erroCarregar, setErroCarregar] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
 
   const temVariacoes = produto?.tem_variacoes === 1;
 
@@ -40,6 +41,7 @@ export function StoreProdutoDialog({
     setQtd(qtdMin > 0 ? qtdMin : 1);
     setObs("");
     setImagemAmpliada(false);
+    setAspectRatio(null);
     setVariacaoId(null);
     setExtrasIds([]);
     setComplementoId(null);
@@ -265,9 +267,10 @@ export function StoreProdutoDialog({
     <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={615}>
       <div className="p-4">
         <div
-          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-[height] duration-300 ease-out ${
-            imagemAmpliada ? "h-[420px]" : "h-[190px]"
+          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out ${
+            imagemAmpliada ? "" : "h-[190px]"
           }`}
+          style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
         >
           {produto.imagem ? (
             <>
@@ -280,7 +283,11 @@ export function StoreProdutoDialog({
                 <img
                   src={produto.imagem}
                   alt=""
-                  className={`size-full transition-[object-fit] ${imagemAmpliada ? "object-contain" : "object-cover"}`}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    if (img.naturalWidth && img.naturalHeight) setAspectRatio(img.naturalWidth / img.naturalHeight);
+                  }}
+                  className="size-full object-cover"
                 />
               </button>
               <button

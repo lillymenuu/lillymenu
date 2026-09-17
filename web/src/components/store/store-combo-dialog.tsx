@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Expand, ImageIcon, Layers, Minus, Plus, Shrink, X } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
@@ -31,12 +31,16 @@ export function StoreComboDialog({
   const [selecoes, setSelecoes] = useState<Record<number, Selecao>>({});
   const [imagemAmpliada, setImagemAmpliada] = useState(false);
   const [erroCarregar, setErroCarregar] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const passoRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const ultimoPassoAlteradoRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!open || !combo) return;
     setQtd(1);
     setObs("");
     setImagemAmpliada(false);
+    setAspectRatio(null);
     setPassos([]);
     setSelecoes({});
     setCarregando(true);
@@ -80,6 +84,38 @@ export function StoreComboDialog({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxCombosPorEstoque]);
+
+  /* Ao satisfazer um passo (ex.: escolher o empadao), rola suavemente ate
+     o proximo passo ainda pendente — mesmo comportamento do cardapio
+     legado (_rolarProximoPassoCombo em loja.js), especialmente util no
+     celular onde o combo tem varios passos empilhados verticalmente. */
+  useEffect(() => {
+    const passoId = ultimoPassoAlteradoRef.current;
+    if (passoId === null) return;
+    ultimoPassoAlteradoRef.current = null;
+    const idx = passos.findIndex((p) => p.id === passoId);
+    if (idx === -1) return;
+    const passoAtual = passos[idx];
+    const totalAtual = Object.values(selecoes[passoAtual.id] ?? {}).reduce((s, q) => s + q, 0);
+    const satisfeito =
+      passoAtual.obrigatorio === 1
+        ? totalAtual >= Math.max(1, passoAtual.min_itens || 1)
+        : (passoAtual.max_itens || 0) > 0 && totalAtual >= (passoAtual.max_itens || 0);
+    if (!satisfeito) return;
+    for (let i = idx + 1; i < passos.length; i++) {
+      const proximo = passos[i];
+      const totalProximo = Object.values(selecoes[proximo.id] ?? {}).reduce((s, q) => s + q, 0);
+      const proximoSatisfeito =
+        proximo.obrigatorio === 1
+          ? totalProximo >= Math.max(1, proximo.min_itens || 1)
+          : (proximo.max_itens || 0) > 0 && totalProximo >= (proximo.max_itens || 0);
+      if (!proximoSatisfeito) {
+        passoRefs.current[proximo.id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+        break;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selecoes]);
 
   if (!combo) return null;
 
@@ -140,9 +176,10 @@ export function StoreComboDialog({
     <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={613}>
       <div className="p-4">
         <div
-          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-[height] duration-300 ease-out ${
-            imagemAmpliada ? "h-[380px]" : "h-[190px]"
+          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out ${
+            imagemAmpliada ? "" : "h-[190px]"
           }`}
+          style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
         >
           {combo.imagem ? (
             <>
@@ -155,7 +192,11 @@ export function StoreComboDialog({
                 <img
                   src={combo.imagem}
                   alt=""
-                  className={`size-full ${imagemAmpliada ? "object-contain" : "object-cover"}`}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    if (img.naturalWidth && img.naturalHeight) setAspectRatio(img.naturalWidth / img.naturalHeight);
+                  }}
+                  className="size-full object-cover"
                 />
               </button>
               <button
@@ -214,7 +255,12 @@ export function StoreComboDialog({
               if (passo.permite_repetir !== 1) sub += sub ? ". Opcoes nao podem ser repetidas" : "Opcoes nao podem ser repetidas";
 
               return (
-                <div key={passo.id}>
+                <div
+                  key={passo.id}
+                  ref={(el) => {
+                    passoRefs.current[passo.id] = el;
+                  }}
+                >
                   <div className="mb-1 rounded-[10px] bg-neutral-100 px-3 py-2">
                     <div className="flex flex-wrap items-center gap-1.5 text-[.8rem] font-bold text-neutral-900">
                       {passo.nome}
@@ -266,7 +312,10 @@ export function StoreComboDialog({
                             <button
                               type="button"
                               disabled={!podeAdd}
-                              onClick={() => alterarQty(passo, opc.id, opc.estoque, 1)}
+                              onClick={() => {
+                                ultimoPassoAlteradoRef.current = passo.id;
+                                alterarQty(passo, opc.id, opc.estoque, 1);
+                              }}
                               className="flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 disabled:text-neutral-300"
                             >
                               <Plus size={13} />
