@@ -44,7 +44,7 @@ export function StoreSheet({
         style={{ maxWidth }}
         className="top-0 left-1/2 h-dvh w-full translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0"
       >
-        <div className="flex h-full flex-col">
+        <div className="flex h-full min-h-0 flex-col">
           {(title || onBack || rightAction) && (
             <div className="flex shrink-0 items-center justify-between gap-2 border-b border-neutral-100 px-4 py-3">
               <div className="flex min-w-8 items-center">
@@ -68,7 +68,7 @@ export function StoreSheet({
               </div>
             </div>
           )}
-          <div className="flex-1 overflow-y-auto">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
           {footer && <div className="shrink-0 border-t border-neutral-100 px-4 py-3">{footer}</div>}
         </div>
       </DialogContent>

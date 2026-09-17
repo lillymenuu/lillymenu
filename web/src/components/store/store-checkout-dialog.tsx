@@ -201,7 +201,7 @@ export function StoreCheckoutDialog({
           showCloseButton={false}
           className="top-0 left-1/2 h-dvh w-full max-w-[901px] translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:max-w-[901px]"
         >
-          <div className="flex h-full flex-col">
+          <div className="flex h-full min-h-0 flex-col">
             <div className="flex shrink-0 items-center border-b border-neutral-100">
               <button type="button" onClick={voltar} className="flex w-10 items-center justify-center self-stretch text-[color:var(--store-link)]" style={{ color: brown }}>
                 ‹
@@ -220,7 +220,7 @@ export function StoreCheckoutDialog({
 
             <DialogTitle className="sr-only">Finalizar pedido</DialogTitle>
 
-            <div className="flex-1 overflow-y-auto px-5 py-6">
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
               {etapa === "dados" && (
                 <div className="mx-auto max-w-xs space-y-3 pt-6">
                   <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome *" className={`${fieldClass()} text-center`} />
