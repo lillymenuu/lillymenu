@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ImageIcon, Layers } from "lucide-react";
+import { ImageIcon, Layers, Minus, Plus } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -133,7 +133,7 @@ export function StoreComboDialog({
         {carregando ? (
           <p className="text-[.86rem] text-neutral-500">Carregando opcoes...</p>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-3">
             {passos.map((passo) => {
               const total = totalSelecionado(passo.id);
               const min = passo.min_itens || 0;
@@ -147,14 +147,16 @@ export function StoreComboDialog({
 
               return (
                 <div key={passo.id}>
-                  <div className="mb-0.5 flex items-center gap-2">
-                    <h3 className="text-[.86rem] font-bold text-neutral-900">{passo.nome}</h3>
-                    {passo.obrigatorio === 1 && (
-                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.67rem] font-bold text-amber-700">Obrigatorio</span>
-                    )}
+                  <div className="mb-1 rounded-[10px] bg-neutral-100 px-3 py-2.5">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[.86rem] font-bold text-neutral-900">
+                      {passo.nome}
+                      {passo.obrigatorio === 1 && (
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.67rem] font-bold text-amber-700">Obrigatorio</span>
+                      )}
+                    </div>
+                    {sub && <p className="mt-0.5 text-[.72rem] text-neutral-500">{sub}</p>}
                   </div>
-                  {sub && <p className="mb-2 text-[.72rem] text-neutral-400">{sub}</p>}
-                  <div className="space-y-2">
+                  <div>
                     {passo.opcoes.map((opc) => {
                       const qty = selecoes[passo.id]?.[opc.id] ?? 0;
                       const podeAdd =
@@ -163,42 +165,44 @@ export function StoreComboDialog({
                         (max === 0 || total < max) &&
                         (passo.permite_repetir === 1 || qty === 0);
                       return (
-                        <div key={opc.id} className={`flex items-center gap-2.5 ${opc.esgotado ? "opacity-50" : ""}`}>
+                        <div
+                          key={opc.id}
+                          className={`flex items-center gap-2.5 border-b border-neutral-100 py-2.5 last:border-0 ${opc.esgotado ? "opacity-55" : ""}`}
+                        >
                           <div className="min-w-0 flex-1">
-                            <div className="text-[.86rem] text-neutral-900">{opc.nome}</div>
-                            <div className="text-[.76rem] text-neutral-400">
+                            <div className="text-[.84rem] leading-tight text-neutral-900">{opc.nome}</div>
+                            <div className="mt-0.5 text-[.71rem] text-neutral-400">
                               {opc.esgotado ? "Esgotado" : "Incluido no valor do combo"}
                             </div>
                           </div>
-                          <div className="flex shrink-0 items-center gap-2">
-                            <button
-                              type="button"
-                              disabled={qty <= 0}
-                              onClick={() => alterarQty(passo, opc.id, opc.estoque, -1)}
-                              className="flex size-7 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 disabled:opacity-40"
-                            >
-                              −
-                            </button>
-                            <span className="w-4 text-center text-[.86rem] font-semibold">{qty}</span>
-                            <button
-                              type="button"
-                              disabled={!podeAdd}
-                              onClick={() => alterarQty(passo, opc.id, opc.estoque, 1)}
-                              className="flex size-7 items-center justify-center rounded-full text-white disabled:opacity-40"
-                              style={{ background: brown }}
-                            >
-                              +
-                            </button>
-                          </div>
-                          <div className="size-10 shrink-0 overflow-hidden rounded-md bg-neutral-100">
+                          <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
                             {opc.imagem ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={opc.imagem} alt="" className="size-full object-cover" />
                             ) : (
                               <div className="flex size-full items-center justify-center text-neutral-300">
-                                <ImageIcon size={14} />
+                                <ImageIcon size={20} />
                               </div>
                             )}
+                          </div>
+                          <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-neutral-200">
+                            <button
+                              type="button"
+                              disabled={qty <= 0}
+                              onClick={() => alterarQty(passo, opc.id, opc.estoque, -1)}
+                              className="flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 disabled:text-neutral-300"
+                            >
+                              <Minus size={13} />
+                            </button>
+                            <span className="min-w-[24px] px-0.5 text-center text-[.83rem] font-medium text-neutral-900">{qty}</span>
+                            <button
+                              type="button"
+                              disabled={!podeAdd}
+                              onClick={() => alterarQty(passo, opc.id, opc.estoque, 1)}
+                              className="flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 disabled:text-neutral-300"
+                            >
+                              <Plus size={13} />
+                            </button>
                           </div>
                         </div>
                       );
