@@ -439,21 +439,27 @@ export function StoreCheckoutDialog({
 
                   {isRetiradaTipo && (
                     <div className="mt-4">
-                      <p className="mb-1.5 text-[.86rem] font-normal text-neutral-900">Endereco para retirada do pedido</p>
+                      <p className="mb-0.5 text-[.86rem] leading-tight font-normal text-neutral-900">Endereco para retirada do pedido</p>
                       <div className="flex items-center justify-between gap-2">
-                        <p className="min-w-0 flex-1 text-[.78rem] font-light text-neutral-500">
+                        <p className="min-w-0 flex-1 text-[.78rem] leading-snug font-light text-neutral-500">
                           {perfil.lojaRua}
                           {perfil.lojaNumero ? `, ${perfil.lojaNumero}` : ""}
                           {perfil.lojaBairro ? ` - ${perfil.lojaBairro}` : ""}
                           {perfil.lojaCidade ? ` / ${perfil.lojaCidade}` : ""}
                         </p>
-                        <button
-                          type="button"
-                          onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(perfil.enderecoLoja || perfil.nomeLoja)}`, "_blank", "noopener")}
-                          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
-                        >
-                          <Map size={16} />
-                        </button>
+                        <div className="relative shrink-0">
+                          <span
+                            className="absolute inset-0 animate-ping rounded-full opacity-40"
+                            style={{ background: brown, animationDuration: "2.2s" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(perfil.enderecoLoja || perfil.nomeLoja)}`, "_blank", "noopener")}
+                            className="relative flex size-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
+                          >
+                            <Map size={16} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
