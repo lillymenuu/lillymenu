@@ -395,12 +395,12 @@ export function StoreCheckoutDialog({
                     <div className="mt-4">
                       {enderecoConfirmado ? (
                         <div>
-                          <p className="mb-3 text-[.86rem] font-bold text-neutral-900">Entregar no endereco</p>
+                          <p className="mb-3 text-[.86rem] font-normal text-neutral-900">Entregar no endereco</p>
                           <div className="space-y-3.5">
                             <div className="flex items-start gap-2.5">
                               <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-900" fill="currentColor" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-[.86rem] font-bold text-neutral-900">
+                                <p className="text-[.86rem] font-normal text-neutral-900">
                                   {rua}
                                   {numero ? `, ${numero}` : ""}
                                 </p>
@@ -418,7 +418,7 @@ export function StoreCheckoutDialog({
                                 <Bike size={16} className="mt-0.5 shrink-0 text-neutral-900" fill="currentColor" />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-[.78rem] font-light text-neutral-500">Taxa de entrega</p>
-                                  <p className="text-[.86rem] font-bold text-neutral-900">{taxaEntrega === 0 ? "Gratis" : formatarPreco(taxaEntrega)}</p>
+                                  <p className="text-[.86rem] font-normal text-neutral-900">{taxaEntrega === 0 ? "Gratis" : formatarPreco(taxaEntrega)}</p>
                                 </div>
                               </div>
                             )}
