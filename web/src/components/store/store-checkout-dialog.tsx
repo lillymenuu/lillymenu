@@ -395,19 +395,31 @@ export function StoreCheckoutDialog({
                     <div className="mt-4">
                       {enderecoConfirmado ? (
                         <div>
-                          <p className="mb-2 text-[.72rem] font-bold tracking-wide text-neutral-400 uppercase">Entregar no endereco</p>
-                          <div className="rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-3">
+                          <p className="mb-3 text-[.86rem] font-bold text-neutral-900">Entregar no endereco</p>
+                          <div className="space-y-3.5">
                             <div className="flex items-start gap-2.5">
-                              <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-500" />
-                              <span className="flex-1 text-[.82rem] text-neutral-700">{enderecoTexto()}</span>
-                              <button type="button" onClick={() => setEnderecoModalAberto(true)} className="shrink-0 text-[.8rem] font-semibold" style={{ color: brown }}>
+                              <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-900" fill="currentColor" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[.86rem] font-bold text-neutral-900">
+                                  {rua}
+                                  {numero ? `, ${numero}` : ""}
+                                </p>
+                                <p className="text-[.78rem] font-light text-blue-600">
+                                  {[bairro, cidade].filter(Boolean).join(", ")}
+                                  {cep ? ` - ${cep.replace(/\D/g, "")}` : ""}
+                                </p>
+                              </div>
+                              <button type="button" onClick={() => setEnderecoModalAberto(true)} className="shrink-0 text-[.8rem] font-light" style={{ color: brown }}>
                                 Editar
                               </button>
                             </div>
                             {taxaInfo && (
-                              <div className="mt-2 flex items-center gap-2.5 border-t border-neutral-200 pt-2">
-                                <Bike size={16} className="shrink-0 text-neutral-500" />
-                                <span className="text-[.82rem] text-neutral-700">{taxaInfo.texto}</span>
+                              <div className="flex items-start gap-2.5">
+                                <Bike size={16} className="mt-0.5 shrink-0 text-neutral-900" fill="currentColor" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[.78rem] font-light text-neutral-500">Taxa de entrega</p>
+                                  <p className="text-[.86rem] font-bold text-neutral-900">{taxaEntrega === 0 ? "Gratis" : formatarPreco(taxaEntrega)}</p>
+                                </div>
                               </div>
                             )}
                           </div>
