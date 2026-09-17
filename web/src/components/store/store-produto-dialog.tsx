@@ -109,7 +109,12 @@ export function StoreProdutoDialog({
 
   const footer = (
     <div className="flex items-center justify-between gap-3">
-      <QtyStepper value={qtd} min={Math.max(1, produto.quantidade_minima ?? 0)} onChange={setQtd} />
+      <QtyStepper
+        value={qtd}
+        min={Math.max(1, produto.quantidade_minima ?? 0)}
+        max={!temVariacoes ? produto.estoque : undefined}
+        onChange={setQtd}
+      />
       <button
         type="button"
         disabled={!podeAdicionar}
@@ -218,7 +223,7 @@ export function StoreProdutoDialog({
 
   if (temVariacoes) {
     return (
-      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={615}>
+      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={809}>
         <div className="flex h-full flex-col sm:flex-row">
           <div className="relative h-[220px] shrink-0 bg-neutral-100 sm:h-full sm:w-[300px]">
             {produto.imagem ? (

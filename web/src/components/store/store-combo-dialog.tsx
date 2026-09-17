@@ -52,13 +52,14 @@ export function StoreComboDialog({
     return Object.values(selecoes[passoId] ?? {}).reduce((s, q) => s + q, 0);
   }
 
-  function alterarQty(passo: StoreComboPasso, opcaoId: number, delta: number) {
+  function alterarQty(passo: StoreComboPasso, opcaoId: number, estoqueOpcao: number, delta: number) {
     setSelecoes((atual) => {
       const atualPasso = atual[passo.id] ?? {};
       const qtyAtual = atualPasso[opcaoId] ?? 0;
       const novaQty = Math.max(0, qtyAtual + delta);
       const totalAtual = Object.values(atualPasso).reduce((s, q) => s + q, 0);
       const max = passo.max_itens || 0;
+      if (delta > 0 && qtyAtual >= estoqueOpcao) return atual;
       if (delta > 0 && max > 0 && totalAtual >= max) return atual;
       if (delta > 0 && passo.permite_repetir !== 1 && qtyAtual >= 1) return atual;
       return { ...atual, [passo.id]: { ...atualPasso, [opcaoId]: novaQty } };
@@ -101,7 +102,7 @@ export function StoreComboDialog({
   );
 
   return (
-    <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer}>
+    <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={613}>
       <div className="p-4">
         <div className="mb-3 h-[190px] w-full overflow-hidden rounded-xl bg-neutral-100">
           {combo.imagem ? (
@@ -156,7 +157,11 @@ export function StoreComboDialog({
                   <div className="space-y-2">
                     {passo.opcoes.map((opc) => {
                       const qty = selecoes[passo.id]?.[opc.id] ?? 0;
-                      const podeAdd = !opc.esgotado && (max === 0 || total < max) && (passo.permite_repetir === 1 || qty === 0);
+                      const podeAdd =
+                        !opc.esgotado &&
+                        qty < opc.estoque &&
+                        (max === 0 || total < max) &&
+                        (passo.permite_repetir === 1 || qty === 0);
                       return (
                         <div key={opc.id} className={`flex items-center gap-2.5 ${opc.esgotado ? "opacity-50" : ""}`}>
                           <div className="min-w-0 flex-1">
@@ -169,7 +174,7 @@ export function StoreComboDialog({
                             <button
                               type="button"
                               disabled={qty <= 0}
-                              onClick={() => alterarQty(passo, opc.id, -1)}
+                              onClick={() => alterarQty(passo, opc.id, opc.estoque, -1)}
                               className="flex size-7 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 disabled:opacity-40"
                             >
                               −
@@ -178,7 +183,7 @@ export function StoreComboDialog({
                             <button
                               type="button"
                               disabled={!podeAdd}
-                              onClick={() => alterarQty(passo, opc.id, 1)}
+                              onClick={() => alterarQty(passo, opc.id, opc.estoque, 1)}
                               className="flex size-7 items-center justify-center rounded-full text-white disabled:opacity-40"
                               style={{ background: brown }}
                             >
