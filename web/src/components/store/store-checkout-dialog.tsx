@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
-import { StoreAgendamentoDialog } from "@/components/store/store-agendamento-dialog";
+import { StoreAgendamentoOverlay } from "@/components/store/store-agendamento-dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { buscarEnderecoPorCep, formatarCep } from "@/lib/cep";
 import { formatarPreco, formatarTelefone } from "@/lib/store/format";
@@ -307,17 +307,24 @@ export function StoreCheckoutDialog({
 
   return (
     <>
-      {/* Fecha (sem soltar o onOpenChange do pai) enquanto o modal de Agendamento
-          esta aberto por cima — dois <Dialog> full-screen no mesmo padrao
-          "top-0/h-dvh/translate-x-1/2" abertos ao mesmo tempo quebram a
-          centralizacao do segundo (o Agendamento aparecia desalinhado a
-          esquerda, vazando o checkout por baixo). */}
-      <Dialog open={open && !agendamentoModalAberto} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           showCloseButton={false}
           className="top-0 left-1/2 h-dvh w-full max-w-[901px] translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:max-w-[901px]"
         >
-          <div className="flex h-full min-h-0 flex-col">
+          <div className="relative flex h-full min-h-0 flex-col">
+            {isAgendadaTipo && agendamentoModalAberto && (
+              <StoreAgendamentoOverlay
+                brown={brown}
+                perfil={perfil}
+                tipo={tipo as "entrega_agendada" | "retirada_agendada"}
+                onFechar={() => setAgendamentoModalAberto(false)}
+                onConfirmar={(data, slot) => {
+                  setAgendamento({ data, slot });
+                  setAgendamentoModalAberto(false);
+                }}
+              />
+            )}
             <div className="flex shrink-0 items-center border-b border-neutral-100">
               <button type="button" onClick={voltar} className="flex w-10 items-center justify-center self-stretch text-[color:var(--store-link)]" style={{ color: brown }}>
                 ‹
@@ -819,20 +826,6 @@ export function StoreCheckoutDialog({
           </div>
         </DialogContent>
       </Dialog>
-
-      {isAgendadaTipo && (
-        <StoreAgendamentoDialog
-          open={agendamentoModalAberto}
-          onOpenChange={setAgendamentoModalAberto}
-          brown={brown}
-          perfil={perfil}
-          tipo={tipo as "entrega_agendada" | "retirada_agendada"}
-          onConfirmar={(data, slot) => {
-            setAgendamento({ data, slot });
-            setAgendamentoModalAberto(false);
-          }}
-        />
-      )}
     </>
   );
 }

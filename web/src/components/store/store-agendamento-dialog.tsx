@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Check } from "lucide-react";
-import { StoreSheet } from "@/components/store/store-sheet";
+import { useState } from "react";
+import { Check, ChevronLeft, X } from "lucide-react";
 import type { StoreAgendHorario, StorePerfil } from "@/lib/store/types";
 
 const DIAS_NOMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
@@ -71,68 +70,55 @@ function gerarSlots(horario: StoreAgendHorario, dia: Date, pausaAtivaFim: string
   return slots;
 }
 
-export function StoreAgendamentoDialog({
-  open,
-  onOpenChange,
+/**
+ * Overlay de agendamento (data+horario), renderizado DENTRO do proprio
+ * DialogContent do checkout (posicionamento absolute, preenchendo o box ja
+ * centralizado do checkout) — nao um <Dialog> separado. Dois <Dialog>
+ * full-screen com centralizacao via transform (fixed + left-1/2
+ * -translate-x-1/2) abertos ao mesmo tempo quebravam a centralizacao do
+ * segundo nesse base-ui/floating-ui (mesmo fechando o primeiro em seguida,
+ * a transicao sobreposta ja deixava o layout corrompido). Um overlay
+ * absolute dentro do box ja aberto nao tem esse problema.
+ */
+export function StoreAgendamentoOverlay({
   brown,
   perfil,
   tipo,
+  onFechar,
   onConfirmar,
 }: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
   brown: string;
   perfil: StorePerfil;
   tipo: "entrega_agendada" | "retirada_agendada";
+  onFechar: () => void;
   onConfirmar: (data: Date, slot: string) => void;
 }) {
-  const dias = useMemo(() => gerarDias(perfil, tipo), [perfil, tipo]);
+  const [dias] = useState(() => gerarDias(perfil, tipo));
   const [diaIdx, setDiaIdx] = useState<number | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
 
-  /* Mesmo comportamento do abrirAgendamentoSheet() legado: sempre reabre
-     zerado, mesmo se reaberto pra "Editar" um agendamento ja escolhido. */
-  useEffect(() => {
-    if (open) {
-      setDiaIdx(null);
-      setSlot(null);
-    }
-  }, [open]);
-
   const diaSelecionado = diaIdx !== null ? dias[diaIdx] : null;
-  const slots = useMemo(
-    () => (diaSelecionado ? gerarSlots(diaSelecionado.horario, diaSelecionado.date, perfil.pausaAtivaFim) : []),
-    [diaSelecionado, perfil.pausaAtivaFim]
-  );
+  const slots = diaSelecionado ? gerarSlots(diaSelecionado.horario, diaSelecionado.date, perfil.pausaAtivaFim) : [];
 
   return (
-    <StoreSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Agendamento"
-      onBack={() => onOpenChange(false)}
-      footer={
-        <div>
-          {diaSelecionado && slot && (
-            <p className="mb-2 text-center text-[.78rem] font-medium text-neutral-600">
-              Data de agendamento: {diaSelecionado.date.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })} {slot}
-            </p>
-          )}
+    <div className="absolute inset-0 z-20 flex flex-col bg-white">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-neutral-100 px-4 py-3">
+        <button type="button" onClick={onFechar} className="flex min-w-8 items-center text-neutral-500 hover:text-neutral-700">
+          <ChevronLeft size={20} />
+        </button>
+        <span className="text-[.92rem] font-bold text-neutral-900">Agendamento</span>
+        <div className="flex min-w-8 items-center justify-end">
           <button
             type="button"
-            disabled={!diaSelecionado || !slot}
-            onClick={() => {
-              if (diaSelecionado && slot) onConfirmar(diaSelecionado.date, slot);
-            }}
-            className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold tracking-wide text-white transition-colors disabled:cursor-not-allowed"
-            style={{ background: diaSelecionado && slot ? brown : "#c0a88a" }}
+            onClick={onFechar}
+            className="flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 hover:bg-neutral-200"
           >
-            CONTINUAR
+            <X size={14} />
           </button>
         </div>
-      }
-    >
-      <div className="px-5 py-6">
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
         <p className="mb-4 text-[.84rem] leading-relaxed text-neutral-500">Escolha a data e horario que voce deseja receber seu pedido:</p>
 
         <div className="mb-4 flex gap-2.5 overflow-x-auto pb-1">
@@ -189,6 +175,25 @@ export function StoreAgendamentoDialog({
           )}
         </div>
       </div>
-    </StoreSheet>
+
+      <div className="shrink-0 border-t border-neutral-100 px-4 py-3">
+        {diaSelecionado && slot && (
+          <p className="mb-2 text-center text-[.78rem] font-medium text-neutral-600">
+            Data de agendamento: {diaSelecionado.date.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })} {slot}
+          </p>
+        )}
+        <button
+          type="button"
+          disabled={!diaSelecionado || !slot}
+          onClick={() => {
+            if (diaSelecionado && slot) onConfirmar(diaSelecionado.date, slot);
+          }}
+          className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold tracking-wide text-white transition-colors disabled:cursor-not-allowed"
+          style={{ background: diaSelecionado && slot ? brown : "#c0a88a" }}
+        >
+          CONTINUAR
+        </button>
+      </div>
+    </div>
   );
 }
