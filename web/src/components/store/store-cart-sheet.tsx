@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ImageIcon, ShoppingBag } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, ImageIcon, Loader2, ShoppingBag, Ticket } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
-import type { StoreCartItem, StoreCrossSellProduto } from "@/lib/store/types";
+import type { StoreCartItem, StoreCrossSellProduto, StoreCupomResultado, StorePerfil } from "@/lib/store/types";
 
 export function StoreCartSheet({
   open,
   onOpenChange,
-  lojaId,
+  perfil,
   nomeLoja,
   logoLoja,
   itens,
@@ -20,10 +20,12 @@ export function StoreCartSheet({
   onRemover,
   onAdicionar,
   onFinalizar,
+  cupomAplicado,
+  onCupomAplicadoChange,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  lojaId: number;
+  perfil: StorePerfil;
   nomeLoja: string;
   logoLoja: string;
   itens: StoreCartItem[];
@@ -32,9 +34,46 @@ export function StoreCartSheet({
   onRemover: (key: string) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
   onFinalizar: () => void;
+  cupomAplicado: StoreCupomResultado | null;
+  onCupomAplicadoChange: (c: StoreCupomResultado | null) => void;
 }) {
   const { brown } = useStoreTheme();
+  const lojaId = perfil.loja_id;
   const [sugestoes, setSugestoes] = useState<StoreCrossSellProduto[]>([]);
+  const [cupomAberto, setCupomAberto] = useState(false);
+  const [cupomCodigo, setCupomCodigo] = useState(cupomAplicado?.codigo ?? perfil.cupomPreenchido ?? "");
+  const [cupomErro, setCupomErro] = useState("");
+  const [validandoCupom, setValidandoCupom] = useState(false);
+
+  const desconto = cupomAplicado && cupomAplicado.tipo !== "frete" ? cupomAplicado.valor : 0;
+  const total = Math.max(0, subtotal - desconto);
+  const cashbackEstimado = useMemo(
+    () => (perfil.cashbackAtivo && perfil.cashbackPct > 0 ? (total * perfil.cashbackPct) / 100 : 0),
+    [perfil.cashbackAtivo, perfil.cashbackPct, total]
+  );
+
+  async function validarCupom() {
+    if (!cupomCodigo.trim()) return;
+    setValidandoCupom(true);
+    setCupomErro("");
+    try {
+      const res = await fetch("/api/store/cupom-validar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loja_id: lojaId, codigo: cupomCodigo.trim(), subtotal }),
+      });
+      const data = await res.json();
+      if (data.ok) onCupomAplicadoChange(data as StoreCupomResultado);
+      else {
+        onCupomAplicadoChange(null);
+        setCupomErro(data.msg ?? "Cupom invalido.");
+      }
+    } catch {
+      setCupomErro("Erro ao validar cupom.");
+    } finally {
+      setValidandoCupom(false);
+    }
+  }
 
   useEffect(() => {
     if (!open || itens.length === 0) {
@@ -79,28 +118,112 @@ export function StoreCartSheet({
       onBack={() => onOpenChange(false)}
       rightAction={
         itens.length > 0 ? (
-          <button type="button" onClick={() => itens.forEach((i) => onRemover(i.key))} className="text-[.8rem] text-neutral-400">
+          <button
+            type="button"
+            onClick={() => {
+              itens.forEach((i) => onRemover(i.key));
+              onCupomAplicadoChange(null);
+            }}
+            className="text-[.8rem] text-neutral-400"
+          >
             Limpar
           </button>
         ) : undefined
       }
       footer={
         itens.length > 0 ? (
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[.72rem] text-neutral-500">Total da compra</p>
-              <p className="text-[.98rem] font-bold text-neutral-900">
-                {formatarPreco(subtotal)} <span className="text-[.72rem] font-normal text-neutral-500">/ {itens.length} itens</span>
-              </p>
+          <div>
+            {perfil.cuponsAtivo && (
+              <div className="mb-3 rounded-xl border border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setCupomAberto((v) => !v)}
+                  className="flex w-full items-center justify-between px-3.5 py-2.5"
+                >
+                  <span className="flex items-center gap-2 text-[.82rem] font-semibold text-neutral-900">
+                    <Ticket size={15} style={{ color: brown }} />
+                    Cupons
+                    {cupomAplicado && (
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[.65rem] font-bold text-emerald-700">
+                        {cupomAplicado.codigo}
+                      </span>
+                    )}
+                  </span>
+                  <ChevronDown size={15} className={`text-neutral-400 transition-transform ${cupomAberto ? "rotate-180" : ""}`} />
+                </button>
+                {cupomAberto && (
+                  <div className="border-t border-neutral-100 p-3">
+                    <div className="flex gap-2">
+                      <input
+                        value={cupomCodigo}
+                        onChange={(e) => setCupomCodigo(e.target.value.toUpperCase())}
+                        placeholder="Ex.: 10OFFHOJE"
+                        disabled={!!cupomAplicado}
+                        className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-[.82rem] outline-none focus:bg-white"
+                      />
+                      {cupomAplicado ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onCupomAplicadoChange(null);
+                            setCupomCodigo("");
+                          }}
+                          className="shrink-0 rounded-lg border border-neutral-200 px-3 text-[.78rem] font-semibold text-neutral-600"
+                        >
+                          Remover
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={validarCupom}
+                          disabled={validandoCupom}
+                          className="shrink-0 rounded-lg border border-neutral-200 px-3 text-[.78rem] font-semibold text-neutral-600"
+                        >
+                          {validandoCupom ? <Loader2 size={14} className="animate-spin" /> : "Aplicar"}
+                        </button>
+                      )}
+                    </div>
+                    {cupomErro && <p className="mt-1.5 text-[.74rem] text-red-600">{cupomErro}</p>}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mb-2.5 space-y-1 text-[.78rem]">
+              <div className="flex justify-between text-neutral-500">
+                <span>Subtotal</span>
+                <span>{formatarPreco(subtotal)}</span>
+              </div>
+              {desconto > 0 && (
+                <div className="flex justify-between" style={{ color: "#7c3aed" }}>
+                  <span>Desconto</span>
+                  <span>-{formatarPreco(desconto)}</span>
+                </div>
+              )}
+              {cashbackEstimado > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Cashback a receber (apos 12 horas da compra)</span>
+                  <span>{formatarPreco(cashbackEstimado)}</span>
+                </div>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={onFinalizar}
-              className="shrink-0 rounded-[10px] px-6 py-3 text-[.86rem] font-bold text-white"
-              style={{ background: brown }}
-            >
-              Continuar
-            </button>
+
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[.72rem] text-neutral-500">Total da compra</p>
+                <p className="text-[.98rem] font-bold text-neutral-900">
+                  {formatarPreco(total)} <span className="text-[.72rem] font-normal text-neutral-500">/ {itens.length} itens</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onFinalizar}
+                className="shrink-0 rounded-[10px] px-6 py-3 text-[.86rem] font-bold text-white"
+                style={{ background: brown }}
+              >
+                Continuar
+              </button>
+            </div>
           </div>
         ) : undefined
       }

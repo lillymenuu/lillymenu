@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CreditCard, Loader2, MapPin, QrCode, Store as StoreIcon, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
@@ -29,6 +29,8 @@ export function StoreCheckoutDialog({
   perfil,
   itens,
   subtotal,
+  cupomAplicado,
+  onCupomAplicadoChange,
   onSucesso,
   onVoltarCarrinho,
 }: {
@@ -37,6 +39,8 @@ export function StoreCheckoutDialog({
   perfil: StorePerfil;
   itens: StoreCartItem[];
   subtotal: number;
+  cupomAplicado: StoreCupomResultado | null;
+  onCupomAplicadoChange: (c: StoreCupomResultado | null) => void;
   onSucesso: (codigo: number | string) => void;
   onVoltarCarrinho?: () => void;
 }) {
@@ -60,8 +64,7 @@ export function StoreCheckoutDialog({
   const [formaPagamento, setFormaPagamento] = useState("");
   const [trocoPara, setTrocoPara] = useState("");
 
-  const [cupomCodigo, setCupomCodigo] = useState(perfil.cupomPreenchido ?? "");
-  const [cupomAplicado, setCupomAplicado] = useState<StoreCupomResultado | null>(null);
+  const [cupomCodigo, setCupomCodigo] = useState(cupomAplicado?.codigo ?? perfil.cupomPreenchido ?? "");
   const [cupomErro, setCupomErro] = useState("");
   const [validandoCupom, setValidandoCupom] = useState(false);
 
@@ -125,9 +128,9 @@ export function StoreCheckoutDialog({
         body: JSON.stringify({ loja_id: perfil.loja_id, codigo: cupomCodigo.trim(), subtotal, tipo, taxa: taxaEntrega, telefone }),
       });
       const data = await res.json();
-      if (data.ok) setCupomAplicado(data as StoreCupomResultado);
+      if (data.ok) onCupomAplicadoChange(data as StoreCupomResultado);
       else {
-        setCupomAplicado(null);
+        onCupomAplicadoChange(null);
         setCupomErro(data.msg ?? "Cupom invalido.");
       }
     } catch {
@@ -136,6 +139,18 @@ export function StoreCheckoutDialog({
       setValidandoCupom(false);
     }
   }
+
+  /* Cupom tipo "frete" aplicado ainda no carrinho (onde a taxa de entrega
+     e desconhecida, sempre 0) fica com valor:0 ate aqui — assim que a taxa
+     real e calculada (endereco confirmado), revalida silenciosamente pra
+     corrigir o desconto. Cupons "valor"/"percent" nao precisam disso, o
+     valor deles independe da taxa. */
+  useEffect(() => {
+    if (cupomAplicado?.tipo === "frete" && taxaEntrega > 0 && cupomAplicado.valor === 0) {
+      validarCupom();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taxaEntrega]);
 
   function enderecoTexto(): string {
     const partes = [rua + (numero ? `, ${numero}` : ""), complemento || null, bairro, cidade + (estado ? `/${estado}` : ""), cep ? `CEP ${cep}` : ""].filter(Boolean);
@@ -343,7 +358,7 @@ export function StoreCheckoutDialog({
                           className={fieldClass()}
                         />
                         {cupomAplicado ? (
-                          <button type="button" onClick={() => setCupomAplicado(null)} className="shrink-0 rounded-xl border-[1.5px] border-neutral-200 px-4 text-[.82rem] font-semibold text-neutral-600">
+                          <button type="button" onClick={() => onCupomAplicadoChange(null)} className="shrink-0 rounded-xl border-[1.5px] border-neutral-200 px-4 text-[.82rem] font-semibold text-neutral-600">
                             Remover
                           </button>
                         ) : (

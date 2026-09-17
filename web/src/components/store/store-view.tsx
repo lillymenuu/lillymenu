@@ -15,7 +15,7 @@ import {
   Star,
 } from "lucide-react";
 import { formatarPreco } from "@/lib/store/format";
-import type { StoreCatalogo, StoreCombo, StorePerfil, StoreProduto } from "@/lib/store/types";
+import type { StoreCatalogo, StoreCombo, StoreCupomResultado, StorePerfil, StoreProduto } from "@/lib/store/types";
 import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-theme";
 import { useStoreCart } from "@/components/store/use-store-cart";
 import { StoreProdutoDialog } from "@/components/store/store-produto-dialog";
@@ -49,6 +49,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [busca, setBusca] = useState("");
   const [infoAberto, setInfoAberto] = useState(false);
+  const [cupomAplicado, setCupomAplicado] = useState<StoreCupomResultado | null>(null);
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(catalogo.categorias[0]?.id ?? null);
 
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -517,7 +518,7 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
       <StoreCartSheet
         open={cartAberto}
         onOpenChange={setCartAberto}
-        lojaId={perfil.loja_id}
+        perfil={perfil}
         nomeLoja={perfil.nomeLoja}
         logoLoja={perfil.perfilLoja}
         itens={cart.itens}
@@ -525,6 +526,8 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
         onAtualizarQtd={cart.atualizarQtd}
         onRemover={cart.remover}
         onAdicionar={cart.adicionar}
+        cupomAplicado={cupomAplicado}
+        onCupomAplicadoChange={setCupomAplicado}
         onFinalizar={() => {
           setCartAberto(false);
           setCheckoutAberto(true);
@@ -537,6 +540,8 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
         perfil={perfil}
         itens={cart.itens}
         subtotal={cart.subtotal}
+        cupomAplicado={cupomAplicado}
+        onCupomAplicadoChange={setCupomAplicado}
         onSucesso={onSucessoPedido}
         onVoltarCarrinho={() => {
           setCheckoutAberto(false);
