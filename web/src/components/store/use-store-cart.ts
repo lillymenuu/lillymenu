@@ -32,7 +32,13 @@ export function useStoreCart(lojaId: number) {
   }, [itens, lojaId, carregado]);
 
   const adicionar = useCallback((item: Omit<StoreCartItem, "key">) => {
-    setItens((atual) => [...atual, { ...item, key: `${Date.now()}_${Math.random().toString(36).slice(2)}` }]);
+    setItens((atual) => {
+      const idxExistente = atual.findIndex((i) => i.id === item.id && i.tipo === item.tipo && i.obs === item.obs);
+      if (idxExistente >= 0) {
+        return atual.map((i, idx) => (idx === idxExistente ? { ...i, qtd: i.qtd + item.qtd } : i));
+      }
+      return [...atual, { ...item, key: `${Date.now()}_${Math.random().toString(36).slice(2)}` }];
+    });
   }, []);
 
   const atualizarQtd = useCallback((key: string, qtd: number) => {

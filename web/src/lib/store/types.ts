@@ -173,7 +173,20 @@ export type StoreCartItem = {
   precoUnit: number;
   qtd: number;
   obs: string;
-  combosels?: { id: number; qtd: number }[];
+  /** So preenchido em itens de combo: a observacao livre digitada pelo cliente, separada dos nomes das opcoes escolhidas (que ja vao em `combosels`) — `obs` continua com tudo concatenado, no formato que o resto do sistema (pedido_criar.php, WhatsLilly) espera. */
+  obsUsuario?: string;
+  imagem?: string;
+  /** Limite de unidades (estoque do produto, ou do combo mais restritivo entre os componentes escolhidos). Sem limite conhecido se ausente. */
+  estoqueMax?: number;
+  combosels?: { id: number; nome: string; qtd: number; passoNome?: string }[];
+};
+
+export type StoreCrossSellProduto = {
+  id: number;
+  nome: string;
+  preco: number;
+  imagem: string;
+  estoque: number;
 };
 
 export type StorePedidoCriarResposta = {

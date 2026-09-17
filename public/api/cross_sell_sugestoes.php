@@ -12,7 +12,11 @@ header('Content-Type: application/json');
 const CROSS_SELL_MIN_PEDIDOS = 3;
 
 function fixImgPathCrossSell($caminho) {
-  return storage_url_relativa((string) $caminho);
+  /* URL absoluta (nao relativa) — este endpoint tambem e consumido pela
+     Store no Next (lillymenu.vercel.app), uma origem diferente de
+     public/loja.php; "../admin/..." so resolve certo quando a pagina que
+     consome esta no mesmo dominio. URL absoluta funciona nos dois casos. */
+  return storage_url_absoluta((string) $caminho);
 }
 
 function crossSellNomesPorFrequencia(PDO $conn, int $lojaId, array $nomesCarrinho): array {

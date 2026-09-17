@@ -95,7 +95,16 @@ export function StoreProdutoDialog({
     if (!produto || !podeAdicionar) return;
 
     if (!temVariacoes) {
-      onAdicionar({ id: produto.id, tipo: "produto", nome: produto.nome, precoUnit: produto.preco_final, qtd, obs: obs.trim() });
+      onAdicionar({
+        id: produto.id,
+        tipo: "produto",
+        nome: produto.nome,
+        precoUnit: produto.preco_final,
+        qtd,
+        obs: obs.trim(),
+        imagem: produto.imagem,
+        estoqueMax: produto.estoque,
+      });
     } else if (variacaoSelecionada) {
       const nomeVariacao = [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ");
       const extraLabel = extrasSelecionados.map((e) => ` + ${e.nome}`).join("");
@@ -107,6 +116,7 @@ export function StoreProdutoDialog({
         precoUnit: precoUnitario,
         qtd,
         obs: obs.trim(),
+        imagem: produto.imagem,
       });
     }
 

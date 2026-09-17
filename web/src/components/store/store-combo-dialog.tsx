@@ -148,12 +148,25 @@ export function StoreComboDialog({
     if (!combo || !podeAdicionar) return;
     const combosels = passos.flatMap((p) => {
       const sel = selecoes[p.id] ?? {};
-      return p.opcoes.filter((o) => (sel[o.id] ?? 0) > 0).map((o) => ({ id: o.id, nome: o.nome, qtd: sel[o.id] }));
+      return p.opcoes
+        .filter((o) => (sel[o.id] ?? 0) > 0)
+        .map((o) => ({ id: o.id, nome: o.nome, qtd: sel[o.id], passoNome: p.nome }));
     });
     const comboLines = combosels.map((s) => s.nome + (s.qtd > 1 ? ` x${s.qtd}` : "")).join("\n");
     const obsFinal = combosels.length ? `[combo]\n${comboLines}${obs ? `\n${obs}` : ""}` : obs;
 
-    onAdicionar({ id: combo.id, tipo: "combo", nome: combo.nome, precoUnit: combo.preco_final, qtd, obs: obsFinal, combosels });
+    onAdicionar({
+      id: combo.id,
+      tipo: "combo",
+      nome: combo.nome,
+      precoUnit: combo.preco_final,
+      qtd,
+      obs: obsFinal,
+      obsUsuario: obs.trim() || undefined,
+      imagem: combo.imagem,
+      estoqueMax: maxCombosPorEstoque ?? undefined,
+      combosels,
+    });
     onOpenChange(false);
   }
 

@@ -517,12 +517,14 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
       <StoreCartSheet
         open={cartAberto}
         onOpenChange={setCartAberto}
+        lojaId={perfil.loja_id}
         nomeLoja={perfil.nomeLoja}
         logoLoja={perfil.perfilLoja}
         itens={cart.itens}
         subtotal={cart.subtotal}
         onAtualizarQtd={cart.atualizarQtd}
         onRemover={cart.remover}
+        onAdicionar={cart.adicionar}
         onFinalizar={() => {
           setCartAberto(false);
           setCheckoutAberto(true);
