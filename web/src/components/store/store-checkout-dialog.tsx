@@ -306,9 +306,15 @@ export function StoreCheckoutDialog({
 
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
               {etapa === "dados" && (
-                <div className="mx-auto max-w-xs space-y-3 pt-6">
-                  <FloatingField label="Nome*" value={nome} onChange={setNome} />
-                  <FloatingField label="Telefone*" value={telefone} onChange={setTelefone} inputMode="tel" />
+                <div className="space-y-3">
+                  <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome*" className={fieldClass()} />
+                  <input
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
+                    inputMode="tel"
+                    placeholder="Telefone*"
+                    className={fieldClass()}
+                  />
                 </div>
               )}
 
@@ -723,30 +729,6 @@ function TipoCard({
         {ativo && <span className="size-2 rounded-full bg-white" />}
       </span>
     </button>
-  );
-}
-
-function FloatingField({
-  label,
-  value,
-  onChange,
-  inputMode,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  inputMode?: "text" | "tel";
-}) {
-  return (
-    <div className="relative rounded-xl border-[1.5px] border-neutral-200 bg-white focus-within:border-neutral-400">
-      <label className="pointer-events-none absolute top-2 left-3.5 text-[.68rem] text-neutral-400">{label}</label>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        inputMode={inputMode}
-        className="w-full bg-transparent px-3.5 pt-6 pb-2.5 text-left text-base text-neutral-900 outline-none"
-      />
-    </div>
   );
 }
 
