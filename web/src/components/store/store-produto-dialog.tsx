@@ -30,6 +30,7 @@ export function StoreProdutoDialog({
   const [extrasIds, setExtrasIds] = useState<number[]>([]);
   const [complementoId, setComplementoId] = useState<number | null>(null);
   const [imagemAmpliada, setImagemAmpliada] = useState(false);
+  const [erroCarregar, setErroCarregar] = useState(false);
 
   const temVariacoes = produto?.tem_variacoes === 1;
 
@@ -43,6 +44,7 @@ export function StoreProdutoDialog({
     setExtrasIds([]);
     setComplementoId(null);
     setDetalhe(null);
+    setErroCarregar(false);
 
     if (produto.tem_variacoes === 1) {
       setCarregando(true);
@@ -50,7 +52,9 @@ export function StoreProdutoDialog({
         .then((r) => r.json())
         .then((data) => {
           if (data.ok) setDetalhe(data as StoreProdutoVariacoes);
+          else setErroCarregar(true);
         })
+        .catch(() => setErroCarregar(true))
         .finally(() => setCarregando(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,6 +133,8 @@ export function StoreProdutoDialog({
 
   const opcoesConteudo = carregando ? (
     <p className="text-[.86rem] text-neutral-500">Carregando opcoes...</p>
+  ) : erroCarregar ? (
+    <p className="text-[.86rem] text-red-600">Nao foi possivel carregar as opcoes. Feche e tente novamente.</p>
   ) : (
     <>
       <div>

@@ -30,6 +30,7 @@ export function StoreComboDialog({
   const [carregando, setCarregando] = useState(false);
   const [selecoes, setSelecoes] = useState<Record<number, Selecao>>({});
   const [imagemAmpliada, setImagemAmpliada] = useState(false);
+  const [erroCarregar, setErroCarregar] = useState(false);
 
   useEffect(() => {
     if (!open || !combo) return;
@@ -39,11 +40,14 @@ export function StoreComboDialog({
     setPassos([]);
     setSelecoes({});
     setCarregando(true);
+    setErroCarregar(false);
     fetch(`/api/store/combo-detalhe?id=${combo.id}&loja_id=${lojaId}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.ok) setPassos(data.passos as StoreComboPasso[]);
+        else setErroCarregar(true);
       })
+      .catch(() => setErroCarregar(true))
       .finally(() => setCarregando(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, combo?.id, lojaId]);
@@ -73,7 +77,7 @@ export function StoreComboDialog({
     const min = Math.max(1, p.min_itens || 1);
     return totalSelecionado(p.id) < min;
   });
-  const podeAdicionar = !carregando && passosFaltando.length === 0;
+  const podeAdicionar = !carregando && !erroCarregar && passosFaltando.length === 0;
 
   /* Quantas unidades do combo inteiro dao pra montar com o estoque das
      opcoes ja escolhidas (ex.: se so tem 1 unidade do item selecionado,
@@ -191,6 +195,8 @@ export function StoreComboDialog({
 
         {carregando ? (
           <p className="text-[.86rem] text-neutral-500">Carregando opcoes...</p>
+        ) : erroCarregar ? (
+          <p className="text-[.86rem] text-red-600">Nao foi possivel carregar as opcoes do combo. Feche e tente novamente.</p>
         ) : (
           <div className="space-y-3">
             {passos.map((passo) => {
