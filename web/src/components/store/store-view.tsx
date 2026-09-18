@@ -149,6 +149,35 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
     else setPromoListaAberta(true);
   }
 
+  /* Popup automatico de promocao ao entrar na loja, so na primeira vez nessa
+     sessao do navegador — mesma regra do loja.js legado. 2+ produtos em
+     promocao abre a lista (chave de sessao inclui os ids, entao reaparece se
+     o conjunto mudar); com so 1 mas com foto/descricao de propaganda
+     configurada (promoAutoPopup), abre direto o produto. */
+  useEffect(() => {
+    if (catalogo.produtosEmPromo.length >= 2) {
+      const idsOrdenados = catalogo.produtosEmPromo
+        .map((p) => p.id)
+        .sort((a, b) => a - b)
+        .join("-");
+      const chave = `promo_lista_visto_${perfil.loja_id}_${idsOrdenados}`;
+      if (!sessionStorage.getItem(chave)) {
+        sessionStorage.setItem(chave, "1");
+        const t = setTimeout(() => setPromoListaAberta(true), 600);
+        return () => clearTimeout(t);
+      }
+    } else if (catalogo.promoAutoPopup) {
+      const chave = `promo_visto_${perfil.loja_id}_${catalogo.promoAutoPopup.id}`;
+      if (!sessionStorage.getItem(chave)) {
+        sessionStorage.setItem(chave, "1");
+        const produto = catalogo.promoAutoPopup;
+        const t = setTimeout(() => abrirItem(produto), 600);
+        return () => clearTimeout(t);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function onSucessoPedido(codigo: number | string) {
     cart.limpar();
     setCheckoutAberto(false);
