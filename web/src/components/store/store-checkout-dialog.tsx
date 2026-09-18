@@ -898,7 +898,7 @@ export function StoreCheckoutDialog({
       </Dialog>
 
       <Dialog open={enderecoModalAberto} onOpenChange={setEnderecoModalAberto}>
-        <DialogContent className="max-w-md gap-0 p-0 sm:max-w-md">
+        <DialogContent showCloseButton={false} className="max-w-md gap-0 p-0 sm:max-w-md">
           <div className="flex items-center justify-between border-b border-neutral-100 p-4">
             <DialogTitle className="text-[1rem] font-bold text-neutral-900">Endereco de Entrega</DialogTitle>
             <button type="button" onClick={() => setEnderecoModalAberto(false)} className="flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
