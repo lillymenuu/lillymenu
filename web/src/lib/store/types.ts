@@ -194,6 +194,8 @@ export type StoreCartItem = {
   /** Limite de unidades (estoque do produto, ou do combo mais restritivo entre os componentes escolhidos). Sem limite conhecido se ausente. */
   estoqueMax?: number;
   combosels?: { id: number; nome: string; qtd: number; passoNome?: string }[];
+  /** true quando adicionado a partir da sugestao "Peça também" no carrinho — vira pedido_itens.cross_sell no pedido_criar.php, base do relatorio de cross-sell. */
+  crossSell?: boolean;
 };
 
 export type StoreCrossSellProduto = {

@@ -107,6 +107,7 @@ export function StoreCartSheet({
       obs: "",
       imagem: p.imagem,
       estoqueMax: p.estoque,
+      crossSell: true,
     });
   }
 
