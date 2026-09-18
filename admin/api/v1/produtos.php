@@ -302,6 +302,8 @@ if ($metodo === 'POST') {
   $temDescricao = in_array('descricao', $colunas, true);
   $temPrecoPromocional = in_array('preco_promocional', $colunas, true);
   $temPromoDesativado = in_array('promo_desativado', $colunas, true);
+  $temPromoDias = in_array('promo_dias', $colunas, true);
+  $temPromoInicio = in_array('promo_inicio', $colunas, true);
   $temOrdem = in_array('ordem', $colunas, true);
   $temImagem = in_array('imagem', $colunas, true);
   $temApenasAgendamento = in_array('apenas_agendamento', $colunas, true);
@@ -337,6 +339,12 @@ if ($metodo === 'POST') {
     if ($temDescricao) $campos['descricao'] = $descricao;
     if ($temPrecoPromocional) $campos['preco_promocional'] = $precoPromocional;
     if ($temPromoDesativado) $campos['promo_desativado'] = $promoDesativado;
+    /* promo_dias/promo_inicio sao de uma feature de "promocao por N dias"
+       do admin legado, sem equivalente nesse form novo — zera pra uma
+       promocao antiga com prazo ja vencido nao ficar travando o produto
+       pra sempre (o em_promo do loja_catalogo.php checa a expiracao). */
+    if ($temPromoDias) $campos['promo_dias'] = null;
+    if ($temPromoInicio) $campos['promo_inicio'] = null;
     if ($temApenasAgendamento) $campos['apenas_agendamento'] = $apenasAgendamento;
     if ($temQuantidadeMinima) $campos['quantidade_minima'] = $quantidadeMinima;
     if ($temPontosGanho) $campos['pontos_ganho'] = $pontosGanho;
