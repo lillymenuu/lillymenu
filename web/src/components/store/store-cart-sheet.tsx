@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ImageIcon, Loader2, ShoppingBag, Ticket } from "lucide-react";
+import { AlertTriangle, CalendarCheck, ChevronDown, ImageIcon, Loader2, ShoppingBag, Ticket } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -250,6 +250,28 @@ export function StoreCartSheet({
             </button>
           </div>
         </div>
+
+        {!perfil.lojaAberta &&
+          (perfil.agendamentoDeliveryAtivo || perfil.agendamentoRetiradaAtivo ? (
+            <div className="mb-3 flex items-start gap-2.5 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-3">
+              <CalendarCheck size={18} className="mt-0.5 shrink-0 text-orange-500" />
+              <div>
+                <p className="text-[.84rem] font-bold text-orange-800">Loja fechada — pedido agendado disponível</p>
+                <p className="mt-0.5 text-[.76rem] leading-relaxed text-orange-800">
+                  A loja está fechada agora, mas você pode fazer um pedido agendado. Escolha <strong className="font-bold">Entrega agendada</strong> ou{" "}
+                  <strong className="font-bold">Retirada agendada</strong> no checkout.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-3 flex items-start gap-2.5 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-3">
+              <AlertTriangle size={18} className="mt-0.5 shrink-0 text-orange-500" />
+              <div>
+                <p className="text-[.84rem] font-bold text-orange-800">Loja fechada no momento</p>
+                <p className="mt-0.5 text-[.76rem] leading-relaxed text-orange-800">Este estabelecimento está fechado no momento.</p>
+              </div>
+            </div>
+          ))}
 
         {itens.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-16 text-neutral-300">
