@@ -258,6 +258,7 @@ export type StorePedidoStatusResposta = {
     desconto: number;
     cashback_usado: number | null;
     endereco_entrega: string;
+    avaliado: boolean;
     criado_em: string;
     nome: string;
     telefone: string;

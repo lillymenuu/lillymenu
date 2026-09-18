@@ -69,9 +69,11 @@ export function StorePedidosSheet({
   const [carregando, setCarregando] = useState(true);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  /* Pedidos ja avaliados — persistido em localStorage por loja, mesma chave
-     (lc_aval_<lojaId>) e mesma logica client-side do loja.js legado (sem
-     verificacao server-side de "ja avaliou"). */
+  /* Fonte da verdade de "ja avaliado" e o campo p.avaliado (vem do servidor,
+     pedido_status.php). Esse Set em localStorage e so um cache otimista pra
+     travar o botao na hora, sem esperar o proximo poll confirmar — sozinho
+     ele nao seria confiavel (localStorage nao segue entre navegador/aparelho
+     e pode ser limpo), diferente do loja.js legado que confiava so nele. */
   const [avaliados, setAvaliados] = useState<Set<number>>(new Set());
   useEffect(() => {
     try {
@@ -370,7 +372,7 @@ export function StorePedidosSheet({
 
                   {(p.status === "finalizado" || p.status === "entregue") && (
                     <div className="border-t border-neutral-100 pt-3">
-                      {avaliados.has(p.id) ? (
+                      {p.avaliado || avaliados.has(p.id) ? (
                         <button
                           type="button"
                           disabled

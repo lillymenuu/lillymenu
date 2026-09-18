@@ -86,6 +86,22 @@ try {
   $codigoBase = getPedidoCodigoBase($conn, $lojaId);
   $codigoDisplay = calcCodigoDisplay((int)$pedido['id'], $codigoBase);
 
+  /* Se o pedido ja foi avaliado — checagem no servidor, nao so localStorage
+     (que se perde ao trocar de navegador/dispositivo ou limpar dados). A
+     tabela so existe depois da primeira avaliacao (criada sob demanda por
+     avaliacao_salvar.php), entao trata a ausencia dela como "nao avaliado". */
+  $avaliado = false;
+  try {
+    $temTabelaAval = (bool) $conn->query("SHOW TABLES LIKE 'avaliacoes'")->fetchColumn();
+    if ($temTabelaAval) {
+      $stmtAval = $conn->prepare("SELECT 1 FROM avaliacoes WHERE pedido_id = ? AND loja_id = ? LIMIT 1");
+      $stmtAval->execute([$pedidoId, $lojaId]);
+      $avaliado = (bool) $stmtAval->fetchColumn();
+    }
+  } catch (Exception $e) {
+    $avaliado = false;
+  }
+
   echo json_encode([
     'ok'     => true,
     'pedido' => [
@@ -101,6 +117,7 @@ try {
       'desconto'            => (float)($pedido['desconto'] ?? 0),
       'cashback_usado'      => isset($pedido['cashback_usado']) && $pedido['cashback_usado'] !== null ? (float)$pedido['cashback_usado'] : null,
       'endereco_entrega'    => $pedido['endereco_entrega'] ?? '',
+      'avaliado'            => $avaliado,
       'criado_em'           => $pedido['criado_em'] ?? '',
       'nome'                => $pedido['nome'] ?? '',
       'telefone'            => $pedido['telefone'] ?? '',
