@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, User, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { StoreAgendamentoOverlay } from "@/components/store/store-agendamento-dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { buscarEnderecoPorCep, formatarCep } from "@/lib/cep";
@@ -992,18 +993,30 @@ export function StoreCheckoutDialog({
             )}
           </div>
           <div className="border-t border-neutral-100 p-4">
-            <button
-              type="button"
-              disabled={!rua.trim() || !numero.trim() || (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido))}
-              onClick={confirmarEndereco}
-              className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
-              style={{
-                background:
-                  !rua.trim() || !numero.trim() || (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) ? "#c0a88a" : brown,
-              }}
-            >
-              Proximo
-            </button>
+            {bairroNaoAtendido && wppNum ? (
+              <a
+                href={`https://wa.me/55${wppNum}?text=${encodeURIComponent("Olá! Meu bairro não está na área de entrega cadastrada, gostaria de combinar a forma de entrega do meu pedido.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-emerald-600 py-3.5 text-[.9rem] font-bold text-white transition-colors hover:bg-emerald-700"
+              >
+                <WhatsAppIcon size={18} />
+                Falar no WhatsApp
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled={!rua.trim() || !numero.trim() || (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido))}
+                onClick={confirmarEndereco}
+                className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+                style={{
+                  background:
+                    !rua.trim() || !numero.trim() || (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) ? "#c0a88a" : brown,
+                }}
+              >
+                Proximo
+              </button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
