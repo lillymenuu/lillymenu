@@ -90,6 +90,15 @@ export function StoreCheckoutDialog({
   const [resumoAberto, setResumoAberto] = useState(true);
   const [itensResumoAberto, setItensResumoAberto] = useState(true);
 
+  /* Cashback ja disponivel do cliente (saldo pra gastar), diferente do
+     cashbackEstimado abaixo (o que ele VAI ganhar com essa compra). */
+  const [cashbackDisponivel, setCashbackDisponivel] = useState(0);
+  const [cashbackModalAberto, setCashbackModalAberto] = useState(false);
+  const [cashbackModalJaMostrado, setCashbackModalJaMostrado] = useState(false);
+  const [cashbackAplicado, setCashbackAplicado] = useState(false);
+  const [cashbackValorInput, setCashbackValorInput] = useState("");
+  const [cashbackValorUsado, setCashbackValorUsado] = useState(0);
+
   const wppNum = perfil.lojaContato.replace(/\D/g, "");
 
   /* Busca case-insensitive do bairro digitado contra os bairros cadastrados em
@@ -131,7 +140,8 @@ export function StoreCheckoutDialog({
     return { desconto: cupomAplicado.valor, taxaFinal: taxaEntrega };
   }, [cupomAplicado, taxaEntrega]);
 
-  const total = Math.max(0, subtotal - desconto) + taxaFinal;
+  const cashbackUsadoEfetivo = cashbackAplicado ? Math.min(cashbackValorUsado, cashbackDisponivel) : 0;
+  const total = Math.max(0, subtotal - desconto - cashbackUsadoEfetivo) + taxaFinal;
   const cashbackEstimado = perfil.cashbackAtivo && perfil.cashbackPct > 0 ? (total * perfil.cashbackPct) / 100 : 0;
 
   const trocoValorNumerico = parseValorMascarado(trocoPara);
@@ -221,6 +231,36 @@ export function StoreCheckoutDialog({
     setTrocoModalAberto(false);
   }
 
+  async function verificarCashback() {
+    if (!perfil.cashbackAtivo || cashbackModalJaMostrado) return;
+    const digits = telefone.replace(/\D/g, "");
+    if (digits.length < 10) return;
+    try {
+      const res = await fetch(`/api/store/cashback-check?tel=${digits}&loja_id=${perfil.loja_id}`);
+      const data = await res.json();
+      const saldo = data.ok ? Number(data.saldo) || 0 : 0;
+      if (saldo > 0) {
+        setCashbackDisponivel(saldo);
+        setCashbackValorInput(saldo.toFixed(2).replace(".", ","));
+        setCashbackModalAberto(true);
+        setCashbackModalJaMostrado(true);
+      }
+    } catch {
+      // silencioso — cashback e um bonus, nao pode travar o checkout
+    }
+  }
+
+  const cashbackValorInputNumerico = parseValorMascarado(cashbackValorInput);
+  const cashbackValorInputValido =
+    cashbackValorInput.trim() !== "" && !isNaN(cashbackValorInputNumerico) && cashbackValorInputNumerico > 0 && cashbackValorInputNumerico <= cashbackDisponivel;
+
+  function confirmarCashback() {
+    if (!cashbackValorInputValido) return;
+    setCashbackValorUsado(cashbackValorInputNumerico);
+    setCashbackAplicado(true);
+    setCashbackModalAberto(false);
+  }
+
   async function validarCupom() {
     if (!cupomCodigo.trim()) return;
     setValidandoCupom(true);
@@ -289,6 +329,8 @@ export function StoreCheckoutDialog({
           troco_valor: formaPagamento === "dinheiro" ? parseValorMascarado(trocoPara) || 0 : 0,
           cupom_codigo: cupomAplicado?.codigo ?? "",
           cupom_desconto: desconto,
+          cashback_usar: cashbackAplicado && cashbackUsadoEfetivo > 0,
+          cashback_valor: cashbackUsadoEfetivo,
           tipo_agendamento: isAgendadaTipo ? tipo : "",
           agendamento: isAgendadaTipo && agendamento ? JSON.stringify({ data: agendamento.data.toISOString().slice(0, 10), slot: agendamento.slot }) : "",
         }),
@@ -362,6 +404,7 @@ export function StoreCheckoutDialog({
                   <input
                     value={telefone}
                     onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
+                    onBlur={verificarCashback}
                     inputMode="tel"
                     placeholder="Telefone*"
                     className={fieldClass()}
@@ -708,6 +751,9 @@ export function StoreCheckoutDialog({
                         {formaPagamento === "dinheiro" && trocoValorValido && (
                           <p className="text-[.78rem] font-light text-neutral-500">Troco para {formatarPreco(trocoValorNumerico)}</p>
                         )}
+                        {cashbackAplicado && cashbackUsadoEfetivo > 0 && (
+                          <p className="text-[.78rem] font-light text-neutral-500">Cashback usado: {formatarPreco(cashbackUsadoEfetivo)}</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -783,6 +829,24 @@ export function StoreCheckoutDialog({
                     <div className="flex justify-between" style={{ color: "#7c3aed" }}>
                       <span>Desconto</span>
                       <span>-{formatarPreco(desconto)}</span>
+                    </div>
+                  )}
+                  {cashbackAplicado && cashbackUsadoEfetivo > 0 && (
+                    <div className="flex justify-between" style={{ color: brown }}>
+                      <span className="flex items-center gap-1.5">
+                        Cashback usado
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCashbackAplicado(false);
+                            setCashbackValorUsado(0);
+                          }}
+                          className="text-[.72rem] font-semibold underline"
+                        >
+                          Remover
+                        </button>
+                      </span>
+                      <span>-{formatarPreco(cashbackUsadoEfetivo)}</span>
                     </div>
                   )}
                   {cashbackEstimado > 0 && (
@@ -1015,6 +1079,46 @@ export function StoreCheckoutDialog({
               style={{ background: precisaTroco && !trocoValorValido ? "#c0a88a" : brown }}
             >
               CONFIRMAR
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={cashbackModalAberto} onOpenChange={setCashbackModalAberto}>
+        <DialogContent showCloseButton={false} className="max-w-md gap-0 p-5 sm:max-w-md">
+          <p className="text-[.92rem] font-bold text-neutral-900">Voce tem cashback disponivel! 🎉</p>
+          <p className="mt-1.5 text-[.86rem] text-neutral-700">
+            Total disponivel: <strong className="font-bold" style={{ color: brown }}>{formatarPreco(cashbackDisponivel)}</strong>
+          </p>
+          <p className="mt-3 text-[.84rem] text-neutral-700">Qual valor do cashback voce deseja utilizar nesse pedido?</p>
+
+          <label className="mt-3 mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">Valor</label>
+          <input
+            value={cashbackValorInput}
+            onChange={(e) => setCashbackValorInput(maskValorDigitado(e.target.value))}
+            inputMode="decimal"
+            placeholder="0,00"
+            className={fieldClass()}
+          />
+          {cashbackValorInput.trim() !== "" && !cashbackValorInputValido && (
+            <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-[.78rem] text-red-700">
+              <AlertCircle size={14} className="shrink-0" />
+              Valor maximo disponivel: {formatarPreco(cashbackDisponivel)}
+            </div>
+          )}
+
+          <div className="mt-5 flex justify-end gap-2">
+            <button type="button" onClick={() => setCashbackModalAberto(false)} className="rounded-lg px-4 py-2.5 text-[.84rem] font-semibold text-neutral-500">
+              Agora nao
+            </button>
+            <button
+              type="button"
+              disabled={!cashbackValorInputValido}
+              onClick={confirmarCashback}
+              className="rounded-lg px-5 py-2.5 text-[.86rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+              style={{ background: cashbackValorInputValido ? brown : "#c0a88a" }}
+            >
+              Usar
             </button>
           </div>
         </DialogContent>
