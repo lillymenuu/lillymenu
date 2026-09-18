@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Copy, MapPin, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Copy, MapPin, ShoppingBag, Star } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
+import { StoreAvaliacaoModal } from "@/components/store/store-avaliacao-modal";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
 import type { StorePedidoStatusResposta, StorePedidosClienteResposta, StorePerfil } from "@/lib/store/types";
@@ -67,6 +68,22 @@ export function StorePedidosSheet({
   const [itensPorPedido, setItensPorPedido] = useState<Record<number, StorePedidoStatusResposta["itens"]>>({});
   const [carregando, setCarregando] = useState(true);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /* Pedidos ja avaliados — persistido em localStorage por loja, mesma chave
+     (lc_aval_<lojaId>) e mesma logica client-side do loja.js legado (sem
+     verificacao server-side de "ja avaliou"). */
+  const [avaliados, setAvaliados] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    try {
+      const salvos = JSON.parse(localStorage.getItem(`lc_aval_${perfil.loja_id}`) || "[]");
+      setAvaliados(new Set(salvos));
+    } catch {
+      // ignora
+    }
+  }, [perfil.loja_id]);
+
+  const [avaliacaoAberta, setAvaliacaoAberta] = useState(false);
+  const [avaliacaoPedidoId, setAvaliacaoPedidoId] = useState<number | null>(null);
 
   async function buscarCards() {
     const clienteId = cliente?.id ?? 0;
@@ -350,12 +367,67 @@ export function StorePedidosSheet({
                       </div>
                     </div>
                   )}
+
+                  {(p.status === "finalizado" || p.status === "entregue") && (
+                    <div className="border-t border-neutral-100 pt-3">
+                      {avaliados.has(p.id) ? (
+                        <button
+                          type="button"
+                          disabled
+                          className="flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg py-2.5 text-[.82rem] font-normal text-white opacity-50"
+                          style={{ background: "#c0a88a" }}
+                        >
+                          <CheckCircle2 size={15} /> Pedido avaliado
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAvaliacaoPedidoId(p.id);
+                            setAvaliacaoAberta(true);
+                          }}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-[.82rem] font-normal text-white"
+                          style={{ background: brown }}
+                        >
+                          <Star size={15} fill="#f59e0b" color="#f59e0b" /> Avaliar pedido
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      <StoreAvaliacaoModal
+        open={avaliacaoAberta}
+        onOpenChange={setAvaliacaoAberta}
+        nomeLoja={perfil.nomeLoja}
+        lojaId={perfil.loja_id}
+        pedidoId={avaliacaoPedidoId}
+        horario={formatarHorario((detalhes ?? []).find((p) => p.id === avaliacaoPedidoId)?.criado_em ?? "")}
+        itens={
+          (itensPorPedido[avaliacaoPedidoId ?? -1] ?? []).map((i) => ({
+            produto_nome: i.produto_nome,
+            quantidade: i.quantidade,
+            preco: i.preco,
+          }))
+        }
+        onAvaliado={(pedidoId) => {
+          setAvaliados((prev) => {
+            const novo = new Set(prev);
+            novo.add(pedidoId);
+            try {
+              localStorage.setItem(`lc_aval_${perfil.loja_id}`, JSON.stringify([...novo]));
+            } catch {
+              // ignora
+            }
+            return novo;
+          });
+        }}
+      />
     </StoreSheet>
   );
 }
