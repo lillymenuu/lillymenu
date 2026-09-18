@@ -27,6 +27,7 @@ import { StoreSuccessDialog } from "@/components/store/store-success-dialog";
 import { StoreInfoDialog } from "@/components/store/store-info-dialog";
 import { StoreAuthModal } from "@/components/store/store-auth-modal";
 import { StorePedidosSheet } from "@/components/store/store-pedidos-sheet";
+import { StorePromoListaModal } from "@/components/store/store-promo-lista-modal";
 
 function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
   return "tipo" in item && item.tipo === "combo";
@@ -54,6 +55,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [busca, setBusca] = useState("");
   const [infoAberto, setInfoAberto] = useState(false);
   const [cupomAplicado, setCupomAplicado] = useState<StoreCupomResultado | null>(null);
+  const [promoListaAberta, setPromoListaAberta] = useState(false);
   const [authModalAberto, setAuthModalAberto] = useState(false);
   const [pedidosSheetAberto, setPedidosSheetAberto] = useState(false);
   const [pedidosCliente, setPedidosCliente] = useState<StorePedidosClienteResposta["cliente"] | null>(null);
@@ -139,6 +141,12 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   function abrirItem(item: StoreProduto | StoreCombo) {
     if (isCombo(item)) setComboAberto(item);
     else setProdutoAberto(item);
+  }
+
+  function abrirPromoNav() {
+    const itens = catalogo.produtosEmPromo;
+    if (itens.length === 1) abrirItem(itens[0]);
+    else setPromoListaAberta(true);
   }
 
   function onSucessoPedido(codigo: number | string) {
@@ -569,7 +577,12 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             <List size={20} />
             Menu
           </button>
-          <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide text-neutral-400">
+          <button
+            type="button"
+            onClick={abrirPromoNav}
+            className={`flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide ${promoListaAberta ? "" : "text-neutral-400"}`}
+            style={promoListaAberta ? { color: brown } : undefined}
+          >
             <Gift size={20} />
             Promo
           </button>
@@ -673,6 +686,16 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         perfil={perfil}
         cliente={pedidosCliente}
         pedidosResumo={pedidosResumo}
+      />
+
+      <StorePromoListaModal
+        open={promoListaAberta}
+        onOpenChange={setPromoListaAberta}
+        produtos={catalogo.produtosEmPromo}
+        onSelecionar={(produto) => {
+          setPromoListaAberta(false);
+          abrirItem(produto);
+        }}
       />
     </div>
   );
