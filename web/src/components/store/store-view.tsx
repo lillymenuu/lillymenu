@@ -196,26 +196,32 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
 
       {/* Header row */}
       <div className="relative mx-auto flex max-w-[901px] items-start justify-between px-4" style={{ marginTop: -34 }}>
-        <button
-          type="button"
-          onClick={() => setInfoAberto(true)}
-          className="inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
-          style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
-        >
-          <div className="size-[88px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-md">
-            {perfil.perfilLoja ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={perfil.perfilLoja} alt={perfil.nomeLoja} className="size-full object-cover" />
-            ) : (
-              <div
-                className="flex size-full items-center justify-center text-2xl font-extrabold text-white"
-                style={{ background: brown }}
-              >
-                {perfil.nomeLoja.charAt(0)}
-              </div>
-            )}
-          </div>
-        </button>
+        <div className="relative inline-flex shrink-0">
+          <span
+            className="absolute inset-0 animate-ping rounded-full opacity-30"
+            style={{ background: brown, animationDuration: "2.4s" }}
+          />
+          <button
+            type="button"
+            onClick={() => setInfoAberto(true)}
+            className="relative inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
+            style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
+          >
+            <div className="size-[88px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-md">
+              {perfil.perfilLoja ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={perfil.perfilLoja} alt={perfil.nomeLoja} className="size-full object-cover" />
+              ) : (
+                <div
+                  className="flex size-full items-center justify-center text-2xl font-extrabold text-white"
+                  style={{ background: brown }}
+                >
+                  {perfil.nomeLoja.charAt(0)}
+                </div>
+              )}
+            </div>
+          </button>
+        </div>
         <div className="flex flex-col items-end gap-1 pt-[52px]">
           {perfil.avaliacaoMedia > 0 && (
             <span className="flex items-center gap-1 text-[.82rem] font-bold text-neutral-900">
@@ -257,7 +263,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       {(perfil.entAtiva || (perfil.cashbackAtivo && perfil.cashbackPct > 0) || perfil.pedidoMinExibir > 0) && (
         <div className="mx-auto mt-3.5 flex max-w-[901px] gap-2 px-4">
           {perfil.entAtiva && (
-            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-50 px-2 py-2.5">
+            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5">
               <Clock3 size={16} style={{ color: brown }} className="shrink-0" />
               <div className="flex min-w-0 flex-col">
                 <span className="truncate text-[.73rem] font-bold text-neutral-900">
@@ -268,7 +274,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             </div>
           )}
           {perfil.cashbackAtivo && perfil.cashbackPct > 0 && (
-            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-50 px-2 py-2.5">
+            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5">
               <Percent size={16} style={{ color: brown }} className="shrink-0" />
               <div className="flex min-w-0 flex-col">
                 <span className="truncate text-[.73rem] font-bold text-neutral-900">{perfil.cashbackPct}%</span>
@@ -277,7 +283,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             </div>
           )}
           {perfil.pedidoMinExibir > 0 && (
-            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-50 px-2 py-2.5">
+            <div className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5">
               <ShoppingBag size={16} style={{ color: brown }} className="shrink-0" />
               <div className="flex min-w-0 flex-col">
                 <span className="truncate text-[.73rem] font-bold text-neutral-900">
