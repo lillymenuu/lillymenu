@@ -196,6 +196,8 @@ export type StoreCartItem = {
   combosels?: { id: number; nome: string; qtd: number; passoNome?: string }[];
   /** true quando adicionado a partir da sugestao "Peça também" no carrinho — vira pedido_itens.cross_sell no pedido_criar.php, base do relatorio de cross-sell. */
   crossSell?: boolean;
+  /** So preenchido em resgates do Clube de Pontos — quantos pontos custou (obs fica "[Resgate de pontos]", precoUnit 0). */
+  pontosCusto?: number;
 };
 
 export type StoreCrossSellProduto = {
@@ -269,4 +271,28 @@ export type StorePedidoStatusResposta = {
     tipo_agendamento: string | null;
   };
   itens?: { produto_nome: string; quantidade: number; preco: number | string; observacoes: string }[];
+};
+
+export type StorePontosProduto = {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  pontos_custo: number;
+  imagem: string;
+  pontos_ganho: number;
+  categoria: string | null;
+};
+
+export type StorePontosProdutosResposta = {
+  ok: boolean;
+  produtos: StorePontosProduto[];
+};
+
+export type StorePontosResgatarResposta = {
+  ok: boolean;
+  msg?: string;
+  produto?: { id: number; nome: string; preco: number };
+  custo?: number;
+  saldo_antes?: number;
+  saldo_novo?: number;
 };

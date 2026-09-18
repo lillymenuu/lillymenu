@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AtSign,
   Clock3,
+  Coins,
   Gift,
   ImageIcon,
   Layers,
@@ -27,6 +28,7 @@ import { StoreSuccessDialog } from "@/components/store/store-success-dialog";
 import { StoreInfoDialog } from "@/components/store/store-info-dialog";
 import { StoreAuthModal } from "@/components/store/store-auth-modal";
 import { StorePedidosSheet } from "@/components/store/store-pedidos-sheet";
+import { StorePontosSheet } from "@/components/store/store-pontos-sheet";
 import { StorePromoListaModal } from "@/components/store/store-promo-lista-modal";
 
 function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
@@ -57,11 +59,13 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [cupomAplicado, setCupomAplicado] = useState<StoreCupomResultado | null>(null);
   const [promoListaAberta, setPromoListaAberta] = useState(false);
   const [authModalAberto, setAuthModalAberto] = useState(false);
+  const [authDestino, setAuthDestino] = useState<"pedidos" | "pontos">("pedidos");
   const [pedidosSheetAberto, setPedidosSheetAberto] = useState(false);
   const [pedidosCliente, setPedidosCliente] = useState<StorePedidosClienteResposta["cliente"] | null>(null);
   const [pedidosResumo, setPedidosResumo] = useState<
     { id: number; tipo: string; forma_pagamento: string; total: number; criado_em: string }[]
   >([]);
+  const [pontosSheetAberto, setPontosSheetAberto] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(catalogo.categorias[0]?.id ?? null);
   const [catalogoAtualizadoVisivel, setCatalogoAtualizadoVisivel] = useState(false);
 
@@ -606,6 +610,22 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             <List size={20} />
             Menu
           </button>
+          {perfil.clubePontosAtivo && (
+            <button
+              type="button"
+              onClick={() => {
+                setAuthDestino("pontos");
+                setAuthModalAberto(true);
+              }}
+              className={`flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide ${
+                (authModalAberto && authDestino === "pontos") || pontosSheetAberto ? "" : "text-neutral-400"
+              }`}
+              style={(authModalAberto && authDestino === "pontos") || pontosSheetAberto ? { color: brown } : undefined}
+            >
+              <Coins size={20} />
+              Pontos
+            </button>
+          )}
           <button
             type="button"
             onClick={abrirPromoNav}
@@ -617,11 +637,14 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           </button>
           <button
             type="button"
-            onClick={() => setAuthModalAberto(true)}
+            onClick={() => {
+              setAuthDestino("pedidos");
+              setAuthModalAberto(true);
+            }}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide ${
-              authModalAberto || pedidosSheetAberto ? "" : "text-neutral-400"
+              (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "" : "text-neutral-400"
             }`}
-            style={authModalAberto || pedidosSheetAberto ? { color: brown } : undefined}
+            style={(authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? { color: brown } : undefined}
           >
             <ShoppingBag size={20} />
             Pedidos
@@ -693,6 +716,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         open={authModalAberto}
         onOpenChange={setAuthModalAberto}
         lojaId={perfil.loja_id}
+        destino={authDestino}
         onAutenticado={(dados) => {
           setPedidosCliente(dados.cliente ?? null);
           setPedidosResumo(
@@ -705,7 +729,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             }))
           );
           setAuthModalAberto(false);
-          setPedidosSheetAberto(true);
+          if (authDestino === "pontos") setPontosSheetAberto(true);
+          else setPedidosSheetAberto(true);
         }}
       />
 
@@ -715,6 +740,21 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         perfil={perfil}
         cliente={pedidosCliente}
         pedidosResumo={pedidosResumo}
+      />
+
+      <StorePontosSheet
+        open={pontosSheetAberto}
+        onOpenChange={setPontosSheetAberto}
+        lojaId={perfil.loja_id}
+        clienteId={pedidosCliente?.id ?? null}
+        clienteNome={pedidosCliente?.nome ?? ""}
+        saldoInicial={pedidosCliente?.saldo ?? 0}
+        itensCarrinho={cart.itens}
+        onVerHistorico={() => {
+          setPontosSheetAberto(false);
+          setPedidosSheetAberto(true);
+        }}
+        onResgatar={cart.adicionar}
       />
 
       <StorePromoListaModal

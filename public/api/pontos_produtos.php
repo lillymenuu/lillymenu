@@ -3,13 +3,15 @@ session_start();
 header('Content-Type: application/json; charset=UTF-8');
 require_once '../../config/database.php';
 require_once '../../helpers/loja_context.php';
+require_once '../../helpers/storage.php';
 
 $lojaId = definirLojaIdSessao($conn);
 
+/* URL relativa (../admin/...) quebra quando consumida cross-origin pela
+   Store em Next — mesmo ajuste ja feito em cross_sell_sugestoes.php. */
 function fixImgP(string $p): string {
     if (!$p) return '';
-    if (preg_match('#^https?://#', $p) || $p[0] === '/') return $p;
-    return '../admin/' . ltrim($p, '/');
+    return storage_url_absoluta($p);
 }
 
 try {

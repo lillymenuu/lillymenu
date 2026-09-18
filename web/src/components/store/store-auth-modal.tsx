@@ -7,20 +7,31 @@ import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarTelefone } from "@/lib/store/format";
 import type { StorePedidosClienteResposta } from "@/lib/store/types";
 
+const TITULOS: Record<"pedidos" | "pontos", string> = {
+  pedidos: "Lista de pedidos",
+  pontos: "Clube de Pontos",
+};
+const DESCRICOES: Record<"pedidos" | "pontos", string> = {
+  pedidos: "Para ver seus pedidos ativos e necessario entrar com seu numero de telefone.",
+  pontos: "Para consultar seus pontos e resgatar produtos, informe seu numero de telefone.",
+};
+
 /**
- * Modal "Lista de pedidos" (identificacao por telefone) — mesmo texto/fluxo
- * do authModal do loja.js legado, so pra Pedidos (fidelidade/pontos fica
- * fora do escopo desta migracao).
+ * Modal de identificacao por telefone — mesmo texto/fluxo do authModal do
+ * loja.js legado, reaproveitado tanto pra "Pedidos" quanto pro "Clube de
+ * Pontos" (os dois textos/titulos que o legado ja tinha).
  */
 export function StoreAuthModal({
   open,
   onOpenChange,
   lojaId,
+  destino = "pedidos",
   onAutenticado,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   lojaId: number;
+  destino?: "pedidos" | "pontos";
   onAutenticado: (dados: StorePedidosClienteResposta) => void;
 }) {
   const { brown } = useStoreTheme();
@@ -64,7 +75,7 @@ export function StoreAuthModal({
     >
       <DialogContent showCloseButton={false} className="max-w-[400px] gap-0 overflow-hidden rounded-[20px] p-0 sm:max-w-[400px]">
         <div className="flex items-center justify-between px-[18px] pt-4 pb-3">
-          <DialogTitle className="text-[.95rem] font-bold text-neutral-900">Lista de pedidos</DialogTitle>
+          <DialogTitle className="text-[.95rem] font-bold text-neutral-900">{TITULOS[destino]}</DialogTitle>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -74,9 +85,7 @@ export function StoreAuthModal({
           </button>
         </div>
         <div className="px-[18px] pb-1.5">
-          <p className="mb-4 text-[.83rem] leading-relaxed text-neutral-600">
-            Para ver seus pedidos ativos e necessario entrar com seu numero de telefone.
-          </p>
+          <p className="mb-4 text-[.83rem] leading-relaxed text-neutral-600">{DESCRICOES[destino]}</p>
           <div className="mb-3.5">
             <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">Telefone para contato</label>
             <input
