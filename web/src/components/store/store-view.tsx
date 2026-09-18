@@ -373,11 +373,16 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                     )}
                   </div>
                 )}
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={`text-[.9rem] font-bold ${item.em_promo ? "text-emerald-600" : "text-neutral-900"}`}>
+                    {formatarPreco(item.preco_final)}
+                  </span>
                   {item.em_promo && (
-                    <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(item.preco_base)}</span>
+                    <>
+                      <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(item.preco_base)}</span>
+                      <span className="rounded bg-emerald-600 px-1.5 py-px text-[.62rem] font-bold text-white">-{item.desc_pct}%</span>
+                    </>
                   )}
-                  <span className="text-[.9rem] font-bold text-neutral-900">{formatarPreco(item.preco_final)}</span>
                 </div>
                 <p className="mt-0.5 truncate text-[.78rem] text-neutral-600">{item.nome}</p>
               </button>
