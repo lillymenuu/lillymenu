@@ -725,7 +725,7 @@ export function StoreCheckoutDialog({
 
                     {itensResumoAberto && (
                       <div className="mt-3 space-y-3">
-                        {itens.map((item, i) => {
+                        {itens.map((item) => {
                           const grupos = item.combosels
                             ? item.combosels.reduce<Record<string, typeof item.combosels>>((acc, s) => {
                                 const chave = s.passoNome ?? "";
@@ -737,7 +737,7 @@ export function StoreCheckoutDialog({
                             <div key={item.key}>
                               <div className="flex items-baseline gap-2 text-[.86rem]">
                                 <span className="flex size-[18px] shrink-0 items-center justify-center rounded-full border border-neutral-400 text-[.7rem] font-light text-neutral-500">
-                                  {i + 1}
+                                  {item.qtd}
                                 </span>
                                 <span className="min-w-0 flex-1 font-normal text-neutral-900">{item.nome}</span>
                                 <span className="shrink-0 font-normal text-neutral-900">{formatarPreco(item.precoUnit * item.qtd)}</span>
