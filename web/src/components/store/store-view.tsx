@@ -9,6 +9,7 @@ import {
   Layers,
   List,
   Percent,
+  RefreshCw,
   Search,
   Share2,
   ShoppingBag,
@@ -37,8 +38,9 @@ export function StoreView({ perfil, catalogo }: { perfil: StorePerfil; catalogo:
   );
 }
 
-function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: StoreCatalogo }) {
+function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerfil; catalogo: StoreCatalogo }) {
   const { brown } = useStoreTheme();
+  const [perfil, setPerfil] = useState(perfilInicial);
   const cart = useStoreCart(perfil.loja_id);
 
   const [produtoAberto, setProdutoAberto] = useState<StoreProduto | null>(null);
@@ -51,9 +53,13 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
   const [infoAberto, setInfoAberto] = useState(false);
   const [cupomAplicado, setCupomAplicado] = useState<StoreCupomResultado | null>(null);
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(catalogo.categorias[0]?.id ?? null);
+  const [catalogoAtualizadoVisivel, setCatalogoAtualizadoVisivel] = useState(false);
 
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const catNavRef = useRef<HTMLDivElement>(null);
+  const catalogoVersaoRef = useRef(perfilInicial.catalogoVersao);
+  const catalogoBannerMostradoRef = useRef(false);
+  const interacaoRef = useRef(false);
 
   useEffect(() => {
     function onScroll() {
@@ -71,6 +77,51 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  /* Snapshot pro polling ler sem precisar recriar o interval a cada
+     mudanca de carrinho/modal aberto. */
+  useEffect(() => {
+    interacaoRef.current = cart.itens.length > 0 || produtoAberto !== null || comboAberto !== null || cartAberto || checkoutAberto || infoAberto;
+  });
+
+  /* Loja publica: horario/pausa/catalogo podem mudar no admin a qualquer
+     momento enquanto o cliente esta navegando. Mesmo mecanismo do loja.js
+     legado (_atualizarLojaStatus/_verificarNovaCatalogoVersao), 20s. */
+  useEffect(() => {
+    async function verificarStatus() {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const res = await fetch(`/api/store/loja-status?loja_id=${perfil.loja_id}`);
+        const d = await res.json();
+        if (!d.ok) return;
+        setPerfil((p) => ({
+          ...p,
+          lojaAberta: d.aberto,
+          entAtiva: d.entAtiva,
+          retAtiva: d.retAtiva,
+          pausaAtivaTitulo: d.pausaTitulo || "",
+          pausaAtivaFim: d.pausaFim || "",
+          proximoHorario: d.proximoHorario || "",
+          semanaHorarios: Array.isArray(d.semana) ? d.semana : p.semanaHorarios,
+        }));
+        if (d.catalogoVersao && d.catalogoVersao !== catalogoVersaoRef.current) {
+          catalogoVersaoRef.current = d.catalogoVersao;
+          if (catalogoBannerMostradoRef.current) return;
+          if (!interacaoRef.current) {
+            window.location.reload();
+            return;
+          }
+          catalogoBannerMostradoRef.current = true;
+          setCatalogoAtualizadoVisivel(true);
+        }
+      } catch {
+        // silencioso — polling nao pode travar a navegacao do cliente
+      }
+    }
+    const id = setInterval(verificarStatus, 20000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perfil.loja_id]);
 
   function irParaCategoria(id: number) {
     setCategoriaAtiva(id);
@@ -107,6 +158,17 @@ function StoreViewInner({ perfil, catalogo }: { perfil: StorePerfil; catalogo: S
 
   return (
     <div className="min-h-screen bg-white pb-[86px]" style={{ ["--store-pink" as string]: "#e63770" }}>
+      {catalogoAtualizadoVisivel && (
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="fixed top-4 left-1/2 z-[9999] flex -translate-x-1/2 items-center gap-2 rounded-full px-5 py-2.5 text-[.82rem] font-semibold whitespace-nowrap text-white shadow-lg"
+          style={{ background: brown }}
+        >
+          <RefreshCw size={15} />
+          Cardapio atualizado! Toque para ver as novidades.
+        </button>
+      )}
       {/* Banner */}
       <div className="relative mx-auto max-w-[901px]">
         <div className="h-[210px] w-full bg-neutral-100">
