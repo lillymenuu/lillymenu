@@ -970,19 +970,7 @@ export function StoreCheckoutDialog({
             <input value={complemento} onChange={(e) => setComplemento(e.target.value)} placeholder="Complemento" className={fieldClass()} />
 
             {bairroNaoAtendido ? (
-              <div className="rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2.5 text-[.78rem] text-orange-800">
-                <p>Bairro fora da area de entrega. Entre em contato conosco.</p>
-                {wppNum && (
-                  <a
-                    href={`https://wa.me/55${wppNum}?text=${encodeURIComponent("Olá! Meu bairro não está na área de entrega cadastrada, gostaria de combinar a forma de entrega do meu pedido.")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 inline-flex items-center gap-1 font-semibold text-emerald-700"
-                  >
-                    Falar no WhatsApp
-                  </a>
-                )}
-              </div>
+              <p className="text-[.78rem] text-red-600">Bairro fora da area de entrega. Entre em contato conosco.</p>
             ) : (
               taxaInfo && (
                 <div className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[.78rem] ${taxaInfo.gratis ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"}`}>
