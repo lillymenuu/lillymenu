@@ -209,3 +209,61 @@ export type StorePedidoCriarResposta = {
   codigo: number | string;
   token: string;
 };
+
+export type StorePedidosClienteResposta = {
+  ok: boolean;
+  msg?: string;
+  cliente?: {
+    id: number;
+    nome: string;
+    telefone: string;
+    saldo: number;
+    cashback_saldo: number;
+    rua: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+    complemento: string;
+  };
+  pedidos?: {
+    id: number;
+    status: string;
+    total: string | number;
+    taxa_entrega: string | number;
+    forma_pagamento: string;
+    criado_em: string;
+    tipo: string;
+    endereco_entrega: string;
+    subtotal: string | number | null;
+    codigo: number | string;
+    itens: { produto_nome: string; quantidade: number; preco: string | number; observacoes: string }[];
+  }[];
+};
+
+export type StorePedidoStatusResposta = {
+  ok: boolean;
+  msg?: string;
+  pedido?: {
+    id: number;
+    codigo: number | string;
+    status: string;
+    tipo: string;
+    total: number;
+    taxa_entrega: number;
+    forma_pagamento: string;
+    troco: number | null;
+    subtotal: number | null;
+    desconto: number;
+    cashback_usado: number | null;
+    endereco_entrega: string;
+    criado_em: string;
+    nome: string;
+    telefone: string;
+    agendamento: string | null;
+    agendamento_em: string | null;
+    tipo_agendamento: string | null;
+  };
+  itens?: { produto_nome: string; quantidade: number; preco: number | string; observacoes: string }[];
+};

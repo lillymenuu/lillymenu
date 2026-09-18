@@ -16,7 +16,7 @@ import {
   Star,
 } from "lucide-react";
 import { formatarPreco } from "@/lib/store/format";
-import type { StoreCatalogo, StoreCombo, StoreCupomResultado, StorePerfil, StoreProduto } from "@/lib/store/types";
+import type { StoreCatalogo, StoreCombo, StoreCupomResultado, StorePedidosClienteResposta, StorePerfil, StoreProduto } from "@/lib/store/types";
 import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-theme";
 import { useStoreCart } from "@/components/store/use-store-cart";
 import { StoreProdutoDialog } from "@/components/store/store-produto-dialog";
@@ -25,6 +25,8 @@ import { StoreCartSheet } from "@/components/store/store-cart-sheet";
 import { StoreCheckoutDialog } from "@/components/store/store-checkout-dialog";
 import { StoreSuccessDialog } from "@/components/store/store-success-dialog";
 import { StoreInfoDialog } from "@/components/store/store-info-dialog";
+import { StoreAuthModal } from "@/components/store/store-auth-modal";
+import { StorePedidosSheet } from "@/components/store/store-pedidos-sheet";
 
 function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
   return "tipo" in item && item.tipo === "combo";
@@ -52,6 +54,12 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [busca, setBusca] = useState("");
   const [infoAberto, setInfoAberto] = useState(false);
   const [cupomAplicado, setCupomAplicado] = useState<StoreCupomResultado | null>(null);
+  const [authModalAberto, setAuthModalAberto] = useState(false);
+  const [pedidosSheetAberto, setPedidosSheetAberto] = useState(false);
+  const [pedidosCliente, setPedidosCliente] = useState<StorePedidosClienteResposta["cliente"] | null>(null);
+  const [pedidosResumo, setPedidosResumo] = useState<
+    { id: number; tipo: string; forma_pagamento: string; total: number; criado_em: string }[]
+  >([]);
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(catalogo.categorias[0]?.id ?? null);
   const [catalogoAtualizadoVisivel, setCatalogoAtualizadoVisivel] = useState(false);
 
@@ -565,7 +573,14 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             <Gift size={20} />
             Promo
           </button>
-          <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide text-neutral-400">
+          <button
+            type="button"
+            onClick={() => setAuthModalAberto(true)}
+            className={`flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide ${
+              authModalAberto || pedidosSheetAberto ? "" : "text-neutral-400"
+            }`}
+            style={authModalAberto || pedidosSheetAberto ? { color: brown } : undefined}
+          >
             <ShoppingBag size={20} />
             Pedidos
           </button>
@@ -631,6 +646,34 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       />
 
       <StoreInfoDialog open={infoAberto} onOpenChange={setInfoAberto} perfil={perfil} />
+
+      <StoreAuthModal
+        open={authModalAberto}
+        onOpenChange={setAuthModalAberto}
+        lojaId={perfil.loja_id}
+        onAutenticado={(dados) => {
+          setPedidosCliente(dados.cliente ?? null);
+          setPedidosResumo(
+            (dados.pedidos ?? []).slice(0, 5).map((p) => ({
+              id: p.id,
+              tipo: p.tipo,
+              forma_pagamento: p.forma_pagamento,
+              total: Number(p.total),
+              criado_em: p.criado_em,
+            }))
+          );
+          setAuthModalAberto(false);
+          setPedidosSheetAberto(true);
+        }}
+      />
+
+      <StorePedidosSheet
+        open={pedidosSheetAberto}
+        onOpenChange={setPedidosSheetAberto}
+        perfil={perfil}
+        cliente={pedidosCliente}
+        pedidosResumo={pedidosResumo}
+      />
     </div>
   );
 }
