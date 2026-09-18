@@ -373,7 +373,7 @@ export function StoreCheckoutDialog({
                 <div>
                   <p className="mb-3 text-[.84rem] text-neutral-500">Escolha o tipo de entrega</p>
                   <div className="space-y-2.5">
-                    {perfil.entAtiva && (
+                    {perfil.entAtiva && perfil.lojaAberta && (
                       <TipoCard
                         ativo={tipo === "entrega"}
                         brown={brown}
@@ -400,7 +400,7 @@ export function StoreCheckoutDialog({
                         }}
                       />
                     )}
-                    {perfil.retAtiva && (
+                    {perfil.retAtiva && perfil.lojaAberta && (
                       <TipoCard
                         ativo={tipo === "retirada"}
                         brown={brown}
