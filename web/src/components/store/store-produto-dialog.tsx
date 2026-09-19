@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Expand, ImageIcon, Shrink, X } from "lucide-react";
+import { Check, Expand, ImageIcon, Plus, Shrink, X } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -136,91 +137,94 @@ export function StoreProdutoDialog({
         disabled={!podeAdicionar}
         onClick={adicionar}
         className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
-        style={{ background: podeAdicionar ? brown : "#c0a88a" }}
+        style={{ background: podeAdicionar ? brown : temVariacoes ? "#a3a3a3" : "#c0a88a" }}
       >
-        {produto.esgotado ? "Esgotado" : `Adicionar ${formatarPreco(total)}`}
+        {produto.esgotado
+          ? "Esgotado"
+          : faltaVariacao
+            ? "Selecionar variação"
+            : `Adicionar ${formatarPreco(total)}`}
       </button>
     </div>
   );
 
   const opcoesConteudo = carregando ? (
-    <p className="text-[.86rem] text-neutral-500">Carregando opcoes...</p>
+    <p className="text-[.86rem] text-neutral-500">Carregando opções...</p>
   ) : erroCarregar ? (
-    <p className="text-[.86rem] text-red-600">Nao foi possivel carregar as opcoes. Feche e tente novamente.</p>
+    <p className="text-[.86rem] text-red-600">Não foi possível carregar as opções. Feche e tente novamente.</p>
   ) : (
     <>
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-[.86rem] font-bold text-neutral-900">Escolha uma das opcoes</h3>
-          <span className="text-[.7rem] font-bold text-red-600">Obrigatorio</span>
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="text-[.86rem] font-bold text-neutral-900">Escolha uma das opções</h3>
+          {(detalhe?.variacoes.length ?? 0) > 0 && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
         </div>
-        <div className="space-y-0">
+        <div>
           {(detalhe?.variacoes ?? []).map((v) => {
-            const nome = [v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opcao";
+            const nome = [v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opção";
             return (
-              <label key={v.id} className="flex cursor-pointer items-center justify-between border-b border-neutral-100 py-3 text-[.86rem]">
-                <div>
-                  <div className="text-neutral-900">{nome}</div>
-                  <div className="text-[.78rem] text-neutral-400">{formatarPreco(v.preco)}</div>
+              <label
+                key={v.id}
+                className="flex cursor-pointer items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0"
+              >
+                <div className="text-base text-neutral-900">
+                  {nome}
+                  <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{formatarPreco(v.preco)}</small>
                 </div>
                 <input
                   type="radio"
                   name="variacao"
                   checked={variacaoId === v.id}
                   onChange={() => setVariacaoId(v.id)}
-                  className="size-[18px] accent-current"
-                  style={{ color: brown }}
+                  className="size-[18px] shrink-0"
+                  style={{ accentColor: brown }}
                 />
               </label>
             );
           })}
-          {detalhe?.variacoes.length === 0 && <p className="py-2 text-[.8rem] text-neutral-400">Sem variacoes cadastradas.</p>}
+          {detalhe?.variacoes.length === 0 && <p className="py-2 text-[.8rem] text-neutral-400">Sem variações cadastradas.</p>}
         </div>
       </div>
 
       {(detalhe?.extras.length ?? 0) > 0 && (
-        <div className="mt-5">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-[.86rem] font-bold text-neutral-900">Escolha seu extra</h3>
-            {detalhe?.extras_obrigatorio === 1 && <span className="text-[.7rem] font-bold text-red-600">Obrigatorio</span>}
+        <div className="mt-4 border-t border-neutral-100 pt-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">Escolha seu extra</h3>
+            {detalhe?.extras_obrigatorio === 1 && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
           </div>
-          <div>
-            {detalhe?.extras.map((e) => (
-              <label key={e.id} className="flex cursor-pointer items-center justify-between border-b border-neutral-100 py-3 text-[.86rem]">
-                <div>
-                  <div className="text-neutral-900">{e.nome}</div>
-                  <div className="text-[.78rem] text-neutral-400">{formatarPreco(e.preco)}</div>
-                </div>
-                <input type="checkbox" checked={extrasIds.includes(e.id)} onChange={() => alternarExtra(e.id)} className="size-[18px]" />
-              </label>
-            ))}
-          </div>
+          <p className="mb-1.5 text-[.74rem] text-neutral-500">Escolha 1 opção.</p>
+          {detalhe?.extras.map((e) => (
+            <OpcaoExtra
+              key={e.id}
+              nome={e.nome}
+              preco={e.preco}
+              ativo={extrasIds.includes(e.id)}
+              cor={brown}
+              onClick={() => alternarExtra(e.id)}
+            />
+          ))}
         </div>
       )}
 
       {(detalhe?.complementos_itens.length ?? 0) > 0 && (
-        <div className="mt-5">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-[.86rem] font-bold text-neutral-900">Escolha o tipo</h3>
-            {detalhe?.complementos_itens_obrigatorio === 1 && <span className="text-[.7rem] font-bold text-red-600">Obrigatorio</span>}
+        <div className="mt-4 border-t border-neutral-100 pt-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">Escolha o tipo</h3>
+            {detalhe?.complementos_itens_obrigatorio === 1 && (
+              <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>
+            )}
           </div>
-          <div>
-            {detalhe?.complementos_itens.map((c) => (
-              <label key={c.id} className="flex cursor-pointer items-center justify-between border-b border-neutral-100 py-3 text-[.86rem]">
-                <div>
-                  <div className="text-neutral-900">{c.nome}</div>
-                  <div className="text-[.78rem] text-neutral-400">{formatarPreco(c.preco)}</div>
-                </div>
-                <input
-                  type="radio"
-                  name="complemento"
-                  checked={complementoId === c.id}
-                  onChange={() => setComplementoId(c.id)}
-                  className="size-[18px]"
-                />
-              </label>
-            ))}
-          </div>
+          <p className="mb-1.5 text-[.74rem] text-neutral-500">Escolha 1 opção.</p>
+          {detalhe?.complementos_itens.map((c) => (
+            <OpcaoExtra
+              key={c.id}
+              nome={c.nome}
+              preco={c.preco}
+              ativo={complementoId === c.id}
+              cor={brown}
+              onClick={() => setComplementoId(c.id)}
+            />
+          ))}
         </div>
       )}
     </>
@@ -240,36 +244,60 @@ export function StoreProdutoDialog({
   );
 
   if (temVariacoes) {
+    /* Dialogo centralizado igual ao varModalLoja do sistema legado: imagem a esquerda
+       (topo no mobile) e opcoes rolando ao lado; observacao e rodape fixos embaixo. */
     return (
-      <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={809}>
-        <div className="flex h-full flex-col sm:flex-row">
-          <div className="relative h-[220px] shrink-0 bg-neutral-100 sm:h-full sm:w-[300px]">
-            {produto.imagem ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={produto.imagem} alt="" className="size-full object-cover" />
-            ) : (
-              <div className="flex size-full items-center justify-center text-neutral-300">
-                <ImageIcon size={32} />
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          showCloseButton={false}
+          className="flex max-h-[92vh] w-[calc(100%-24px)] max-w-[460px] flex-col gap-0 overflow-hidden rounded-[20px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)] sm:max-w-[460px] min-[900px]:h-[min(632px,calc(100vh-40px))] min-[900px]:max-h-[632px] min-[900px]:w-[min(897px,calc(100vw-40px))] min-[900px]:max-w-[897px]"
+        >
+          <DialogTitle className="sr-only">{produto.nome}</DialogTitle>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="Fechar"
+            className="absolute top-3 right-3 z-10 flex size-7 items-center justify-center rounded-full bg-black/25 text-white hover:bg-black/35"
+          >
+            <X size={15} />
+          </button>
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto min-[900px]:overflow-hidden">
+            <div className="flex flex-col min-[900px]:min-h-0 min-[900px]:flex-1 min-[900px]:flex-row min-[900px]:items-stretch">
+              <div className="aspect-[4/3] w-full shrink-0 min-[900px]:aspect-auto min-[900px]:w-[380px] min-[900px]:py-6 min-[900px]:pl-6">
+                <div className="size-full overflow-hidden bg-neutral-100 min-[900px]:rounded-2xl">
+                  {produto.imagem ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={produto.imagem} alt="" className="size-full object-cover" />
+                  ) : (
+                    <div className="flex size-full items-center justify-center text-neutral-300">
+                      <ImageIcon size={48} />
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="absolute top-3 right-3 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600"
-            >
-              ×
-            </button>
+              <div className="min-w-0 px-[18px] pt-4 pb-1 min-[900px]:flex-1 min-[900px]:overflow-y-auto min-[900px]:px-8 min-[900px]:pt-7">
+                <h2 className="mb-1 pr-8 text-[1rem] leading-tight font-bold text-neutral-900 min-[900px]:pr-10">
+                  {produto.nome}
+                </h2>
+                {produto.descricao && <p className="mb-2 text-[.8rem] leading-normal text-neutral-500">{produto.descricao}</p>}
+                <p className="mb-3.5 text-[.86rem] font-bold text-neutral-900">a partir de {formatarPreco(produto.preco_produto)}</p>
+                {opcoesConteudo}
+              </div>
+            </div>
+            <div className="border-t border-neutral-100 px-4 pt-2 pb-2.5">
+              <label className="mb-1.5 block text-[.82rem] font-semibold text-neutral-900">Alguma observação?</label>
+              <textarea
+                value={obs}
+                onChange={(e) => setObs(e.target.value)}
+                placeholder="Observações do cliente"
+                rows={1}
+                className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 px-3 py-2 text-base outline-none"
+              />
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            <h2 className="mb-1 text-[1rem] font-bold text-neutral-900">{produto.nome}</h2>
-            <p className="mb-4 text-[.86rem] font-semibold text-neutral-900">
-              a partir de {formatarPreco(produto.preco_produto)}
-            </p>
-            {opcoesConteudo}
-            {obsField}
-          </div>
-        </div>
-      </StoreSheet>
+          <div className="shrink-0 border-t border-neutral-100 px-4 py-3">{footer}</div>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -338,5 +366,38 @@ export function StoreProdutoDialog({
         {obsField}
       </div>
     </StoreSheet>
+  );
+}
+
+/** Linha de extra/tipo com botão "+" que vira check preto quando selecionado (igual ao loja.php legado). */
+function OpcaoExtra({
+  nome,
+  preco,
+  ativo,
+  cor,
+  onClick,
+}: {
+  nome: string;
+  preco: number;
+  ativo: boolean;
+  cor: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0">
+      <div className="text-base text-neutral-900">
+        {nome}
+        <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{formatarPreco(preco)}</small>
+      </div>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={ativo}
+        className="flex size-8 shrink-0 items-center justify-center rounded-[10px] text-white"
+        style={{ background: ativo ? "#171717" : cor }}
+      >
+        {ativo ? <Check size={15} /> : <Plus size={15} />}
+      </button>
+    </div>
   );
 }
