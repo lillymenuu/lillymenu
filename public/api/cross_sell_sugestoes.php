@@ -77,6 +77,8 @@ try {
   $temPromoDur = in_array('promo_dias', $colunas, true) && in_array('promo_inicio', $colunas, true);
   $selectProm = $temProm ? ', preco_promocional, promo_desativado' : '';
   $selectProm .= $temPromoDur ? ', promo_dias, promo_inicio' : '';
+  $temPtGanho = in_array('pontos_ganho', $colunas, true);
+  $selectProm .= $temPtGanho ? ', pontos_ganho' : '';
 
   $nomesCarrinho = [];
   if ($idsCarrinho) {
@@ -202,6 +204,7 @@ try {
       'preco' => $precoFinal,
       'imagem' => $temImagem ? fixImgPathCrossSell($p['imagem'] ?? '') : '',
       'estoque' => (int) $p['estoque'],
+      'pontos_ganho' => $temPtGanho ? (int) ($p['pontos_ganho'] ?? 0) : 0,
     ];
     if (count($produtos) >= 3) {
       break;

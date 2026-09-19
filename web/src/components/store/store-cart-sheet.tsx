@@ -109,6 +109,7 @@ export function StoreCartSheet({
       imagem: p.imagem,
       estoqueMax: p.estoque,
       crossSell: true,
+      pontosGanho: p.pontos_ganho,
     });
   }
 
@@ -381,6 +382,11 @@ export function StoreCartSheet({
                       </div>
                       <p className="line-clamp-2 text-[.72rem] leading-tight text-neutral-800">{p.nome}</p>
                       <p className="mt-1 text-[.74rem] font-bold text-neutral-900">{formatarPreco(p.preco)}</p>
+                      {perfil.clubePontosAtivo && (
+                        <div className="mt-1">
+                          <PontosBadge pontos={p.pontos_ganho ?? 0} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

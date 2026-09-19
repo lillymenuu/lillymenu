@@ -209,6 +209,7 @@ export type StoreCrossSellProduto = {
   preco: number;
   imagem: string;
   estoque: number;
+  pontos_ganho?: number;
 };
 
 export type StorePedidoCriarResposta = {
