@@ -355,7 +355,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       {/* Category nav */}
       <div ref={catNavRef} className="sticky top-0 z-30 mt-4 border-b border-neutral-100 bg-white">
         <div className="mx-auto flex max-w-[901px] items-center px-2">
-          <div className="flex flex-1 gap-1.5 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex flex-1 gap-2 overflow-x-auto px-1 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {catalogo.categorias.map((cat) => {
               const ativa = categoriaAtiva === cat.id;
               return (
@@ -363,8 +363,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                   key={cat.id}
                   type="button"
                   onClick={() => irParaCategoria(cat.id)}
-                  className="shrink-0 rounded-full px-4 py-1.5 text-[.8rem] font-semibold whitespace-nowrap transition-colors"
-                  style={ativa ? { color: "#fff", background: brown } : { color: "#888" }}
+                  className="shrink-0 rounded-xl px-4 py-2 text-[.82rem] font-medium whitespace-nowrap transition-colors"
+                  style={ativa ? { color: "#fff", background: brown } : { color: "#333", background: "#f5f5f5" }}
                 >
                   {cat.nome}
                 </button>
@@ -375,7 +375,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             type="button"
             onClick={() => setBuscaAberta(true)}
             aria-label="Buscar no cardápio"
-            className="flex size-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600"
+            className="ml-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-200 text-neutral-900 transition-colors hover:bg-neutral-300"
           >
             <Search size={15} />
           </button>
