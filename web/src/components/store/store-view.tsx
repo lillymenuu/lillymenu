@@ -515,6 +515,11 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                           {produto.tem_variacoes === 1 && !produto.em_promo ? "a partir de " : ""}
                           {formatarPreco(produto.preco_final)}
                         </span>
+                        {perfil.clubePontosAtivo && (produto.pontos_ganho ?? 0) > 0 && (
+                          <span className="rounded-full bg-purple-700 px-1.5 py-px text-[.66rem] font-bold text-white">
+                            +{produto.pontos_ganho} pts
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="relative shrink-0">
