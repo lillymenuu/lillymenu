@@ -30,6 +30,7 @@ import { ProdutoFormDialog } from "./produto-form-dialog";
 import { ComboFormDialog } from "./combo-form-dialog";
 import { CriarCategoriaDialog } from "./criar-categoria-dialog";
 import { ReordenarCategoriasDialog } from "./reordenar-categorias-dialog";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 
 function formatBRL(v: number) {
@@ -183,6 +184,7 @@ export function ProdutosManager({
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 p-6">
+      <ScrollToTop />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Produtos</h1>
