@@ -1,7 +1,7 @@
 import { BadgeCheck, Banknote, ShoppingBag, TrendingUp, Users } from "lucide-react";
 import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { cn } from "cn";
+import { TopProdutosChart } from "@/components/top-produtos-chart";
 import { DashboardChart } from "@/components/dashboard-chart";
 import { ConversionFunnel } from "@/components/conversion-funnel";
 import { DashboardSearch } from "@/components/dashboard-search";
@@ -215,32 +215,7 @@ export default async function DashboardPage({
         </CardHeader>
         <CardContent>
           {data.top_produtos.length > 0 ? (
-            <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-4">
-              <span className="pb-2 text-xs font-medium text-muted-foreground">Produto</span>
-              <span className="pb-2 text-right text-xs font-medium text-muted-foreground">Valor</span>
-              <span className="pb-2 text-right text-xs font-medium text-muted-foreground">Saídas</span>
-              <span className="pb-2 text-right text-xs font-medium text-muted-foreground">Estoque</span>
-
-              {data.top_produtos.map((p, i) => (
-                <div key={i} className="contents">
-                  <span className="truncate border-t py-2.5 text-sm font-medium">{p.nome}</span>
-                  <span className="border-t py-2.5 text-right text-sm tabular-nums text-muted-foreground">
-                    {formatBRL(p.valor)}
-                  </span>
-                  <span className="border-t py-2.5 text-right text-sm tabular-nums text-muted-foreground">
-                    {p.saidas}
-                  </span>
-                  <span
-                    className={cn(
-                      "border-t py-2.5 text-right text-sm tabular-nums",
-                      p.estoque <= 0 ? "font-medium text-destructive" : "text-muted-foreground"
-                    )}
-                  >
-                    {p.estoque}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <TopProdutosChart produtos={data.top_produtos} />
           ) : (
             <div className="py-8 text-center text-sm text-muted-foreground">
               Sem dados suficientes.
