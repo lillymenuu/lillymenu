@@ -250,7 +250,7 @@ export function StoreProdutoDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           showCloseButton={false}
-          className="flex max-h-[92dvh] w-[calc(100%-24px)] max-w-[460px] flex-col gap-0 overflow-hidden rounded-[20px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)] sm:max-w-[460px] min-[940px]:h-[min(597px,calc(100dvh-24px))] min-[940px]:max-h-[597px] min-[940px]:w-[900px] min-[940px]:max-w-[900px]"
+          className="flex max-h-[92dvh] w-[calc(100%-24px)] max-w-[460px] flex-col gap-0 overflow-hidden rounded-[20px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)] sm:max-w-[460px] min-[940px]:h-[min(597px,calc(100dvh-24px))] min-[940px]:max-h-[597px] min-[940px]:w-[900px]! min-[940px]:max-w-[900px]!"
         >
           <DialogTitle className="sr-only">{produto.nome}</DialogTitle>
           <button
