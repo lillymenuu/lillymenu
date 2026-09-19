@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, Expand, ImageIcon, Plus, Shrink, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
+import { PontosBadge } from "@/components/store/pontos-badge";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
@@ -12,12 +13,15 @@ import type { StoreCartItem, StoreProduto, StoreProdutoVariacoes } from "@/lib/s
 export function StoreProdutoDialog({
   produto,
   lojaId,
+  mostrarPontos = false,
   open,
   onOpenChange,
   onAdicionar,
 }: {
   produto: StoreProduto | null;
   lojaId: number;
+  /** Clube de Pontos ativo na loja — habilita o selo "+N pts". */
+  mostrarPontos?: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
@@ -105,6 +109,7 @@ export function StoreProdutoDialog({
         obs: obs.trim(),
         imagem: produto.imagem,
         estoqueMax: produto.estoque,
+        pontosGanho: produto.pontos_ganho,
       });
     } else if (variacaoSelecionada) {
       const nomeVariacao = [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ");
@@ -118,11 +123,14 @@ export function StoreProdutoDialog({
         qtd,
         obs: obs.trim(),
         imagem: produto.imagem,
+        pontosGanho: produto.pontos_ganho,
       });
     }
 
     onOpenChange(false);
   }
+
+  const pontosTotal = mostrarPontos ? (produto.pontos_ganho ?? 0) * qtd : 0;
 
   const footer = (
     <div className="flex items-center justify-between gap-3">
@@ -280,7 +288,10 @@ export function StoreProdutoDialog({
                   {produto.nome}
                 </h2>
                 {produto.descricao && <p className="mb-2 text-[.8rem] leading-normal text-neutral-500">{produto.descricao}</p>}
-                <p className="mb-3.5 text-[.86rem] font-bold text-neutral-900">a partir de {formatarPreco(produto.preco_produto)}</p>
+                <p className="mb-3.5 flex items-center gap-2 text-[.86rem] font-bold text-neutral-900">
+                  a partir de {formatarPreco(produto.preco_produto)}
+                  <PontosBadge pontos={pontosTotal} />
+                </p>
                 {opcoesConteudo}
               </div>
             </div>
@@ -352,7 +363,7 @@ export function StoreProdutoDialog({
         </div>
         <h2 className="mb-1.5 text-[1rem] font-bold text-neutral-900">{produto.nome}</h2>
         {produto.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
-        <div className="mb-3.5">
+        <div className="mb-3.5 flex flex-wrap items-center gap-2">
           {produto.em_promo ? (
             <div className="flex items-center gap-2">
               <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
@@ -361,6 +372,7 @@ export function StoreProdutoDialog({
           ) : (
             <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
           )}
+          <PontosBadge pontos={pontosTotal} />
         </div>
         {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
         {obsField}

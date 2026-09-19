@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, User, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
+import { PontosBadge } from "@/components/store/pontos-badge";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { StoreAgendamentoOverlay } from "@/components/store/store-agendamento-dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -812,7 +813,14 @@ export function StoreCheckoutDialog({
                                 <span className="flex size-[18px] shrink-0 items-center justify-center rounded-full border border-neutral-400 text-[.7rem] font-light text-neutral-500">
                                   {item.qtd}
                                 </span>
-                                <span className="min-w-0 flex-1 font-normal text-neutral-900">{item.nome}</span>
+                                <span className="min-w-0 flex-1 font-normal text-neutral-900">
+                                  {item.nome}
+                                  {perfil.clubePontosAtivo && item.pontosCusto == null && (item.pontosGanho ?? 0) > 0 && (
+                                    <span className="ml-1.5 align-middle">
+                                      <PontosBadge pontos={(item.pontosGanho ?? 0) * item.qtd} />
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="shrink-0 font-normal text-neutral-900">{formatarPreco(item.precoUnit * item.qtd)}</span>
                               </div>
                               {grupos &&

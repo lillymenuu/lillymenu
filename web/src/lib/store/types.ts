@@ -199,6 +199,8 @@ export type StoreCartItem = {
   crossSell?: boolean;
   /** So preenchido em resgates do Clube de Pontos — quantos pontos custou (obs fica "[Resgate de pontos]", precoUnit 0). */
   pontosCusto?: number;
+  /** Pontos que o Clube da por unidade deste produto (o total do item e pontosGanho * qtd). */
+  pontosGanho?: number;
 };
 
 export type StoreCrossSellProduto = {

@@ -645,6 +645,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       <StoreProdutoDialog
         produto={produtoAberto}
         lojaId={perfil.loja_id}
+        mostrarPontos={perfil.clubePontosAtivo}
         open={produtoAberto !== null}
         onOpenChange={(v) => !v && setProdutoAberto(null)}
         onAdicionar={cart.adicionar}

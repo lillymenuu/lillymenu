@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CalendarCheck, ChevronDown, ImageIcon, Loader2, ShoppingBag, Ticket } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
+import { PontosBadge } from "@/components/store/pontos-badge";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
@@ -319,6 +320,11 @@ export function StoreCartSheet({
                         <p className="mt-0.5 text-[.82rem] font-bold" style={{ color: brown }}>
                           {formatarPreco(item.precoUnit)}
                         </p>
+                        {perfil.clubePontosAtivo && item.pontosCusto == null && (
+                          <div className="mt-1">
+                            <PontosBadge pontos={(item.pontosGanho ?? 0) * item.qtd} />
+                          </div>
+                        )}
                       </div>
                       <div className="shrink-0">
                         <QtyStepper
