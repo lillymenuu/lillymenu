@@ -29,6 +29,7 @@ import { StoreInfoDialog } from "@/components/store/store-info-dialog";
 import { StoreAuthModal } from "@/components/store/store-auth-modal";
 import { StorePedidosSheet } from "@/components/store/store-pedidos-sheet";
 import { StorePontosSheet } from "@/components/store/store-pontos-sheet";
+import { StoreFlyerSlider } from "@/components/store/store-flyer-slider";
 import { StorePromoListaModal } from "@/components/store/store-promo-lista-modal";
 
 function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
@@ -357,6 +358,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           </div>
         </div>
       )}
+
+      {perfil.flyersAtivo && perfil.lojaFlyers?.length > 0 && <StoreFlyerSlider flyers={perfil.lojaFlyers} />}
 
       {/* Category nav */}
       <div ref={catNavRef} className="sticky top-0 z-30 mt-4 border-b border-neutral-100 bg-white">
