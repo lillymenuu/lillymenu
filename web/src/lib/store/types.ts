@@ -104,6 +104,7 @@ export type StoreProduto = {
   esgotado: boolean;
   tem_variacoes: 0 | 1;
   quantidade_minima?: number;
+  pontos_ganho?: number;
   destaque?: number;
 };
 

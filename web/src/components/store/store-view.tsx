@@ -29,6 +29,7 @@ import { StoreInfoDialog } from "@/components/store/store-info-dialog";
 import { StoreAuthModal } from "@/components/store/store-auth-modal";
 import { StorePedidosSheet } from "@/components/store/store-pedidos-sheet";
 import { StorePontosSheet } from "@/components/store/store-pontos-sheet";
+import { StoreBuscaModal } from "@/components/store/store-busca-modal";
 import { StoreFlyerSlider } from "@/components/store/store-flyer-slider";
 import { StorePromoListaModal } from "@/components/store/store-promo-lista-modal";
 
@@ -55,7 +56,6 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [checkoutAberto, setCheckoutAberto] = useState(false);
   const [pedidoConfirmado, setPedidoConfirmado] = useState<{ codigo: number | string; snapshot: StorePedidoSnapshot } | null>(null);
   const [buscaAberta, setBuscaAberta] = useState(false);
-  const [busca, setBusca] = useState("");
   const [infoAberto, setInfoAberto] = useState(false);
   const [cupomAplicado, setCupomAplicado] = useState<StoreCupomResultado | null>(null);
   const [promoListaAberta, setPromoListaAberta] = useState(false);
@@ -194,20 +194,11 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
     setPedidoConfirmado({ codigo, snapshot });
   }
 
-  const termoBusca = busca.trim().toLowerCase();
-  const categoriasFiltradas = termoBusca
-    ? catalogo.categorias
-        .map((cat) => ({
-          cat,
-          produtos: (catalogo.produtosPorCat[cat.id] ?? []).filter((p) => p.nome.toLowerCase().includes(termoBusca)),
-          combos: (catalogo.combosPorCat[cat.id] ?? []).filter((c) => c.nome.toLowerCase().includes(termoBusca)),
-        }))
-        .filter((x) => x.produtos.length > 0 || x.combos.length > 0)
-    : catalogo.categorias.map((cat) => ({
-        cat,
-        produtos: catalogo.produtosPorCat[cat.id] ?? [],
-        combos: catalogo.combosPorCat[cat.id] ?? [],
-      }));
+  const categoriasFiltradas = catalogo.categorias.map((cat) => ({
+    cat,
+    produtos: catalogo.produtosPorCat[cat.id] ?? [],
+    combos: catalogo.combosPorCat[cat.id] ?? [],
+  }));
 
   const instagramHandle = perfil.lojaInstagram.replace(/^@/, "");
 
@@ -382,28 +373,17 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           </div>
           <button
             type="button"
-            onClick={() => setBuscaAberta((v) => !v)}
-            className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${buscaAberta ? "border-neutral-300 bg-neutral-100" : "border-neutral-200 bg-white"} text-neutral-600`}
+            onClick={() => setBuscaAberta(true)}
+            aria-label="Buscar no cardápio"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600"
           >
             <Search size={15} />
           </button>
         </div>
-        {buscaAberta && (
-          <div className="mx-auto max-w-[901px] px-3.5 pb-2">
-            <input
-              autoFocus
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar no cardapio"
-              className="w-full rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-2 text-base outline-none focus:bg-white"
-              style={{ borderColor: undefined }}
-            />
-          </div>
-        )}
       </div>
 
       {/* Destaques */}
-      {!termoBusca && catalogo.destaques.length > 0 && (
+      {catalogo.destaques.length > 0 && (
         <div className="mx-auto max-w-[901px]">
           <h2 className="px-4 pt-4 pb-2 text-[.95rem] font-bold text-neutral-900">Destaques</h2>
           <div className="flex gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -567,9 +547,6 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             </div>
           );
         })}
-        {termoBusca && categoriasFiltradas.length === 0 && (
-          <p className="px-4 py-10 text-center text-[.86rem] text-neutral-400">Nenhum item encontrado.</p>
-        )}
       </div>
 
       {/* Rodape */}
@@ -770,6 +747,18 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           setPedidosSheetAberto(true);
         }}
         onResgatar={cart.adicionar}
+      />
+
+      <StoreBuscaModal
+        open={buscaAberta}
+        onOpenChange={setBuscaAberta}
+        nomeLoja={perfil.nomeLoja}
+        categorias={categoriasFiltradas}
+        mostrarPontos={perfil.clubePontosAtivo}
+        onSelecionar={(item) => {
+          setBuscaAberta(false);
+          abrirItem(item);
+        }}
       />
 
       <StorePromoListaModal
