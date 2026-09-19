@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { PhpApiError } from "@/lib/phpApi";
 import { getConfiguracoesDetalhe } from "@/lib/settingsServer";
 import { SettingsManager } from "@/components/settings/settings-manager";
@@ -9,7 +10,12 @@ export default async function SettingsPage() {
   try {
     const dados = await getConfiguracoesDetalhe();
     const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
-    return <SettingsManager dadosIniciais={dados} phpAdminUrl={phpAdminUrl} />;
+    return (
+      <>
+        <SettingsManager dadosIniciais={dados} phpAdminUrl={phpAdminUrl} />
+        <ScrollToTop />
+      </>
+    );
   } catch (e) {
     erro = e instanceof PhpApiError ? e.message : "Erro ao carregar a tela de configurações.";
   }

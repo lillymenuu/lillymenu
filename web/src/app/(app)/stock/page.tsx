@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { PhpApiError } from "@/lib/phpApi";
 import { getEstoqueListar } from "@/lib/estoque";
 import { StockManager } from "@/components/stock/stock-manager";
@@ -10,7 +11,12 @@ export default async function StockPage() {
     const data = await getEstoqueListar();
     const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
 
-    return <StockManager itensIniciais={data.itens} phpAdminUrl={phpAdminUrl} />;
+    return (
+      <>
+        <StockManager itensIniciais={data.itens} phpAdminUrl={phpAdminUrl} />
+        <ScrollToTop />
+      </>
+    );
   } catch (e) {
     erro = e instanceof PhpApiError ? e.message : "Erro ao carregar o estoque.";
   }

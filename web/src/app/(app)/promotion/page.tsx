@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { PhpApiError } from "@/lib/phpApi";
 import { getPromoListar } from "@/lib/promo";
 import { PromotionManager } from "@/components/promotion/promotion-manager";
@@ -11,13 +12,16 @@ export default async function PromotionPage() {
     const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
 
     return (
-      <PromotionManager
-        produtosIniciais={data.produtos}
-        limiteAtivas={data.limite_ativas}
-        flyersIniciais={data.flyers}
-        flyersAtivoInicial={data.flyers_ativo}
-        phpAdminUrl={phpAdminUrl}
-      />
+      <>
+        <PromotionManager
+          produtosIniciais={data.produtos}
+          limiteAtivas={data.limite_ativas}
+          flyersIniciais={data.flyers}
+          flyersAtivoInicial={data.flyers_ativo}
+          phpAdminUrl={phpAdminUrl}
+        />
+        <ScrollToTop />
+      </>
     );
   } catch (e) {
     erro = e instanceof PhpApiError ? e.message : "Erro ao carregar a tela de promoções.";

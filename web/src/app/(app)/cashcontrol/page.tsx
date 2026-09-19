@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { PhpApiError } from "@/lib/phpApi";
 import { getCaixaResumo } from "@/lib/caixa";
 import { CashControlManager } from "@/components/cashcontrol/cash-control-manager";
@@ -8,7 +9,12 @@ export default async function CashControlPage() {
 
   try {
     const dados = await getCaixaResumo();
-    return <CashControlManager dadosIniciais={dados} />;
+    return (
+      <>
+        <CashControlManager dadosIniciais={dados} />
+        <ScrollToTop />
+      </>
+    );
   } catch (e) {
     erro = e instanceof PhpApiError ? e.message : "Erro ao carregar o controle de caixa.";
   }
