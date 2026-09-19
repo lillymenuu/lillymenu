@@ -69,6 +69,19 @@ try {
         exit;
     }
 
+    /* Modo so-validar (loja Next): o debito acontece em pedido_criar.php, quando o cliente finaliza o pedido */
+    if (!empty($_POST['apenas_validar'])) {
+        $conn->rollBack();
+        echo json_encode([
+            'ok'          => true,
+            'produto'     => ['id' => $produtoId, 'nome' => $produto['nome'], 'preco' => (float) $produto['preco']],
+            'custo'       => $custo,
+            'saldo_antes' => $saldo,
+            'saldo_novo'  => $saldo,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     /* Debitar pontos */
     $novoSaldo = $saldo - $custo;
     $conn->prepare("UPDATE clientes SET {$colPontos} = ? WHERE id = ? AND loja_id = ?")

@@ -333,6 +333,7 @@ export function StoreCheckoutDialog({
             obs: i.obs,
             combosels: i.combosels,
             crossSell: i.crossSell === true,
+            pontosPendente: i.pontosCusto != null,
           })),
           troco_solicitado: formaPagamento === "dinheiro" && trocoPara.trim() !== "",
           troco_valor: formaPagamento === "dinheiro" ? parseValorMascarado(trocoPara) || 0 : 0,

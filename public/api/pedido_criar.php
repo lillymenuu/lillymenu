@@ -312,6 +312,44 @@ try {
     }
   }
 
+  /* ── Resgate do Clube de Pontos (loja Next): so debita agora, ao finalizar o pedido ── */
+  $resgates = [];
+  foreach ($itens as $item) {
+    if (!empty($item['pontosPendente']) && (int)($item['id'] ?? 0) > 0) $resgates[] = $item;
+  }
+  if ($resgates) {
+    $colsCli   = $conn->query("SHOW COLUMNS FROM clientes")->fetchAll(PDO::FETCH_COLUMN, 0);
+    $colPontos = in_array('pontos_saldo', $colsCli) ? 'pontos_saldo' : (in_array('pontos', $colsCli) ? 'pontos' : null);
+    if (!$colPontos) {
+      $conn->rollBack();
+      echo json_encode(['ok'=>false,'msg'=>'Sistema de pontos indisponível.']); exit;
+    }
+    $custoTotal = 0;
+    $stmtCusto = $conn->prepare("SELECT pontos_custo FROM produtos WHERE id=? AND loja_id=? AND ativo=1 AND pontos_custo>0 LIMIT 1");
+    foreach ($resgates as $r) {
+      $stmtCusto->execute([(int)$r['id'], $lojaId]);
+      $c = $stmtCusto->fetchColumn();
+      if ($c === false) {
+        $conn->rollBack();
+        echo json_encode(['ok'=>false,'msg'=>'Um produto resgatado não está mais disponível para resgate.']); exit;
+      }
+      $custoTotal += (int)$c * max(1, (int)($r['qtd'] ?? 1));
+    }
+    $stmtSaldo = $conn->prepare("SELECT $colPontos FROM clientes WHERE id=? AND loja_id=? FOR UPDATE");
+    $stmtSaldo->execute([$clienteId, $lojaId]);
+    $saldoAntes = (int)$stmtSaldo->fetchColumn();
+    if ($saldoAntes < $custoTotal) {
+      $conn->rollBack();
+      echo json_encode(['ok'=>false,'msg'=>"Pontos insuficientes. Você tem {$saldoAntes} pts e o resgate custa {$custoTotal} pts."]); exit;
+    }
+    $saldoDepois = $saldoAntes - $custoTotal;
+    $conn->prepare("UPDATE clientes SET $colPontos=? WHERE id=? AND loja_id=?")->execute([$saldoDepois, $clienteId, $lojaId]);
+    try {
+      $conn->prepare("INSERT INTO pontos_movimentacoes (cliente_id, tipo, pontos, saldo_antes, saldo_depois, loja_id, criado_em) VALUES (?, 'resgate', ?, ?, ?, ?, NOW())")
+           ->execute([$clienteId, -$custoTotal, $saldoAntes, $saldoDepois, $lojaId]);
+    } catch (Exception $e) {}
+  }
+
   /* ── Pagamentos ── */
   try {
     $conn->prepare("INSERT INTO pedido_pagamentos(pedido_id,forma,valor,loja_id) VALUES(?,?,?,?)")->execute([$pedidoId,$pagamento,$total,$lojaId]);

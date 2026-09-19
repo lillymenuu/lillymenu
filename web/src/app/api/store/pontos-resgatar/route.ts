@@ -21,6 +21,7 @@ export async function POST(request: Request) {
         cliente_id: cliente_id as number,
         produto_id: produto_id as number,
         loja_id: loja_id as number,
+        apenas_validar: 1,
       }),
     });
     return NextResponse.json(data);
