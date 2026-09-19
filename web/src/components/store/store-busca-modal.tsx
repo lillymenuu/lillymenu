@@ -49,15 +49,16 @@ export function StoreBuscaModal({
   return (
     <Dialog
       open={open}
-      onOpenChange={(v) => {
-        if (!v) setBusca("");
-        onOpenChange(v);
+      onOpenChange={onOpenChange}
+      /* Limpa a busca so depois da animacao de saida, senao a lista "pula" enquanto o modal some. */
+      onOpenChangeComplete={(aberto) => {
+        if (!aberto) setBusca("");
       }}
     >
       <DialogContent
         showCloseButton={false}
         style={{ maxWidth: 901 }}
-        className="top-0 left-1/2 flex h-dvh w-full -translate-x-1/2 translate-y-0 flex-col gap-0 rounded-none bg-white p-0 duration-300 ease-out data-open:slide-in-from-bottom-10 data-closed:slide-out-to-bottom-6 sm:top-0"
+        className="top-0 left-1/2 flex h-dvh w-full -translate-x-1/2 translate-y-0 flex-col gap-0 rounded-none bg-white p-0 duration-300 ease-out data-open:slide-in-from-bottom-10 data-closed:slide-out-to-bottom-10 data-closed:duration-250 sm:top-0"
       >
         <div className="flex shrink-0 items-center justify-between gap-3 px-5 pt-5 pb-3">
           <DialogTitle className="truncate text-[1.05rem] font-semibold text-neutral-900">Buscar em {nomeLoja}</DialogTitle>
