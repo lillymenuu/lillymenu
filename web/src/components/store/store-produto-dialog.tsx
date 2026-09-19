@@ -250,7 +250,7 @@ export function StoreProdutoDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           showCloseButton={false}
-          className="flex max-h-[92vh] w-[calc(100%-24px)] max-w-[460px] flex-col gap-0 overflow-hidden rounded-[20px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)] sm:max-w-[460px] min-[900px]:h-[min(632px,calc(100vh-40px))] min-[900px]:max-h-[632px] min-[900px]:w-[min(897px,calc(100vw-40px))] min-[900px]:max-w-[897px]"
+          className="flex max-h-[92dvh] w-[calc(100%-24px)] max-w-[460px] flex-col gap-0 overflow-hidden rounded-[20px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)] sm:max-w-[460px] min-[940px]:h-[min(597px,calc(100dvh-24px))] min-[940px]:max-h-[597px] min-[940px]:w-[900px] min-[940px]:max-w-[900px]"
         >
           <DialogTitle className="sr-only">{produto.nome}</DialogTitle>
           <button
@@ -261,10 +261,10 @@ export function StoreProdutoDialog({
           >
             <X size={15} />
           </button>
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto min-[900px]:overflow-hidden">
-            <div className="flex flex-col min-[900px]:min-h-0 min-[900px]:flex-1 min-[900px]:flex-row min-[900px]:items-stretch">
-              <div className="aspect-[4/3] w-full shrink-0 min-[900px]:aspect-auto min-[900px]:w-[380px] min-[900px]:py-6 min-[900px]:pl-6">
-                <div className="size-full overflow-hidden bg-neutral-100 min-[900px]:rounded-2xl">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto min-[940px]:overflow-hidden">
+            <div className="flex flex-col min-[940px]:min-h-0 min-[940px]:flex-1 min-[940px]:flex-row min-[940px]:items-stretch">
+              <div className="aspect-[16/11] w-full shrink-0 min-[940px]:aspect-auto min-[940px]:w-[380px] min-[940px]:py-6 min-[940px]:pl-6">
+                <div className="size-full overflow-hidden bg-neutral-100 min-[940px]:rounded-2xl">
                   {produto.imagem ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={produto.imagem} alt="" className="size-full object-cover" />
@@ -275,8 +275,8 @@ export function StoreProdutoDialog({
                   )}
                 </div>
               </div>
-              <div className="min-w-0 px-[18px] pt-4 pb-1 min-[900px]:flex-1 min-[900px]:overflow-y-auto min-[900px]:px-8 min-[900px]:pt-7">
-                <h2 className="mb-1 pr-8 text-[1rem] leading-tight font-bold text-neutral-900 min-[900px]:pr-10">
+              <div className="min-w-0 px-[18px] pt-4 pb-1 min-[940px]:flex-1 min-[940px]:overflow-y-auto min-[940px]:px-8 min-[940px]:pt-7">
+                <h2 className="mb-1 pr-8 text-[1rem] leading-tight font-bold text-neutral-900 min-[940px]:pr-10">
                   {produto.nome}
                 </h2>
                 {produto.descricao && <p className="mb-2 text-[.8rem] leading-normal text-neutral-500">{produto.descricao}</p>}
