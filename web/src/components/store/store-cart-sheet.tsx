@@ -325,7 +325,7 @@ export function StoreCartSheet({
                           size="sm"
                           value={item.qtd}
                           min={0}
-                          max={item.estoqueMax}
+                          max={item.pontosCusto != null ? 1 : item.estoqueMax}
                           onChange={(v) => (v <= 0 ? onRemover(item.key) : onAtualizarQtd(item.key, v))}
                         />
                       </div>
