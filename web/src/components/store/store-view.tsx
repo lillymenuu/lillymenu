@@ -17,7 +17,7 @@ import {
   Star,
 } from "lucide-react";
 import { formatarPreco } from "@/lib/store/format";
-import type { StoreCatalogo, StoreCombo, StoreCupomResultado, StorePedidosClienteResposta, StorePerfil, StoreProduto } from "@/lib/store/types";
+import type { StoreCatalogo, StoreCombo, StoreCupomResultado, StorePedidoSnapshot, StorePedidosClienteResposta, StorePerfil, StoreProduto } from "@/lib/store/types";
 import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-theme";
 import { useStoreCart } from "@/components/store/use-store-cart";
 import { StoreProdutoDialog } from "@/components/store/store-produto-dialog";
@@ -52,13 +52,14 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [comboAberto, setComboAberto] = useState<StoreCombo | null>(null);
   const [cartAberto, setCartAberto] = useState(false);
   const [checkoutAberto, setCheckoutAberto] = useState(false);
-  const [pedidoConfirmado, setPedidoConfirmado] = useState<{ codigo: number | string } | null>(null);
+  const [pedidoConfirmado, setPedidoConfirmado] = useState<{ codigo: number | string; snapshot: StorePedidoSnapshot } | null>(null);
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [busca, setBusca] = useState("");
   const [infoAberto, setInfoAberto] = useState(false);
   const [cupomAplicado, setCupomAplicado] = useState<StoreCupomResultado | null>(null);
   const [promoListaAberta, setPromoListaAberta] = useState(false);
   const [authModalAberto, setAuthModalAberto] = useState(false);
+  const [authTelefoneInicial, setAuthTelefoneInicial] = useState("");
   const [authDestino, setAuthDestino] = useState<"pedidos" | "pontos">("pedidos");
   const [pedidosSheetAberto, setPedidosSheetAberto] = useState(false);
   const [pedidosCliente, setPedidosCliente] = useState<StorePedidosClienteResposta["cliente"] | null>(null);
@@ -182,10 +183,10 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function onSucessoPedido(codigo: number | string) {
+  function onSucessoPedido(codigo: number | string, snapshot: StorePedidoSnapshot) {
     cart.limpar();
     setCheckoutAberto(false);
-    setPedidoConfirmado({ codigo });
+    setPedidoConfirmado({ codigo, snapshot });
   }
 
   const termoBusca = busca.trim().toLowerCase();
@@ -706,8 +707,14 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         open={pedidoConfirmado !== null}
         onOpenChange={(v) => !v && setPedidoConfirmado(null)}
         codigo={pedidoConfirmado?.codigo ?? ""}
-        tempoEstimado={`${perfil.tEntMin}-${perfil.tEntMax} min`}
-        numeroWhatsapp={perfil.lojaContato}
+        perfil={perfil}
+        snapshot={pedidoConfirmado?.snapshot ?? null}
+        onAcompanhar={() => {
+          setAuthTelefoneInicial(pedidoConfirmado?.snapshot.telefone ?? "");
+          setPedidoConfirmado(null);
+          setAuthDestino("pedidos");
+          setAuthModalAberto(true);
+        }}
       />
 
       <StoreInfoDialog open={infoAberto} onOpenChange={setInfoAberto} perfil={perfil} />
@@ -717,6 +724,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         onOpenChange={setAuthModalAberto}
         lojaId={perfil.loja_id}
         destino={authDestino}
+        telefoneInicial={authTelefoneInicial}
         onAutenticado={(dados) => {
           setPedidosCliente(dados.cliente ?? null);
           setPedidosResumo(

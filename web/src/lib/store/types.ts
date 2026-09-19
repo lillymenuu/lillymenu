@@ -296,3 +296,19 @@ export type StorePontosResgatarResposta = {
   saldo_antes?: number;
   saldo_novo?: number;
 };
+
+/** Foto do pedido no momento em que foi criado — base da mensagem completa de WhatsApp (o carrinho e limpo logo depois). */
+export type StorePedidoSnapshot = {
+  nome: string;
+  telefone: string;
+  itens: StoreCartItem[];
+  tipo: "entrega" | "entrega_agendada" | "retirada" | "retirada_agendada";
+  formaPagamento: string;
+  trocoValor: number;
+  endereco: string;
+  agendamentoTexto: string;
+  taxa: number;
+  desconto: number;
+  cashbackUsado: number;
+  total: number;
+};

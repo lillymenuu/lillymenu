@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Info, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -26,18 +26,24 @@ export function StoreAuthModal({
   onOpenChange,
   lojaId,
   destino = "pedidos",
+  telefoneInicial = "",
   onAutenticado,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   lojaId: number;
   destino?: "pedidos" | "pontos";
+  telefoneInicial?: string;
   onAutenticado: (dados: StorePedidosClienteResposta) => void;
 }) {
   const { brown } = useStoreTheme();
   const [telefone, setTelefone] = useState("");
   const [verificando, setVerificando] = useState(false);
   const [erro, setErro] = useState("");
+
+  useEffect(() => {
+    if (open && telefoneInicial) setTelefone(formatarTelefone(telefoneInicial));
+  }, [open, telefoneInicial]);
 
   const digits = telefone.replace(/\D/g, "");
   const completo = digits.length >= 10;

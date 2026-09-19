@@ -158,3 +158,10 @@
     height: 0;
   }
 }
+/* Tela de pedido confirmado da Store */
+@keyframes store-success-pop { 0% { transform: scale(.3); opacity: 0 } 60% { transform: scale(1.12); opacity: 1 } 100% { transform: scale(1) } }
+@keyframes store-success-draw { to { stroke-dashoffset: 0 } }
+@keyframes store-success-ring { 0% { transform: scale(.8); opacity: .55 } 100% { transform: scale(2.1); opacity: 0 } }
+@keyframes store-success-rise { 0% { transform: translateY(18px); opacity: 0 } 100% { transform: translateY(0); opacity: 1 } }
+@keyframes store-success-spark { 0% { transform: translate(0,0) scale(0); opacity: 0 } 25% { opacity: 1 } 100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0 } }
+@keyframes store-success-shine { 0% { transform: translateX(-120%) } 100% { transform: translateX(220%) } }

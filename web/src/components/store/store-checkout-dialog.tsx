@@ -9,7 +9,7 @@ import { StoreAgendamentoOverlay } from "@/components/store/store-agendamento-di
 import { useStoreTheme } from "@/components/store/store-theme";
 import { buscarEnderecoPorCep, formatarCep } from "@/lib/cep";
 import { formatarPreco, formatarTelefone, maskValorDigitado, parseValorMascarado } from "@/lib/store/format";
-import type { StoreCartItem, StoreCupomResultado, StorePerfil } from "@/lib/store/types";
+import type { StoreCartItem, StoreCupomResultado, StorePedidoSnapshot, StorePerfil } from "@/lib/store/types";
 
 type Etapa = "dados" | "entrega" | "pagamento" | "resumo";
 const ETAPAS: Etapa[] = ["dados", "entrega", "pagamento", "resumo"];
@@ -46,7 +46,7 @@ export function StoreCheckoutDialog({
   subtotal: number;
   cupomAplicado: StoreCupomResultado | null;
   onCupomAplicadoChange: (c: StoreCupomResultado | null) => void;
-  onSucesso: (codigo: number | string) => void;
+  onSucesso: (codigo: number | string, snapshot: StorePedidoSnapshot) => void;
   onVoltarCarrinho?: () => void;
 }) {
   const { brown } = useStoreTheme();
@@ -345,8 +345,25 @@ export function StoreCheckoutDialog({
         }),
       });
       const data = await res.json();
-      if (data.ok) onSucesso(data.codigo);
-      else setErroEnvio(data.msg ?? "Erro ao enviar pedido.");
+      if (data.ok) {
+        onSucesso(data.codigo, {
+          nome: nome.trim(),
+          telefone,
+          itens,
+          tipo: tipo as StorePedidoSnapshot["tipo"],
+          formaPagamento,
+          trocoValor: formaPagamento === "dinheiro" && trocoValorValido ? trocoValorNumerico : 0,
+          endereco: isEntregaTipo ? enderecoTexto() : "",
+          agendamentoTexto:
+            isAgendadaTipo && agendamento
+              ? `${agendamento.data.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })} ${agendamento.slot}`
+              : "",
+          taxa: taxaFinal,
+          desconto,
+          cashbackUsado: cashbackUsadoEfetivo,
+          total,
+        });
+      } else setErroEnvio(data.msg ?? "Erro ao enviar pedido.");
     } catch {
       setErroEnvio("Erro de conexao. Tente novamente.");
     } finally {
