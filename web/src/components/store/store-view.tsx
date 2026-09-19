@@ -148,8 +148,12 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
     else setProdutoAberto(item);
   }
 
+  /* Produto esgotado nao aparece em Promocoes (icone da bottom-nav, modal e popup). */
+  const promosDisponiveis = catalogo.produtosEmPromo.filter((p) => !p.esgotado);
+  const promoAutoPopup = catalogo.promoAutoPopup && !catalogo.promoAutoPopup.esgotado ? catalogo.promoAutoPopup : null;
+
   function abrirPromoNav() {
-    const itens = catalogo.produtosEmPromo;
+    const itens = promosDisponiveis;
     if (itens.length === 1) abrirItem(itens[0]);
     else setPromoListaAberta(true);
   }
@@ -160,8 +164,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
      o conjunto mudar); com so 1 mas com foto/descricao de propaganda
      configurada (promoAutoPopup), abre direto o produto. */
   useEffect(() => {
-    if (catalogo.produtosEmPromo.length >= 2) {
-      const idsOrdenados = catalogo.produtosEmPromo
+    if (promosDisponiveis.length >= 2) {
+      const idsOrdenados = promosDisponiveis
         .map((p) => p.id)
         .sort((a, b) => a - b)
         .join("-");
@@ -171,11 +175,11 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         const t = setTimeout(() => setPromoListaAberta(true), 600);
         return () => clearTimeout(t);
       }
-    } else if (catalogo.promoAutoPopup) {
-      const chave = `promo_visto_${perfil.loja_id}_${catalogo.promoAutoPopup.id}`;
+    } else if (promoAutoPopup) {
+      const chave = `promo_visto_${perfil.loja_id}_${promoAutoPopup.id}`;
       if (!sessionStorage.getItem(chave)) {
         sessionStorage.setItem(chave, "1");
-        const produto = catalogo.promoAutoPopup;
+        const produto = promoAutoPopup;
         const t = setTimeout(() => abrirItem(produto), 600);
         return () => clearTimeout(t);
       }
@@ -768,7 +772,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       <StorePromoListaModal
         open={promoListaAberta}
         onOpenChange={setPromoListaAberta}
-        produtos={catalogo.produtosEmPromo}
+        produtos={promosDisponiveis}
         onSelecionar={(produto) => {
           setPromoListaAberta(false);
           abrirItem(produto);
