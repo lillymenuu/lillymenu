@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Copy, MapPin, ShoppingBag, Star } from "lucide-react";
+import { toast } from "sonner";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { StoreAvaliacaoModal } from "@/components/store/store-avaliacao-modal";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -136,7 +137,11 @@ export function StorePedidosSheet({
   }, [detalhes]);
 
   function copiarPix() {
-    if (perfil.pixChave) navigator.clipboard?.writeText(perfil.pixChave).catch(() => {});
+    if (!perfil.pixChave) return;
+    navigator.clipboard
+      ?.writeText(perfil.pixChave)
+      .then(() => toast.success("A chave Pix foi copiada!"))
+      .catch(() => toast.error("Não foi possível copiar a chave Pix."));
   }
 
   return (
