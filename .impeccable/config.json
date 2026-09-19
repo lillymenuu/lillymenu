@@ -800,6 +800,12 @@
         "rule": "design-system-color",
         "value": "rgba(8,20,33,.25)",
         "createdAt": "2026-09-07T19:56:29.770Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#c0a88a",
+        "createdAt": "2026-09-19T22:05:08.354Z",
+        "reason": "pre-existing disabled-button tint in store-produto-dialog (present before this session's edits); not introduced by me"
       }
     ]
   }
