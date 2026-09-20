@@ -5,6 +5,7 @@ import { Expand, ImageIcon, Layers, Minus, Plus, Shrink, X } from "lucide-react"
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
+import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem, StoreCombo, StoreComboPasso } from "@/lib/store/types";
 
@@ -172,7 +173,12 @@ export function StoreComboDialog({
 
   const footer = (
     <div className="flex items-center justify-between gap-3">
-      <QtyStepper value={qtd} onChange={setQtd} max={maxCombosPorEstoque ?? undefined} />
+      <QtyStepper
+        value={qtd}
+        onChange={setQtd}
+        max={maxCombosPorEstoque ?? undefined}
+        onMaxAtingido={avisarEstoqueIndisponivel}
+      />
       <button
         type="button"
         disabled={!podeAdicionar}
@@ -324,12 +330,16 @@ export function StoreComboDialog({
                             <span className="min-w-[22px] px-0.5 text-center text-[.78rem] font-medium text-neutral-900">{qty}</span>
                             <button
                               type="button"
-                              disabled={!podeAdd}
+                              aria-disabled={!podeAdd}
                               onClick={() => {
+                                if (!podeAdd) {
+                                  if (!opc.esgotado && qty >= opc.estoque) avisarEstoqueIndisponivel();
+                                  return;
+                                }
                                 ultimoPassoAlteradoRef.current = passo.id;
                                 alterarQty(passo, opc.id, opc.estoque, 1);
                               }}
-                              className="flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 disabled:text-neutral-300"
+                              className={`flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 ${!podeAdd ? "text-neutral-300" : ""}`}
                             >
                               <Plus size={13} />
                             </button>

@@ -9,6 +9,7 @@ export function QtyStepper({
   min = 1,
   max,
   size = "md",
+  onMaxAtingido,
 }: {
   value: number;
   onChange: (v: number) => void;
@@ -16,6 +17,8 @@ export function QtyStepper({
   /** Limite superior (normalmente o estoque disponivel). Sem limite se omitido. */
   max?: number;
   size?: "sm" | "md";
+  /** Chamado quando o cliente tenta passar do `max` (ex.: avisar que o estoque acabou). */
+  onMaxAtingido?: () => void;
 }) {
   const { brown } = useStoreTheme();
   const dim = size === "sm" ? "size-6.5" : "size-7";
@@ -34,9 +37,15 @@ export function QtyStepper({
       <span className="w-5 text-center text-sm font-bold text-neutral-900">{value}</span>
       <button
         type="button"
-        disabled={atingiuMax}
-        onClick={() => onChange(max !== undefined ? Math.min(max, value + 1) : value + 1)}
-        className={`${dim} flex items-center justify-center rounded-full text-white transition-opacity disabled:opacity-40`}
+        aria-disabled={atingiuMax}
+        onClick={() => {
+          if (atingiuMax) {
+            onMaxAtingido?.();
+            return;
+          }
+          onChange(max !== undefined ? Math.min(max, value + 1) : value + 1);
+        }}
+        className={`${dim} flex items-center justify-center rounded-full text-white transition-opacity ${atingiuMax ? "opacity-40" : ""}`}
         style={{ background: brown }}
       >
         <Plus size={iconSize} />

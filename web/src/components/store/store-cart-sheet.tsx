@@ -6,6 +6,7 @@ import { StoreSheet } from "@/components/store/store-sheet";
 import { PontosBadge } from "@/components/store/pontos-badge";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
+import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem, StoreCrossSellProduto, StoreCupomResultado, StorePerfil } from "@/lib/store/types";
 
@@ -334,6 +335,7 @@ export function StoreCartSheet({
                           min={0}
                           max={item.pontosCusto != null ? 1 : item.estoqueMax}
                           onChange={(v) => (v <= 0 ? onRemover(item.key) : onAtualizarQtd(item.key, v))}
+                          onMaxAtingido={item.pontosCusto == null ? avisarEstoqueIndisponivel : undefined}
                         />
                       </div>
                     </div>

@@ -7,6 +7,7 @@ import { StoreSheet } from "@/components/store/store-sheet";
 import { PontosBadge } from "@/components/store/pontos-badge";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
+import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem, StoreProduto, StoreProdutoVariacoes } from "@/lib/store/types";
 
@@ -140,6 +141,7 @@ export function StoreProdutoDialog({
         min={Math.max(1, produto.quantidade_minima ?? 0)}
         max={produto.estoque}
         onChange={setQtd}
+        onMaxAtingido={avisarEstoqueIndisponivel}
       />
       <button
         type="button"
