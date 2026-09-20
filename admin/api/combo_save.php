@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
 require_once __DIR__ . '/../../helpers/storage.php';
+require_once __DIR__ . '/../helpers/operacao.php';
 
 header('Content-Type: application/json');
 
@@ -137,6 +138,7 @@ try {
         $id = (int)$conn->lastInsertId();
     }
 
+    bumpCatalogoVersao($conn, $lojaId);
     echo json_encode(['ok' => true, 'combo_id' => $id], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     echo json_encode(['ok' => false, 'msg' => 'Erro ao salvar combo: ' . $e->getMessage()]);

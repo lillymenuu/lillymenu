@@ -11,6 +11,7 @@
 require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../helpers/api_auth.php';
 require_once __DIR__ . '/../../helpers/estoque_vinculo_module.php';
+require_once __DIR__ . '/../../helpers/operacao.php';
 
 header('Content-Type: application/json');
 
@@ -69,6 +70,7 @@ if ($metodo === 'DELETE') {
   $conn->prepare("DELETE FROM estoque WHERE produto_id = ? AND loja_id = ?")->execute([$produtoId, $lojaId]);
   estoqueVinculoEnsureModule($conn);
   $conn->prepare("DELETE FROM estoque_grupo_membros WHERE produto_id = ? AND loja_id = ?")->execute([$produtoId, $lojaId]);
+  bumpCatalogoVersao($conn, $lojaId);
   echo json_encode(['ok' => true]);
   exit;
 }
@@ -124,6 +126,7 @@ if ($metodo === 'POST') {
 
     $conn->commit();
     estoqueVinculoSincronizar($conn, $produtoId, $lojaId, $mov);
+    bumpCatalogoVersao($conn, $lojaId);
     echo json_encode(['ok' => true, 'quantidade' => $quantidade, 'quantidade_minima' => $minimo]);
   } catch (Exception $e) {
     $conn->rollBack();

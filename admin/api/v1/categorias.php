@@ -45,6 +45,7 @@ if ($metodo === 'PUT') {
     $stmt->execute([$index + 1, (int) $id, $lojaId]);
   }
   $conn->commit();
+  bumpCatalogoVersao($conn, $lojaId);
   echo json_encode(['ok' => true]);
   exit;
 }

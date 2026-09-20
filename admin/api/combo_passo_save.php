@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
+require_once __DIR__ . '/../helpers/operacao.php';
 
 header('Content-Type: application/json');
 
@@ -73,6 +74,7 @@ try {
         }
     }
 
+    bumpCatalogoVersao($conn, $lojaId);
     echo json_encode(['ok' => true, 'passo_id' => $passoId], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     echo json_encode(['ok' => false, 'msg' => 'Erro ao salvar passo: ' . $e->getMessage()]);

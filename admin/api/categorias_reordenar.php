@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../protect.php';
+require_once __DIR__ . '/../helpers/operacao.php';
 
 header('Content-Type: application/json');
 
@@ -28,5 +29,6 @@ foreach ($ordem as $index => $id) {
   $stmt->execute([$index + 1, (int) $id, $lojaId]);
 }
 $conn->commit();
+bumpCatalogoVersao($conn, $lojaId);
 
 echo json_encode(['ok' => true]);
