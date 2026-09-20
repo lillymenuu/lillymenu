@@ -125,6 +125,7 @@ export function PosComboDialog({
   /* "por_combo": preco fechado (com promo, se houver); "por_item": soma dos itens escolhidos. */
   const precoUnit = combo.tipo_preco === "por_item" ? somaOpcoes : precoFixo;
   const qtdEfetiva = Math.min(qtd, maxQtd);
+  const estoqueCombos = maxQtd;
 
   function confirmar() {
     if (!combo || !valido) return;
@@ -145,6 +146,8 @@ export function PosComboDialog({
       usarPontos: false,
       combosels,
       imagem: combo.imagem,
+      /* Limite de combos inteiros que o estoque das opcoes comporta — o editor do item usa pra travar a quantidade. */
+      ...(Number.isFinite(estoqueCombos) ? { estoque: estoqueCombos } : {}),
     });
     onOpenChange(false);
   }
