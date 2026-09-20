@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/loja_cfg.php';
+require_once __DIR__ . '/../admin/helpers/pdv_reserva_module.php';
 
 /* Extraído de public/loja.php (linhas 302-472 da versão original) sem
    mudança de comportamento — monta categorias/produtos/combos/destaques da
@@ -68,6 +69,8 @@ function montarCatalogoLoja(PDO $conn, int $lojaId): array {
     }catch(Throwable $e){}
   }
 
+  /* Unidades que o balcao (PDV) ja separou no Resumo do pedido — saem do estoque exibido. */
+  $_pdvReservas=pdvReservaMapa($conn,$lojaId);
   $produtosPorCat=[];
   foreach($categorias as $cat){
     if(!$_categoriaDisponivelAgora($cat)) continue;
@@ -85,7 +88,7 @@ function montarCatalogoLoja(PDO $conn, int $lojaId): array {
           $minVar=$variacoesMinPrecoPorProduto[(int)$pr['id']];
           $pr['preco_base']=$minVar>0?$minVar:$pr['preco_base'];
         }
-        $pr['estoque']=(int)$pr['estoque'];
+        $pr['estoque']=pdvReservaAplicar((int)$pr['estoque'],(int)$pr['id'],$_pdvReservas);
         $pr['esgotado']=$pr['estoque']<=0;
         $promoExpirada=false;
         if($temPromoDur && !empty($pr['promo_dias']) && !empty($pr['promo_inicio'])){

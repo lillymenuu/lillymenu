@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../helpers/loja_context.php';
+require_once __DIR__ . '/../../admin/helpers/pdv_reserva_module.php';
 
 header('Content-Type: application/json');
 
@@ -24,9 +25,10 @@ try {
   ");
   $stmt->execute(array_merge($ids, [$lojaId]));
 
+  $pdvReservas = pdvReservaMapa($conn, $lojaId);
   $estoque = [];
   foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-    $estoque[(int) $row['id']] = (int) $row['estoque'];
+    $estoque[(int) $row['id']] = pdvReservaAplicar((int) $row['estoque'], (int) $row['id'], $pdvReservas);
   }
 
   echo json_encode(['ok' => true, 'estoque' => $estoque]);

@@ -19,6 +19,7 @@ import { usePosCart } from "@/components/pos/use-pos-cart";
 import { PosCatalog } from "@/components/pos/pos-catalog";
 import { PosCartList } from "@/components/pos/pos-cart-list";
 import { PosVariacaoDialog } from "@/components/pos/pos-variacao-dialog";
+import { usePosReservaEstoque } from "@/components/pos/use-pos-reserva";
 import { PosComboDialog } from "@/components/pos/pos-combo-dialog";
 import { PosAvulsoDialog } from "@/components/pos/pos-avulso-dialog";
 import { PosEditarItemDialog } from "@/components/pos/pos-editar-item-dialog";
@@ -72,6 +73,8 @@ export function PosOverlay({
   pedidoEditandoId?: number | null;
 }) {
   const cart = usePosCart();
+  /* Itens do Resumo reservam estoque na loja publica; pedido ja lancado (edicao) ja teve o estoque baixado. */
+  usePosReservaEstoque(cart.itens, !!pedidoEditandoId);
 
   const [carregandoInicial, setCarregandoInicial] = useState(true);
   const [catalogo, setCatalogo] = useState<PosCatalogoResposta | null>(null);

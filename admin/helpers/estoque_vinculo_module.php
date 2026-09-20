@@ -34,6 +34,21 @@ if (!function_exists('estoqueVinculoEnsureModule')) {
   }
 }
 
+if (!function_exists('estoqueVinculoBumpCatalogo')) {
+  function estoqueVinculoBumpCatalogo(PDO $conn, int $lojaId): void
+  {
+    try {
+      $conn->prepare("
+        INSERT INTO configuracoes (loja_id, chave, valor)
+        VALUES (?, 'catalogo_versao', ?)
+        ON DUPLICATE KEY UPDATE valor = VALUES(valor)
+      ")->execute([$lojaId, (string) microtime(true)]);
+    } catch (Throwable $e) {
+      // nao pode travar a baixa/entrada de estoque
+    }
+  }
+}
+
 /**
  * Ids de produto no mesmo grupo de $produtoId, incluindo ele mesmo. Sem grupo,
  * retorna so [$produtoId].
@@ -78,6 +93,9 @@ if (!function_exists('estoqueVinculoSincronizar')) {
     if ($produtoId <= 0) {
       return;
     }
+    /* Toda escrita em "estoque" passa por aqui: avisa a loja publica (polling de catalogo_versao)
+       pra atualizar sozinha o que esta esgotado, sem F5. */
+    estoqueVinculoBumpCatalogo($conn, $lojaId);
     $membros = estoqueVinculoMembros($conn, $produtoId, $lojaId);
     $outros = array_filter($membros, fn($id) => $id !== $produtoId);
     if (!$outros) {

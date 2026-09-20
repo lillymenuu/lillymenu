@@ -9,6 +9,7 @@ require_once '../../config/database.php';
 require_once '../../helpers/telefone.php';
 require_once '../../admin/helpers/combo_estoque_module.php';
 require_once '../../admin/helpers/estoque_vinculo_module.php';
+require_once '../../admin/helpers/pdv_reserva_module.php';
 require_once '../../admin/helpers/garcom_module.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -147,10 +148,12 @@ if ($estoqueNecessario) {
     WHERE p.id IN ($phChk) AND p.loja_id = ?
   ");
   $stmtEstChk->execute([...$idsChk, $lojaId]);
+  /* Descontando o que o balcao (PDV) ja separou no Resumo do pedido. */
+  $pdvReservasChk = pdvReservaMapa($conn, $lojaId);
   foreach ($stmtEstChk->fetchAll(PDO::FETCH_ASSOC) as $rowChk) {
     $pidChk = (int) $rowChk['id'];
     $necessario = $estoqueNecessario[$pidChk] ?? 0;
-    if ($necessario > 0 && (int) $rowChk['estoque'] < $necessario) {
+    if ($necessario > 0 && pdvReservaAplicar((int) $rowChk['estoque'], $pidChk, $pdvReservasChk) < $necessario) {
       echo json_encode(['ok'=>false,'msg'=>'"' . $rowChk['nome'] . '" está sem estoque suficiente no momento.']);
       exit;
     }

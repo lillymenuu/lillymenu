@@ -6,6 +6,7 @@ require_once '../../config/database.php';
 require_once '../../helpers/loja_context.php';
 require_once '../../admin/helpers/config.php';
 require_once '../../admin/helpers/whatsapp.php';
+require_once '../../admin/helpers/pdv_reserva_module.php';
 
 function cfg(PDO $db, int $lid, string $chave, $default = ''): string {
   static $cache = [];
@@ -24,7 +25,7 @@ try {
   $entAtiva = entregaDisponivelAgora($conn);
   $retAtiva = cfg($conn,$lojaId,'pedido_retirada_ativo','1') === '1';
   $lojaAberta = estaAberto($conn) && $receberPedidosAtivo;
-  $catalogoVersao = cfg($conn,$lojaId,'catalogo_versao','');
+  $catalogoVersao = pdvReservaVersao($conn,$lojaId,cfg($conn,$lojaId,'catalogo_versao',''));
 
   /* Pausa programada ativa: mesma checagem usada em loja.php */
   $pausaAtivaTitulo = '';

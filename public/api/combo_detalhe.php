@@ -3,6 +3,7 @@ session_start();
 header('Content-Type: application/json; charset=UTF-8');
 require_once '../../config/database.php';
 require_once '../../helpers/storage.php';
+require_once '../../admin/helpers/pdv_reserva_module.php';
 
 $lojaId  = (int)($_GET['loja_id'] ?? 1);
 $comboId = (int)($_GET['id'] ?? 0);
@@ -43,12 +44,13 @@ try {
         WHERE o.passo_id = ? AND o.loja_id = ?
         ORDER BY o.ordem IS NULL, o.ordem, o.id
     ");
+    $pdvReservas = pdvReservaMapa($conn, $lojaId);
     foreach ($passos as &$passo) {
         $stmtO->execute([$passo['id'], $lojaId]);
         $opcoes = $stmtO->fetchAll(PDO::FETCH_ASSOC);
         foreach ($opcoes as &$opc) {
             $opc['imagem']   = fixImgPath((string)($opc['imagem'] ?? ''));
-            $opc['estoque']  = (int)($opc['estoque'] ?? 0);
+            $opc['estoque']  = pdvReservaAplicar((int)($opc['estoque'] ?? 0), (int)$opc['id'], $pdvReservas);
             $opc['esgotado'] = $opc['estoque'] <= 0;
         }
         unset($opc);

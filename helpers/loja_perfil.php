@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/loja_cfg.php';
+require_once __DIR__ . '/../admin/helpers/pdv_reserva_module.php';
 
 /* Extraído de public/loja.php (linhas 16-529 da versão original) sem mudança
    de comportamento — monta o perfil/config/contexto da loja pública. Usado
@@ -243,7 +244,7 @@ function montarPerfilLoja(PDO $conn, int $lojaId): array {
   $agendamentoDeliveryAtivo = $agendDeliveryAtivo;
   $agendamentoRetiradaAtivo = $agendRetiradaAtivo;
 
-  $catalogoVersao = cfg($conn,$lojaId,'catalogo_versao','');
+  $catalogoVersao = pdvReservaVersao($conn,$lojaId,cfg($conn,$lojaId,'catalogo_versao',''));
 
   /* Config global (loja_id=0, nivel SaaS) que liga/desliga a localizacao
      automatica via Nominatim — mesma flag lida por public/api/geo_reverso.php

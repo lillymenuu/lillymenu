@@ -10,6 +10,7 @@ require_once '../helpers/loja_context.php';
 require_once '../helpers/storage.php';
 require_once '../admin/helpers/config.php';
 require_once '../admin/helpers/whatsapp.php';
+require_once '../admin/helpers/pdv_reserva_module.php';
 require_once '../helpers/loja_perfil.php';
 require_once '../helpers/loja_catalogo.php';
 
@@ -84,7 +85,7 @@ $cfgJS=json_encode(['lojaId'=>$lojaId,'nomeLoja'=>$nomeLoja,'lojaPerfil'=>$perfi
 'clubePontosAtivo'=>$clubePontosAtivo,
 'cuponsAtivo'=>$cuponsAtivo,
 'lojaCanonicalUrl'=>$lojaCanonicalUrl,
-'catalogoVersao'=>cfg($conn,$lojaId,'catalogo_versao',''),
+'catalogoVersao'=>pdvReservaVersao($conn,$lojaId,cfg($conn,$lojaId,'catalogo_versao','')),
 'geoAtivo'=>cfg($conn,0,'saas_nominatim_ativo','1')==='1',
 'pausaAtivaFim'=>$pausaAtivaFim,
 'mesaId'=>$mesaId ?: null,
