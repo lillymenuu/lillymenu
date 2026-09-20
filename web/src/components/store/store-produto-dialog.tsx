@@ -123,6 +123,7 @@ export function StoreProdutoDialog({
         qtd,
         obs: obs.trim(),
         imagem: produto.imagem,
+        estoqueMax: produto.estoque,
         pontosGanho: produto.pontos_ganho,
       });
     }
@@ -137,7 +138,7 @@ export function StoreProdutoDialog({
       <QtyStepper
         value={qtd}
         min={Math.max(1, produto.quantidade_minima ?? 0)}
-        max={!temVariacoes ? produto.estoque : undefined}
+        max={produto.estoque}
         onChange={setQtd}
       />
       <button
