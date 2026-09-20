@@ -806,6 +806,36 @@
         "value": "#c0a88a",
         "createdAt": "2026-09-19T22:05:08.354Z",
         "reason": "pre-existing disabled-button tint in store-produto-dialog (present before this session's edits); not introduced by me"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#a07050",
+        "createdAt": "2026-09-20T17:41:35.045Z",
+        "reason": "pre-existing store-view styling (banner fallback gradient, avatar ring, headings) present before this session's logic-only edits; not introduced by me"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e8c9a0",
+        "createdAt": "2026-09-20T17:41:35.191Z",
+        "reason": "pre-existing store-view styling (banner fallback gradient, avatar ring, headings) present before this session's logic-only edits; not introduced by me"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#d9a66c",
+        "createdAt": "2026-09-20T17:41:35.351Z",
+        "reason": "pre-existing store-view styling (banner fallback gradient, avatar ring, headings) present before this session's logic-only edits; not introduced by me"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.15rem",
+        "createdAt": "2026-09-20T17:41:35.546Z",
+        "reason": "pre-existing store-view styling (banner fallback gradient, avatar ring, headings) present before this session's logic-only edits; not introduced by me"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": ".95rem",
+        "createdAt": "2026-09-20T17:41:35.713Z",
+        "reason": "pre-existing store-view styling (banner fallback gradient, avatar ring, headings) present before this session's logic-only edits; not introduced by me"
       }
     ]
   }
