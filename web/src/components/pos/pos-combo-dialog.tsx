@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ImageIcon, Layers, Minus, Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { formatBRL } from "@/components/ordermanager/constants";
+import { toast } from "sonner";
 import { cn } from "cn";
 import type { PosCartItem, PosCombo, PosComboDetalheResposta, PosComboPasso } from "@/lib/pos";
 
@@ -23,14 +24,45 @@ function dicaDoPasso(passo: PosComboPasso) {
   return "Escolha as opções que quiser.";
 }
 
+function avisarEstoque() {
+  toast.error("Quantidade do item indisponível no momento!");
+}
+
+/** Observacao livre do cliente = o que sobra em `observacoes` depois de "[combo]" e das linhas de composicao. */
+function obsDoItem(item: PosCartItem) {
+  const n = item.combosels?.length ?? 0;
+  return item.observacoes
+    .split("\n")
+    .slice(1 + n)
+    .join("\n");
+}
+
+/** Reconstroi o que estava marcado no modal a partir das opcoes guardadas no item (passoId, ou o 1o passo que tiver a opcao). */
+function selecoesDoItem(passos: PosComboPasso[], combosels: NonNullable<PosCartItem["combosels"]>): Selecoes {
+  const resultado: Selecoes = {};
+  for (const sel of combosels) {
+    const passo =
+      passos.find((p) => p.id === sel.passoId && p.opcoes.some((o) => o.id === sel.id)) ??
+      passos.find((p) => p.opcoes.some((o) => o.id === sel.id));
+    if (!passo) continue;
+    resultado[passo.id] = { ...(resultado[passo.id] ?? {}), [sel.id]: sel.qtd };
+  }
+  return resultado;
+}
+
 export function PosComboDialog({
   combo,
+  itemEditando,
   onOpenChange,
   onAdicionar,
+  onSalvar,
 }: {
   combo: PosCombo | null;
+  /** Item do carrinho sendo editado: reabre este mesmo modal ja preenchido pra trocar as opcoes. */
+  itemEditando?: PosCartItem | null;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<PosCartItem, "rowKey">) => void;
+  onSalvar?: (rowKey: string, item: Omit<PosCartItem, "rowKey">) => void;
 }) {
   const [carregando, setCarregando] = useState(false);
   const [passos, setPassos] = useState<PosComboPasso[]>([]);
@@ -45,19 +77,21 @@ export function PosComboDialog({
     setPassos([]);
     setDescricao("");
     setSelecoes({});
-    setQtd(1);
-    setObs("");
+    setQtd(itemEditando?.qtd ?? 1);
+    setObs(itemEditando ? obsDoItem(itemEditando) : "");
     fetch(`/api/pos/combo-detalhe?id=${combo.id}`)
       .then((r) => r.json())
       .then((data: PosComboDetalheResposta) => {
         if (data.ok) {
-          setPassos(data.passos ?? []);
+          const lista = data.passos ?? [];
+          setPassos(lista);
           setDescricao(data.combo?.descricao ?? "");
+          if (itemEditando?.combosels) setSelecoes(selecoesDoItem(lista, itemEditando.combosels));
         }
       })
       .catch(() => setPassos([]))
       .finally(() => setCarregando(false));
-  }, [combo]);
+  }, [combo, itemEditando]);
 
   const totalPorPasso = useMemo(() => {
     const map: Record<number, number> = {};
@@ -77,13 +111,21 @@ export function PosComboDialog({
     return total;
   }, [passos, selecoes]);
 
-  /* Quantos combos inteiros o estoque das opcoes escolhidas comporta. */
+  /* Quantos combos inteiros o estoque comporta: nos passos ja escolhidos vale a opcao marcada; nos
+     obrigatorios ainda sem escolha, vale a melhor opcao disponivel (senao o "+" ficaria livre ate escolher). */
   const maxQtd = useMemo(() => {
     let limite = Infinity;
     for (const passo of passos) {
-      for (const opcao of passo.opcoes) {
-        const q = selecoes[passo.id]?.[opcao.id] ?? 0;
-        if (q > 0 && opcao.estoque !== null) limite = Math.min(limite, Math.floor(opcao.estoque / q));
+      const escolhidas = passo.opcoes.filter((o) => (selecoes[passo.id]?.[o.id] ?? 0) > 0);
+      if (escolhidas.length > 0) {
+        for (const opcao of escolhidas) {
+          if (opcao.estoque !== null) limite = Math.min(limite, Math.floor(opcao.estoque / (selecoes[passo.id]?.[opcao.id] ?? 1)));
+        }
+      } else if (passo.obrigatorio) {
+        const estoques = passo.opcoes.filter((o) => !o.esgotado && o.estoque !== null).map((o) => o.estoque as number);
+        if (estoques.length > 0 && estoques.length === passo.opcoes.filter((o) => !o.esgotado).length) {
+          limite = Math.min(limite, Math.max(...estoques));
+        }
       }
     }
     return Math.max(1, limite);
@@ -132,11 +174,11 @@ export function PosComboDialog({
     const combosels = passos.flatMap((p) =>
       p.opcoes
         .filter((o) => (selecoes[p.id]?.[o.id] ?? 0) > 0)
-        .map((o) => ({ id: o.id, nome: o.nome, qtd: selecoes[p.id]?.[o.id] ?? 0 }))
+        .map((o) => ({ id: o.id, nome: o.nome, qtd: selecoes[p.id]?.[o.id] ?? 0, passoId: p.id }))
     );
     const linhas = combosels.map((c) => `${c.qtd}x ${c.nome}`).join("\n");
     const obsTexto = obs.trim();
-    onAdicionar({
+    const item = {
       produtoId: null,
       comboId: combo.id,
       nome: combo.nome,
@@ -146,9 +188,11 @@ export function PosComboDialog({
       usarPontos: false,
       combosels,
       imagem: combo.imagem,
-      /* Limite de combos inteiros que o estoque das opcoes comporta — o editor do item usa pra travar a quantidade. */
-      ...(Number.isFinite(estoqueCombos) ? { estoque: estoqueCombos } : {}),
-    });
+      /* Limite de combos inteiros que o estoque comporta, guardado no item pra travar a quantidade depois. */
+      estoque: Number.isFinite(estoqueCombos) ? estoqueCombos : undefined,
+    };
+    if (itemEditando && onSalvar) onSalvar(itemEditando.rowKey, item);
+    else onAdicionar(item);
     onOpenChange(false);
   }
 
@@ -226,7 +270,11 @@ export function PosComboDialog({
                   <div className="divide-y bg-background">
                     {passo.opcoes.map((opcao) => {
                       const q = selecoes[passo.id]?.[opcao.id] ?? 0;
-                      const limiteEstoque = opcao.estoque !== null && q >= opcao.estoque;
+                      const limiteEstoque = opcao.estoque !== null && (q + 1) * qtdEfetiva > opcao.estoque;
+                      const tentarAdd = () => {
+                        if (podeAdd) alterarQtdOpcao(passo, opcao.id, 1);
+                        else if (!opcao.esgotado && limiteEstoque) avisarEstoque();
+                      };
                       const podeAdd = !opcao.esgotado && !limiteEstoque && (passo.max_itens === 1 || !cheio) && (passo.permite_repetir || q === 0);
                       return (
                         <div
@@ -260,10 +308,10 @@ export function PosComboDialog({
                           {q === 0 ? (
                             <button
                               type="button"
-                              disabled={!podeAdd}
-                              onClick={() => alterarQtdOpcao(passo, opcao.id, 1)}
+                              aria-disabled={!podeAdd}
+                              onClick={tentarAdd}
                               aria-label={`Adicionar ${opcao.nome}`}
-                              className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                              className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95", !podeAdd && "cursor-not-allowed opacity-40")}
                             >
                               <Plus className="size-4" />
                             </button>
@@ -280,10 +328,10 @@ export function PosComboDialog({
                               <span className="w-5 text-center text-sm font-semibold tabular-nums">{q}</span>
                               <button
                                 type="button"
-                                disabled={!podeAdd}
-                                onClick={() => alterarQtdOpcao(passo, opcao.id, 1)}
+                                aria-disabled={!podeAdd}
+                                onClick={tentarAdd}
                                 aria-label={`Adicionar mais ${opcao.nome}`}
-                                className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                className={cn("flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", !podeAdd && "cursor-not-allowed opacity-40")}
                               >
                                 <Plus className="size-3.5" />
                               </button>
@@ -325,10 +373,10 @@ export function PosComboDialog({
               <span className="w-8 text-center text-sm font-semibold tabular-nums">{qtdEfetiva}</span>
               <button
                 type="button"
-                disabled={qtdEfetiva >= maxQtd}
-                onClick={() => setQtd((q) => Math.min(maxQtd, q + 1))}
+                aria-disabled={qtdEfetiva >= maxQtd}
+                onClick={() => (qtdEfetiva >= maxQtd ? avisarEstoque() : setQtd((q) => Math.min(maxQtd, q + 1)))}
                 aria-label="Aumentar quantidade"
-                className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95 disabled:opacity-40"
+                className={cn("flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", qtdEfetiva >= maxQtd && "opacity-40")}
               >
                 <Plus className="size-4" />
               </button>
@@ -339,7 +387,7 @@ export function PosComboDialog({
               disabled={carregando || !valido}
               className="h-11 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Adicionar {formatBRL(precoUnit * qtdEfetiva)}
+              {itemEditando ? "Salvar" : "Adicionar"} {formatBRL(precoUnit * qtdEfetiva)}
             </button>
           </div>
         </div>

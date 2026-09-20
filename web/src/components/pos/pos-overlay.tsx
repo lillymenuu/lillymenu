@@ -80,6 +80,7 @@ export function PosOverlay({
   const [produtoVariacao, setProdutoVariacao] = useState<PosProduto | null>(null);
   const [itemVariacaoEditando, setItemVariacaoEditando] = useState<PosCartItem | null>(null);
   const [comboAberto, setComboAberto] = useState<PosCombo | null>(null);
+  const [comboItemEditando, setComboItemEditando] = useState<PosCartItem | null>(null);
   const [avulsoAberto, setAvulsoAberto] = useState(false);
   const [itemEditando, setItemEditando] = useState<PosCartItem | null>(null);
 
@@ -245,7 +246,12 @@ export function PosOverlay({
 
   function editarItemCarrinho(item: PosCartItem) {
     const produtoDoItem = item.produtoId ? (catalogo?.produtos.find((p) => p.id === item.produtoId) ?? null) : null;
-    if (produtoDoItem?.tem_variacoes) {
+    /* Item de combo com composicao conhecida: reabre o mesmo modal de lancar, ja preenchido, pra trocar opcoes. */
+    const comboDoItem = item.comboId && item.combosels?.length ? (catalogo?.combos.find((c) => c.id === item.comboId) ?? null) : null;
+    if (comboDoItem) {
+      setComboItemEditando(item);
+      setComboAberto(comboDoItem);
+    } else if (produtoDoItem?.tem_variacoes) {
       setItemVariacaoEditando(item);
       setProdutoVariacao(produtoDoItem);
     } else {
@@ -632,7 +638,18 @@ export function PosOverlay({
         onAdicionar={(item) => cart.adicionar(item)}
         onSalvar={(rowKey, item) => cart.atualizarItem(rowKey, item)}
       />
-      <PosComboDialog combo={comboAberto} onOpenChange={(v) => !v && setComboAberto(null)} onAdicionar={(item) => cart.adicionar(item)} />
+      <PosComboDialog
+        combo={comboAberto}
+        itemEditando={comboItemEditando}
+        onOpenChange={(v) => {
+          if (!v) {
+            setComboAberto(null);
+            setComboItemEditando(null);
+          }
+        }}
+        onAdicionar={(item) => cart.adicionar(item)}
+        onSalvar={(rowKey, item) => cart.atualizarItem(rowKey, item)}
+      />
       <PosAvulsoDialog open={avulsoAberto} onOpenChange={setAvulsoAberto} onAdicionar={(item) => cart.adicionar(item)} />
       <PosEditarItemDialog
         item={itemEditando}

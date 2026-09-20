@@ -78,7 +78,7 @@ export type PosComboDetalheResposta = {
   passos?: PosComboPasso[];
 };
 
-export type PosCartComboSel = { id: number; nome: string; qtd: number };
+export type PosCartComboSel = { id: number; nome: string; qtd: number; passoId?: number };
 
 export type PosCartItem = {
   rowKey: string;
