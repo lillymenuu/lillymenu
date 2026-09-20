@@ -63,6 +63,7 @@ export type PosComboOpcao = {
 export type PosComboPasso = {
   id: number;
   nome: string;
+  descricao?: string | null;
   min_itens: number;
   max_itens: number;
   obrigatorio: boolean;
@@ -73,7 +74,7 @@ export type PosComboPasso = {
 export type PosComboDetalheResposta = {
   ok: boolean;
   msg?: string;
-  combo?: { id: number; nome: string; preco: number; tipo_preco: string };
+  combo?: { id: number; nome: string; descricao?: string | null; preco: number; tipo_preco: string };
   passos?: PosComboPasso[];
 };
 
