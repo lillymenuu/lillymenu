@@ -53,6 +53,7 @@ function selecoesDoItem(passos: PosComboPasso[], combosels: NonNullable<PosCartI
 export function PosComboDialog({
   combo,
   itemEditando,
+  consumoCarrinho,
   onOpenChange,
   onAdicionar,
   onSalvar,
@@ -60,12 +61,14 @@ export function PosComboDialog({
   combo: PosCombo | null;
   /** Item do carrinho sendo editado: reabre este mesmo modal ja preenchido pra trocar as opcoes. */
   itemEditando?: PosCartItem | null;
+  /** Unidades por produto que o resto do carrinho ja consome (sem contar o item em edicao). */
+  consumoCarrinho?: Record<number, number>;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<PosCartItem, "rowKey">) => void;
   onSalvar?: (rowKey: string, item: Omit<PosCartItem, "rowKey">) => void;
 }) {
   const [carregando, setCarregando] = useState(false);
-  const [passos, setPassos] = useState<PosComboPasso[]>([]);
+  const [passosBrutos, setPassos] = useState<PosComboPasso[]>([]);
   const [descricao, setDescricao] = useState("");
   const [selecoes, setSelecoes] = useState<Selecoes>({});
   const [qtd, setQtd] = useState(1);
@@ -92,6 +95,20 @@ export function PosComboDialog({
       .catch(() => setPassos([]))
       .finally(() => setCarregando(false));
   }, [combo, itemEditando]);
+
+  /* Estoque das opcoes ja descontado do que o carrinho consome (senao da pra lancar de novo o que acabou). */
+  const passos = useMemo(
+    () =>
+      passosBrutos.map((p) => ({
+        ...p,
+        opcoes: p.opcoes.map((o) => {
+          if (o.estoque === null) return o;
+          const estoque = Math.max(0, o.estoque - (consumoCarrinho?.[o.id] ?? 0));
+          return { ...o, estoque, esgotado: o.esgotado || estoque <= 0 };
+        }),
+      })),
+    [passosBrutos, consumoCarrinho]
+  );
 
   const totalPorPasso = useMemo(() => {
     const map: Record<number, number> = {};

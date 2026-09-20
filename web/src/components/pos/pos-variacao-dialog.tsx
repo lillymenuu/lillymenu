@@ -9,12 +9,15 @@ import type { PosCartItem, PosExtra, PosProduto, PosVariacao, PosVariacoesRespos
 export function PosVariacaoDialog({
   produto,
   itemEditando,
+  estoqueDisponivel,
   onOpenChange,
   onAdicionar,
   onSalvar,
 }: {
   produto: PosProduto | null;
   itemEditando?: PosCartItem | null;
+  /** Unidades que ainda cabem no carrinho (estoque menos tudo que ja esta nele, sem contar o item em edicao). */
+  estoqueDisponivel: number;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<PosCartItem, "rowKey">) => void;
   onSalvar?: (rowKey: string, item: Omit<PosCartItem, "rowKey">) => void;
@@ -78,6 +81,7 @@ export function PosVariacaoDialog({
 
   const podeAdicionar =
     !carregando &&
+    qtd <= estoqueDisponivel &&
     variacaoId !== null &&
     (!extrasObrigatorio || extrasIds.length > 0) &&
     (!complementosObrigatorio || complementoId !== null);
@@ -264,8 +268,8 @@ export function PosVariacaoDialog({
             <span className="w-4 text-center text-sm font-semibold tabular-nums">{qtd}</span>
             <button
               type="button"
-              disabled={qtd >= produto.estoque}
-              onClick={() => setQtd((q) => Math.min(q + 1, produto.estoque))}
+              disabled={qtd >= estoqueDisponivel}
+              onClick={() => setQtd((q) => Math.min(q + 1, estoqueDisponivel))}
               className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Plus className="size-3.5" />

@@ -19,6 +19,7 @@ import { usePosCart } from "@/components/pos/use-pos-cart";
 import { PosCatalog } from "@/components/pos/pos-catalog";
 import { PosCartList } from "@/components/pos/pos-cart-list";
 import { PosVariacaoDialog } from "@/components/pos/pos-variacao-dialog";
+import { consumoDoCarrinho, estoqueRestanteProduto } from "@/components/pos/estoque-carrinho";
 import { usePosReservaEstoque } from "@/components/pos/use-pos-reserva";
 import { PosComboDialog } from "@/components/pos/pos-combo-dialog";
 import { PosAvulsoDialog } from "@/components/pos/pos-avulso-dialog";
@@ -262,17 +263,23 @@ export function PosOverlay({
     }
   }
 
+  /* Quanto ainda cabe de `produto` considerando TUDO que o carrinho consome (produtos, variacoes e combos). */
+  function restanteDoProduto(produto: PosProduto, ignorarRowKey?: string | null) {
+    return Math.max(0, estoqueRestanteProduto(produto, catalogo?.produtos ?? [], consumoDoCarrinho(cart.itens, ignorarRowKey)));
+  }
+
   function alterarQtdProduto(produto: PosProduto, delta: number) {
     const rowKey = `produto-${produto.id}`;
     const existente = cart.itens.find((i) => i.rowKey === rowKey);
+    const restante = restanteDoProduto(produto);
     if (existente) {
-      cart.alterarQtd(rowKey, Math.min(existente.qtd + delta, produto.estoque));
-    } else if (delta > 0 && produto.estoque > 0) {
+      cart.alterarQtd(rowKey, delta > 0 ? existente.qtd + Math.min(delta, restante) : existente.qtd + delta);
+    } else if (delta > 0 && restante > 0) {
       cart.adicionar({
         rowKey,
         produtoId: produto.id,
         nome: produto.nome,
-        qtd: Math.min(1, produto.estoque),
+        qtd: Math.min(1, restante),
         preco: produto.preco_promocional ?? produto.preco,
         observacoes: "",
         usarPontos: false,
@@ -283,9 +290,9 @@ export function PosOverlay({
   }
 
   function definirQtdProduto(produto: PosProduto, qtd: number) {
-    const qtdCapada = Math.min(qtd, produto.estoque);
     const rowKey = `produto-${produto.id}`;
     const existente = cart.itens.find((i) => i.rowKey === rowKey);
+    const qtdCapada = Math.min(qtd, (existente?.qtd ?? 0) + restanteDoProduto(produto));
     if (existente) {
       cart.alterarQtd(rowKey, qtdCapada);
     } else if (qtdCapada > 0) {
@@ -632,6 +639,7 @@ export function PosOverlay({
       <PosVariacaoDialog
         produto={produtoVariacao}
         itemEditando={itemVariacaoEditando}
+        estoqueDisponivel={produtoVariacao ? restanteDoProduto(produtoVariacao, itemVariacaoEditando?.rowKey) : 0}
         onOpenChange={(v) => {
           if (!v) {
             setProdutoVariacao(null);
@@ -644,6 +652,7 @@ export function PosOverlay({
       <PosComboDialog
         combo={comboAberto}
         itemEditando={comboItemEditando}
+        consumoCarrinho={consumoDoCarrinho(cart.itens, comboItemEditando?.rowKey)}
         onOpenChange={(v) => {
           if (!v) {
             setComboAberto(null);

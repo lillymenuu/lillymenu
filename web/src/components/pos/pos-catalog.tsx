@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import type { PosCartItem, PosCatalogoResposta, PosCombo, PosProduto } from "@/lib/pos";
 import { PosProdutoCard } from "@/components/pos/pos-produto-card";
 import { PosComboCard } from "@/components/pos/pos-combo-card";
+import { consumoDoCarrinho, estoqueRestanteProduto } from "@/components/pos/estoque-carrinho";
 
 const SEM_CATEGORIA = -1;
 
@@ -44,33 +45,14 @@ export function PosCatalog({
     return map;
   }, [itensCarrinho]);
 
-  // Produtos que compartilham o mesmo grupo de estoque (ex.: mesmo lote
-  // fisico vendido sob nomes diferentes) precisam refletir, em tempo real,
-  // a quantidade ja reservada no carrinho de QUALQUER membro do grupo — nao
-  // so a do proprio produto — senao o card so atualiza ao reabrir o POS.
+  // Saldo restante de cada produto = estoque - o que o carrinho ja consome (linhas de produto/variacao e
+  // componentes de combo; produtos do mesmo grupo de estoque dividem o saldo).
   const estoqueRestantePorProduto = useMemo(() => {
+    const consumo = consumoDoCarrinho(itensCarrinho);
     const map: Record<number, number> = {};
-    for (const p of catalogo.produtos) {
-      if (p.grupo_estoque_id === null) {
-        map[p.id] = p.estoque - (qtdPorProduto[p.id] ?? 0);
-      }
-    }
-    const porGrupo = new Map<number, PosProduto[]>();
-    for (const p of catalogo.produtos) {
-      if (p.grupo_estoque_id === null) continue;
-      const lista = porGrupo.get(p.grupo_estoque_id) ?? [];
-      lista.push(p);
-      porGrupo.set(p.grupo_estoque_id, lista);
-    }
-    for (const membros of porGrupo.values()) {
-      const reservadoGrupo = membros.reduce((s, p) => s + (qtdPorProduto[p.id] ?? 0), 0);
-      const estoqueGrupo = membros[0].estoque;
-      for (const p of membros) {
-        map[p.id] = estoqueGrupo - reservadoGrupo;
-      }
-    }
+    for (const p of catalogo.produtos) map[p.id] = estoqueRestanteProduto(p, catalogo.produtos, consumo);
     return map;
-  }, [catalogo.produtos, qtdPorProduto]);
+  }, [catalogo.produtos, itensCarrinho]);
 
   const qtdPorCombo = useMemo(() => {
     const map: Record<number, number> = {};
