@@ -15,6 +15,7 @@ export function StoreProdutoDialog({
   produto,
   lojaId,
   mostrarPontos = false,
+  jaNoCarrinho = 0,
   open,
   onOpenChange,
   onAdicionar,
@@ -23,6 +24,8 @@ export function StoreProdutoDialog({
   lojaId: number;
   /** Clube de Pontos ativo na loja — habilita o selo "+N pts". */
   mostrarPontos?: boolean;
+  /** Unidades deste produto que o carrinho ja tem (todas as linhas, inclusive variacoes) — saem do estoque disponivel. */
+  jaNoCarrinho?: number;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
@@ -90,8 +93,10 @@ export function StoreProdutoDialog({
   const faltaExtraObrigatorio = temVariacoes && detalhe?.extras_obrigatorio === 1 && extrasIds.length === 0;
   const faltaComplementoObrigatorio =
     temVariacoes && detalhe?.complementos_itens_obrigatorio === 1 && !complementoId;
+  /* Estoque que ainda cabe: o do produto menos o que ja esta no carrinho. */
+  const estoqueRestante = Math.max(0, produto.estoque - jaNoCarrinho);
   const podeAdicionar =
-    !produto.esgotado && !carregando && !faltaVariacao && !faltaExtraObrigatorio && !faltaComplementoObrigatorio;
+    !produto.esgotado && estoqueRestante > 0 && qtd <= estoqueRestante && !carregando && !faltaVariacao && !faltaExtraObrigatorio && !faltaComplementoObrigatorio;
 
   function alternarExtra(id: number) {
     setExtrasIds((atual) => (atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id]));
@@ -139,7 +144,7 @@ export function StoreProdutoDialog({
       <QtyStepper
         value={qtd}
         min={Math.max(1, produto.quantidade_minima ?? 0)}
-        max={produto.estoque}
+        max={estoqueRestante}
         onChange={setQtd}
         onMaxAtingido={avisarEstoqueIndisponivel}
       />

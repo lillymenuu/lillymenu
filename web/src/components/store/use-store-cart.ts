@@ -35,7 +35,12 @@ export function useStoreCart(lojaId: number) {
     setItens((atual) => {
       const idxExistente = atual.findIndex((i) => i.id === item.id && i.tipo === item.tipo && i.obs === item.obs);
       if (idxExistente >= 0) {
-        return atual.map((i, idx) => (idx === idxExistente ? { ...i, qtd: i.qtd + item.qtd } : i));
+        return atual.map((i, idx) => {
+          if (idx !== idxExistente) return i;
+          const teto = i.estoqueMax ?? item.estoqueMax;
+          const soma = i.qtd + item.qtd;
+          return { ...i, qtd: teto !== undefined ? Math.min(soma, Math.max(i.qtd, teto)) : soma };
+        });
       }
       return [...atual, { ...item, key: `${Date.now()}_${Math.random().toString(36).slice(2)}` }];
     });

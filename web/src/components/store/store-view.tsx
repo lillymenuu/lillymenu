@@ -29,6 +29,8 @@ import { StoreInfoDialog } from "@/components/store/store-info-dialog";
 import { StoreAuthModal } from "@/components/store/store-auth-modal";
 import { StorePedidosSheet } from "@/components/store/store-pedidos-sheet";
 import { StorePontosSheet } from "@/components/store/store-pontos-sheet";
+import { consumoDoCarrinho } from "@/components/store/estoque-carrinho";
+import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
 import { StoreBuscaModal } from "@/components/store/store-busca-modal";
 import { StoreFlyerSlider } from "@/components/store/store-flyer-slider";
 import { StorePromoListaModal } from "@/components/store/store-promo-lista-modal";
@@ -144,9 +146,20 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
     sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  /* Estoque que o carrinho ja consome: produto ja no limite do estoque nao abre de novo (ficaria "comprar o que acabou"). */
+  const consumoCarrinho = consumoDoCarrinho(cart.itens);
+  const restanteDoProduto = (p: StoreProduto) => p.estoque - (consumoCarrinho[p.id] ?? 0);
+
   function abrirItem(item: StoreProduto | StoreCombo) {
-    if (isCombo(item)) setComboAberto(item);
-    else setProdutoAberto(item);
+    if (isCombo(item)) {
+      setComboAberto(item);
+      return;
+    }
+    if (!item.esgotado && restanteDoProduto(item) <= 0) {
+      avisarEstoqueIndisponivel();
+      return;
+    }
+    setProdutoAberto(item);
   }
 
   /* Produto esgotado nao aparece em Promocoes (icone da bottom-nav, modal e popup). */
@@ -490,7 +503,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                     key={`produto-${produto.id}`}
                     type="button"
                     onClick={() => abrirItem(produto)}
-                    className={`mx-3 mb-2 flex w-[calc(100%-24px)] items-center gap-3 rounded-xl border border-neutral-100 p-3.5 text-left transition-shadow hover:border-neutral-200 hover:shadow-sm ${produto.esgotado ? "opacity-65" : ""}`}
+                    className={`mx-3 mb-2 flex w-[calc(100%-24px)] items-center gap-3 rounded-xl border border-neutral-100 p-3.5 text-left transition-shadow hover:border-neutral-200 hover:shadow-sm ${produto.esgotado || restanteDoProduto(produto) <= 0 ? "opacity-65" : ""}`}
                   >
                     <div className="min-w-0 flex-1">
                       <div className="mb-0.5 text-[.88rem] font-semibold text-neutral-900">{produto.nome}</div>
@@ -525,7 +538,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                           </div>
                         )}
                       </div>
-                      {produto.esgotado ? (
+                      {produto.esgotado || restanteDoProduto(produto) <= 0 ? (
                         <span className="absolute -right-1.5 -bottom-1.5 rounded-full border-2 border-white bg-red-600 px-2.5 py-[5px] text-[.6rem] font-bold tracking-wide text-white uppercase whitespace-nowrap">
                           Esgotado
                         </span>
@@ -638,6 +651,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         produto={produtoAberto}
         lojaId={perfil.loja_id}
         mostrarPontos={perfil.clubePontosAtivo}
+        jaNoCarrinho={produtoAberto ? (consumoCarrinho[produtoAberto.id] ?? 0) : 0}
         open={produtoAberto !== null}
         onOpenChange={(v) => !v && setProdutoAberto(null)}
         onAdicionar={cart.adicionar}
@@ -646,6 +660,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       <StoreComboDialog
         combo={comboAberto}
         lojaId={perfil.loja_id}
+        consumoCarrinho={consumoCarrinho}
         open={comboAberto !== null}
         onOpenChange={(v) => !v && setComboAberto(null)}
         onAdicionar={cart.adicionar}

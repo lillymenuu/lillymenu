@@ -14,12 +14,15 @@ type Selecao = Record<number, number>;
 export function StoreComboDialog({
   combo,
   lojaId,
+  consumoCarrinho,
   open,
   onOpenChange,
   onAdicionar,
 }: {
   combo: StoreCombo | null;
   lojaId: number;
+  /** Unidades por produto que o carrinho ja consome — saem do estoque das opcoes. */
+  consumoCarrinho?: Record<number, number>;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
@@ -27,7 +30,7 @@ export function StoreComboDialog({
   const { brown } = useStoreTheme();
   const [qtd, setQtd] = useState(1);
   const [obs, setObs] = useState("");
-  const [passos, setPassos] = useState<StoreComboPasso[]>([]);
+  const [passosBrutos, setPassos] = useState<StoreComboPasso[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [selecoes, setSelecoes] = useState<Record<number, Selecao>>({});
   const [imagemAmpliada, setImagemAmpliada] = useState(false);
@@ -56,6 +59,19 @@ export function StoreComboDialog({
       .finally(() => setCarregando(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, combo?.id, lojaId]);
+
+  /* Estoque das opcoes ja descontado do que o carrinho consome (senao da pra pedir de novo o que acabou). */
+  const passos = useMemo(
+    () =>
+      passosBrutos.map((p) => ({
+        ...p,
+        opcoes: p.opcoes.map((o) => {
+          const estoque = Math.max(0, o.estoque - (consumoCarrinho?.[o.id] ?? 0));
+          return { ...o, estoque, esgotado: o.esgotado || estoque <= 0 };
+        }),
+      })),
+    [passosBrutos, consumoCarrinho]
+  );
 
   /* Quantas unidades do combo inteiro dao pra montar com o estoque das
      opcoes ja escolhidas (ex.: se so tem 1 unidade do item selecionado,

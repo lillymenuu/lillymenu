@@ -7,6 +7,7 @@ import { PontosBadge } from "@/components/store/pontos-badge";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
+import { consumoDoCarrinho } from "@/components/store/estoque-carrinho";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem, StoreCrossSellProduto, StoreCupomResultado, StorePerfil } from "@/lib/store/types";
 
@@ -75,6 +76,13 @@ export function StoreCartSheet({
     } finally {
       setValidandoCupom(false);
     }
+  }
+
+  /* Limite da linha: o estoque do produto menos o que as OUTRAS linhas (variacoes, combos) ja consomem. */
+  const consumo = useMemo(() => consumoDoCarrinho(itens), [itens]);
+  function limiteDaLinha(item: StoreCartItem) {
+    if (item.estoqueMax === undefined || item.tipo !== "produto") return item.estoqueMax;
+    return item.qtd + Math.max(0, item.estoqueMax - (consumo[item.id] ?? 0));
   }
 
   useEffect(() => {
@@ -333,7 +341,7 @@ export function StoreCartSheet({
                           size="sm"
                           value={item.qtd}
                           min={0}
-                          max={item.pontosCusto != null ? 1 : item.estoqueMax}
+                          max={item.pontosCusto != null ? 1 : limiteDaLinha(item)}
                           onChange={(v) => (v <= 0 ? onRemover(item.key) : onAtualizarQtd(item.key, v))}
                           onMaxAtingido={item.pontosCusto == null ? avisarEstoqueIndisponivel : undefined}
                         />
