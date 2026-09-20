@@ -342,14 +342,6 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         </div>
       )}
 
-      {!perfil.lojaAberta && (
-        <div className="mx-auto mt-3.5 max-w-[901px] px-4">
-          <div className="flex items-start gap-2.5 border-l-[3px] border-amber-300 bg-amber-50 px-4 py-3 text-[.8rem] text-amber-800">
-            Loja fechada no momento{perfil.proximoHorario ? ` — abre ${perfil.proximoHorario}` : ""}.
-          </div>
-        </div>
-      )}
-
       {perfil.flyersAtivo && perfil.lojaFlyers?.length > 0 && <StoreFlyerSlider flyers={perfil.lojaFlyers} />}
 
       {/* Category nav */}
