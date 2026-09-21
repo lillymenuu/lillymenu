@@ -397,6 +397,9 @@ function AppShellInner({
           <span className="text-sm font-semibold">{sidebarData.loja.nome}</span>
         </header>
         <main className="min-w-0 flex-1">{children}</main>
+        <footer className="border-t border-border py-4 text-center text-sm text-foreground">
+          Lilly Menu Digital ©{new Date().getFullYear()}
+        </footer>
       </div>
 
       <LojaInfoDialog
