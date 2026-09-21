@@ -25,14 +25,18 @@ const METRICAS: Record<Metric, string> = {
 };
 
 function formatarValor(metric: Metric, v: number) {
-  return metric === "faturamento" ? `R$ ${v.toFixed(0)}` : String(v);
+  return metric === "faturamento"
+    ? `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    : String(v);
 }
 
-type DotProps = { cx?: number; cy?: number; value?: number; index?: number };
+/* Em <Area>, o value do ponto vem como par [base, valor], nao como numero. */
+type DotProps = { cx?: number; cy?: number; value?: number | [number, number]; index?: number };
 
 function renderValueBubble(metric: Metric) {
-  return function ValueBubble({ cx, cy, value, index }: DotProps) {
-    if (cx == null || cy == null || value == null) return null;
+  return function ValueBubble({ cx, cy, value: bruto, index }: DotProps) {
+    const value = Array.isArray(bruto) ? bruto[1] : bruto;
+    if (cx == null || cy == null || value == null || !Number.isFinite(value)) return null;
     const texto = formatarValor(metric, value);
     const largura = Math.max(24, texto.length * 6.5 + 14);
     return (
