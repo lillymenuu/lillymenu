@@ -50,6 +50,11 @@ export function formatBRL(v: number | string) {
   return `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 }
 
+/** Igual ao formatBRL, com separador de milhar: R$ 4.623,93 (em vez de R$ 4623,93). */
+export function formatBRLMilhar(v: number | string) {
+  return `R$ ${Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export function formatHora(iso: string): string {
   if (!iso) return "-";
   const data = new Date(iso.replace(" ", "T"));

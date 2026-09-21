@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { TrendingUp, TrendingDown, Wallet, Percent, PieChart, BarChart3, Landmark, ClipboardList } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatBRL } from "@/components/ordermanager/constants";
+import { formatBRLMilhar } from "@/components/ordermanager/constants";
 import { MESES_LABEL, DONUT_CORES, DESPESA_COR } from "@/lib/financeiroDashboard";
 import type { FinanceiroDashboardResposta } from "@/lib/financeiroDashboard";
 
@@ -93,7 +93,7 @@ function BarraAnimada({ label, valor, max, cor }: { label: string; valor: number
     <div className="group">
       <div className="mb-0.5 flex items-center justify-between text-xs">
         <span>{label}</span>
-        <span className="font-medium tabular-nums">{formatBRL(valor)}</span>
+        <span className="font-medium tabular-nums">{formatBRLMilhar(valor)}</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div
@@ -198,11 +198,11 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
       </div>
 
       <div className={`grid grid-cols-2 gap-3 lg:grid-cols-4 transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
-        <KpiTile titulo="Receita" valor={formatBRL(resumo.total_income)} icon={TrendingUp} tone="positive" delay={0} />
-        <KpiTile titulo="Despesa" valor={formatBRL(resumo.total_expense)} icon={TrendingDown} tone="negative" delay={60} />
+        <KpiTile titulo="Receita" valor={formatBRLMilhar(resumo.total_income)} icon={TrendingUp} tone="positive" delay={0} />
+        <KpiTile titulo="Despesa" valor={formatBRLMilhar(resumo.total_expense)} icon={TrendingDown} tone="negative" delay={60} />
         <KpiTile
           titulo="Lucro / Prejuízo"
-          valor={formatBRL(resumo.profit_or_loss)}
+          valor={formatBRLMilhar(resumo.profit_or_loss)}
           icon={Wallet}
           tone={resumo.profit_or_loss >= 0 ? "positive" : "negative"}
           delay={120}
@@ -220,7 +220,7 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
               <div className="absolute inset-4 flex flex-col items-center justify-center rounded-full bg-popover text-center shadow-inner">
                 <span className="text-[11px] text-muted-foreground">Saldo</span>
                 <span className={`text-sm font-semibold tabular-nums ${saldo >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                  {formatBRL(saldo)}
+                  {formatBRLMilhar(saldo)}
                 </span>
               </div>
             </div>
@@ -228,11 +228,11 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg border p-2 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/5">
                   <div className="text-muted-foreground">Receitas</div>
-                  <div className="font-semibold tabular-nums text-emerald-600">{formatBRL(totalIncome)}</div>
+                  <div className="font-semibold tabular-nums text-emerald-600">{formatBRLMilhar(totalIncome)}</div>
                 </div>
                 <div className="rounded-lg border p-2 transition-colors hover:border-destructive/40 hover:bg-destructive/5">
                   <div className="text-muted-foreground">Despesas</div>
-                  <div className="font-semibold tabular-nums text-destructive">{formatBRL(totalExpense)}</div>
+                  <div className="font-semibold tabular-nums text-destructive">{formatBRLMilhar(totalExpense)}</div>
                 </div>
               </div>
               <div className="max-h-40 space-y-1.5 overflow-y-auto">
@@ -250,7 +250,7 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
                         <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: f.cor }} />
                         <span className="min-w-0 flex-1 truncate">{f.label}</span>
                         <span className="shrink-0 text-muted-foreground">{pct.toFixed(1)}%</span>
-                        <span className="w-20 shrink-0 text-right font-medium tabular-nums">{formatBRL(f.valor)}</span>
+                        <span className="w-20 shrink-0 text-right font-medium tabular-nums">{formatBRLMilhar(f.valor)}</span>
                       </div>
                     );
                   })
@@ -300,10 +300,10 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
                 >
                   <span className="font-medium">{c.name}</span>
                   <div className="flex gap-3 text-xs tabular-nums">
-                    <span className="text-emerald-600">+{formatBRL(c.monthly_income)}</span>
-                    <span className="text-destructive">-{formatBRL(c.monthly_expense)}</span>
+                    <span className="text-emerald-600">+{formatBRLMilhar(c.monthly_income)}</span>
+                    <span className="text-destructive">-{formatBRLMilhar(c.monthly_expense)}</span>
                     <span className={`font-semibold ${num(c.monthly_balance) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                      {formatBRL(c.monthly_balance)}
+                      {formatBRLMilhar(c.monthly_balance)}
                     </span>
                   </div>
                 </div>
@@ -316,16 +316,16 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
           <div className="space-y-2">
             <div className="flex items-center justify-between rounded-lg border p-2.5 text-sm transition-colors hover:bg-muted/40">
               <span>Receita bruta</span>
-              <span className="font-medium tabular-nums">{formatBRL(dre.gross_revenue)}</span>
+              <span className="font-medium tabular-nums">{formatBRLMilhar(dre.gross_revenue)}</span>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-2.5 text-sm transition-colors hover:bg-muted/40">
               <span>Despesas totais</span>
-              <span className="font-medium tabular-nums">{formatBRL(dre.total_expenses)}</span>
+              <span className="font-medium tabular-nums">{formatBRLMilhar(dre.total_expenses)}</span>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-2.5 text-sm transition-colors hover:bg-muted/40">
               <span>Lucro líquido</span>
               <span className={`font-semibold tabular-nums ${dre.net_profit >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                {formatBRL(dre.net_profit)}
+                {formatBRLMilhar(dre.net_profit)}
               </span>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-2.5 text-sm transition-colors hover:bg-muted/40">
