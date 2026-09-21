@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Headset, ImagePlus, Send, X } from "lucide-react";
+import { ImagePlus, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "cn";
 
@@ -59,9 +59,13 @@ function lerBase64(file: File): Promise<string> {
 export function SuporteChat({
   mensagensIniciais,
   phpAdminUrl,
+  lojaNome,
+  lojaLogo,
 }: {
   mensagensIniciais: SuporteMensagem[];
   phpAdminUrl: string;
+  lojaNome: string;
+  lojaLogo: string | null;
 }) {
   const [mensagens, setMensagens] = useState(mensagensIniciais);
   const [texto, setTexto] = useState("");
@@ -208,55 +212,87 @@ export function SuporteChat({
   }
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] min-h-[440px] flex-col overflow-hidden rounded-2xl border bg-card">
-      <header className="relative z-10 flex items-center gap-3 border-b bg-card px-4 py-3 shadow-md">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <Headset size={20} />
-        </div>
-        <div className="min-w-0">
+    <div className="flex h-[calc(100dvh-9rem)] min-h-[460px] flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
+      <header className="relative z-10 flex items-center gap-3 border-b bg-card px-4 py-3 shadow-sm">
+        <AvatarSuporte className="size-11" />
+        <div className="min-w-0 flex-1">
           <h1 className="text-base leading-tight font-semibold">Suporte Lilly Menu</h1>
-          <p className="truncate text-sm text-muted-foreground">
-            {suporteDigitando ? "Digitando…" : "Fale com a nossa equipe"}
+          <p
+            className={cn(
+              "flex items-center gap-1.5 truncate text-sm",
+              suporteDigitando ? "font-medium text-emerald-600" : "text-muted-foreground"
+            )}
+          >
+            {suporteDigitando ? (
+              <>
+                digitando
+                <PontinhosDigitando className="bg-emerald-600" />
+              </>
+            ) : (
+              <>
+                <span className="size-2 rounded-full bg-emerald-500" />
+                Equipe online para ajudar
+              </>
+            )}
           </p>
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-5">
+      <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto bg-muted/40 px-3 py-5 sm:px-5">
         {mensagens.length === 0 && (
-          <div className="m-auto max-w-xs text-center text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">Olá! Como podemos ajudar?</p>
-            <p className="mt-1">Envie sua dúvida ou problema e a nossa equipe responde por aqui.</p>
+          <div className="m-auto flex max-w-xs flex-col items-center gap-3 text-center text-sm text-muted-foreground">
+            <AvatarSuporte className="size-14" />
+            <div>
+              <p className="text-base font-semibold text-foreground">Olá! Como podemos ajudar?</p>
+              <p className="mt-1">Envie sua dúvida ou problema e a nossa equipe responde por aqui.</p>
+            </div>
           </div>
         )}
 
         {mensagens.map((m, i) => {
           const minha = m.remetente === "loja";
-          const novoDia = i === 0 || chaveDia(mensagens[i - 1].criado_em) !== chaveDia(m.criado_em);
+          const anterior = mensagens[i - 1];
+          const proxima = mensagens[i + 1];
+          const novoDia = !anterior || chaveDia(anterior.criado_em) !== chaveDia(m.criado_em);
+          const ultimaDoBloco =
+            !proxima || proxima.remetente !== m.remetente || chaveDia(proxima.criado_em) !== chaveDia(m.criado_em);
+          const primeiraDoBloco = novoDia || anterior.remetente !== m.remetente;
+          const url = m.anexo_arquivo ? urlAnexo(m.anexo_arquivo, phpAdminUrl) : null;
           return (
-            <div key={m.id} className="flex flex-col gap-3">
+            <div key={m.id} className={cn("flex flex-col", primeiraDoBloco && i > 0 && "mt-2.5")}>
               {novoDia && (
-                <div className="self-center text-xs text-foreground">{rotuloDia(m.criado_em)}</div>
+                <div className="my-2 self-center rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+                  {rotuloDia(m.criado_em)}
+                </div>
               )}
-              <div className={cn("flex", minha ? "justify-end" : "justify-start")}>
+              <div className={cn("flex items-end gap-2", minha ? "flex-row-reverse" : "flex-row")}>
+                <div className="size-8 shrink-0">
+                  {ultimaDoBloco &&
+                    (minha ? (
+                      <AvatarLoja nome={lojaNome} logo={lojaLogo} className="size-8" />
+                    ) : (
+                      <AvatarSuporte className="size-8" />
+                    ))}
+                </div>
                 <div
                   className={cn(
-                    "flex max-w-[min(85%,28rem)] flex-col gap-1.5 rounded-2xl px-4 py-2.5 shadow-md",
-                    minha ? "bg-slate-800 text-slate-100" : "bg-slate-100 text-slate-900"
+                    "flex max-w-[min(80%,28rem)] flex-col gap-1.5 rounded-2xl px-3.5 py-2 shadow-sm",
+                    minha ? "bg-primary text-primary-foreground" : "border bg-card text-foreground",
+                    ultimaDoBloco && (minha ? "rounded-br-md" : "rounded-bl-md")
                   )}
                 >
-                  {m.anexo_arquivo && (
-                    <a href={urlAnexo(m.anexo_arquivo, phpAdminUrl)} target="_blank" rel="noreferrer">
+                  {url && (
+                    <a href={url} target="_blank" rel="noreferrer" className="-mx-1.5 -mt-0.5 block overflow-hidden rounded-xl">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={urlAnexo(m.anexo_arquivo, phpAdminUrl)}
-                        alt="Imagem enviada"
-                        className="max-h-64 rounded-lg object-cover"
-                      />
+                      <img src={url} alt="Imagem enviada" className="max-h-64 w-full object-cover" />
                     </a>
                   )}
                   {m.mensagem && <p className="text-sm leading-snug break-words whitespace-pre-wrap">{m.mensagem}</p>}
                   <span
-                    className={cn("self-end text-[11px] italic", minha ? "text-slate-300" : "text-slate-500")}
+                    className={cn(
+                      "self-end text-[11px] tabular-nums",
+                      minha ? "text-primary-foreground/70" : "text-muted-foreground"
+                    )}
                   >
                     {formatarHora(m.criado_em)}
                   </span>
@@ -265,23 +301,36 @@ export function SuporteChat({
             </div>
           );
         })}
+
+        {suporteDigitando && (
+          <div className="mt-2.5 flex items-end gap-2">
+            <AvatarSuporte className="size-8" />
+            <div className="flex flex-col gap-1 rounded-2xl rounded-bl-md border bg-card px-3.5 py-2.5 shadow-sm">
+              <span className="text-xs font-medium text-emerald-600">Digitando...</span>
+              <PontinhosDigitando className="bg-muted-foreground" tamanho="md" />
+            </div>
+          </div>
+        )}
         <div ref={fimRef} />
       </div>
 
-      <div className="px-4 pb-4">
+      <div className="border-t bg-card px-3 py-3 sm:px-4">
         {previewUrl && (
-          <div className="mb-2 flex items-center gap-2 rounded-xl border bg-muted/40 p-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl} alt="Pré-visualização" className="size-12 rounded-lg object-cover" />
-            <span className="min-w-0 flex-1 truncate text-sm">{arquivo?.name}</span>
-            <button
-              type="button"
-              onClick={limparArquivo}
-              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Remover imagem"
-            >
-              <X size={16} />
-            </button>
+          <div className="mb-3 flex items-start gap-3">
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={previewUrl} alt="Pré-visualização" className="size-24 rounded-xl border object-cover" />
+              <button
+                type="button"
+                onClick={limparArquivo}
+                className="absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full bg-destructive text-white shadow-md transition-transform hover:scale-105"
+                aria-label="Excluir imagem"
+                title="Excluir imagem"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+            <p className="min-w-0 flex-1 truncate pt-1 text-sm text-muted-foreground">{arquivo?.name}</p>
           </div>
         )}
         <form
@@ -289,7 +338,7 @@ export function SuporteChat({
             e.preventDefault();
             void enviar();
           }}
-          className="flex items-center gap-2 rounded-xl border bg-background px-3 py-2"
+          className="flex items-center gap-2"
         >
           <input
             ref={inputArquivoRef}
@@ -298,33 +347,73 @@ export function SuporteChat({
             className="hidden"
             onChange={(e) => escolherArquivo(e.target.files?.[0])}
           />
-          <button
-            type="button"
-            onClick={() => inputArquivoRef.current?.click()}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label="Anexar imagem"
-            title="Anexar imagem"
-          >
-            <ImagePlus size={18} />
-          </button>
-          <input
-            value={texto}
-            onChange={(e) => aoDigitar(e.target.value)}
-            onBlur={() => avisarDigitando(false)}
-            maxLength={2000}
-            placeholder="Digite sua mensagem..."
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border bg-background px-3 py-1.5 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30">
+            <button
+              type="button"
+              onClick={() => inputArquivoRef.current?.click()}
+              className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Anexar imagem"
+              title="Anexar imagem"
+            >
+              <ImagePlus size={18} />
+            </button>
+            <input
+              value={texto}
+              onChange={(e) => aoDigitar(e.target.value)}
+              onBlur={() => avisarDigitando(false)}
+              maxLength={2000}
+              placeholder="Digite sua mensagem..."
+              className="min-w-0 flex-1 bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground"
+            />
+          </div>
           <button
             type="submit"
             disabled={enviando || (!texto.trim() && !arquivo)}
-            className="rounded-md p-1.5 text-foreground hover:bg-muted disabled:opacity-40"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-opacity hover:bg-primary/90 disabled:opacity-40"
             aria-label="Enviar"
           >
-            <Send size={18} />
+            <Send size={17} />
           </button>
         </form>
       </div>
     </div>
+  );
+}
+
+function AvatarSuporte({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex shrink-0 items-center justify-center overflow-hidden rounded-full border bg-white", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/favicon_store.png" alt="Suporte Lilly Menu" className="size-[70%] object-contain" />
+    </div>
+  );
+}
+
+function AvatarLoja({ nome, logo, className }: { nome: string; logo: string | null; className?: string }) {
+  if (logo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={logo} alt={nome} className={cn("shrink-0 rounded-full border bg-white object-cover", className)} />
+    );
+  }
+  return (
+    <div className={cn("flex shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary", className)}>
+      {nome.trim().charAt(0).toUpperCase() || "L"}
+    </div>
+  );
+}
+
+/* Tres pontinhos pulando, como o "digitando..." do WhatsApp. */
+function PontinhosDigitando({ className, tamanho = "sm" }: { className?: string; tamanho?: "sm" | "md" }) {
+  return (
+    <span className="inline-flex items-center gap-1" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className={cn("animate-bounce rounded-full", tamanho === "md" ? "size-2" : "size-1.5", className)}
+          style={{ animationDelay: `${i * 150}ms`, animationDuration: "900ms" }}
+        />
+      ))}
+    </span>
   );
 }
