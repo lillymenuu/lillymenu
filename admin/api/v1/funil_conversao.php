@@ -26,19 +26,25 @@ try {
 
   $desde = date('Y-m-d H:i:s', strtotime("-{$dias} days"));
 
-  $stmtEvt = $conn->prepare("
-    SELECT tipo, COUNT(*) AS cnt
-    FROM loja_eventos
-    WHERE loja_id = ? AND criado_em >= ?
-    GROUP BY tipo
-  ");
-  $stmtEvt->execute([$lojaId, $desde]);
-  $rows = $stmtEvt->fetchAll(PDO::FETCH_KEY_PAIR);
+  /* Pessoas unicas por etapa (visitante anonimo). Eventos antigos, sem visitante, nao entram. */
+  $temCol = $conn->query("SHOW COLUMNS FROM loja_eventos LIKE 'visitante'")->fetchColumn();
+  $rows = [];
+  if ($temCol) {
+    $stmtEvt = $conn->prepare("
+      SELECT tipo, COUNT(DISTINCT visitante) AS cnt
+      FROM loja_eventos
+      WHERE loja_id = ? AND criado_em >= ? AND visitante IS NOT NULL
+      GROUP BY tipo
+    ");
+    $stmtEvt->execute([$lojaId, $desde]);
+    $rows = $stmtEvt->fetchAll(PDO::FETCH_KEY_PAIR);
+  }
 
+  /* Funil: cada etapa nunca passa da anterior. */
   $visitas   = (int) ($rows['visita'] ?? 0);
-  $views     = (int) ($rows['view_item'] ?? 0);
-  $carrinhos = (int) ($rows['carrinho'] ?? 0);
-  $pedidos   = (int) ($rows['pedido'] ?? 0);
+  $views     = min($visitas, (int) ($rows['view_item'] ?? 0));
+  $carrinhos = min($views, (int) ($rows['carrinho'] ?? 0));
+  $pedidos   = min($carrinhos, (int) ($rows['pedido'] ?? 0));
 
   $conversao = $visitas > 0 ? round($pedidos / $visitas * 100) : 0;
 

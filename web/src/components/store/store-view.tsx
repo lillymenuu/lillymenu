@@ -20,6 +20,7 @@ import { formatarPreco } from "@/lib/store/format";
 import type { StoreCatalogo, StoreCombo, StoreCupomResultado, StorePedidoSnapshot, StorePedidosClienteResposta, StorePerfil, StoreProduto } from "@/lib/store/types";
 import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-theme";
 import { useStoreCart } from "@/components/store/use-store-cart";
+import { trackStoreEvento } from "@/lib/store/tracking";
 import { StoreProdutoDialog } from "@/components/store/store-produto-dialog";
 import { StoreComboDialog } from "@/components/store/store-combo-dialog";
 import { StoreCartSheet } from "@/components/store/store-cart-sheet";
@@ -102,6 +103,18 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
     interacaoRef.current = cart.itens.length > 0 || produtoAberto !== null || comboAberto !== null || cartAberto || checkoutAberto || infoAberto;
   });
 
+  /* Funil de conversao: 1 visita por sessao do navegador (o dashboard conta visitantes unicos). */
+  useEffect(() => {
+    try {
+      const chave = `tr_visita_${perfil.loja_id}`;
+      if (sessionStorage.getItem(chave)) return;
+      sessionStorage.setItem(chave, "1");
+    } catch {
+      /* sem sessionStorage: registra mesmo assim */
+    }
+    trackStoreEvento(perfil.loja_id, "visita");
+  }, [perfil.loja_id]);
+
   /* Loja publica: horario/pausa/catalogo podem mudar no admin a qualquer
      momento enquanto o cliente esta navegando. Mesmo mecanismo do loja.js
      legado (_atualizarLojaStatus/_verificarNovaCatalogoVersao), 20s. */
@@ -151,6 +164,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const restanteDoProduto = (p: StoreProduto) => p.estoque - (consumoCarrinho[p.id] ?? 0);
 
   function abrirItem(item: StoreProduto | StoreCombo) {
+    trackStoreEvento(perfil.loja_id, "view_item");
     if (isCombo(item)) {
       setComboAberto(item);
       return;

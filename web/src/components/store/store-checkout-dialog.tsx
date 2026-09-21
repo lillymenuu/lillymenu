@@ -9,6 +9,7 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { StoreAgendamentoOverlay } from "@/components/store/store-agendamento-dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { buscarEnderecoPorCep, formatarCep } from "@/lib/cep";
+import { trackStoreEvento } from "@/lib/store/tracking";
 import { formatarPreco, formatarTelefone, maskValorDigitado, parseValorMascarado } from "@/lib/store/format";
 import type { StoreCartItem, StoreCupomResultado, StorePedidoSnapshot, StorePerfil } from "@/lib/store/types";
 
@@ -348,6 +349,7 @@ export function StoreCheckoutDialog({
       });
       const data = await res.json();
       if (data.ok) {
+        trackStoreEvento(perfil.loja_id, "pedido");
         onSucesso(data.codigo, {
           nome: nome.trim(),
           telefone,

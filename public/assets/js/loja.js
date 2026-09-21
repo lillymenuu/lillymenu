@@ -3356,9 +3356,19 @@ uiAtualizar();
 window.scrollTo({top:0,behavior:'instant'});
 
 /* ── Tracking de funil de conversão ── */
+function _visitanteId(){
+  try {
+    let v = localStorage.getItem('lm_visitante');
+    if (!v) {
+      v = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_-]/g, '');
+      localStorage.setItem('lm_visitante', v);
+    }
+    return v;
+  } catch(e){ return ''; }
+}
 function track(tipo){
   try {
-    const body = new URLSearchParams({tipo, loja_id: CFG.lojaId});
+    const body = new URLSearchParams({tipo, loja_id: CFG.lojaId, visitante: _visitanteId()});
     if (navigator.sendBeacon) {
       navigator.sendBeacon('api/loja_tracking.php', body);
     } else {

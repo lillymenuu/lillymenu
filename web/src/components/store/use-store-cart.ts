@@ -1,5 +1,6 @@
 "use client";
 
+import { trackStoreEvento } from "@/lib/store/tracking";
 import { useCallback, useEffect, useState } from "react";
 import type { StoreCartItem } from "@/lib/store/types";
 
@@ -32,6 +33,7 @@ export function useStoreCart(lojaId: number) {
   }, [itens, lojaId, carregado]);
 
   const adicionar = useCallback((item: Omit<StoreCartItem, "key">) => {
+    trackStoreEvento(lojaId, "carrinho");
     setItens((atual) => {
       const idxExistente = atual.findIndex((i) => i.id === item.id && i.tipo === item.tipo && i.obs === item.obs);
       if (idxExistente >= 0) {
@@ -44,7 +46,7 @@ export function useStoreCart(lojaId: number) {
       }
       return [...atual, { ...item, key: `${Date.now()}_${Math.random().toString(36).slice(2)}` }];
     });
-  }, []);
+  }, [lojaId]);
 
   const atualizarQtd = useCallback((key: string, qtd: number) => {
     setItens((atual) =>
