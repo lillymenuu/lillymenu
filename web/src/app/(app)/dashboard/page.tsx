@@ -8,6 +8,7 @@ import { DashboardSearch } from "@/components/dashboard-search";
 import { StoreLinkField } from "@/components/store-link-field";
 import { VerseOfDay } from "@/components/verse-of-day";
 import { getSidebarData } from "@/lib/sidebar";
+import { formatBRLMilhar } from "@/components/ordermanager/constants";
 
 type VersiculoResponse = {
   ok: true;
@@ -57,9 +58,6 @@ type DashboardResponse = {
   }[];
 };
 
-function formatBRL(v: number) {
-  return `R$ ${v.toFixed(2).replace(".", ",")}`;
-}
 
 export default async function DashboardPage({
   searchParams,
@@ -135,7 +133,7 @@ export default async function DashboardPage({
             <Banknote className="text-primary" size={18} />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{formatBRL(data.kpis.receita_mes_atual)}</div>
+            <div className="text-xl font-bold">{formatBRLMilhar(data.kpis.receita_mes_atual)}</div>
             <div className="text-xs text-muted-foreground">{data.kpis.faixa_receita_mes}</div>
           </CardContent>
         </Card>
