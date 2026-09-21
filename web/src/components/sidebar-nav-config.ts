@@ -29,6 +29,7 @@ import {
   Ticket,
   Star,
   Settings,
+  Headset,
 } from "lucide-react";
 
 export type NavItem = {
@@ -104,6 +105,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: null, label: "Avaliações", icon: Star, href: "/avaliacoes", migrated: true },
       { menuKey: null, label: "Assinatura", icon: CreditCard, href: "/plan-details", migrated: true },
       { menuKey: "configuracoes", label: "Configurações", icon: Settings, href: "/settings", migrated: true },
+      { menuKey: null, label: "Suporte", icon: Headset, href: "/suporte", migrated: true },
     ],
   },
 ];

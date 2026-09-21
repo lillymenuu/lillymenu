@@ -42,6 +42,7 @@ function AppShellInner({
   const [alternandoLoja, setAlternandoLoja] = useState(false);
   const [lojaInfoOpen, setLojaInfoOpen] = useState(false);
   const [wlNaoLidas, setWlNaoLidas] = useState(0);
+  const [suporteNaoLidas, setSuporteNaoLidas] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
   const { abrir: abrirPos } = usePosOverlay();
@@ -65,6 +66,25 @@ function AppShellInner({
       clearInterval(interval);
     };
   }, [sidebarData.menu.whatslilly]);
+
+  useEffect(() => {
+    let ativo = true;
+    async function carregar() {
+      try {
+        const res = await fetch("/api/suporte/nao-lidas");
+        const data = await res.json();
+        if (ativo && data.ok) setSuporteNaoLidas(data.unread);
+      } catch {
+        // silencioso — proximo poll tenta de novo
+      }
+    }
+    carregar();
+    const interval = setInterval(carregar, 15000);
+    return () => {
+      ativo = false;
+      clearInterval(interval);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     try {
@@ -304,7 +324,11 @@ function AppShellInner({
                             : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       );
                       const badge =
-                        item.menuKey === "whatslilly" && wlNaoLidas > 0 ? (
+                        item.href === "/suporte" && suporteNaoLidas > 0 && pathname !== "/suporte" ? (
+                          <span className="ml-auto flex size-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">
+                            {suporteNaoLidas > 99 ? "99+" : suporteNaoLidas}
+                          </span>
+                        ) : item.menuKey === "whatslilly" && wlNaoLidas > 0 ? (
                           <span className="ml-auto flex size-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">
                             {wlNaoLidas > 99 ? "99+" : wlNaoLidas}
                           </span>
