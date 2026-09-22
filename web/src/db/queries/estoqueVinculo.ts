@@ -10,9 +10,13 @@ import { estoque, estoqueGrupoMembros, estoqueMovimentacoes, configuracoes, pedi
  * `estoque` deve chamar sincronizarEstoqueVinculo depois.
  */
 
-async function membrosDoGrupo(tx: NeonTx, produtoId: number, lojaId: number): Promise<number[]> {
+/** `db` (fora de transacao) ou `tx` (dentro de uma) — as duas tem a mesma API de leitura. */
+type Queryable = typeof db | NeonTx;
+
+/** Ids de produto no mesmo grupo de produtoId (incluindo ele mesmo). Sem grupo, devolve so [produtoId]. */
+export async function membrosDoGrupo(conexao: Queryable, produtoId: number, lojaId: number): Promise<number[]> {
   if (produtoId <= 0) return [];
-  const proprio = await tx
+  const proprio = await conexao
     .select({ grupoId: estoqueGrupoMembros.grupo_id })
     .from(estoqueGrupoMembros)
     .where(and(eq(estoqueGrupoMembros.produto_id, produtoId), eq(estoqueGrupoMembros.loja_id, lojaId)))
@@ -20,7 +24,7 @@ async function membrosDoGrupo(tx: NeonTx, produtoId: number, lojaId: number): Pr
   const grupoId = proprio[0]?.grupoId;
   if (grupoId === undefined) return [produtoId];
 
-  const linhas = await tx
+  const linhas = await conexao
     .select({ produtoId: estoqueGrupoMembros.produto_id })
     .from(estoqueGrupoMembros)
     .where(and(eq(estoqueGrupoMembros.grupo_id, grupoId), eq(estoqueGrupoMembros.loja_id, lojaId)));
