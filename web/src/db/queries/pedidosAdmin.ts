@@ -23,13 +23,13 @@ import { getConfig } from "@/db/queries/config";
  */
 
 /** Base de numeracao zerada (helpers/pedido_codigo.php). */
-async function pedidoCodigoBase(lojaId: number): Promise<number> {
+export async function pedidoCodigoBase(lojaId: number): Promise<number> {
   const v = await getConfig(lojaId, "pedido_codigo_base", "0");
   const n = parseInt(v, 10);
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-function codigoDisplay(id: number, base: number): number {
+export function codigoDisplay(id: number, base: number): number {
   return base > 0 && id > base ? Math.max(1, id - base) : id;
 }
 
