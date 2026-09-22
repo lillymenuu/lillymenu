@@ -22,7 +22,11 @@ export const db = drizzleHttp(neon(url), { schema });
  */
 neonConfig.poolQueryViaFetch = true;
 
-export async function withTransaction<T>(fn: (tx: Parameters<Parameters<ReturnType<typeof drizzlePool>["transaction"]>[0]>[0]) => Promise<T>): Promise<T> {
+type TransactionCallback = Parameters<ReturnType<typeof drizzlePool<typeof schema>>["transaction"]>[0];
+/** Tipo do `tx` recebido dentro de withTransaction — para tipar funcoes auxiliares chamadas de dentro da transacao. */
+export type NeonTx = Parameters<TransactionCallback>[0];
+
+export async function withTransaction<T>(fn: (tx: NeonTx) => Promise<T>): Promise<T> {
   const pool = new Pool({ connectionString: url });
   try {
     const tdb = drizzlePool(pool, { schema });

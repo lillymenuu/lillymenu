@@ -1,7 +1,8 @@
 import "server-only";
-import { and, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { categorias, produtos, produtoVariacoes, combos, estoque, pdvReservas } from "@/db/schema";
+import { categorias, produtos, produtoVariacoes, combos, estoque } from "@/db/schema";
+import { aplicarReservaPdv, reservaMapaPdv } from "@/db/queries/pdvReservas";
 
 /*
  * Equivalente de helpers/loja_catalogo.php (montarCatalogoLoja): monta
@@ -107,23 +108,6 @@ export type CatalogoLoja = {
   promoAutoPopup: CatalogoProduto | null;
 };
 
-/** Mapa produto_id -> quantidade reservada no balcao (PDV), ainda dentro do TTL de 90s. */
-async function reservaMapaPdv(lojaId: number): Promise<Map<number, number>> {
-  const limite = new Date(Date.now() - 90_000).toISOString();
-  const linhas = await db
-    .select({ produtoId: pdvReservas.produto_id, qtd: sql<number>`sum(${pdvReservas.quantidade})` })
-    .from(pdvReservas)
-    .where(and(eq(pdvReservas.loja_id, lojaId), gte(pdvReservas.atualizado_em, limite)))
-    .groupBy(pdvReservas.produto_id);
-
-  const mapa = new Map<number, number>();
-  for (const l of linhas) {
-    const q = Number(l.qtd);
-    if (q > 0) mapa.set(l.produtoId, q);
-  }
-  return mapa;
-}
-
 function promoAtiva(
   precoBase: number,
   precoPromocional: number | null,
@@ -214,7 +198,7 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
     const precoBase = p.temVariacoes && precoMinPorProduto.has(p.id) ? precoMinPorProduto.get(p.id)! || precoBaseBruto : precoBaseBruto;
     const { emPromo, precoFinal, descPct } = promoAtiva(precoBase, p.precoPromocional, p.promoDesativado, p.promoDias, p.promoInicio);
     const estoqueBruto = p.estoqueQtd ?? 0;
-    const estoqueDisponivel = Math.max(0, estoqueBruto - (reservas.get(p.id) ?? 0));
+    const estoqueDisponivel = aplicarReservaPdv(estoqueBruto, p.id, reservas);
 
     const item: CatalogoProduto = {
       id: p.id,
