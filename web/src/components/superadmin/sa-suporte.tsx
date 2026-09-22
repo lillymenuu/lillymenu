@@ -87,7 +87,7 @@ function Pontinhos({ className }: { className?: string }) {
   return (
     <span className="inline-flex items-center gap-1" aria-hidden>
       {[0, 1, 2].map((i) => (
-        <span key={i} className={cn("size-1.5 animate-bounce rounded-full", className)} style={{ animationDelay: `${i * 150}ms`, animationDuration: "900ms" }} />
+        <span key={i} className={cn("size-1.5 animate-pulse rounded-full", className)} style={{ animationDelay: `${i * 150}ms`, animationDuration: "900ms" }} />
       ))}
     </span>
   );

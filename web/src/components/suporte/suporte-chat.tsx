@@ -410,7 +410,7 @@ function PontinhosDigitando({ className, tamanho = "sm" }: { className?: string;
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className={cn("animate-bounce rounded-full", tamanho === "md" ? "size-2" : "size-1.5", className)}
+          className={cn("animate-pulse rounded-full", tamanho === "md" ? "size-2" : "size-1.5", className)}
           style={{ animationDelay: `${i * 150}ms`, animationDuration: "900ms" }}
         />
       ))}
