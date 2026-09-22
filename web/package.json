@@ -13,6 +13,7 @@
     "db:migrar-dados": "tsx scripts/db/migrar-dados.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1137.0",
     "@base-ui/react": "^1.8.0",
     "@neondatabase/serverless": "^1.1.0",
     "bcryptjs": "^3.0.3",
