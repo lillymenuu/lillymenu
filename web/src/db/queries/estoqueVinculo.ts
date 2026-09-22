@@ -33,7 +33,7 @@ export async function membrosDoGrupo(conexao: Queryable, produtoId: number, loja
 }
 
 /** Bump em catalogo_versao: avisa a loja publica (polling) que o catalogo mudou. */
-async function bumpCatalogoVersao(tx: NeonTx, lojaId: number): Promise<void> {
+export async function bumpCatalogoVersao(tx: NeonTx, lojaId: number): Promise<void> {
   const valor = String(Date.now() / 1000);
   await tx
     .insert(configuracoes)
