@@ -17,6 +17,8 @@ import { getConfig } from "@/db/queries/config";
 import { estaAberto } from "@/db/queries/lojaStatus";
 import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
 import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
+import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
+import { saldoCashbackLiberado } from "@/db/queries/cashback";
 
 /*
  * Equivalente de public/api/pedido_criar.php — cria um pedido da loja publica
@@ -66,20 +68,6 @@ export type CriarPedidoInput = {
 
 export type CriarPedidoResultado = { ok: true; id: number; codigo: number } | { ok: false; msg: string };
 
-function apenasDigitos(tel: string): string {
-  return tel.replace(/\D+/g, "");
-}
-
-function formatarTelefoneBR(tel: string): string {
-  const d = apenasDigitos(tel);
-  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return tel;
-}
-
-/** Remove mascara de telefone via SQL, pra comparar com o que foi digitado (com ou sem mascara). */
-const telefoneSemMascara = sql<string>`replace(replace(replace(replace(replace(${clientes.telefone},'(',''),')',''),' ',''),'-',''),'+','')`;
-
 async function obterOuCriarCliente(tx: NeonTx, lojaId: number, nome: string, telefoneBruto: string): Promise<number> {
   const telFormatado = formatarTelefoneBR(telefoneBruto);
   const telDigitos = apenasDigitos(telefoneBruto);
@@ -118,32 +106,6 @@ function calcularEstoqueNecessario(itens: ItemCarrinho[]): Map<number, number> {
 
 function calcularCodigoDisplay(id: number, base: number): number {
   return base > 0 && id > base ? Math.max(1, id - base) : id;
-}
-
-/** Saldo de cashback ja liberado (fora do periodo de carencia) — mesma regra do PHP. Sempre chamada fora da transacao. */
-async function saldoCashbackLiberado(clienteId: number, lojaId: number, saldoAtual: number): Promise<number> {
-  const agora = new Date().toISOString();
-  const hoje = agora.slice(0, 10);
-
-  const naoLiberadas = await db.execute<{ valor: string; usado: string }>(sql`
-    SELECT m.valor,
-      COALESCE((
-        SELECT SUM(u.valor) FROM cashback_movimentacoes u
-        WHERE u.referencia_id = m.id AND u.tipo IN ('uso','resgate','expirado') AND u.loja_id = m.loja_id
-      ), 0) AS usado
-    FROM cashback_movimentacoes m
-    WHERE m.cliente_id = ${clienteId} AND m.loja_id = ${lojaId} AND m.tipo IN ('entrada','ganho')
-      AND m.disponivel_em IS NOT NULL
-      AND m.disponivel_em > ${agora}
-      AND (m.expira_em IS NULL OR m.expira_em >= ${hoje})
-  `);
-
-  let totalNaoLiberado = 0;
-  for (const row of naoLiberadas.rows) {
-    const d = Number(row.valor) - Number(row.usado);
-    if (d > 0) totalNaoLiberado += d;
-  }
-  return Math.max(0, Math.min(saldoAtual, saldoAtual - totalNaoLiberado));
 }
 
 export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPedidoResultado> {
