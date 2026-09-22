@@ -283,3 +283,88 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
   await bumpCatalogoVersao(lojaId);
   return { ok: true, action: "insert", id: inserido.id, imagem: imagemSalva };
 }
+
+/* Equivalente de admin/api/v1/produto_duplicar.php: clona produto + variacoes + extras
+   (nao duplica complementos_itens — mesma omissao do legado) com "(Copia)" no nome. */
+export async function duplicarProduto(lojaId: number, produtoId: number): Promise<{ ok: true; id: number } | { ok: false; msg: string }> {
+  if (produtoId <= 0) return { ok: false, msg: "ID invalido." };
+
+  const linhas = await db.select().from(produtos).where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId))).limit(1);
+  const original = linhas[0];
+  if (!original) return { ok: false, msg: "Produto nao encontrado." };
+
+  /* produtos nao tem coluna criado_em/atualizado_em nesta instalacao — so `id` precisa ser omitido. */
+  const resto = { ...original };
+  delete (resto as { id?: number }).id;
+  const [copia] = await db.insert(produtos).values({ ...resto, nome: `${original.nome} (Cópia)` }).returning({ id: produtos.id });
+
+  const variacoesOriginais = await db.select().from(produtoVariacoes).where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.loja_id, lojaId)));
+  for (const v of variacoesOriginais) {
+    const vResto = { ...v };
+    delete (vResto as { id?: number }).id;
+    await db.insert(produtoVariacoes).values({ ...vResto, produto_id: copia.id });
+  }
+
+  const extrasOriginais = await db.select().from(produtoExtras).where(and(eq(produtoExtras.produto_id, produtoId), eq(produtoExtras.loja_id, lojaId)));
+  for (const e of extrasOriginais) {
+    const eResto = { ...e };
+    delete (eResto as { id?: number }).id;
+    await db.insert(produtoExtras).values({ ...eResto, produto_id: copia.id });
+  }
+
+  await bumpCatalogoVersao(lojaId);
+  return { ok: true, id: copia.id };
+}
+
+export type VariacaoDetalhe = { id: number; tamanho: string | null; cor: string | null; preco: number };
+export type ExtraDetalhe = { id: number; nome: string; preco: number; obrigatorio: boolean };
+export type ComplementoItemDetalhe = { id: number; nome: string; preco: number; obrigatorio: boolean };
+
+/* Equivalente de admin/api/v1/produto_variacoes_detalhe.php. */
+export async function detalheVariacoesProduto(
+  lojaId: number,
+  produtoId: number
+): Promise<{ ok: false; msg: string } | { ok: true; variacoes: VariacaoDetalhe[]; extras: ExtraDetalhe[]; complementosItens: ComplementoItemDetalhe[] }> {
+  if (produtoId <= 0) return { ok: false, msg: "Produto invalido." };
+  const existe = await db.select({ id: produtos.id }).from(produtos).where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId))).limit(1);
+  if (existe.length === 0) return { ok: false, msg: "Produto nao encontrado." };
+
+  const variacoes = await db
+    .select({ id: produtoVariacoes.id, tamanho: produtoVariacoes.tamanho, cor: produtoVariacoes.cor, preco: produtoVariacoes.preco })
+    .from(produtoVariacoes)
+    .where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.loja_id, lojaId)))
+    .orderBy(produtoVariacoes.ordem, produtoVariacoes.id);
+
+  const extras = await db
+    .select({ id: produtoExtras.id, nome: produtoExtras.nome, preco: produtoExtras.preco, obrigatorio: produtoExtras.obrigatorio })
+    .from(produtoExtras)
+    .where(and(eq(produtoExtras.produto_id, produtoId), eq(produtoExtras.ativo, true), eq(produtoExtras.loja_id, lojaId)))
+    .orderBy(produtoExtras.ordem, produtoExtras.id);
+
+  const complementosItens = await db
+    .select({ id: produtoComplementosItens.id, nome: produtoComplementosItens.nome, preco: produtoComplementosItens.preco, obrigatorio: produtoComplementosItens.obrigatorio })
+    .from(produtoComplementosItens)
+    .where(and(eq(produtoComplementosItens.produto_id, produtoId), eq(produtoComplementosItens.ativo, true), eq(produtoComplementosItens.loja_id, lojaId)))
+    .orderBy(produtoComplementosItens.ordem, produtoComplementosItens.id);
+
+  return { ok: true, variacoes, extras, complementosItens };
+}
+
+export type ProdutoValidadeAviso = { id: number; nome: string | null; dataValidade: string; diasRestantes: number; vencido: boolean };
+
+/* Equivalente de admin/api/v1/produtos_validade_check.php: produtos ativos vencendo em ate 2 dias (ou ja vencidos). */
+export async function produtosValidadeCheck(lojaId: number): Promise<ProdutoValidadeAviso[]> {
+  const DIAS_AVISO = 2;
+  const diasRestantesExpr = sql<string>`(${produtos.data_validade}::date - current_date)`;
+
+  const linhas = await db
+    .select({ id: produtos.id, nome: produtos.nome, dataValidade: produtos.data_validade, diasRestantes: diasRestantesExpr })
+    .from(produtos)
+    .where(and(eq(produtos.loja_id, lojaId), eq(produtos.ativo, true), sql`${produtos.data_validade} is not null`, sql`${diasRestantesExpr} <= ${DIAS_AVISO}`))
+    .orderBy(produtos.data_validade);
+
+  return linhas.map((l) => {
+    const diasRestantes = Number(l.diasRestantes);
+    return { id: l.id, nome: l.nome, dataValidade: l.dataValidade as string, diasRestantes, vencido: diasRestantes < 0 };
+  });
+}
