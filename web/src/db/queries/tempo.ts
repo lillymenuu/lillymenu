@@ -28,3 +28,20 @@ export function timestampFortaleza(): string {
 export function dataFortaleza(): string {
   return timestampFortaleza().slice(0, 10);
 }
+
+/** "agora" na loja + N dias, so a data (aritmetica pura em UTC-label, sem depender do fuso do servidor). */
+export function adicionarDiasFortaleza(dias: number): string {
+  const [y, m, d] = dataFortaleza().split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d) + dias * 86_400_000);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}-${String(dt.getUTCDate()).padStart(2, "0")}`;
+}
+
+/** "agora" na loja + N horas, timestamp completo (mesma aritmetica pura em UTC-label). */
+export function adicionarHorasFortaleza(horas: number): string {
+  const [dataParte, horaParte] = timestampFortaleza().split(" ");
+  const [y, m, d] = dataParte.split("-").map(Number);
+  const [hh, mm, ss] = horaParte.split(":").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d, hh, mm, ss) + horas * 3_600_000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())} ${pad(dt.getUTCHours())}:${pad(dt.getUTCMinutes())}:${pad(dt.getUTCSeconds())}`;
+}

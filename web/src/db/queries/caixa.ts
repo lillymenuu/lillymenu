@@ -1,8 +1,11 @@
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { admins, caixaTurnos, caixaMovimentacoes, operacaoLogs } from "@/db/schema";
+import type { NeonTx } from "@/db";
+import { admins, caixaTurnos, caixaMovimentacoes, operacaoLogs, pedidos } from "@/db/schema";
 import { timestampFortaleza, dataFortaleza } from "@/db/queries/tempo";
+
+type Queryable = typeof db | NeonTx;
 
 /*
  * Equivalente de admin/api/v1/caixa_abrir.php, caixa_fechar.php e
@@ -170,4 +173,32 @@ export async function movimentarCaixa(input: MovimentarCaixaInput): Promise<Movi
   await registrarOperacao(input.adminId, "caixa_movimentacao", `caixa:${caixaId}`, { tipo: input.tipo, valor: input.valor });
 
   return { ok: true, caixaId };
+}
+
+/*
+ * Equivalente de admin/helpers/caixa_module.php (caixaAtribuirPedidoFinalizado):
+ * atribui o caixa aberto da loja a um pedido que ainda nao tem caixa_id (caso de
+ * pedidos agendados feitos pelo cliente, que nascem sem operador/caixa). So
+ * faz sentido na finalizacao, pra entrar na movimentacao do caixa aberto no dia
+ * em que foi processado (nao no dia em que foi originalmente criado/agendado).
+ * Nunca sobrescreve um caixa_id ja existente (ex.: pedido criado pelo PDV).
+ */
+export async function caixaAtribuirPedidoFinalizado(conexao: Queryable, lojaId: number, pedidoId: number): Promise<void> {
+  try {
+    const [pedido] = await conexao.select({ caixaId: pedidos.caixa_id }).from(pedidos).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId))).limit(1);
+    if (!pedido || pedido.caixaId) return;
+
+    const hoje = dataFortaleza();
+    const [caixaAberto] = await conexao
+      .select({ id: caixaTurnos.id })
+      .from(caixaTurnos)
+      .where(and(eq(caixaTurnos.status, "aberto"), eq(caixaTurnos.loja_id, lojaId), sql`to_char(${caixaTurnos.aberto_em}, 'YYYY-MM-DD') = ${hoje}`))
+      .orderBy(desc(caixaTurnos.id))
+      .limit(1);
+    if (!caixaAberto) return;
+
+    await conexao.update(pedidos).set({ caixa_id: caixaAberto.id }).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId), sql`${pedidos.caixa_id} is null`));
+  } catch (e) {
+    console.error("[caixa] falha ao atribuir caixa ao pedido finalizado", pedidoId, e);
+  }
 }
