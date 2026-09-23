@@ -13,7 +13,7 @@ import { timestampFortaleza } from "@/db/queries/tempo";
  * persistente, e R2 ja esta configurado em producao de qualquer forma.
  */
 
-const CONTENT_TYPES: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
+const CONTENT_TYPES: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", pdf: "application/pdf" };
 
 function r2Client(): S3Client {
   return new S3Client({
@@ -46,6 +46,25 @@ export async function storageSaveBase64(dataUri: string, categoria: string, pref
   const ext = extRaw === "jpeg" ? "jpg" : extRaw;
   const buffer = Buffer.from(match[2], "base64");
   if (buffer.length === 0) return null;
+
+  const carimbo = timestampFortaleza().replace(/\D/g, "");
+  const nome = `${prefixo}_${carimbo}_${randomBytes(4).toString("hex")}.${ext}`;
+  const chave = chaveRelativa(categoria, lojaId, nome);
+
+  await r2Client().send(
+    new PutObjectCommand({ Bucket: process.env.R2_BUCKET, Key: chave, Body: buffer, ContentType: CONTENT_TYPES[ext] ?? "application/octet-stream" })
+  );
+
+  return `${publicBase()}/${chave}`;
+}
+
+const RE_BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
+
+/** Base64 cru (sem prefixo data-URI) + extensao explicita -> URL publica no R2. Usado por arquivos que nao sao imagem de data-URI (ex.: comprovante em PDF). */
+export async function storageSaveArquivoBase64(base64: string, ext: string, categoria: string, prefixo: string, lojaId: number | null, tamanhoMaximoBytes: number): Promise<string | null> {
+  if (base64 === "" || !RE_BASE64.test(base64)) return null;
+  const buffer = Buffer.from(base64, "base64");
+  if (buffer.length === 0 || buffer.length > tamanhoMaximoBytes) return null;
 
   const carimbo = timestampFortaleza().replace(/\D/g, "");
   const nome = `${prefixo}_${carimbo}_${randomBytes(4).toString("hex")}.${ext}`;
