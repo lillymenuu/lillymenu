@@ -1,14 +1,38 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-import type { PosCatalogoResposta } from "@/lib/pos";
+import { getSessaoAdmin } from "@/lib/session";
+import { catalogoPdv } from "@/db/queries/pdvCatalogo";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch<PosCatalogoResposta>("/admin/api/v1/pdv_catalogo.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const resultado = await catalogoPdv(sessao.lojaId);
+
+  return NextResponse.json({
+    ok: true,
+    categorias: resultado.categorias,
+    produtos: resultado.produtos.map((p) => ({
+      id: p.id,
+      nome: p.nome,
+      descricao: p.descricao,
+      categoria_id: p.categoriaId,
+      preco: p.preco,
+      preco_promocional: p.precoPromocional,
+      tem_variacoes: p.temVariacoes,
+      imagem: p.imagem,
+      pontos_ganho: p.pontosGanho,
+      pontos_custo: p.pontosCusto,
+      estoque: p.estoque,
+      grupo_estoque_id: p.grupoEstoqueId,
+    })),
+    combos: resultado.combos.map((c) => ({
+      id: c.id,
+      nome: c.nome,
+      categoria_id: c.categoriaId,
+      imagem: c.imagem,
+      tipo_preco: c.tipoPreco,
+      preco: c.preco,
+      preco_promocional: c.precoPromocional,
+    })),
+  });
 }

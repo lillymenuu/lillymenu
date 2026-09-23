@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
-import { phpApiFetchPassthrough, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { validarCupom } from "@/db/queries/cupons";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetchPassthrough("/admin/api/v1/pdv_cupom_validar.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const msg = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ ok: false, msg: "Dados invalidos." }, { status: 400 });
+
+  const resultado = await validarCupom({
+    lojaId: sessao.lojaId,
+    codigo: String(body.codigo ?? ""),
+    subtotal: Number(body.subtotal ?? 0),
+    tipoPedido: body.tipo ? String(body.tipo) : undefined,
+    taxaEntrega: body.taxa !== undefined ? Number(body.taxa) : undefined,
+    clienteId: body.cliente_id ? Number(body.cliente_id) : undefined,
+  });
+
+  return NextResponse.json(resultado);
 }

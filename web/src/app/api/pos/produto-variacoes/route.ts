@@ -1,16 +1,22 @@
 import { NextResponse } from "next/server";
-import { phpApiFetchPassthrough, PhpApiError } from "@/lib/phpApi";
-import type { PosVariacoesResposta } from "@/lib/pos";
+import { getSessaoAdmin } from "@/lib/session";
+import { variacoesProdutoPdv } from "@/db/queries/produtoVariacoesPdv";
 
 export async function GET(request: Request) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-  try {
-    const data = await phpApiFetchPassthrough<PosVariacoesResposta>(`/admin/api/v1/pdv_produto_variacoes.php?id=${encodeURIComponent(id ?? "")}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const id = Number(searchParams.get("id") ?? "0");
+  const resultado = await variacoesProdutoPdv(sessao.lojaId, id);
+
+  return NextResponse.json({
+    ok: resultado.ok,
+    msg: "msg" in resultado ? resultado.msg : undefined,
+    variacoes: resultado.variacoes,
+    extras: resultado.extras.map((e) => ({ id: e.id, nome: e.nome, preco: e.preco, obrigatorio: e.obrigatorio ? 1 : 0 })),
+    extras_obrigatorio: resultado.extrasObrigatorio ? 1 : 0,
+    complementos_itens: resultado.complementosItens.map((c) => ({ id: c.id, nome: c.nome, preco: c.preco, obrigatorio: c.obrigatorio ? 1 : 0 })),
+    complementos_itens_obrigatorio: resultado.complementosItensObrigatorio ? 1 : 0,
+  });
 }
