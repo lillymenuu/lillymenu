@@ -1,18 +1,18 @@
 import "server-only";
-import { detalheLancamentos } from "@/db/queries/financeiroSync";
+import { detalheLancamentosFinanceiro } from "@/db/queries/financeiroRelatorios";
 import type { FinanceiroLancamentosResposta } from "@/lib/financeiroLancamentos";
 
 export async function getFinanceiroLancamentos(
   lojaId: number,
   params?: { mes?: number; ano?: number; tipo?: string; categoria_id?: number; conta_id?: number; page?: number }
 ): Promise<FinanceiroLancamentosResposta> {
-  const resultado = await detalheLancamentos(lojaId, {
+  const resultado = await detalheLancamentosFinanceiro(lojaId, {
     mes: params?.mes,
     ano: params?.ano,
     tipo: params?.tipo,
     categoriaId: params?.categoria_id,
     contaId: params?.conta_id,
-    page: params?.page,
+    pagina: params?.page,
   });
 
   return {
@@ -44,7 +44,7 @@ export async function getFinanceiroLancamentos(
       payment_method_name: l.paymentMethodName,
       order_id: l.orderId,
     })),
-    categorias: resultado.categorias,
+    categorias: resultado.categorias.map((c) => ({ id: c.id, name: c.name, type: c.type as "income" | "expense" })),
     contas: resultado.contas,
     formas_pagamento: resultado.formasPagamento,
   };

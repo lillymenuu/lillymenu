@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
 import { getSessaoAdmin } from "@/lib/session";
-import { detalheLancamentos } from "@/db/queries/financeiroSync";
+import { detalheLancamentosFinanceiro } from "@/db/queries/financeiroRelatorios";
 
 export async function GET(request: Request) {
   const sessao = await getSessaoAdmin();
   if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
-  const resultado = await detalheLancamentos(sessao.lojaId, {
+  const resultado = await detalheLancamentosFinanceiro(sessao.lojaId, {
     mes: searchParams.get("mes") ? Number(searchParams.get("mes")) : undefined,
     ano: searchParams.get("ano") ? Number(searchParams.get("ano")) : undefined,
     tipo: searchParams.get("tipo") ?? undefined,
     categoriaId: searchParams.get("categoria_id") ? Number(searchParams.get("categoria_id")) : undefined,
     contaId: searchParams.get("conta_id") ? Number(searchParams.get("conta_id")) : undefined,
-    page: searchParams.get("page") ? Number(searchParams.get("page")) : undefined,
+    pagina: searchParams.get("page") ? Number(searchParams.get("page")) : undefined,
   });
 
   return NextResponse.json({
