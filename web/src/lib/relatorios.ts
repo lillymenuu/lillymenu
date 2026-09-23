@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { relatorioVendas } from "@/db/queries/relatoriosVendas";
 
 export type PedidoRelatorio = {
   id: number;
@@ -47,14 +48,45 @@ export type RelatoriosParams = {
   limite?: number;
 };
 
-export function getRelatorios(params: RelatoriosParams = {}) {
-  const qs = new URLSearchParams();
-  if (params.periodo) qs.set("periodo", params.periodo);
-  if (params.data_ini) qs.set("data_ini", params.data_ini);
-  if (params.data_fim) qs.set("data_fim", params.data_fim);
-  if (params.tipo) qs.set("tipo", params.tipo);
-  if (params.pagina) qs.set("pagina", String(params.pagina));
-  if (params.limite) qs.set("limite", String(params.limite));
-  const query = qs.toString();
-  return phpApiFetch<RelatoriosResposta>(`/admin/api/v1/relatorios.php${query ? `?${query}` : ""}`);
+export async function getRelatorios(lojaId: number, params: RelatoriosParams = {}): Promise<RelatoriosResposta> {
+  const resultado = await relatorioVendas({
+    lojaId,
+    periodo: params.periodo,
+    dataIni: params.data_ini,
+    dataFim: params.data_fim,
+    tipo: params.tipo,
+    pagina: params.pagina,
+    limite: params.limite,
+  });
+
+  return {
+    ok: true,
+    resumo: {
+      total_pedidos: resultado.resumo.totalPedidos,
+      faturamento: resultado.resumo.faturamento,
+      ticket_medio: resultado.resumo.ticketMedio,
+      taxa_entrega: resultado.resumo.taxaEntrega,
+    },
+    fiado_recebido: resultado.fiadoRecebido,
+    cancelados: resultado.cancelados,
+    cancelados_valor: resultado.canceladosValor,
+    vendas_pagamento: resultado.vendasPagamento,
+    produtos: resultado.produtos,
+    vendas_produtos: resultado.vendasProdutos,
+    clientes_frequencia: resultado.clientesFrequencia,
+    pedidos: resultado.pedidos.map((p) => ({
+      id: p.id,
+      codigo: p.codigo,
+      total: p.total,
+      status: p.status,
+      tipo: p.tipo,
+      forma_pagamento: p.formaPagamento,
+      criado_em: p.criadoEm,
+      cliente: p.cliente,
+    })),
+    total: resultado.total,
+    paginas: resultado.paginas,
+    pagina: resultado.pagina,
+    limite: resultado.limite,
+  };
 }
