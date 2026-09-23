@@ -1,22 +1,18 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { salvarGarcom } from "@/db/queries/modoGarcom";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/garcons_salvar.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const id = Number(body?.id ?? 0);
+  const nome = typeof body?.nome === "string" ? body.nome : "";
+  const email = typeof body?.email === "string" ? body.email : "";
+
+  const resultado = await salvarGarcom(sessao.lojaId, id, nome, email);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({ ok: true, id: resultado.id, codigo_acesso: resultado.codigoAcesso ?? null });
 }

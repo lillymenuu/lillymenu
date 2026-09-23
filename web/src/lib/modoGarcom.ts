@@ -1,4 +1,6 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { headers } from "next/headers";
+import { detalheModoGarcom } from "@/db/queries/modoGarcom";
 
 export type Mesa = {
   id: number;
@@ -46,6 +48,22 @@ export type PedidoMesa = {
   garcom_nome: string | null;
 };
 
-export function getModoGarcomDetalhe() {
-  return phpApiFetch<ModoGarcomDetalheResposta>("/admin/api/v1/modo_garcom_detalhe.php");
+export async function getModoGarcomDetalhe(lojaId: number): Promise<ModoGarcomDetalheResposta> {
+  const store = await headers();
+  const host = store.get("x-forwarded-host") ?? store.get("host") ?? "localhost";
+  const proto = store.get("x-forwarded-proto") ?? "http";
+  const protocoloHost = `${proto}://${host}`;
+
+  const resultado = await detalheModoGarcom(lojaId, protocoloHost);
+
+  return {
+    ok: true,
+    mesas: resultado.mesas.map((m) => ({ id: m.id, nome: m.nome, ativo: m.ativo ? 1 : 0, criado_em: m.criadoEm, tem_pedido_aberto: m.temPedidoAberto })),
+    garcons: resultado.garcons.map((g) => ({ id: g.id, nome: g.nome, email: g.email, ativo: g.ativo ? 1 : 0, criado_em: g.criadoEm })),
+    pedidos_pendentes: resultado.pedidosPendentes,
+    mesas_ativas: resultado.mesasAtivas,
+    garcons_ativos: resultado.garconsAtivos,
+    garcom_login_url: resultado.garcomLoginUrl,
+    cardapio_url: resultado.cardapioUrl,
+  };
 }
