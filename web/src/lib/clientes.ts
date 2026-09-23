@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { listarClientes } from "@/db/queries/clientesAdmin";
 
 export type Cliente = {
   id: number;
@@ -35,12 +36,34 @@ export type ClientesListarResposta = {
   pagina: number;
 };
 
-export function getClientesListar(params: ClientesListarParams = {}) {
-  const qs = new URLSearchParams();
-  if (params.busca) qs.set("busca", params.busca);
-  if (params.pagina) qs.set("pagina", String(params.pagina));
-  const query = qs.toString();
-  return phpApiFetch<ClientesListarResposta>(
-    `/admin/api/v1/clientes_listar.php${query ? `?${query}` : ""}`
-  );
+export async function getClientesListar(lojaId: number, params: ClientesListarParams = {}): Promise<ClientesListarResposta> {
+  const resultado = await listarClientes(lojaId, params.busca ?? "", params.pagina ?? 1);
+
+  return {
+    ok: true,
+    clientes: resultado.clientes.map((c) => ({
+      id: c.id,
+      nome: c.nome ?? "",
+      telefone: c.telefone ?? "",
+      endereco: c.endereco,
+      endereco_texto: c.enderecoTexto,
+      aniversario: c.aniversario,
+      cep: c.cep,
+      rua: c.rua,
+      numero: c.numero,
+      bairro: c.bairro,
+      cidade: c.cidade,
+      estado: c.estado,
+      complemento: c.complemento,
+      criado_em: c.criadoEm ?? "",
+      cashback_saldo: c.cashbackSaldo,
+      pontos_saldo: c.pontosSaldo,
+      saldo_fiado: c.saldoFiado,
+      total_pedidos: c.totalPedidos,
+      total_gasto: c.totalGasto,
+    })),
+    total: resultado.total,
+    paginas: resultado.paginas,
+    pagina: resultado.pagina,
+  };
 }
