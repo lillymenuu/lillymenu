@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { notificacoesPedidos } from "@/db/queries/notificacoesPedidos";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch("/admin/api/v1/notificacoes_pedidos.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    return NextResponse.json({ ok: false, pedidos: [] }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, pedidos: [] }, { status: 401 });
+
+  const pedidos = await notificacoesPedidos(sessao.lojaId);
+  return NextResponse.json({
+    ok: true,
+    pedidos: pedidos.map((p) => ({ id: p.id, codigo: p.codigo, criado_em: p.criadoEm, cliente: p.cliente, status: p.status, origem: p.origem, tipo: p.tipo, chave: p.chave, nota: p.nota, pedido_id: p.pedidoId })),
+  });
 }
