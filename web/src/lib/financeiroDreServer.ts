@@ -1,9 +1,12 @@
-import { phpApiFetch } from "@/lib/phpApi";
-import type { FinanceiroDreResposta } from "@/lib/financeiroDre";
+import "server-only";
+import { detalheDreFinanceiro } from "@/db/queries/financeiroRelatorios";
+import type { FinanceiroDreResposta, FinanceiroDreMes } from "@/lib/financeiroDre";
 
-export function getFinanceiroDre(ano?: number) {
-  const qs = new URLSearchParams();
-  if (ano) qs.set("ano", String(ano));
-  const query = qs.toString();
-  return phpApiFetch<FinanceiroDreResposta>(`/admin/api/v1/financeiro_dre_detalhe.php${query ? `?${query}` : ""}`);
+export async function getFinanceiroDre(lojaId: number, ano?: number): Promise<FinanceiroDreResposta> {
+  const resultado = await detalheDreFinanceiro(lojaId, ano);
+  const meses: Record<string, FinanceiroDreMes> = {};
+  for (const [mes, r] of Object.entries(resultado.meses)) {
+    meses[mes] = { reference_month: r.referenceMonth, reference_year: r.referenceYear, total_income: r.totalIncome, total_expense: r.totalExpense, profit_or_loss: r.profitOrLoss, margin_percent: r.marginPercent };
+  }
+  return { ok: true, ano: resultado.ano, anos: resultado.anos, meses };
 }
