@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-import type { BlDetalheResposta } from "@/lib/broadcastlist";
+import { getSessaoAdmin } from "@/lib/session";
+import { detalheLista } from "@/db/queries/broadcastList";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
   const { id } = await params;
-  try {
-    const data = await phpApiFetch<BlDetalheResposta>(`/admin/api/v1/broadcastlist_detalhe.php?id=${encodeURIComponent(id)}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const resultado = await detalheLista(sessao.lojaId, Number(id));
+  return NextResponse.json(resultado);
 }

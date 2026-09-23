@@ -1,6 +1,8 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { listarListas } from "@/db/queries/broadcastList";
 import type { BlListarResposta } from "@/lib/broadcastlist";
 
-export function getBlListas() {
-  return phpApiFetch<BlListarResposta>("/admin/api/v1/broadcastlist_listar.php");
+export async function getBlListas(lojaId: number): Promise<BlListarResposta> {
+  const listas = await listarListas(lojaId);
+  return { ok: true, listas: listas.map((l) => ({ id: l.id, nome: l.nome, criado_em: l.criadoEm, total_membros: l.totalMembros })) };
 }
