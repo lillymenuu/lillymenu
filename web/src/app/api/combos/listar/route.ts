@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-import type { CombosListarResposta } from "@/lib/combos";
+import { getSessaoAdmin } from "@/lib/session";
+import { getCombos } from "@/lib/combosServer";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch<CombosListarResposta>("/admin/api/v1/combo_listar.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const data = await getCombos(sessao.lojaId);
+  return NextResponse.json(data);
 }
