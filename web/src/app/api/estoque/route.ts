@@ -1,46 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { detalheEstoque, salvarEstoque, excluirEstoque } from "@/db/queries/estoqueAdmin";
 
 export async function GET(request: NextRequest) {
-  const produtoId = request.nextUrl.searchParams.get("produto_id") ?? "";
-  try {
-    const data = await phpApiFetch(`/admin/api/v1/estoque.php?produto_id=${encodeURIComponent(produtoId)}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const produtoId = Number(request.nextUrl.searchParams.get("produto_id") ?? 0);
+  const resultado = await detalheEstoque(sessao.lojaId, produtoId);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({
+    ok: true,
+    quantidade: resultado.quantidade,
+    quantidade_minima: resultado.quantidadeMinima,
+    vinculados: resultado.vinculados.map((v) => ({ id: v.id, nome: v.nome })),
+  });
 }
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/estoque.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const produtoId = Number(body?.produto_id ?? 0);
+  const quantidade = Number(body?.quantidade ?? 0);
+  const quantidadeMinima = Number(body?.quantidade_minima ?? 0);
+
+  const resultado = await salvarEstoque(sessao.lojaId, produtoId, quantidade, quantidadeMinima);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({ ok: true, quantidade: resultado.quantidade, quantidade_minima: resultado.quantidadeMinima });
 }
 
 export async function DELETE(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/estoque.php", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const produtoId = Number(body?.produto_id ?? 0);
+
+  const resultado = await excluirEstoque(sessao.lojaId, produtoId);
+  return NextResponse.json(resultado);
 }

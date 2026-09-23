@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { listarEstoque } from "@/db/queries/estoqueAdmin";
 
 export type EstoqueItem = {
   id: number;
@@ -6,6 +7,7 @@ export type EstoqueItem = {
   quantidade: number;
 };
 
-export function getEstoqueListar() {
-  return phpApiFetch<{ ok: true; itens: EstoqueItem[] }>("/admin/api/v1/estoque_listar.php");
+export async function getEstoqueListar(lojaId: number): Promise<{ ok: true; itens: EstoqueItem[] }> {
+  const itens = await listarEstoque(lojaId);
+  return { ok: true, itens: itens.map((i) => ({ id: i.id, nome: i.nome ?? "", quantidade: i.quantidade })) };
 }
