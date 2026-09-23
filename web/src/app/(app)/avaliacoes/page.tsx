@@ -1,35 +1,13 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Star, MessageSquareOff } from "lucide-react";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { listarAvaliacoes } from "@/db/queries/avaliacoes";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "cn";
-
-type Avaliacao = {
-  id: number;
-  nota: number;
-  descricao: string;
-  criado_em: string;
-  pedido_id: number;
-  codigo_pedido: number;
-  pedido_total: number | null;
-  pedido_data: string | null;
-  cliente_nome: string | null;
-  cliente_tel: string | null;
-};
-
-type AvaliacoesResponse = {
-  ok: true;
-  total: number;
-  media: number;
-  distribuicao: Record<string, number>;
-  total_filtrado: number;
-  pagina: number;
-  paginas: number;
-  avaliacoes: Avaliacao[];
-};
 
 const NOTA_LABEL: Record<number, string> = {
   5: "Ótimo",
@@ -85,24 +63,21 @@ export default async function AvaliacoesPage({
 }: {
   searchParams: Promise<{ nota?: string; busca?: string; pagina?: string }>;
 }) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) redirect("/login");
+
   const params = await searchParams;
   const filtroNota = params.nota ? Number(params.nota) : undefined;
   const filtroBusca = params.busca ?? "";
-  const pagina = params.pagina ?? "1";
+  const pagina = Number(params.pagina ?? "1");
 
-  let data: AvaliacoesResponse | null = null;
+  let data: Awaited<ReturnType<typeof listarAvaliacoes>> | null = null;
   let erro: string | null = null;
 
   try {
-    data = await phpApiFetch<AvaliacoesResponse>(
-      `/admin/api/v1/avaliacoes.php${buildQuery({
-        nota: filtroNota,
-        busca: filtroBusca,
-        pagina,
-      })}`
-    );
-  } catch (e) {
-    erro = e instanceof PhpApiError ? e.message : "Erro ao carregar avaliações.";
+    data = await listarAvaliacoes(sessao.lojaId, filtroNota ?? null, filtroBusca, pagina);
+  } catch {
+    erro = "Erro ao carregar avaliações.";
   }
 
   const temFiltro = Boolean(filtroNota || filtroBusca);
@@ -177,7 +152,7 @@ export default async function AvaliacoesPage({
                     }`}
                   >
                     <span className="text-base font-semibold" style={{ color: NOTA_COR[n] }}>
-                      {data.distribuicao[String(n)] ?? 0}
+                      {data.distribuicao[n as 1 | 2 | 3 | 4 | 5] ?? 0}
                     </span>
                     <Stars nota={n} size={11} />
                     <span className="text-[11px] text-muted-foreground">{NOTA_LABEL[n]}</span>
@@ -195,7 +170,7 @@ export default async function AvaliacoesPage({
                 {data.total > 0 ? (
                   <div className="flex flex-col gap-2">
                     {[5, 4, 3, 2, 1].map((n) => {
-                      const cnt = data!.distribuicao[String(n)] ?? 0;
+                      const cnt = data!.distribuicao[n as 1 | 2 | 3 | 4 | 5] ?? 0;
                       const pct = data!.total > 0 ? Math.round((cnt / data!.total) * 100) : 0;
                       return (
                         <div key={n} className="flex items-center gap-2 text-xs">
@@ -229,7 +204,7 @@ export default async function AvaliacoesPage({
               <div>
                 <h2 className="text-sm font-semibold">Avaliações</h2>
                 <p className="text-xs text-muted-foreground">
-                  {data.total_filtrado} resultado{data.total_filtrado !== 1 ? "s" : ""}
+                  {data.totalFiltrado} resultado{data.totalFiltrado !== 1 ? "s" : ""}
                 </p>
               </div>
               {temFiltro && (
@@ -246,10 +221,10 @@ export default async function AvaliacoesPage({
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="text-sm font-medium">
-                            {av.cliente_nome ?? "Cliente"}
+                            {av.clienteNome ?? "Cliente"}
                           </div>
-                          {av.cliente_tel && (
-                            <div className="text-xs text-muted-foreground">{av.cliente_tel}</div>
+                          {av.clienteTel && (
+                            <div className="text-xs text-muted-foreground">{av.clienteTel}</div>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -260,11 +235,11 @@ export default async function AvaliacoesPage({
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>Pedido #{av.codigo_pedido}</span>
-                        {av.pedido_data && <span>{formatarData(av.pedido_data)}</span>}
-                        {av.pedido_total != null && (
+                        <span>Pedido #{av.codigoPedido}</span>
+                        {av.pedidoData && <span>{formatarData(av.pedidoData)}</span>}
+                        {av.pedidoTotal != null && (
                           <span>
-                            R$ {av.pedido_total.toFixed(2).replace(".", ",")}
+                            R$ {av.pedidoTotal.toFixed(2).replace(".", ",")}
                           </span>
                         )}
                       </div>
@@ -272,7 +247,7 @@ export default async function AvaliacoesPage({
                         <p className="text-sm text-foreground/90">{av.descricao}</p>
                       )}
                       <div className="text-[11px] text-muted-foreground">
-                        {formatarData(av.criado_em)}
+                        {formatarData(av.criadoEm)}
                       </div>
                     </div>
                   ))}
