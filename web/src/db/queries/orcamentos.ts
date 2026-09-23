@@ -34,10 +34,12 @@ export async function listarOrcamentos(lojaId: number, statusFiltro: string): Pr
       total: orcamentos.total,
       criadoEm: orcamentos.criado_em,
       atualizadoEm: orcamentos.atualizado_em,
-      itensCount: sql<string>`(select count(*) from ${orcamentoItens} where ${orcamentoItens.orcamento_id} = ${orcamentos.id})`,
+      itensCount: sql<string>`count(${orcamentoItens.id})`,
     })
     .from(orcamentos)
+    .leftJoin(orcamentoItens, eq(orcamentoItens.orcamento_id, orcamentos.id))
     .where(condicao)
+    .groupBy(orcamentos.id)
     .orderBy(desc(orcamentos.criado_em), desc(orcamentos.id));
 
   return linhas.map((l) => ({ ...l, itensCount: Number(l.itensCount) }));

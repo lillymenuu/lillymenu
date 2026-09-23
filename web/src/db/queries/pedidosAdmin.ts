@@ -72,7 +72,12 @@ export type PedidoResumo = {
   pagamentos: PagamentoPedido[];
 };
 
-const statusEmExpr = sql<string | null>`(select l.criado_em from pedido_status_log l where l.pedido_id = ${pedidos.id} and l.loja_id = ${pedidos.loja_id} order by l.criado_em desc limit 1)`;
+// Correlacao com pedidos.id/loja_id via nome literal da tabela externa (nao
+// interpolado como coluna) de proposito: interpolar ${pedidos.id} aqui rendia
+// so "id" sem qualificar, e como pedido_status_log tambem tem sua propria
+// coluna "id", o Postgres resolvia pro "id" ERRADO (o da propria subquery),
+// zerando sempre o resultado.
+const statusEmExpr = sql<string | null>`(select l.criado_em from pedido_status_log l where l.pedido_id = pedidos.id and l.loja_id = pedidos.loja_id order by l.criado_em desc limit 1)`;
 
 export type ListarPedidosInput = {
   lojaId: number;

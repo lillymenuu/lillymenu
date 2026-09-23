@@ -35,7 +35,12 @@ async function expirarCashbackVencido(lojaId: number): Promise<void> {
       clienteId: cashbackMovimentacoes.cliente_id,
       valor: cashbackMovimentacoes.valor,
       expiraEm: cashbackMovimentacoes.expira_em,
-      usado: sql<string>`coalesce((select sum(u.valor) from cashback_movimentacoes u where u.referencia_id = ${cashbackMovimentacoes.id} and u.loja_id = ${cashbackMovimentacoes.loja_id} and u.tipo in ('uso','expirado')), 0)`,
+      // Correlacao via nome literal da tabela externa (nao interpolado como
+      // coluna): interpolar ${cashbackMovimentacoes.id} rendia so "id" sem
+      // qualificar, e como a subquery e um self-join na MESMA tabela (aliased
+      // "u"), o Postgres resolvia pro "id"/"loja_id" da propria subquery,
+      // fazendo "usado" ficar sempre 0 (coalesce cai no fallback).
+      usado: sql<string>`coalesce((select sum(u.valor) from cashback_movimentacoes u where u.referencia_id = cashback_movimentacoes.id and u.loja_id = cashback_movimentacoes.loja_id and u.tipo in ('uso','expirado')), 0)`,
     })
     .from(cashbackMovimentacoes)
     .where(and(eq(cashbackMovimentacoes.tipo, "entrada"), eq(cashbackMovimentacoes.loja_id, lojaId), isNotNull(cashbackMovimentacoes.expira_em), lt(cashbackMovimentacoes.expira_em, hoje)));
