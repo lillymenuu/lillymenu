@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { historicoCaixa } from "@/db/queries/caixaDetalhe";
 
 export async function GET(request: NextRequest) {
-  const qs = request.nextUrl.searchParams.toString();
-  try {
-    const data = await phpApiFetch(`/admin/api/v1/caixa_historico.php${qs ? `?${qs}` : ""}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const tipo = request.nextUrl.searchParams.get("tipo") ?? "fechado";
+  const pagina = Number(request.nextUrl.searchParams.get("pagina") ?? "1");
+
+  const resultado = await historicoCaixa(sessao.lojaId, tipo, pagina);
+  return NextResponse.json({
+    ok: true,
+    tipo: resultado.tipo,
+    itens: resultado.itens.map((i) => ({ id: i.id, status: i.status, aberto_em: i.abertoEm, fechado_em: i.fechadoEm, operador: i.operador })),
+    pagina: resultado.pagina,
+    total_paginas: resultado.totalPaginas,
+    total: resultado.total,
+    mostrando_de: resultado.mostrandoDe,
+    mostrando_ate: resultado.mostrandoAte,
+  });
 }

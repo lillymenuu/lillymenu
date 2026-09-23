@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { resumoCaixaAtual } from "@/db/queries/caixaResumo";
 
 export type CaixaAtual = {
   id: number;
@@ -97,6 +98,28 @@ export type CaixaDetalheResposta = {
   linhas: CaixaDetalheLinha[];
 };
 
-export function getCaixaResumo() {
-  return phpApiFetch<CaixaResumoResposta>("/admin/api/v1/caixa_resumo.php");
+export async function getCaixaResumo(lojaId: number): Promise<CaixaResumoResposta> {
+  const resultado = await resumoCaixaAtual(lojaId);
+  if (!resultado.caixa) return { ok: true, caixa: null };
+
+  const { caixa, resumo, movimentos } = resultado;
+  return {
+    ok: true,
+    caixa: { id: caixa.id, status: caixa.status, saldo_inicial: caixa.saldoInicial, aberto_em: caixa.abertoEm, operador: caixa.operador },
+    resumo: {
+      saldo_inicial_dia: resumo.saldoInicialDia,
+      pagamentos: resumo.pagamentos,
+      saldo_esperado: resumo.saldoEsperado,
+      entrada_total: resumo.entradaTotal,
+      saida_total: resumo.saidaTotal,
+      saldo_total: resumo.saldoTotal,
+      troco: resumo.troco,
+      taxa_maquininha: resumo.taxaMaquininha,
+      sangrias_total: resumo.sangriasTotal,
+      total_vendas: resumo.totalVendas,
+      taxa_entrega: resumo.taxaEntrega,
+      total_sem_taxa_entrega: resumo.totalSemTaxaEntrega,
+    },
+    movimentos: movimentos.map((m) => ({ uid: m.uid, forma: m.forma, valor: m.valor, criado_em: m.criadoEm, observacoes: m.observacoes, direcao: m.direcao, origem: m.origem })),
+  };
 }
