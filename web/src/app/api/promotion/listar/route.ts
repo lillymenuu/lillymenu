@@ -1,17 +1,34 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { listarPromocoes } from "@/db/queries/promocoes";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch("/admin/api/v1/promo_listar.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const resultado = await listarPromocoes(sessao.lojaId);
+  return NextResponse.json({
+    ok: true,
+    produtos: resultado.produtos.map((p) => ({
+      id: p.id,
+      nome: p.nome,
+      preco: p.preco,
+      categoria_id: p.categoriaId,
+      categoria: p.categoria,
+      preco_promocional: p.precoPromocional,
+      promo_desativado: p.promoDesativado ? 1 : 0,
+      promo_dias: p.promoDias,
+      promo_inicio: p.promoInicio,
+      promo_imagem: p.promoImagem,
+      promo_descricao: p.promoDescricao,
+      promo_etiqueta: p.promoEtiqueta,
+      imagem: p.imagem,
+      em_promo: p.emPromo,
+      dias_restantes: p.diasRestantes,
+    })),
+    limite_ativas: resultado.limiteAtivas,
+    ativas_count: resultado.ativasCount,
+    flyers: resultado.flyers,
+    flyers_ativo: resultado.flyersAtivo,
+  });
 }
