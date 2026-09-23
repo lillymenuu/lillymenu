@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { relatorioCrossSell } from "@/db/queries/relatorioCrossSell";
 
 export type CrossSellPorDia = { dia: string; valor: number };
 export type CrossSellTopProduto = { nome: string; qtd: number; valor: number };
@@ -32,13 +33,19 @@ export type CrossSellReportParams = {
   data_fim?: string;
 };
 
-export function getCrossSellReport(params: CrossSellReportParams = {}) {
-  const qs = new URLSearchParams();
-  if (params.periodo) qs.set("periodo", params.periodo);
-  if (params.data_ini) qs.set("data_ini", params.data_ini);
-  if (params.data_fim) qs.set("data_fim", params.data_fim);
-  const query = qs.toString();
-  return phpApiFetch<CrossSellReportResposta>(
-    `/admin/api/v1/relatorio_cross_sell.php${query ? `?${query}` : ""}`
-  );
+export async function getCrossSellReport(lojaId: number, params: CrossSellReportParams = {}): Promise<CrossSellReportResposta> {
+  const resultado = await relatorioCrossSell({ lojaId, periodo: params.periodo, dataIni: params.data_ini, dataFim: params.data_fim });
+  return {
+    ok: true,
+    periodo: resultado.periodo,
+    resumo: {
+      faturamento: resultado.resumo.faturamento,
+      itens_vendidos: resultado.resumo.itensVendidos,
+      pedidos_cross_sell: resultado.resumo.pedidosCrossSell,
+      ticket_medio: resultado.resumo.ticketMedio,
+    },
+    por_dia: resultado.porDia,
+    top_produtos: resultado.topProdutos,
+    itens: resultado.itens.map((i) => ({ codigo: i.codigo, cliente: i.cliente, produto_nome: i.produtoNome ?? "", quantidade: i.quantidade, preco: i.preco, subtotal: i.subtotal, criado_em: i.criadoEm ?? "" })),
+  };
 }
