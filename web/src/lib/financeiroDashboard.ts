@@ -1,15 +1,15 @@
 export type FinanceiroConta = {
   id: number;
   name: string;
-  initial_balance: string;
+  initial_balance: number;
   active: number;
-  monthly_income: string;
-  monthly_expense: string;
-  monthly_balance: string;
+  monthly_income: number;
+  monthly_expense: number;
+  monthly_balance: number;
 };
 
-export type FinanceiroPorPagamento = { payment_method: string; total: string };
-export type FinanceiroPorCategoria = { category_name: string; category_group: string | null; total: string };
+export type FinanceiroPorPagamento = { payment_method: string; total: number };
+export type FinanceiroPorCategoria = { category_name: string; category_group: string | null; total: number };
 
 export type FinanceiroDashboardResposta = {
   ok: true;
@@ -25,8 +25,8 @@ export type FinanceiroDashboardResposta = {
     margin_percent: number;
   };
   dashboard: {
-    summary: { total_income: string; total_expense: string; balance: string };
-    cash_flow: { transaction_date: string; income_total: string; expense_total: string; day_balance: string }[];
+    summary: { total_income: number; total_expense: number; balance: number };
+    cash_flow: { transaction_date: string; income_total: number; expense_total: number; day_balance: number }[];
     accounts: FinanceiroConta[];
     expense_by_category: FinanceiroPorCategoria[];
     income_by_payment_method: FinanceiroPorPagamento[];
@@ -36,7 +36,7 @@ export type FinanceiroDashboardResposta = {
     total_expenses: number;
     net_profit: number;
     margin_percent: number;
-    lines: { type: string; category_name: string; group_name: string; total: string }[];
+    lines: { type: string; category_name: string; group_name: string; total: number }[];
   };
 };
 
