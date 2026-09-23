@@ -1,18 +1,21 @@
 import { NextResponse } from "next/server";
-import { phpApiFetchPassthrough, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { sincronizarPedidosFinanceiro } from "@/db/queries/financeiroSync";
 
 export async function POST(request: Request) {
-  const body = await request.text();
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const modo = typeof body?.modo === "string" ? body.modo : "mes";
+  const mes = body?.mes ? Number(body.mes) : undefined;
+  const ano = body?.ano ? Number(body.ano) : undefined;
+
   try {
-    const data = await phpApiFetchPassthrough("/admin/api/v1/financeiro_sync_pedidos.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
+    const resultado = await sincronizarPedidosFinanceiro(sessao.lojaId, modo, mes, ano);
+    return NextResponse.json({ ok: true, ...resultado });
   } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const msg = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg }, { status });
+    const msg = e instanceof Error ? e.message : "Erro ao sincronizar pedidos.";
+    return NextResponse.json({ ok: false, msg: `Erro: ${msg}` });
   }
 }

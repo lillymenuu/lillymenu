@@ -1,21 +1,51 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { detalheLancamentos } from "@/db/queries/financeiroSync";
 import type { FinanceiroLancamentosResposta } from "@/lib/financeiroLancamentos";
 
-export function getFinanceiroLancamentos(params?: {
-  mes?: number;
-  ano?: number;
-  tipo?: string;
-  categoria_id?: number;
-  conta_id?: number;
-  page?: number;
-}) {
-  const qs = new URLSearchParams();
-  if (params?.mes) qs.set("mes", String(params.mes));
-  if (params?.ano) qs.set("ano", String(params.ano));
-  if (params?.tipo) qs.set("tipo", params.tipo);
-  if (params?.categoria_id) qs.set("categoria_id", String(params.categoria_id));
-  if (params?.conta_id) qs.set("conta_id", String(params.conta_id));
-  if (params?.page) qs.set("page", String(params.page));
-  const query = qs.toString();
-  return phpApiFetch<FinanceiroLancamentosResposta>(`/admin/api/v1/financeiro_lancamentos_detalhe.php${query ? `?${query}` : ""}`);
+export async function getFinanceiroLancamentos(
+  lojaId: number,
+  params?: { mes?: number; ano?: number; tipo?: string; categoria_id?: number; conta_id?: number; page?: number }
+): Promise<FinanceiroLancamentosResposta> {
+  const resultado = await detalheLancamentos(lojaId, {
+    mes: params?.mes,
+    ano: params?.ano,
+    tipo: params?.tipo,
+    categoriaId: params?.categoria_id,
+    contaId: params?.conta_id,
+    page: params?.page,
+  });
+
+  return {
+    ok: true,
+    mes: resultado.mes,
+    ano: resultado.ano,
+    anos: resultado.anos,
+    tipo: resultado.tipo,
+    categoria_id: resultado.categoriaId,
+    conta_id: resultado.contaId,
+    page: resultado.page,
+    per_page: resultado.perPage,
+    total: resultado.total,
+    total_paginas: resultado.totalPaginas,
+    lancamentos: resultado.lancamentos.map((l) => ({
+      id: l.id,
+      type: l.type,
+      description: l.description,
+      amount: l.amount,
+      transaction_date: l.transactionDate,
+      reference_month: l.referenceMonth,
+      reference_year: l.referenceYear,
+      notes: l.notes,
+      account_id: l.accountId,
+      account_name: l.accountName,
+      category_id: l.categoryId,
+      category_name: l.categoryName,
+      payment_method_id: l.paymentMethodId,
+      payment_method_name: l.paymentMethodName,
+      order_id: l.orderId,
+    })),
+    categorias: resultado.categorias,
+    contas: resultado.contas,
+    formas_pagamento: resultado.formasPagamento,
+  };
 }
