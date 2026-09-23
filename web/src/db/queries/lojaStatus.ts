@@ -1,8 +1,17 @@
 import "server-only";
 import { and, lte, gte, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { pausasProgramadas } from "@/db/schema";
+import { pausasProgramadas, configuracoes } from "@/db/schema";
 import { getConfigs } from "@/db/queries/config";
+
+/* Equivalente de admin/api/v1/loja_status.php (abre/fecha a loja manualmente). */
+export async function definirLojaAberta(lojaId: number, aberta: boolean): Promise<void> {
+  const valor = aberta ? "0" : "1";
+  await db
+    .insert(configuracoes)
+    .values({ loja_id: lojaId, chave: "loja_force_fechada", valor })
+    .onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor } });
+}
 
 /* Equivalente de admin/helpers/whatsapp.php: estaAberto(). */
 export async function estaAberto(lojaId: number): Promise<boolean> {
