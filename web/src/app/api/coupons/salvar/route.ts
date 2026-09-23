@@ -1,18 +1,25 @@
 import { NextResponse } from "next/server";
-import { phpApiFetchPassthrough, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { salvarCupom } from "@/db/queries/cuponsAdmin";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetchPassthrough("/admin/api/v1/cupons_salvar.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const msg = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ ok: false, msg: "Dados invalidos." }, { status: 400 });
+
+  const resultado = await salvarCupom(sessao.lojaId, {
+    id: Number(body.id ?? 0) > 0 ? Number(body.id) : undefined,
+    codigo: typeof body.codigo === "string" ? body.codigo : "",
+    tipo: typeof body.tipo === "string" ? body.tipo : undefined,
+    desconto: body.desconto,
+    minimo: body.minimo,
+    quantidadeTotal: body.quantidade_total,
+    ativo: Boolean(body.ativo),
+    primeiraCompra: Boolean(body.primeira_compra),
+    publico: Boolean(body.publico),
+  });
+
+  return NextResponse.json(resultado);
 }
