@@ -1,18 +1,29 @@
 import { NextResponse } from "next/server";
-import { phpApiFetchPassthrough, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { salvarContaFinanceira } from "@/db/queries/financeiroCore";
 
 export async function POST(request: Request) {
-  const body = await request.text();
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const id = Number(body?.id ?? 0);
+
   try {
-    const data = await phpApiFetchPassthrough("/admin/api/v1/financeiro_contas_salvar.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
+    const item = await salvarContaFinanceira(sessao.lojaId, {
+      id: id > 0 ? id : undefined,
+      name: body?.name,
+      initialBalance: body?.initial_balance,
+      currentBalance: body?.current_balance,
+      active: body?.active,
     });
-    return NextResponse.json(data);
+    return NextResponse.json({
+      ok: true,
+      msg: id > 0 ? "Conta atualizada com sucesso." : "Conta criada com sucesso.",
+      item: { id: item.id, name: item.name, initial_balance: item.initialBalance, current_balance: item.currentBalance, active: item.active },
+    });
   } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const msg = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg }, { status });
+    const msg = e instanceof Error ? e.message : "Dados inválidos.";
+    return NextResponse.json({ ok: false, msg }, { status: 422 });
   }
 }

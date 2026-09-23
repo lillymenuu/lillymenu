@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-import type { FinanceiroContasResposta } from "@/lib/financeiroContas";
+import { getSessaoAdmin } from "@/lib/session";
+import { listarContasFinanceiras } from "@/db/queries/financeiroCore";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch<FinanceiroContasResposta>("/admin/api/v1/financeiro_contas_detalhe.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const contas = await listarContasFinanceiras(sessao.lojaId, false);
+  return NextResponse.json({
+    ok: true,
+    contas: contas.map((c) => ({ id: c.id, name: c.name, initial_balance: c.initialBalance, current_balance: c.currentBalance, active: c.active })),
+  });
 }

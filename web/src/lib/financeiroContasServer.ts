@@ -1,6 +1,11 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { listarContasFinanceiras } from "@/db/queries/financeiroCore";
 import type { FinanceiroContasResposta } from "@/lib/financeiroContas";
 
-export function getFinanceiroContas() {
-  return phpApiFetch<FinanceiroContasResposta>("/admin/api/v1/financeiro_contas_detalhe.php");
+export async function getFinanceiroContas(lojaId: number): Promise<FinanceiroContasResposta> {
+  const contas = await listarContasFinanceiras(lojaId, false);
+  return {
+    ok: true,
+    contas: contas.map((c) => ({ id: c.id, name: c.name, initial_balance: c.initialBalance, current_balance: c.currentBalance, active: c.active })),
+  };
 }
