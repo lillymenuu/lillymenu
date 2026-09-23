@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-import type { OrcamentosListarResposta } from "@/lib/orcamentos";
+import { getSessaoAdmin } from "@/lib/session";
+import { listarOrcamentos } from "@/db/queries/orcamentos";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch<OrcamentosListarResposta>("/admin/api/v1/orcamentos_listar.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const orcamentos = await listarOrcamentos(sessao.lojaId, "");
+  return NextResponse.json({
+    ok: true,
+    orcamentos: orcamentos.map((o) => ({ id: o.id, status: o.status, cliente_nome: o.clienteNome, total: o.total, itens_count: o.itensCount, criado_em: o.criadoEm, atualizado_em: o.atualizadoEm })),
+  });
 }
