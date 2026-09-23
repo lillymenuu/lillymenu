@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { detalheAssinatura } from "@/db/queries/assinatura";
 
 export type AssinaturaStatus = "trial" | "ativa" | "suspensa" | "cancelada";
 
@@ -45,6 +46,27 @@ export type AssinaturaDetalheResposta = {
   saas: { pix_chave: string; pix_nome: string; whatsapp_numero: string };
 };
 
-export function getAssinaturaDetalhe() {
-  return phpApiFetch<AssinaturaDetalheResposta>("/admin/api/v1/assinatura_detalhe.php");
+export async function getAssinaturaDetalhe(lojaId: number): Promise<AssinaturaDetalheResposta> {
+  const d = await detalheAssinatura(lojaId);
+  return {
+    ok: true,
+    assinatura: { id: d.assinatura.id, status: d.assinatura.status as AssinaturaStatus, trial_fim: d.assinatura.trialFim, ciclo_fim: d.assinatura.cicloFim },
+    plano: d.plano,
+    assinatura_desde: d.assinaturaDesde,
+    loja_nome: d.lojaNome,
+    cobranca_pendente: d.cobrancaPendente
+      ? {
+          id: d.cobrancaPendente.id,
+          valor: d.cobrancaPendente.valor,
+          vencimento: d.cobrancaPendente.vencimento,
+          status: d.cobrancaPendente.status,
+          comprovante_arquivo: d.cobrancaPendente.comprovanteArquivo,
+          comprovante_enviado_em: d.cobrancaPendente.comprovanteEnviadoEm,
+          motivo_rejeicao: d.cobrancaPendente.motivoRejeicao,
+        }
+      : null,
+    planos_disponiveis: d.planosDisponiveis,
+    perfil_cobranca: d.perfilCobranca,
+    saas: { pix_chave: d.saas.pixChave, pix_nome: d.saas.pixNome, whatsapp_numero: d.saas.whatsappNumero },
+  };
 }

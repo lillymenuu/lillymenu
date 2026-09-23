@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { criarPagamentoPix } from "@/db/queries/pagamentoPix";
 
 export async function POST() {
-  try {
-    const data = await phpApiFetch("/admin/api/v1/pagamento_pix_criar.php", { method: "POST" });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const resultado = await criarPagamentoPix(sessao.lojaId, sessao.id);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({
+    ok: true,
+    cobranca_id: resultado.cobrancaId,
+    qr_code: resultado.qrCode,
+    qr_code_base64: resultado.qrCodeBase64,
+    expira_em: resultado.expiraEm,
+    valor: resultado.valor,
+  });
 }

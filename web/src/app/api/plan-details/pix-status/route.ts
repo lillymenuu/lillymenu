@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { consultarStatusPix } from "@/db/queries/pagamentoPix";
 
 export async function GET(request: NextRequest) {
-  const qs = request.nextUrl.searchParams.toString();
-  try {
-    const data = await phpApiFetch(`/admin/api/v1/pagamento_pix_status.php${qs ? `?${qs}` : ""}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const cobrancaId = Number(request.nextUrl.searchParams.get("cobranca_id") ?? "0");
+  const resultado = await consultarStatusPix(sessao.lojaId, cobrancaId);
+  return NextResponse.json(resultado);
 }

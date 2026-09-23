@@ -1,17 +1,32 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { detalheAssinatura } from "@/db/queries/assinatura";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch("/admin/api/v1/assinatura_detalhe.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const d = await detalheAssinatura(sessao.lojaId);
+
+  return NextResponse.json({
+    ok: true,
+    assinatura: { id: d.assinatura.id, status: d.assinatura.status, trial_fim: d.assinatura.trialFim, ciclo_fim: d.assinatura.cicloFim },
+    plano: d.plano,
+    assinatura_desde: d.assinaturaDesde,
+    loja_nome: d.lojaNome,
+    cobranca_pendente: d.cobrancaPendente
+      ? {
+          id: d.cobrancaPendente.id,
+          valor: d.cobrancaPendente.valor,
+          vencimento: d.cobrancaPendente.vencimento,
+          status: d.cobrancaPendente.status,
+          comprovante_arquivo: d.cobrancaPendente.comprovanteArquivo,
+          comprovante_enviado_em: d.cobrancaPendente.comprovanteEnviadoEm,
+          motivo_rejeicao: d.cobrancaPendente.motivoRejeicao,
+        }
+      : null,
+    planos_disponiveis: d.planosDisponiveis,
+    perfil_cobranca: d.perfilCobranca,
+    saas: { pix_chave: d.saas.pixChave, pix_nome: d.saas.pixNome, whatsapp_numero: d.saas.whatsappNumero },
+  });
 }

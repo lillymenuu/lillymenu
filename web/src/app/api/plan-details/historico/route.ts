@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { historicoAssinatura } from "@/db/queries/assinatura";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch("/admin/api/v1/assinatura_historico.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const linhas = await historicoAssinatura(sessao.lojaId);
+
+  return NextResponse.json({
+    ok: true,
+    transacoes: linhas.map((t) => ({ id: t.id, valor: t.valor, status: t.status, origem: t.origem, vencimento: t.vencimento, pago_em: t.pagoEm, criado_em: t.criadoEm })),
+  });
 }
