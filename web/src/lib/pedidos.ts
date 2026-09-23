@@ -1,6 +1,6 @@
 import "server-only";
 import { phpApiFetch } from "@/lib/phpApi";
-import { listarPedidos } from "@/db/queries/pedidosAdmin";
+import { kanbanPedidos, listarPedidos } from "@/db/queries/pedidosAdmin";
 
 export type Pagamento = { forma: string; valor: number };
 
@@ -27,8 +27,31 @@ export type Pedido = {
 
 export type Motoboy = { id: number; nome: string; whatsapp: string };
 
-export function getPedidos() {
-  return phpApiFetch<{ ok: true; pedidos: Pedido[] }>("/admin/api/v1/pedidos_kanban.php");
+export async function getPedidosKanban(lojaId: number): Promise<{ ok: true; pedidos: Pedido[] }> {
+  const resultado = await kanbanPedidos(lojaId);
+  return {
+    ok: true,
+    pedidos: resultado.pedidos.map((p) => ({
+      id: p.id,
+      codigo: p.codigo,
+      status: p.status,
+      tipo: p.tipo,
+      total: p.total ?? 0,
+      criado_em: p.criadoEm ?? "",
+      forma_pagamento: p.formaPagamento,
+      endereco_entrega: p.enderecoEntrega,
+      nome: p.nome,
+      telefone: p.telefone ?? "",
+      agendamento: p.agendamento,
+      origem: p.origem,
+      observacoes_cliente: p.observacoesCliente,
+      motoboy_id: p.motoboyId,
+      motoboy_nome: p.motoboyNome,
+      motoboy_whatsapp: p.motoboyWhatsapp,
+      status_em: p.statusEm,
+      pagamentos: p.pagamentos,
+    })),
+  };
 }
 
 export function getMotoboysAtivos() {

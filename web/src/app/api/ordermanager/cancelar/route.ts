@@ -1,22 +1,13 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { cancelarPedido } from "@/db/queries/pedidosStatus";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/pedidos_cancelar.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id ?? 0);
+  const resultado = await cancelarPedido(sessao.lojaId, sessao.id, sessao.perfil, id);
+  return NextResponse.json(resultado);
 }

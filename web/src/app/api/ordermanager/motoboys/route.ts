@@ -1,34 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { listarMotoboysParaVinculo, vincularMotoboy } from "@/db/queries/motoboys";
 
 export async function GET(request: NextRequest) {
-  const pedidoId = request.nextUrl.searchParams.get("pedido_id") ?? "";
-  try {
-    const data = await phpApiFetch(
-      `/admin/api/v1/motoboys.php?action=list&pedido_id=${encodeURIComponent(pedidoId)}`
-    );
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const pedidoId = Number(request.nextUrl.searchParams.get("pedido_id") ?? "0");
+  const resultado = await listarMotoboysParaVinculo(sessao.lojaId, pedidoId);
+  return NextResponse.json({ ok: true, motoboys: resultado.motoboys, selected_id: resultado.selectedId });
 }
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/motoboys.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => ({}));
+  const pedidoId = Number(body.pedido_id ?? 0);
+  const motoboyId = Number(body.motoboy_id ?? 0);
+  const resultado = await vincularMotoboy(sessao.lojaId, pedidoId, motoboyId);
+  if (!resultado.ok) return NextResponse.json(resultado);
+  return NextResponse.json({ ok: true, msg: resultado.msg, motoboy_nome: resultado.motoboyNome });
 }

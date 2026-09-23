@@ -1,18 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { buscarPedidos } from "@/db/queries/pedidosAdmin";
 
 export async function GET(request: NextRequest) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
   const q = request.nextUrl.searchParams.get("q") ?? "";
-  try {
-    const data = await phpApiFetch(`/admin/api/v1/pedidos_buscar.php?q=${encodeURIComponent(q)}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const resultado = await buscarPedidos(sessao.lojaId, q);
+
+  return NextResponse.json({
+    ok: true,
+    pedidos: resultado.pedidos.map((p) => ({
+      id: p.id,
+      codigo: p.codigo,
+      status: p.status,
+      tipo: p.tipo,
+      total: p.total ?? 0,
+      criado_em: p.criadoEm ?? "",
+      forma_pagamento: p.formaPagamento,
+      endereco_entrega: p.enderecoEntrega,
+      nome: p.nome,
+      telefone: p.telefone ?? "",
+      agendamento: p.agendamento,
+      origem: p.origem,
+      observacoes_cliente: p.observacoesCliente,
+      motoboy_id: p.motoboyId,
+      motoboy_nome: p.motoboyNome,
+      motoboy_whatsapp: p.motoboyWhatsapp,
+      status_em: p.statusEm,
+      pagamentos: p.pagamentos,
+    })),
+  });
 }
