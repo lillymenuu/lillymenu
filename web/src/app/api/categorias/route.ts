@@ -1,26 +1,49 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { listarCategorias, salvarCategoria, reordenarCategorias, excluirCategoria } from "@/db/queries/categoriasAdmin";
 
-async function proxy(request: Request, method: "POST" | "DELETE") {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/categorias.php", {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+export async function GET() {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const categorias = await listarCategorias(sessao.lojaId);
+  return NextResponse.json({
+    ok: true,
+    categorias: categorias.map((c) => ({ id: c.id, nome: c.nome, ativo: c.ativo ? 1 : 0, ordem: c.ordem, modo_exibicao: c.modoExibicao })),
+  });
 }
 
-export function POST(request: Request) {
-  return proxy(request, "POST");
+export async function POST(request: Request) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const idRaw = body?.id;
+  const resultado = await salvarCategoria(sessao.lojaId, {
+    id: idRaw && Number(idRaw) > 0 ? Number(idRaw) : undefined,
+    nome: typeof body?.nome === "string" ? body.nome : "",
+    ativo: Boolean(body?.ativo),
+    modoExibicao: typeof body?.modo_exibicao === "string" ? body.modo_exibicao : undefined,
+  });
+  return NextResponse.json(resultado);
 }
 
-export function DELETE(request: Request) {
-  return proxy(request, "DELETE");
+export async function PUT(request: Request) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const ordem = Array.isArray(body?.ordem) ? body.ordem.map((n: unknown) => Number(n)) : [];
+  const resultado = await reordenarCategorias(sessao.lojaId, ordem);
+  return NextResponse.json(resultado);
+}
+
+export async function DELETE(request: Request) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const id = Number(body?.id ?? 0);
+  const resultado = await excluirCategoria(sessao.lojaId, id);
+  return NextResponse.json(resultado);
 }

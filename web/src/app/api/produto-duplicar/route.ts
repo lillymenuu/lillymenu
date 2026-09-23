@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { duplicarProduto } from "@/db/queries/produtosAdmin";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/produto_duplicar.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const id = Number(body?.id ?? 0);
+  const resultado = await duplicarProduto(sessao.lojaId, id);
+  return NextResponse.json(resultado);
 }
