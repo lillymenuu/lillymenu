@@ -1,4 +1,6 @@
+import "server-only";
 import { phpApiFetch } from "@/lib/phpApi";
+import { listarPedidos } from "@/db/queries/pedidosAdmin";
 
 export type Pagamento = { forma: string; valor: number };
 
@@ -52,15 +54,41 @@ export type PedidosListarResposta = {
   limite: number;
 };
 
-export function getPedidosListar(params: PedidosListarParams = {}) {
-  const qs = new URLSearchParams();
-  if (params.status) qs.set("status", params.status);
-  if (params.data_ini) qs.set("data_ini", params.data_ini);
-  if (params.data_fim) qs.set("data_fim", params.data_fim);
-  if (params.pagina) qs.set("pagina", String(params.pagina));
-  if (params.limite) qs.set("limite", String(params.limite));
-  const query = qs.toString();
-  return phpApiFetch<PedidosListarResposta>(
-    `/admin/api/v1/pedidos_listar.php${query ? `?${query}` : ""}`
-  );
+export async function getPedidosListar(lojaId: number, params: PedidosListarParams = {}): Promise<PedidosListarResposta> {
+  const resultado = await listarPedidos({
+    lojaId,
+    status: params.status,
+    dataIni: params.data_ini,
+    dataFim: params.data_fim,
+    pagina: params.pagina,
+    limite: params.limite,
+  });
+
+  return {
+    ok: true,
+    pedidos: resultado.pedidos.map((p) => ({
+      id: p.id,
+      codigo: p.codigo,
+      status: p.status,
+      tipo: p.tipo,
+      total: p.total ?? 0,
+      criado_em: p.criadoEm ?? "",
+      forma_pagamento: p.formaPagamento,
+      endereco_entrega: p.enderecoEntrega,
+      nome: p.nome,
+      telefone: p.telefone ?? "",
+      agendamento: p.agendamento,
+      origem: p.origem,
+      observacoes_cliente: p.observacoesCliente,
+      motoboy_id: p.motoboyId,
+      motoboy_nome: p.motoboyNome,
+      motoboy_whatsapp: p.motoboyWhatsapp,
+      status_em: p.statusEm,
+      pagamentos: p.pagamentos,
+    })),
+    total: resultado.total,
+    paginas: resultado.paginas,
+    pagina: resultado.pagina,
+    limite: resultado.limite,
+  };
 }

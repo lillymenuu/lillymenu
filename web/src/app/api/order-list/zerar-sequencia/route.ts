@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { zerarSequenciaPedidos } from "@/db/queries/pedidosAdmin";
 
 export async function POST() {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
   try {
-    const data = await phpApiFetch("/admin/api/v1/pedidos_zerar_sequencia.php", {
-      method: "POST",
-    });
-    return NextResponse.json(data);
+    const resultado = await zerarSequenciaPedidos(sessao.lojaId);
+    return NextResponse.json(resultado);
   } catch (e) {
-    return erroResposta(e);
+    const msg = e instanceof Error ? e.message : "Erro desconhecido.";
+    return NextResponse.json({ ok: false, msg: `Erro: ${msg}` });
   }
 }
