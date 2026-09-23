@@ -1,5 +1,6 @@
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { BadgeCheck, Banknote, ShoppingBag, TrendingUp, Users } from "lucide-react";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { TopProdutosChart } from "@/components/top-produtos-chart";
 import { DashboardChart } from "@/components/dashboard-chart";
@@ -7,7 +8,11 @@ import { ConversionFunnel } from "@/components/conversion-funnel";
 import { DashboardSearch } from "@/components/dashboard-search";
 import { StoreLinkField } from "@/components/store-link-field";
 import { VerseOfDay } from "@/components/verse-of-day";
-import { getSidebarData } from "@/lib/sidebar";
+import { getSessaoAdmin } from "@/lib/session";
+import { getSidebarDataNeon } from "@/db/queries/sidebar";
+import { montarDashboard } from "@/db/queries/dashboard";
+import { funilConversao } from "@/db/queries/funilConversao";
+import { getConfig } from "@/db/queries/config";
 import { formatBRLMilhar } from "@/components/ordermanager/constants";
 
 type VersiculoResponse = {
@@ -20,83 +25,76 @@ type VersiculoResponse = {
   fonte_url?: string;
 };
 
-type FunilResponse = {
-  ok: true;
-  dias: number;
-  visitas: number;
-  views: number;
-  carrinhos: number;
-  pedidos: number;
-  conversao: number;
-  pct_views: number;
-  pct_carrinhos: number;
-  pct_pedidos: number;
-};
+/*
+ * Busca do versiculo do dia (scraping de bibliaon.com) deliberadamente
+ * deixada em PHP — ver o comentario em db/queries/versiculoReacao.ts.
+ * Isolada num import() dinamico pra nao derrubar a pagina inteira quando
+ * PHP_API_BASE_URL nao esta configurada (so o widget some).
+ */
+async function carregarVersiculo(): Promise<VersiculoResponse | null> {
+  try {
+    const { phpApiFetch } = await import("@/lib/phpApi");
+    return await phpApiFetch<VersiculoResponse>("/admin/api/v1/versiculo_dia.php");
+  } catch {
+    return null;
+  }
+}
 
-type DashboardResponse = {
-  ok: true;
-  periodo: 7 | 15 | 30;
-  loja: { nome: string; verificada: boolean; link: string };
-  kpis: {
-    receita_mes_atual: number;
-    faixa_receita_mes: string;
-    pedidos_periodo: number;
-    receita_periodo: number;
-    clientes_cadastrados: number;
-    acessos_menu: number;
-  };
-  grafico: {
-    labels: string[];
-    serie_pedidos: number[];
-    serie_valores: number[];
-  };
-  top_produtos: {
-    nome: string;
-    valor: number;
-    saidas: number;
-    estoque: number;
-  }[];
-};
+async function resolverLinkLoja(lojaId: number): Promise<string> {
+  const linkLojaRaw = await getConfig(lojaId, "link_loja", "");
+  const store = await headers();
+  const host = store.get("x-forwarded-host") ?? store.get("host") ?? "localhost";
+  const proto = store.get("x-forwarded-proto") ?? "http";
+  const base = `${proto}://${host}/`;
+  const baseAntigo = `${base}lilly/`;
 
+  let slug: string;
+  if (linkLojaRaw.startsWith(baseAntigo)) {
+    slug = decodeURIComponent(linkLojaRaw.slice(baseAntigo.length));
+  } else {
+    const mParam = linkLojaRaw.match(/[?&]loja=([^&]+)/);
+    const mPath = linkLojaRaw.match(/\/([^/?]+)\/?$/);
+    if (mParam) slug = decodeURIComponent(mParam[1]);
+    else if (mPath) slug = mPath[1];
+    else slug = linkLojaRaw;
+  }
+  slug = slug.replace(/\.php$/i, "");
+
+  return slug !== "" ? `${base}${slug}` : "";
+}
 
 export default async function DashboardPage({
   searchParams,
 }: {
   searchParams: Promise<{ periodo?: string }>;
 }) {
-  const params = await searchParams;
-  const periodo = params.periodo ?? "7";
+  const sessao = await getSessaoAdmin();
+  if (!sessao) redirect("/login");
 
-  let data: DashboardResponse | null = null;
-  let funil: FunilResponse | null = null;
+  const params = await searchParams;
+  const periodo = Number(params.periodo ?? "7");
+
+  let data: Awaited<ReturnType<typeof montarDashboard>> | null = null;
+  let linkLoja = "";
+  let funil: Awaited<ReturnType<typeof funilConversao>> | null = null;
   let erro: string | null = null;
 
   try {
-    [data, funil] = await Promise.all([
-      phpApiFetch<DashboardResponse>(
-        `/admin/api/v1/dashboard.php?periodo=${encodeURIComponent(periodo)}`
-      ),
-      phpApiFetch<FunilResponse>(`/admin/api/v1/funil_conversao.php?dias=7`),
-    ]);
-  } catch (e) {
-    erro = e instanceof PhpApiError ? e.message : "Erro ao carregar o dashboard.";
+    [data, linkLoja, funil] = await Promise.all([montarDashboard(sessao.lojaId, periodo), resolverLinkLoja(sessao.lojaId), funilConversao(sessao.lojaId, 7)]);
+  } catch {
+    erro = "Erro ao carregar o dashboard.";
   }
 
   const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
   let menu: Record<string, boolean> = {};
   try {
-    const sidebarData = await getSidebarData();
+    const sidebarData = await getSidebarDataNeon(sessao.id, sessao.lojaId, sessao.perfil);
     menu = sidebarData.menu;
   } catch {
     // busca fica vazia se o sidebar nao carregar; nao bloqueia o resto do dashboard
   }
 
-  let versiculo: VersiculoResponse | null = null;
-  try {
-    versiculo = await phpApiFetch<VersiculoResponse>("/admin/api/v1/versiculo_dia.php");
-  } catch {
-    // fonte externa pode falhar (timeout, fora do ar) — widget so some, nao quebra o dashboard
-  }
+  const versiculo = await carregarVersiculo();
 
   if (erro || !data) {
     return (
@@ -122,7 +120,7 @@ export default async function DashboardPage({
           <DashboardSearch menu={menu} phpAdminUrl={phpAdminUrl} />
         </div>
         <div className="justify-self-start sm:justify-self-end">
-          <StoreLinkField link={data.loja.link} />
+          <StoreLinkField link={linkLoja} />
         </div>
       </div>
 
@@ -133,8 +131,8 @@ export default async function DashboardPage({
             <Banknote className="text-primary" size={18} />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{formatBRLMilhar(data.kpis.receita_mes_atual)}</div>
-            <div className="text-xs text-muted-foreground">{data.kpis.faixa_receita_mes}</div>
+            <div className="text-xl font-bold">{formatBRLMilhar(data.kpis.receitaMesAtual)}</div>
+            <div className="text-xs text-muted-foreground">{data.kpis.faixaReceitaMes}</div>
           </CardContent>
         </Card>
         <Card>
@@ -143,7 +141,7 @@ export default async function DashboardPage({
             <ShoppingBag className="text-primary" size={18} />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{data.kpis.pedidos_periodo}</div>
+            <div className="text-xl font-bold">{data.kpis.pedidosPeriodo}</div>
             <div className="text-xs text-muted-foreground">nos últimos {data.periodo} dias</div>
           </CardContent>
         </Card>
@@ -153,7 +151,7 @@ export default async function DashboardPage({
             <Users className="text-primary" size={18} />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{data.kpis.clientes_cadastrados}</div>
+            <div className="text-xl font-bold">{data.kpis.clientesCadastrados}</div>
           </CardContent>
         </Card>
         <Card>
@@ -162,7 +160,7 @@ export default async function DashboardPage({
             <TrendingUp className="text-primary" size={18} />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{data.kpis.acessos_menu}</div>
+            <div className="text-xl font-bold">{data.kpis.acessosMenu}</div>
             <div className="text-xs text-muted-foreground">este mês</div>
           </CardContent>
         </Card>
@@ -174,9 +172,9 @@ export default async function DashboardPage({
           views={funil.views}
           carrinhos={funil.carrinhos}
           pedidos={funil.pedidos}
-          pctViews={funil.pct_views}
-          pctCarrinhos={funil.pct_carrinhos}
-          pctPedidos={funil.pct_pedidos}
+          pctViews={funil.pctViews}
+          pctCarrinhos={funil.pctCarrinhos}
+          pctPedidos={funil.pctPedidos}
           conversao={funil.conversao}
           dias={funil.dias}
         />
@@ -200,8 +198,8 @@ export default async function DashboardPage({
           <DashboardChart
             periodo={data.periodo}
             labels={data.grafico.labels}
-            seriePedidos={data.grafico.serie_pedidos}
-            serieValores={data.grafico.serie_valores}
+            seriePedidos={data.grafico.seriePedidos}
+            serieValores={data.grafico.serieValores}
           />
         </CardContent>
       </Card>
@@ -212,8 +210,8 @@ export default async function DashboardPage({
           <p className="text-xs text-muted-foreground">Top 5 produtos com maior rotatividade</p>
         </CardHeader>
         <CardContent>
-          {data.top_produtos.length > 0 ? (
-            <TopProdutosChart produtos={data.top_produtos} />
+          {data.topProdutos.length > 0 ? (
+            <TopProdutosChart produtos={data.topProdutos} />
           ) : (
             <div className="py-8 text-center text-sm text-muted-foreground">
               Sem dados suficientes.
