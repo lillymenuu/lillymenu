@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-import type { FinanceiroFormasPagamentoResposta } from "@/lib/financeiroFormasPagamento";
+import { getSessaoAdmin } from "@/lib/session";
+import { listarFormasPagamento } from "@/db/queries/financeiroCore";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch<FinanceiroFormasPagamentoResposta>("/admin/api/v1/financeiro_formas_pagamento_detalhe.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const formas = await listarFormasPagamento(sessao.lojaId, false);
+  return NextResponse.json({ ok: true, formas_pagamento: formas.map((f) => ({ id: f.id, name: f.name, active: f.active })) });
 }
