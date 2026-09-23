@@ -1,18 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { detalheFiado } from "@/db/queries/fiado";
 
 export async function GET(request: NextRequest) {
-  const qs = request.nextUrl.searchParams.toString();
-  try {
-    const data = await phpApiFetch(`/admin/api/v1/fiado_detalhe.php${qs ? `?${qs}` : ""}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const clienteId = Number(request.nextUrl.searchParams.get("cliente_id") ?? 0);
+  const pagina = Number(request.nextUrl.searchParams.get("pagina") ?? "1");
+
+  const resultado = await detalheFiado(sessao.lojaId, clienteId, pagina);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  const { cliente, lancamentos } = resultado;
+  return NextResponse.json({
+    ok: true,
+    cliente: { id: cliente.id, nome: cliente.nome ?? "", telefone: cliente.telefone ?? "", saldo_fiado: cliente.saldoFiado },
+    lancamentos: lancamentos.map((l) => ({
+      id: l.id,
+      tipo: l.tipo,
+      valor: l.valor,
+      saldo_antes: l.saldoAntes,
+      saldo_depois: l.saldoDepois,
+      observacao: l.observacao,
+      criado_em: l.criadoEm,
+      pedido_id: l.pedidoId,
+      pedido_codigo: l.pedidoCodigo,
+      forma_pagamento: l.formaPagamento,
+      operador_nome: l.operadorNome,
+    })),
+    pagina: resultado.pagina,
+    paginas: resultado.paginas,
+    total: resultado.total,
+  });
 }

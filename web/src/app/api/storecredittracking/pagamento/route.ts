@@ -1,22 +1,19 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { registrarPagamentoFiado } from "@/db/queries/fiado";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/fiado_pagamento.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const clienteId = Number(body?.cliente_id ?? 0);
+  const valor = Number(body?.valor ?? 0);
+  const formaPagamento = typeof body?.forma_pagamento === "string" ? body.forma_pagamento : "";
+  const observacao = typeof body?.observacao === "string" ? body.observacao : "";
+
+  const resultado = await registrarPagamentoFiado(sessao.lojaId, sessao.id, clienteId, valor, formaPagamento, observacao);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({ ok: true, saldo_fiado: resultado.saldoFiado });
 }

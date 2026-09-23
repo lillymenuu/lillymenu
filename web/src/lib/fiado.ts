@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { listarClientesFiado } from "@/db/queries/fiado";
 
 export type FiadoCliente = {
   id: number;
@@ -23,13 +24,17 @@ export type FiadoClientesParams = {
   limite?: number;
 };
 
-export function getFiadoClientes(params: FiadoClientesParams = {}) {
-  const qs = new URLSearchParams();
-  if (params.busca) qs.set("busca", params.busca);
-  if (params.pagina) qs.set("pagina", String(params.pagina));
-  if (params.limite) qs.set("limite", String(params.limite));
-  const query = qs.toString();
-  return phpApiFetch<FiadoClientesResposta>(`/admin/api/v1/fiado_clientes.php${query ? `?${query}` : ""}`);
+export async function getFiadoClientes(lojaId: number, params: FiadoClientesParams = {}): Promise<FiadoClientesResposta> {
+  const resultado = await listarClientesFiado(lojaId, params.busca ?? "", params.pagina ?? 1, params.limite ?? 10);
+  return {
+    ok: true,
+    total_debitos: resultado.totalDebitos,
+    total_clientes: resultado.totalClientes,
+    clientes: resultado.clientes.map((c) => ({ id: c.id, nome: c.nome ?? "", telefone: c.telefone ?? "", saldo_fiado: c.saldoFiado })),
+    pagina: resultado.pagina,
+    paginas: resultado.paginas,
+    total: resultado.total,
+  };
 }
 
 export type FiadoLancamento = {

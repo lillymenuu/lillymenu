@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { buscarClientesFiado } from "@/db/queries/fiado";
 
 export async function GET(request: NextRequest) {
-  const qs = request.nextUrl.searchParams.toString();
-  try {
-    const data = await phpApiFetch(`/admin/api/v1/fiado_clientes_busca.php${qs ? `?${qs}` : ""}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const busca = request.nextUrl.searchParams.get("busca") ?? "";
+  const clientes = await buscarClientesFiado(sessao.lojaId, busca);
+  return NextResponse.json({ ok: true, clientes: clientes.map((c) => ({ id: c.id, nome: c.nome ?? "", telefone: c.telefone ?? "" })) });
 }
