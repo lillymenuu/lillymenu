@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { avaliacoesCliente } from "@/db/queries/avaliacoes";
 
 export async function GET(request: NextRequest) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
   const params = request.nextUrl.searchParams;
-  const id = params.get("id") ?? "";
-  const pagina = params.get("pagina") ?? "1";
-  try {
-    const data = await phpApiFetch(
-      `/admin/api/v1/cliente_avaliacoes.php?cliente_id=${encodeURIComponent(id)}&pagina=${encodeURIComponent(pagina)}`
-    );
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const id = Number(params.get("id") ?? 0);
+  const pagina = Number(params.get("pagina") ?? "1");
+
+  const resultado = await avaliacoesCliente(sessao.lojaId, id, pagina);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({
+    ok: true,
+    total: resultado.total,
+    pagina: resultado.pagina,
+    paginas: resultado.paginas,
+    avaliacoes: resultado.avaliacoes.map((a) => ({ id: a.id, nota: a.nota, descricao: a.descricao, pedido_id: a.pedidoId, criado_em: a.criadoEm })),
+  });
 }

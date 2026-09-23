@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { pontosCliente } from "@/db/queries/clienteAbas";
 
 export async function GET(request: NextRequest) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
   const params = request.nextUrl.searchParams;
-  const id = params.get("id") ?? "";
-  const pagina = params.get("pagina") ?? "1";
-  try {
-    const data = await phpApiFetch(
-      `/admin/api/v1/cliente_pontos.php?cliente_id=${encodeURIComponent(id)}&pagina=${encodeURIComponent(pagina)}`
-    );
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const id = Number(params.get("id") ?? 0);
+  const pagina = Number(params.get("pagina") ?? "1");
+
+  const resultado = await pontosCliente(sessao.lojaId, id, pagina);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({
+    ok: true,
+    pagina: resultado.pagina,
+    paginas: resultado.paginas,
+    total: resultado.total,
+    pontos: resultado.pontos.map((p) => ({ id: p.id, pedido_id: p.pedidoId, tipo: p.tipo, pontos: p.pontos, saldo_antes: p.saldoAntes, saldo_depois: p.saldoDepois, criado_em: p.criadoEm })),
+  });
 }
