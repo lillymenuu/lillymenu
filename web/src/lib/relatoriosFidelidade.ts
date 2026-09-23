@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { relatorioFidelidade } from "@/db/queries/relatoriosFidelidade";
 
 export type ClienteFidelidade = {
   nome: string;
@@ -34,13 +35,18 @@ export type RelatoriosFidelidadeParams = {
   data_fim?: string;
 };
 
-export function getRelatoriosFidelidade(params: RelatoriosFidelidadeParams = {}) {
-  const qs = new URLSearchParams();
-  if (params.periodo) qs.set("periodo", params.periodo);
-  if (params.data_ini) qs.set("data_ini", params.data_ini);
-  if (params.data_fim) qs.set("data_fim", params.data_fim);
-  const query = qs.toString();
-  return phpApiFetch<RelatoriosFidelidadeResposta>(
-    `/admin/api/v1/relatorios_fidelidade.php${query ? `?${query}` : ""}`
-  );
+export async function getRelatoriosFidelidade(lojaId: number, params: RelatoriosFidelidadeParams = {}): Promise<RelatoriosFidelidadeResposta> {
+  const resultado = await relatorioFidelidade({ lojaId, periodo: params.periodo, dataIni: params.data_ini, dataFim: params.data_fim });
+  return {
+    ok: true,
+    data_ini: resultado.dataIni,
+    data_fim: resultado.dataFim,
+    cashback_saldo_base: resultado.cashbackSaldoBase,
+    cashback_utilizado: resultado.cashbackUtilizado,
+    pedidos_com_cashback: resultado.pedidosComCashback,
+    clientes: resultado.clientes.map((c) => ({ nome: c.nome, criado_em: c.criadoEm, saldo: c.saldo, usado: c.usado, expira_em: c.expiraEm })),
+    historico: resultado.historico.map((h) => ({ tipo: h.tipo, classe: h.classe, data: h.data, valor: h.valor })),
+    cupom_desconto: resultado.cupomDesconto,
+    cupom_pedidos: resultado.cupomPedidos,
+  };
 }
