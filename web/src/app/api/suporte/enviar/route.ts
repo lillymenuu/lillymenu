@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
-import { phpApiFetchPassthrough, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { enviarMensagemLoja } from "@/db/queries/suporteChat";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetchPassthrough("/admin/api/v1/suporte_enviar.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const msg = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  const mensagem = typeof body?.mensagem === "string" ? body.mensagem : "";
+  const base64 = typeof body?.imagem_base64 === "string" ? body.imagem_base64 : "";
+  const ext = typeof body?.imagem_ext === "string" ? body.imagem_ext : "";
+
+  const resultado = await enviarMensagemLoja(sessao.lojaId, mensagem, base64, ext);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  const m = resultado.mensagem;
+  return NextResponse.json({ ok: true, mensagem: { id: m.id, remetente: m.remetente, mensagem: m.mensagem, anexo_arquivo: m.anexoArquivo, criado_em: m.criadoEm } });
 }
