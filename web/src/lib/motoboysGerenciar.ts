@@ -1,4 +1,5 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { gerenciarMotoboys } from "@/db/queries/motoboys";
 
 export type MotoboyGerenciar = {
   id: number;
@@ -53,13 +54,14 @@ export type MotoboysPeriodoParams = {
   data_fim?: string;
 };
 
-export function getMotoboysGerenciar(params: MotoboysPeriodoParams = {}) {
-  const qs = new URLSearchParams();
-  if (params.periodo) qs.set("periodo", params.periodo);
-  if (params.data_inicio) qs.set("data_inicio", params.data_inicio);
-  if (params.data_fim) qs.set("data_fim", params.data_fim);
-  const query = qs.toString();
-  return phpApiFetch<MotoboysGerenciarResposta>(
-    `/admin/api/v1/motoboys_gerenciar.php${query ? `?${query}` : ""}`
-  );
+export async function getMotoboysGerenciar(lojaId: number, params: MotoboysPeriodoParams = {}): Promise<MotoboysGerenciarResposta> {
+  const resultado = await gerenciarMotoboys(lojaId, params.periodo ?? "hoje", params.data_inicio ?? "", params.data_fim ?? "");
+  return {
+    ok: true,
+    periodo: resultado.periodo,
+    data_inicio: resultado.dataInicio,
+    data_fim: resultado.dataFim,
+    stats: { total_motoboys: resultado.stats.totalMotoboys, entregas_periodo: resultado.stats.entregasPeriodo, taxas_periodo: resultado.stats.taxasPeriodo },
+    motoboys: resultado.motoboys.map((m) => ({ id: m.id, nome: m.nome, whatsapp: m.whatsapp, data_cadastro: m.dataCadastro, ativo: m.ativo ? 1 : 0, entregas_periodo: m.entregasPeriodo, taxas_periodo: m.taxasPeriodo })),
+  };
 }
