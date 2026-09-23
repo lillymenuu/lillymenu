@@ -19,9 +19,15 @@ export type AdminAutenticado = {
   perfil: string;
   lojaId: number;
   lojaAtiva: boolean;
+  ativo: boolean;
 };
 
-/** Confere email/usuario + senha contra a tabela `admins` migrada. */
+/**
+ * Confere email/usuario + senha contra a tabela `admins` migrada. NAO checa
+ * ativo/lojaAtiva aqui (igual auth_login.php): quem chama decide o codigo de
+ * resposta (401 credencial invalida vs 403 conta/loja inativa), ja que o
+ * fluxo do lojista distingue os dois casos e o do superadmin nao.
+ */
 export async function verificarCredenciais(login: string, senha: string): Promise<AdminAutenticado | null> {
   const loginNormalizado = login.trim().toLowerCase();
 
@@ -44,7 +50,6 @@ export async function verificarCredenciais(login: string, senha: string): Promis
   const admin = linhas[0];
   if (!admin || !admin.senha) return null;
   if (!bcrypt.compareSync(senha, admin.senha)) return null;
-  if (!admin.ativo) return null;
 
   return {
     id: admin.id,
@@ -53,13 +58,14 @@ export async function verificarCredenciais(login: string, senha: string): Promis
     perfil: admin.perfil,
     lojaId: admin.lojaId,
     lojaAtiva: admin.lojaAtiva ?? false,
+    ativo: admin.ativo ?? false,
   };
 }
 
-/** Igual a verificarCredenciais, mas so aceita perfil "superadmin" (tela /superadmin/login). */
+/** Igual a verificarCredenciais, mas so aceita perfil "superadmin" + ativo=1 (igual ao WHERE de superadmin_login.php: inativo cai no mesmo 401 generico, sem 403 separado). */
 export async function verificarCredenciaisSuperadmin(login: string, senha: string): Promise<AdminAutenticado | null> {
   const admin = await verificarCredenciais(login, senha);
-  if (!admin || admin.perfil !== "superadmin") return null;
+  if (!admin || admin.perfil !== "superadmin" || !admin.ativo) return null;
   return admin;
 }
 
@@ -112,6 +118,7 @@ export async function validarSessao(token: string): Promise<AdminAutenticado | n
     perfil: admin.perfil,
     lojaId: admin.lojaId,
     lojaAtiva: admin.lojaAtiva ?? false,
+    ativo: admin.ativo ?? false,
   };
 }
 

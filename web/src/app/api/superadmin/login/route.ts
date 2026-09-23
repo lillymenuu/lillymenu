@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { phpApiBaseUrl } from "@/lib/phpApi";
+import { verificarCredenciaisSuperadmin, criarSessao } from "@/db/queries/auth";
 import { SA_TOKEN_COOKIE } from "@/lib/superAuthCookie";
 
 export async function POST(request: Request) {
@@ -12,20 +12,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, erro: "Informe email e senha." }, { status: 422 });
   }
 
-  const res = await fetch(`${phpApiBaseUrl()}/admin/api/v1/superadmin_login.php`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, senha }),
-    cache: "no-store",
-  });
-  const data = await res.json().catch(() => null);
-
-  if (!res.ok || !data?.ok) {
-    return NextResponse.json({ ok: false, erro: data?.erro ?? "Falha ao autenticar." }, { status: res.status || 401 });
+  const admin = await verificarCredenciaisSuperadmin(email, senha);
+  if (!admin) {
+    return NextResponse.json({ ok: false, erro: "Email ou senha invalidos." }, { status: 401 });
   }
 
+  const token = await criarSessao(admin.id, admin.lojaId);
+
   const store = await cookies();
-  store.set(SA_TOKEN_COOKIE, data.token, {
+  store.set(SA_TOKEN_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
