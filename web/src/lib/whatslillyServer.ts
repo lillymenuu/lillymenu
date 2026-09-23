@@ -1,6 +1,12 @@
-import { phpApiFetch } from "@/lib/phpApi";
+import "server-only";
+import { listarConversas } from "@/db/queries/whatsLilly";
 import type { WlConversasResposta } from "@/lib/whatslilly";
 
-export function getWlConversas() {
-  return phpApiFetch<WlConversasResposta>("/admin/api/v1/whatslilly_conversas.php");
+export async function getWlConversas(lojaId: number): Promise<WlConversasResposta> {
+  const { conversas, totalNaoLidas } = await listarConversas(lojaId, "");
+  return {
+    ok: true,
+    conversas: conversas.map((c) => ({ id: c.id, numero: c.numero, nome: c.nome, ultimo_msg: c.ultimoMsg, ultimo_msg_em: c.ultimoMsgEm, nao_lidas: c.naoLidas })),
+    total_nao_lidas: totalNaoLidas,
+  };
 }

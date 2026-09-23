@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { totalNaoLidas } from "@/db/queries/whatsLilly";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch<{ ok: true; total_nao_lidas: number }>("/admin/api/v1/whatslilly_nao_lidas.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const total = await totalNaoLidas(sessao.lojaId);
+  return NextResponse.json({ ok: true, total_nao_lidas: total });
 }
