@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos, caixaTurnos, clientes, lojaEventos, pedidoItens, produtos, estoque } from "@/db/schema";
-import { getConfig } from "@/db/queries/config";
+import { getConfigs } from "@/db/queries/config";
 
 /*
  * Equivalente de admin/api/v1/dashboard.php: KPIs, grafico de pedidos/faturamento
@@ -74,7 +74,7 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
   const fimMesStr = formatarISO(fimMes);
 
   /* serie diaria do periodo, so pedidos finalizados */
-  const serieRaw = await db
+  const serieP = db
     .select({
       dia: dataCompetencia,
       totalPedidos: sql<number>`count(*)`,
@@ -84,6 +84,63 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
     .leftJoin(caixaTurnos, and(eq(caixaTurnos.id, pedidos.caixa_id), eq(caixaTurnos.loja_id, pedidos.loja_id)))
     .where(and(eq(pedidos.loja_id, lojaId), eq(pedidos.status, "finalizado"), gte(dataCompetencia, inicioPeriodoStr)))
     .groupBy(dataCompetencia);
+
+  /* receita do mes corrente (mesma competencia, sem limite de periodo) */
+  const receitaMesP = db
+    .select({ total: sql<number>`coalesce(sum(${pedidos.total}), 0)` })
+    .from(pedidos)
+    .leftJoin(caixaTurnos, and(eq(caixaTurnos.id, pedidos.caixa_id), eq(caixaTurnos.loja_id, pedidos.loja_id)))
+    .where(
+      and(
+        eq(pedidos.loja_id, lojaId),
+        eq(pedidos.status, "finalizado"),
+        gte(dataCompetencia, inicioMesStr),
+        lte(dataCompetencia, fimMesStr)
+      )
+    );
+  /* acessos ao cardapio no mes (loja_eventos.tipo = 'visita') */
+  const acessosP = db
+    .select({ n: sql<number>`count(*)` })
+    .from(lojaEventos)
+    .where(
+      and(
+        eq(lojaEventos.loja_id, lojaId),
+        eq(lojaEventos.tipo, "visita"),
+        gte(lojaEventos.criado_em, `${inicioMesStr} 00:00:00`),
+        lte(lojaEventos.criado_em, `${fimMesStr} 23:59:59`)
+      )
+    );
+  const clientesP = db.select({ n: sql<number>`count(*)` }).from(clientes).where(eq(clientes.loja_id, lojaId));
+
+  /* top 5 produtos por saidas (soma de pedido_itens.quantidade em pedidos finalizados) */
+  const topP = db
+    .select({
+      produtoId: sql<number | null>`coalesce(${produtos.id}, ${pedidoItens.produto_id})`,
+      nome: sql<string | null>`coalesce(${produtos.nome}, ${pedidoItens.produto_nome})`,
+      valor: sql<number | null>`coalesce(${produtos.preco}, ${pedidoItens.preco})`,
+      estoqueQtd: sql<number>`coalesce(${estoque.quantidade}, 0)`,
+      saidas: sql<number>`sum(${pedidoItens.quantidade})`,
+    })
+    .from(pedidoItens)
+    .innerJoin(pedidos, eq(pedidos.id, pedidoItens.pedido_id))
+    .leftJoin(
+      produtos,
+      and(
+        sql`(${produtos.id} = nullif(${pedidoItens.produto_id}, 0) or ((${pedidoItens.produto_id} is null or ${pedidoItens.produto_id} = 0) and ${produtos.nome} = ${pedidoItens.produto_nome}))`,
+        eq(produtos.loja_id, lojaId)
+      )
+    )
+    .leftJoin(estoque, and(eq(estoque.produto_id, produtos.id), eq(estoque.loja_id, lojaId)))
+    .where(and(eq(pedidos.status, "finalizado"), eq(pedidos.loja_id, lojaId), eq(pedidoItens.loja_id, lojaId)))
+    .groupBy(sql`coalesce(${produtos.id}, ${pedidoItens.produto_id})`, sql`coalesce(${produtos.nome}, ${pedidoItens.produto_nome})`, sql`coalesce(${produtos.preco}, ${pedidoItens.preco})`, estoque.quantidade)
+    .orderBy(sql`sum(${pedidoItens.quantidade}) desc`)
+    .limit(5);
+
+  const [serieRaw, receitaMesLinhas, acessosLinhas, clientesLinhas, topRaw, cfgLoja] = await Promise.all([serieP, receitaMesP, acessosP, clientesP, topP, getConfigs(lojaId, ["nome_loja", "loja_verificada"])]);
+
+  const receitaMesAtual = Math.round(Number(receitaMesLinhas[0]?.total ?? 0) * 100) / 100;
+  const acessosMenu = Number(acessosLinhas[0]?.n ?? 0);
+  const clientesCadastrados = Number(clientesLinhas[0]?.n ?? 0);
 
   const mapPedidos = new Map(serieRaw.map((r) => [r.dia, Number(r.totalPedidos)]));
   const mapValores = new Map(serieRaw.map((r) => [r.dia, Number(r.totalValor)]));
@@ -107,62 +164,6 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
   }
   receitaPeriodo = Math.round(receitaPeriodo * 100) / 100;
 
-  /* receita do mes corrente (mesma competencia, sem limite de periodo) */
-  const receitaMesLinhas = await db
-    .select({ total: sql<number>`coalesce(sum(${pedidos.total}), 0)` })
-    .from(pedidos)
-    .leftJoin(caixaTurnos, and(eq(caixaTurnos.id, pedidos.caixa_id), eq(caixaTurnos.loja_id, pedidos.loja_id)))
-    .where(
-      and(
-        eq(pedidos.loja_id, lojaId),
-        eq(pedidos.status, "finalizado"),
-        gte(dataCompetencia, inicioMesStr),
-        lte(dataCompetencia, fimMesStr)
-      )
-    );
-  const receitaMesAtual = Math.round(Number(receitaMesLinhas[0]?.total ?? 0) * 100) / 100;
-
-  /* acessos ao cardapio no mes (loja_eventos.tipo = 'visita') */
-  const acessosLinhas = await db
-    .select({ n: sql<number>`count(*)` })
-    .from(lojaEventos)
-    .where(
-      and(
-        eq(lojaEventos.loja_id, lojaId),
-        eq(lojaEventos.tipo, "visita"),
-        gte(lojaEventos.criado_em, `${inicioMesStr} 00:00:00`),
-        lte(lojaEventos.criado_em, `${fimMesStr} 23:59:59`)
-      )
-    );
-  const acessosMenu = Number(acessosLinhas[0]?.n ?? 0);
-
-  const clientesLinhas = await db.select({ n: sql<number>`count(*)` }).from(clientes).where(eq(clientes.loja_id, lojaId));
-  const clientesCadastrados = Number(clientesLinhas[0]?.n ?? 0);
-
-  /* top 5 produtos por saidas (soma de pedido_itens.quantidade em pedidos finalizados) */
-  const topRaw = await db
-    .select({
-      produtoId: sql<number | null>`coalesce(${produtos.id}, ${pedidoItens.produto_id})`,
-      nome: sql<string | null>`coalesce(${produtos.nome}, ${pedidoItens.produto_nome})`,
-      valor: sql<number | null>`coalesce(${produtos.preco}, ${pedidoItens.preco})`,
-      estoqueQtd: sql<number>`coalesce(${estoque.quantidade}, 0)`,
-      saidas: sql<number>`sum(${pedidoItens.quantidade})`,
-    })
-    .from(pedidoItens)
-    .innerJoin(pedidos, eq(pedidos.id, pedidoItens.pedido_id))
-    .leftJoin(
-      produtos,
-      and(
-        sql`(${produtos.id} = nullif(${pedidoItens.produto_id}, 0) or ((${pedidoItens.produto_id} is null or ${pedidoItens.produto_id} = 0) and ${produtos.nome} = ${pedidoItens.produto_nome}))`,
-        eq(produtos.loja_id, lojaId)
-      )
-    )
-    .leftJoin(estoque, and(eq(estoque.produto_id, produtos.id), eq(estoque.loja_id, lojaId)))
-    .where(and(eq(pedidos.status, "finalizado"), eq(pedidos.loja_id, lojaId), eq(pedidoItens.loja_id, lojaId)))
-    .groupBy(sql`coalesce(${produtos.id}, ${pedidoItens.produto_id})`, sql`coalesce(${produtos.nome}, ${pedidoItens.produto_nome})`, sql`coalesce(${produtos.preco}, ${pedidoItens.preco})`, estoque.quantidade)
-    .orderBy(sql`sum(${pedidoItens.quantidade}) desc`)
-    .limit(5);
-
   const topProdutos: DashboardTopProduto[] = topRaw.map((p) => ({
     nome: p.nome ?? "Produto",
     valor: Number(p.valor ?? 0),
@@ -170,8 +171,8 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
     estoque: Number(p.estoqueQtd ?? 0),
   }));
 
-  const lojaNome = (await getConfig(lojaId, "nome_loja")) || "Minha Loja";
-  const lojaVerificada = (await getConfig(lojaId, "loja_verificada")) === "1";
+  const lojaNome = cfgLoja.nome_loja || "Minha Loja";
+  const lojaVerificada = cfgLoja.loja_verificada === "1";
 
   return {
     periodo,

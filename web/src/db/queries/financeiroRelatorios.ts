@@ -1,5 +1,6 @@
 import "server-only";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { after } from "next/server";
 import { db } from "@/db";
 import { financialTransactions, financialCategories, financialAccounts, paymentMethods, configuracoes } from "@/db/schema";
 import { syncFinalizedOrdersForPeriod } from "@/db/queries/financeiroSync";
@@ -218,15 +219,26 @@ async function sincronizarMesAtualSeNecessario(lojaId: number, referenceMonth: n
   const agora = Math.floor(Date.now() / 1000);
   if (ultimoSync !== null && agora - ultimoSync < 300) return;
 
-  try {
-    await syncFinalizedOrdersForPeriod(lojaId, referenceMonth, referenceYear);
-    await db
-      .insert(configuracoes)
-      .values({ loja_id: lojaId, chave, valor: String(agora) })
-      .onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor: String(agora) } });
-  } catch (e) {
-    console.error("Erro ao reconciliar vendas finalizadas no financeiro:", e);
-  }
+  /*
+   * A reconciliacao percorre todos os pedidos finalizados do mes (varias idas
+   * ao banco por pedido) — rodava ANTES de responder e travava a tela por
+   * segundos/minutos. Agora roda depois da resposta (after) e marca o
+   * throttle antes, pra duas aberturas seguidas nao dispararem duas
+   * reconciliacoes. Pedidos finalizados ja sincronizam na hora
+   * (finalizarPedido), entao isto e so rede de seguranca.
+   */
+  await db
+    .insert(configuracoes)
+    .values({ loja_id: lojaId, chave, valor: String(agora) })
+    .onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor: String(agora) } });
+
+  after(async () => {
+    try {
+      await syncFinalizedOrdersForPeriod(lojaId, referenceMonth, referenceYear);
+    } catch (e) {
+      console.error("Erro ao reconciliar vendas finalizadas no financeiro:", e);
+    }
+  });
 }
 
 /* ==================== Endpoints compostos ==================== */
@@ -238,14 +250,18 @@ export async function detalheDashboardFinanceiro(lojaId: number, mesInput?: numb
   const mes = Math.min(12, Math.max(1, mesInput ?? mesAtual));
   const ano = anoInput ?? anoAtual;
 
-  await sincronizarMesAtualSeNecessario(lojaId, mes, ano);
+  const filtros = { referenceMonth: mes, referenceYear: ano };
+  const [, anosDb, resumo, dash, dreResultado] = await Promise.all([
+    sincronizarMesAtualSeNecessario(lojaId, mes, ano),
+    anosDisponiveis(lojaId),
+    resumoMensal(lojaId, mes, ano, filtros),
+    dashboardFinanceiro(lojaId, filtros),
+    dre(lojaId, filtros),
+  ]);
 
-  const anosSet = new Set(await anosDisponiveis(lojaId));
+  const anosSet = new Set(anosDb);
   anosSet.add(ano);
   const anos = Array.from(anosSet).sort((a, b) => b - a);
-
-  const filtros = { referenceMonth: mes, referenceYear: ano };
-  const [resumo, dash, dreResultado] = await Promise.all([resumoMensal(lojaId, mes, ano, filtros), dashboardFinanceiro(lojaId, filtros), dre(lojaId, filtros)]);
 
   return { mes, ano, anos, resumoMensal: resumo, dashboard: dash, dre: dreResultado };
 }
