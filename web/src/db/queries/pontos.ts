@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, gt, or } from "drizzle-orm";
 import { db } from "@/db";
-import { clientes, produtos, categorias } from "@/db/schema";
+import { clientes, produtos, categorias, pontosMovimentacoes } from "@/db/schema";
 import { apenasDigitos, telefoneSemMascara } from "@/db/queries/telefone";
 
 /* Equivalente de public/api/pontos_saldo.php e pontos_produtos.php. */
@@ -67,4 +67,38 @@ export async function produtosResgataveisPorPontos(lojaId: number, phpAdminUrl =
     pontosCusto: p.pontosCusto,
     pontosGanho: p.pontosGanho,
   }));
+}
+
+/* Equivalente de public/api/pontos_resgatar.php. */
+
+export type ResgatarPontosResultado =
+  | { ok: false; msg: string }
+  | { ok: true; msg?: string; produto: { id: number; nome: string; preco: number }; custo: number; saldoAntes: number; saldoNovo: number };
+
+export async function resgatarPontos(lojaId: number, clienteId: number, produtoId: number, apenasValidar: boolean): Promise<ResgatarPontosResultado> {
+  const [produto] = await db
+    .select({ id: produtos.id, nome: produtos.nome, pontosCusto: produtos.pontos_custo, preco: produtos.preco })
+    .from(produtos)
+    .where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId), eq(produtos.ativo, true), gt(produtos.pontos_custo, 0)))
+    .limit(1);
+  if (!produto) return { ok: false, msg: "Produto não disponível para resgate." };
+  const custo = produto.pontosCusto;
+
+  const [cliente] = await db.select({ id: clientes.id, saldo: clientes.pontos_saldo }).from(clientes).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId))).limit(1);
+  if (!cliente) return { ok: false, msg: "Cliente não encontrado." };
+
+  const saldo = cliente.saldo;
+  if (saldo < custo) return { ok: false, msg: `Pontos insuficientes. Você tem ${saldo} pts e precisa de ${custo} pts.` };
+
+  const produtoResumo = { id: produto.id, nome: produto.nome ?? "", preco: Number(produto.preco ?? 0) };
+
+  if (apenasValidar) {
+    return { ok: true, produto: produtoResumo, custo, saldoAntes: saldo, saldoNovo: saldo };
+  }
+
+  const saldoNovo = saldo - custo;
+  await db.update(clientes).set({ pontos_saldo: saldoNovo }).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
+  await db.insert(pontosMovimentacoes).values({ cliente_id: clienteId, tipo: "resgate", pontos: -custo, saldo_antes: saldo, saldo_depois: saldoNovo, loja_id: lojaId });
+
+  return { ok: true, msg: `Resgate realizado! ${produtoResumo.nome} adicionado ao carrinho.`, produto: produtoResumo, custo, saldoAntes: saldo, saldoNovo };
 }

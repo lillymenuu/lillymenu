@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { storePhpFetch, storeFormBody, StoreApiError } from "@/lib/store/api";
-import type { StoreCupomResultado } from "@/lib/store/types";
+import { validarCupom } from "@/db/queries/cupons";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -13,27 +12,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, msg: "Parametros invalidos" }, { status: 400 });
   }
 
-  try {
-    const data = await storePhpFetch<(StoreCupomResultado & { ok: true }) | { ok: false; msg: string }>(
-      "/public/api/cupons_validar.php",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: storeFormBody({
-          loja_id: loja_id as number,
-          codigo: codigo as string,
-          subtotal: subtotal as number | undefined,
-          tipo: tipo as string | undefined,
-          taxa: taxa as number | undefined,
-          cliente_id: cliente_id as number | undefined,
-          telefone: telefone as string | undefined,
-        }),
-      }
-    );
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof StoreApiError ? e.status : 500;
-    const msg = e instanceof StoreApiError ? e.message : "Erro ao falar com a loja.";
-    return NextResponse.json({ ok: false, msg }, { status });
-  }
+  const resultado = await validarCupom({
+    lojaId: Number(loja_id),
+    codigo: String(codigo),
+    subtotal: Number(subtotal ?? 0),
+    tipoPedido: typeof tipo === "string" ? tipo : undefined,
+    taxaEntrega: taxa !== undefined ? Number(taxa) : undefined,
+    clienteId: cliente_id !== undefined ? Number(cliente_id) : undefined,
+    telefone: typeof telefone === "string" ? telefone : undefined,
+  });
+
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({
+    ok: true,
+    codigo: resultado.codigo,
+    tipo: resultado.tipo,
+    desconto: resultado.desconto,
+    valor: resultado.valor,
+    primeira_compra: resultado.primeiraCompra ? 1 : 0,
+    msg: resultado.msg,
+  });
 }

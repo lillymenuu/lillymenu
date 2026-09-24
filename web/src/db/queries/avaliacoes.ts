@@ -120,3 +120,23 @@ export async function avaliacoesCliente(lojaId: number, clienteId: number, pagin
 
   return { ok: true, total: totalNum, pagina, paginas, avaliacoes: linhas.map((l) => ({ ...l, descricao: l.descricao ?? "" })) };
 }
+
+/* Equivalente de public/api/avaliacao_salvar.php: cliente avalia um pedido ja entregue (upsert por pedido). */
+export async function salvarAvaliacaoCliente(lojaId: number, pedidoId: number, nota: number, descricaoInput: string): Promise<{ ok: true; msg: string } | { ok: false; msg: string }> {
+  if (!pedidoId || nota < 1 || nota > 5) return { ok: false, msg: "Dados inválidos." };
+
+  const [pedido] = await db.select({ id: pedidos.id, clienteId: pedidos.cliente_id, status: pedidos.status }).from(pedidos).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId))).limit(1);
+  if (!pedido) return { ok: false, msg: "Pedido não encontrado." };
+  if (!["finalizado", "entregue"].includes(pedido.status ?? "")) return { ok: false, msg: "Somente pedidos entregues podem ser avaliados." };
+
+  const descricao = descricaoInput.trim();
+  const [existente] = await db.select({ id: avaliacoes.id }).from(avaliacoes).where(and(eq(avaliacoes.pedido_id, pedidoId), eq(avaliacoes.loja_id, lojaId))).limit(1);
+
+  if (existente) {
+    await db.update(avaliacoes).set({ nota, descricao: descricao || null, criado_em: sql`now()` }).where(eq(avaliacoes.id, existente.id));
+  } else {
+    await db.insert(avaliacoes).values({ pedido_id: pedidoId, loja_id: lojaId, cliente_id: pedido.clienteId, nota, descricao: descricao || null });
+  }
+
+  return { ok: true, msg: "Avaliação enviada! Obrigado." };
+}

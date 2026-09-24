@@ -1,20 +1,19 @@
 import { NextResponse } from "next/server";
-import { storePhpFetch, StoreApiError } from "@/lib/store/api";
-import type { StorePontosProdutosResposta } from "@/lib/store/types";
+import { produtosResgataveisPorPontos } from "@/db/queries/pontos";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const lojaId = url.searchParams.get("loja_id");
+  const lojaId = Number(url.searchParams.get("loja_id") ?? "0");
 
-  if (!lojaId) {
+  if (lojaId <= 0) {
     return NextResponse.json({ ok: false, produtos: [] });
   }
 
-  try {
-    const data = await storePhpFetch<StorePontosProdutosResposta>(`/public/api/pontos_produtos.php?loja_id=${encodeURIComponent(lojaId)}`);
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof StoreApiError ? e.status : 500;
-    return NextResponse.json({ ok: false, produtos: [] }, { status });
-  }
+  const baseUrl = `${url.protocol}//${url.host}/`;
+  const produtos = await produtosResgataveisPorPontos(lojaId, baseUrl);
+
+  return NextResponse.json({
+    ok: true,
+    produtos: produtos.map((p) => ({ id: p.id, nome: p.nome, descricao: p.descricao, pontos_custo: p.pontosCusto, imagem: p.imagem ?? "", pontos_ganho: p.pontosGanho, categoria: p.categoria })),
+  });
 }
