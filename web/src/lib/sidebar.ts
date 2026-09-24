@@ -1,5 +1,3 @@
-import { phpApiFetch } from "@/lib/phpApi";
-
 export type SidebarData = {
   ok: true;
   loja: {
@@ -27,7 +25,3 @@ export type SidebarData = {
   };
   menu: Record<string, boolean>;
 };
-
-export function getSidebarData() {
-  return phpApiFetch<SidebarData>("/admin/api/v1/sidebar.php");
-}

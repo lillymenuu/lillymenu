@@ -1,23 +1,13 @@
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
-import { getPedidosKanban } from "@/lib/pedidos";
+import { getPedidosKanban, getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy, Pedido } from "@/lib/pedidos";
 import { OrderManager } from "@/components/ordermanager/order-manager";
 
-async function carregarMotoboysAtivos(): Promise<Motoboy[]> {
-  try {
-    const { getMotoboysAtivos } = await import("@/lib/pedidos");
-    const resultado = await getMotoboysAtivos();
-    return resultado.motoboys;
-  } catch {
-    return [];
-  }
-}
-
 async function carregarDados(lojaId: number) {
-  const [kanban, motoboys] = await Promise.all([getPedidosKanban(lojaId), carregarMotoboysAtivos()]);
-  return { pedidos: kanban.pedidos, motoboys };
+  const [kanban, motoboysRes] = await Promise.all([getPedidosKanban(lojaId), getMotoboysAtivos(lojaId)]);
+  return { pedidos: kanban.pedidos, motoboys: motoboysRes.motoboys };
 }
 
 export default async function OrderManagerPage() {

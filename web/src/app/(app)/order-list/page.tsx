@@ -1,19 +1,9 @@
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
-import { getPedidosListar } from "@/lib/pedidos";
+import { getPedidosListar, getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy } from "@/lib/pedidos";
 import { OrderListTable } from "@/components/order-list/order-list-table";
-
-async function carregarMotoboysAtivos(): Promise<Motoboy[]> {
-  try {
-    const { getMotoboysAtivos } = await import("@/lib/pedidos");
-    const resultado = await getMotoboysAtivos();
-    return resultado.motoboys;
-  } catch {
-    return [];
-  }
-}
 
 export default async function OrderListPage() {
   const sessao = await getSessaoAdmin();
@@ -24,7 +14,9 @@ export default async function OrderListPage() {
   let erro: string | null = null;
 
   try {
-    [listagem, motoboys] = await Promise.all([getPedidosListar(sessao.lojaId), carregarMotoboysAtivos()]);
+    const [listagemRes, motoboysRes] = await Promise.all([getPedidosListar(sessao.lojaId), getMotoboysAtivos(sessao.lojaId)]);
+    listagem = listagemRes;
+    motoboys = motoboysRes.motoboys;
   } catch {
     erro = "Erro ao carregar a lista de pedidos.";
   }

@@ -1,6 +1,6 @@
 import "server-only";
-import { phpApiFetch } from "@/lib/phpApi";
 import { kanbanPedidos, listarPedidos } from "@/db/queries/pedidosAdmin";
+import { listarMotoboysParaVinculo } from "@/db/queries/motoboys";
 
 export type Pagamento = { forma: string; valor: number };
 
@@ -54,10 +54,9 @@ export async function getPedidosKanban(lojaId: number): Promise<{ ok: true; pedi
   };
 }
 
-export function getMotoboysAtivos() {
-  return phpApiFetch<{ ok: true; motoboys: Motoboy[]; selected_id: number }>(
-    "/admin/api/v1/motoboys.php?action=list"
-  );
+export async function getMotoboysAtivos(lojaId: number): Promise<{ ok: true; motoboys: Motoboy[]; selected_id: number }> {
+  const resultado = await listarMotoboysParaVinculo(lojaId, 0);
+  return { ok: true, motoboys: resultado.motoboys, selected_id: resultado.selectedId };
 }
 
 export type PedidosListarParams = {

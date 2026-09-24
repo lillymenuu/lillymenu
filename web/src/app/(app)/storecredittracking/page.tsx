@@ -2,18 +2,9 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getFiadoClientes } from "@/lib/fiado";
+import { getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy } from "@/lib/pedidos";
 import { StoreCreditManager } from "@/components/storecredittracking/store-credit-manager";
-
-async function carregarMotoboysAtivos(): Promise<Motoboy[]> {
-  try {
-    const { getMotoboysAtivos } = await import("@/lib/pedidos");
-    const resultado = await getMotoboysAtivos();
-    return resultado.motoboys;
-  } catch {
-    return [];
-  }
-}
 
 export default async function StoreCreditTrackingPage() {
   const sessao = await getSessaoAdmin();
@@ -24,7 +15,9 @@ export default async function StoreCreditTrackingPage() {
   let erro: string | null = null;
 
   try {
-    [dados, motoboys] = await Promise.all([getFiadoClientes(sessao.lojaId, { pagina: 1, limite: 10 }), carregarMotoboysAtivos()]);
+    const [dadosRes, motoboysRes] = await Promise.all([getFiadoClientes(sessao.lojaId, { pagina: 1, limite: 10 }), getMotoboysAtivos(sessao.lojaId)]);
+    dados = dadosRes;
+    motoboys = motoboysRes.motoboys;
   } catch {
     erro = "Erro ao carregar o controle de fiado.";
   }

@@ -2,18 +2,9 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getMotoboysGerenciar } from "@/lib/motoboysGerenciar";
+import { getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy } from "@/lib/pedidos";
 import { MotoboysManager } from "@/components/motoboys/motoboys-manager";
-
-async function carregarMotoboysAtivos(): Promise<Motoboy[]> {
-  try {
-    const { getMotoboysAtivos } = await import("@/lib/pedidos");
-    const resultado = await getMotoboysAtivos();
-    return resultado.motoboys;
-  } catch {
-    return [];
-  }
-}
 
 export default async function MotoboysPage() {
   const sessao = await getSessaoAdmin();
@@ -24,7 +15,9 @@ export default async function MotoboysPage() {
   let erro: string | null = null;
 
   try {
-    [dados, motoboysAtivos] = await Promise.all([getMotoboysGerenciar(sessao.lojaId, { periodo: "hoje" }), carregarMotoboysAtivos()]);
+    const [dadosRes, motoboysRes] = await Promise.all([getMotoboysGerenciar(sessao.lojaId, { periodo: "hoje" }), getMotoboysAtivos(sessao.lojaId)]);
+    dados = dadosRes;
+    motoboysAtivos = motoboysRes.motoboys;
   } catch {
     erro = "Erro ao carregar a tela de motoboys.";
   }

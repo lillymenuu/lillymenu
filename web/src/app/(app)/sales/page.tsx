@@ -2,18 +2,9 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getRelatorios } from "@/lib/relatorios";
+import { getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy } from "@/lib/pedidos";
 import { SalesManager } from "@/components/sales/sales-manager";
-
-async function carregarMotoboysAtivos(): Promise<Motoboy[]> {
-  try {
-    const { getMotoboysAtivos } = await import("@/lib/pedidos");
-    const resultado = await getMotoboysAtivos();
-    return resultado.motoboys;
-  } catch {
-    return [];
-  }
-}
 
 export default async function SalesPage() {
   const sessao = await getSessaoAdmin();
@@ -24,7 +15,9 @@ export default async function SalesPage() {
   let erro: string | null = null;
 
   try {
-    [dados, motoboys] = await Promise.all([getRelatorios(sessao.lojaId, { periodo: "hoje" }), carregarMotoboysAtivos()]);
+    const [dadosRes, motoboysRes] = await Promise.all([getRelatorios(sessao.lojaId, { periodo: "hoje" }), getMotoboysAtivos(sessao.lojaId)]);
+    dados = dadosRes;
+    motoboys = motoboysRes.motoboys;
   } catch {
     erro = "Erro ao carregar o relatório de vendas.";
   }
