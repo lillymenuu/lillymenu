@@ -15,7 +15,7 @@ import { aplicarReservaPdv, reservaMapaPdv } from "@/db/queries/pdvReservas";
 type DiaCod = "dom" | "seg" | "ter" | "qua" | "qui" | "sex" | "sab";
 const FUSO_LOJA = "America/Fortaleza";
 
-function agoraNaLoja(): { dia: DiaCod; hora: string } {
+export function agoraNaLoja(): { dia: DiaCod; hora: string } {
   const agora = new Date();
   const partes = new Intl.DateTimeFormat("en-US", {
     timeZone: FUSO_LOJA,
@@ -39,7 +39,7 @@ function agoraNaLoja(): { dia: DiaCod; hora: string } {
   return { dia: mapaDia[weekday] ?? "dom", hora: `${hour}:${minute}` };
 }
 
-function disponivelAgora(
+export function disponivelAgora(
   diasSemanaJson: string | null,
   horarioIni: string | null,
   horarioFim: string | null,
@@ -283,4 +283,21 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
   }
 
   return { categorias: categoriasComItens, produtosPorCategoria, combosPorCategoria, destaques, produtosEmPromo, promoAutoPopup };
+}
+
+/*
+ * Equivalente do trecho de public/api/loja_status.php que calcula
+ * categoriasBloqueadas: categorias com cronograma proprio (dias_semana/
+ * horario_ini/horario_fim) que estao fora do horario agora — usado pelo
+ * polling da Store pra detectar bloqueio mesmo sem o catalogo_versao mudar.
+ */
+export async function categoriasBloqueadas(lojaId: number): Promise<number[]> {
+  const agora = agoraNaLoja();
+  const linhas = await db
+    .select({ id: categorias.id, diasSemana: categorias.dias_semana, horarioIni: categorias.horario_ini, horarioFim: categorias.horario_fim })
+    .from(categorias)
+    .where(and(eq(categorias.loja_id, lojaId), eq(categorias.ativo, true)));
+
+  const bloqueadas = linhas.filter((c) => (c.diasSemana || c.horarioIni || c.horarioFim) && !disponivelAgora(c.diasSemana, c.horarioIni, c.horarioFim, agora)).map((c) => c.id);
+  return bloqueadas.sort((a, b) => a - b);
 }

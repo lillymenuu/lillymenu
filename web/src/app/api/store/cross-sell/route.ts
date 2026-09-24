@@ -1,30 +1,36 @@
 import { NextResponse } from "next/server";
-import { storePhpFetch, StoreApiError } from "@/lib/store/api";
-import type { StoreCrossSellProduto } from "@/lib/store/types";
+import { crossSellSugestoes } from "@/db/queries/crossSellSugestoes";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const lojaId = url.searchParams.get("loja_id");
-  const produtosIds = url.searchParams.get("produtos_ids") ?? "";
-  const produtosNomes = url.searchParams.get("produtos_nomes") ?? "";
+  const lojaId = Number(url.searchParams.get("loja_id") ?? "0");
+  const produtosIdsRaw = url.searchParams.get("produtos_ids") ?? "";
+  const produtosNomesRaw = url.searchParams.get("produtos_nomes") ?? "";
 
-  if (!lojaId) {
+  if (lojaId <= 0) {
     return NextResponse.json({ ok: false, msg: "Parametros invalidos" }, { status: 400 });
   }
 
-  try {
-    const qs = new URLSearchParams({
-      loja_id: lojaId,
-      produtos_ids: produtosIds,
-      produtos_nomes: produtosNomes,
-    });
-    const data = await storePhpFetch<{ ok: true; ativo: boolean; produtos: StoreCrossSellProduto[] }>(
-      `/public/api/cross_sell_sugestoes.php?${qs.toString()}`
-    );
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof StoreApiError ? e.status : 500;
-    const msg = e instanceof StoreApiError ? e.message : "Erro ao falar com a loja.";
-    return NextResponse.json({ ok: false, msg }, { status });
+  const idsCarrinho = produtosIdsRaw
+    .split(",")
+    .map((v) => Number(v.trim()))
+    .filter((v) => Number.isFinite(v) && v > 0);
+
+  let nomesExtra: string[] = [];
+  if (produtosNomesRaw !== "") {
+    try {
+      const decodificado = JSON.parse(produtosNomesRaw);
+      if (Array.isArray(decodificado)) nomesExtra = decodificado.filter((n): n is string => typeof n === "string" && n !== "");
+    } catch {
+      /* ignora JSON invalido */
+    }
   }
+
+  const resultado = await crossSellSugestoes(lojaId, idsCarrinho, nomesExtra);
+
+  return NextResponse.json({
+    ok: true,
+    ativo: resultado.ativo,
+    produtos: resultado.produtos.map((p) => ({ id: p.id, nome: p.nome, preco: p.preco, imagem: p.imagem, estoque: p.estoque, pontos_ganho: p.pontosGanho })),
+  });
 }
