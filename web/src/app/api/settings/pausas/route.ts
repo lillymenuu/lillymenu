@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-import type { PausasListarResposta } from "@/lib/settings";
+import { getSessaoAdmin } from "@/lib/session";
+import { listarPausas } from "@/db/queries/pausasFuncionamento";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch<PausasListarResposta>("/admin/api/v1/pausas_listar.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const pausas = await listarPausas(sessao.lojaId);
+  return NextResponse.json({
+    ok: true,
+    pausas: pausas.map((p) => ({ id: p.id, titulo: p.titulo, data_inicio: p.dataInicio, hora_inicio: p.horaInicio, data_fim: p.dataFim, hora_fim: p.horaFim })),
+  });
 }

@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-import type { CrossSellStatusResposta } from "@/lib/crossSell";
+import { getSessaoAdmin } from "@/lib/session";
+import { statusCrossSell } from "@/db/queries/crossSellStatus";
 
 export async function GET() {
-  try {
-    const data = await phpApiFetch<CrossSellStatusResposta>("/admin/api/v1/cross_sell_status.php");
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg: erro }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const resultado = await statusCrossSell(sessao.lojaId);
+
+  return NextResponse.json({
+    ok: true,
+    ativo: resultado.ativo,
+    faturamento_extra: resultado.faturamentoExtra,
+    grupos: resultado.grupos.map((g) => ({ categoria: g.categoria, total_produtos: g.totalProdutos, exemplos: g.exemplos })),
+  });
 }

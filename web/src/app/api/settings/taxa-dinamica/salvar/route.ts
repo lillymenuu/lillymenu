@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
-import { phpApiFetchPassthrough, PhpApiError } from "@/lib/phpApi";
+import { getSessaoAdmin } from "@/lib/session";
+import { salvarTaxaDinamica } from "@/db/queries/taxasEntrega";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetchPassthrough("/admin/api/v1/taxa_dinamica_salvar.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof PhpApiError ? e.status : 500;
-    const msg = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-    return NextResponse.json({ ok: false, msg }, { status });
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ ok: false, msg: "Dados invalidos." }, { status: 400 });
+
+  const resultado = await salvarTaxaDinamica(sessao.lojaId, {
+    id: body.id ? Number(body.id) : undefined,
+    distanciaKm: body.distancia_km ?? 0,
+    valor: body.valor ?? 0,
+    tipo: body.tipo ? String(body.tipo) : undefined,
+    tempoMin: body.tempo_min ?? null,
+    tempoMax: body.tempo_max ?? null,
+  });
+
+  return NextResponse.json(resultado);
 }
