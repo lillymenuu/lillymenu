@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { storePhpFetch, storeFormBody, StoreApiError } from "@/lib/store/api";
-import type { StorePedidoCriarResposta } from "@/lib/store/types";
+import { criarPedidoLoja, type ItemCarrinho } from "@/db/queries/pedidoCriar";
+
+type ItemPayload = { id?: number; nome?: string; preco?: number; qtd?: number; obs?: string; combosels?: { id: number; qtd?: number }[] | null; crossSell?: boolean; pontosPendente?: boolean };
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -13,39 +14,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, msg: "Parametros invalidos" }, { status: 400 });
   }
 
-  try {
-    const data = await storePhpFetch<(StorePedidoCriarResposta & { ok: true }) | { ok: false; msg: string }>(
-      "/public/api/pedido_criar.php",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: storeFormBody({
-          loja_id: b.loja_id as number,
-          mesa_id: b.mesa_id as number | undefined,
-          cliente_nome: b.cliente_nome as string,
-          cliente_telefone: b.cliente_telefone as string,
-          tipo: b.tipo as string,
-          forma_pagamento: b.forma_pagamento as string,
-          endereco: b.endereco as string | undefined,
-          subtotal: b.subtotal as number,
-          taxa_entrega: b.taxa_entrega as number | undefined,
-          total: b.total as number,
-          itens: JSON.stringify(b.itens),
-          troco_solicitado: b.troco_solicitado as boolean | undefined,
-          troco_valor: b.troco_valor as number | undefined,
-          cashback_usar: b.cashback_usar as boolean | undefined,
-          cashback_valor: b.cashback_valor as number | undefined,
-          cupom_codigo: b.cupom_codigo as string | undefined,
-          cupom_desconto: b.cupom_desconto as number | undefined,
-          tipo_agendamento: b.tipo_agendamento as string | undefined,
-          agendamento: b.agendamento as string | undefined,
-        }),
-      }
-    );
-    return NextResponse.json(data);
-  } catch (e) {
-    const status = e instanceof StoreApiError ? e.status : 500;
-    const msg = e instanceof StoreApiError ? e.message : "Erro ao falar com a loja.";
-    return NextResponse.json({ ok: false, msg }, { status });
+  const itensRaw = Array.isArray(b.itens) ? (b.itens as ItemPayload[]) : [];
+  const itens: ItemCarrinho[] = itensRaw.map((i) => ({
+    id: i.id,
+    nome: String(i.nome ?? ""),
+    preco: Number(i.preco ?? 0),
+    qtd: Number(i.qtd ?? 1),
+    obs: i.obs,
+    combosels: i.combosels ?? null,
+    crossSell: Boolean(i.crossSell),
+    pontosPendente: Boolean(i.pontosPendente),
+  }));
+
+  let agendamento: { data: string; slot: string } | null = null;
+  if (typeof b.agendamento === "string" && b.agendamento.trim() !== "") {
+    try {
+      const parsed = JSON.parse(b.agendamento) as { data?: string; slot?: string };
+      if (parsed.data) agendamento = { data: parsed.data, slot: parsed.slot ?? "" };
+    } catch {
+      /* ignora agendamento invalido */
+    }
   }
+
+  const resultado = await criarPedidoLoja({
+    lojaId: Number(b.loja_id),
+    clienteNome: String(b.cliente_nome ?? ""),
+    clienteTelefone: String(b.cliente_telefone ?? ""),
+    tipo: b.tipo === "entrega" ? "entrega" : "retirada",
+    formaPagamento: String(b.forma_pagamento ?? ""),
+    endereco: typeof b.endereco === "string" ? b.endereco : undefined,
+    subtotal: Number(b.subtotal ?? 0),
+    taxaEntrega: b.taxa_entrega !== undefined ? Number(b.taxa_entrega) : undefined,
+    total: Number(b.total ?? 0),
+    itens,
+    trocoSolicitado: Boolean(b.troco_solicitado),
+    trocoValor: b.troco_valor !== undefined ? Number(b.troco_valor) : undefined,
+    cashbackUsar: Boolean(b.cashback_usar),
+    cashbackValor: b.cashback_valor !== undefined ? Number(b.cashback_valor) : undefined,
+    tipoAgendamento: typeof b.tipo_agendamento === "string" ? b.tipo_agendamento : undefined,
+    agendamento,
+    cupomCodigo: typeof b.cupom_codigo === "string" ? b.cupom_codigo : undefined,
+    cupomDesconto: b.cupom_desconto !== undefined ? Number(b.cupom_desconto) : undefined,
+  });
+
+  if (!resultado.ok) return NextResponse.json(resultado);
+  return NextResponse.json({ ok: true, id: resultado.id, codigo: resultado.codigo, token: String(resultado.id) });
 }
