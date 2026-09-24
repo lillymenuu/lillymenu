@@ -1,17 +1,21 @@
+import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { PhpApiError } from "@/lib/phpApi";
-import { superApiFetch } from "@/lib/superApi";
+import { getSessaoSuperadmin } from "@/lib/session";
+import { getListagemLojasSuperadmin } from "@/lib/superadminServer";
 import type { SaLojasResposta } from "@/lib/superadmin";
 import { SaLojasManager } from "@/components/superadmin/sa-lojas-manager";
 
 export default async function SuperadminLojasPage() {
+  const sessao = await getSessaoSuperadmin();
+  if (!sessao) redirect("/superadmin/login");
+
   let dados: SaLojasResposta | null = null;
   let erro: string | null = null;
 
   try {
-    dados = await superApiFetch<SaLojasResposta>("/admin/api/v1/superadmin_lojas.php");
-  } catch (e) {
-    erro = e instanceof PhpApiError ? e.message : "Erro ao carregar as lojas.";
+    dados = await getListagemLojasSuperadmin();
+  } catch {
+    erro = "Erro ao carregar as lojas.";
   }
 
   if (!dados) {

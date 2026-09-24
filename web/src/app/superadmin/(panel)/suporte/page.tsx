@@ -1,17 +1,20 @@
+import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { PhpApiError } from "@/lib/phpApi";
-import { superApiFetch } from "@/lib/superApi";
+import { getSessaoSuperadmin } from "@/lib/session";
+import { getConversasSuporteSuperadmin } from "@/lib/superadminServer";
 import { SaSuporte, type SaConversa } from "@/components/superadmin/sa-suporte";
 
 export default async function SuperadminSuportePage() {
+  const sessao = await getSessaoSuperadmin();
+  if (!sessao) redirect("/superadmin/login");
+
   let conversas: SaConversa[] = [];
   let erro: string | null = null;
 
   try {
-    const r = await superApiFetch<{ ok: true; conversas: SaConversa[] }>("/admin/api/v1/superadmin_suporte.php?acao=conversas");
-    conversas = r.conversas;
-  } catch (e) {
-    erro = e instanceof PhpApiError ? e.message : "Erro ao carregar o suporte.";
+    conversas = await getConversasSuporteSuperadmin(true);
+  } catch {
+    erro = "Erro ao carregar o suporte.";
   }
 
   if (erro) {
