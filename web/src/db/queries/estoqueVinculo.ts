@@ -1,8 +1,8 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
-import { db } from "@/db";
+import { and, eq, ilike, inArray, ne, notInArray, sql } from "drizzle-orm";
+import { db, withTransaction } from "@/db";
 import type { NeonTx } from "@/db";
-import { estoque, estoqueGrupoMembros, estoqueMovimentacoes, configuracoes, pedidoComboItens } from "@/db/schema";
+import { estoque, estoqueGrupos, estoqueGrupoMembros, estoqueMovimentacoes, configuracoes, pedidoComboItens, produtos } from "@/db/schema";
 
 /*
  * Equivalente de admin/helpers/estoque_vinculo_module.php: produtos vinculados
@@ -124,4 +124,87 @@ export async function estoqueDisponivel(produtoId: number, lojaId: number): Prom
     .where(and(eq(estoque.produto_id, produtoId), eq(estoque.loja_id, lojaId)))
     .limit(1);
   return linhas[0]?.quantidade ?? 0;
+}
+
+/*
+ * Equivalente de admin/api/estoque_vinculo_produtos.php (GET) e
+ * estoque_vinculo_save.php (POST), combinados por admin/api/v1/estoque_vinculo.php:
+ * tela "Vincular itens" do produto (produtos que dividem o mesmo saldo fisico).
+ */
+
+export type ProdutoVinculo = { id: number; nome: string; imagem: string | null; categoriaId: number | null; vinculado: boolean };
+
+export async function listarProdutosVinculo(lojaId: number, produtoId: number, search: string): Promise<{ ok: true; produtos: ProdutoVinculo[] } | { ok: false; msg: string }> {
+  if (produtoId <= 0) return { ok: false, msg: "Produto invalido." };
+
+  const termo = search.trim();
+  const condicoes = [eq(produtos.loja_id, lojaId), eq(produtos.ativo, true), ne(produtos.id, produtoId)];
+  if (termo !== "") condicoes.push(ilike(produtos.nome, `%${termo}%`));
+
+  const linhas = await db
+    .select({ id: produtos.id, nome: produtos.nome, imagem: produtos.imagem, categoriaId: produtos.categoria_id })
+    .from(produtos)
+    .where(and(...condicoes))
+    .orderBy(produtos.nome)
+    .limit(300);
+
+  const membros = new Set(await membrosDoGrupo(db, produtoId, lojaId));
+
+  return {
+    ok: true,
+    produtos: linhas.map((p) => ({ id: p.id, nome: p.nome ?? "", imagem: p.imagem, categoriaId: p.categoriaId, vinculado: membros.has(p.id) })),
+  };
+}
+
+export type SalvarVinculoInput = { produtoId: number; produtoIds: number[] };
+
+export async function salvarVinculoEstoque(lojaId: number, input: SalvarVinculoInput): Promise<{ ok: true } | { ok: false; msg: string }> {
+  const produtoId = input.produtoId;
+  if (produtoId <= 0) return { ok: false, msg: "Produto invalido." };
+
+  try {
+    return await withTransaction(async (tx): Promise<{ ok: true } | { ok: false; msg: string }> => {
+      const [prod] = await tx.select({ id: produtos.id }).from(produtos).where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId))).limit(1);
+      if (!prod) return { ok: false, msg: "Produto nao encontrado nesta loja." };
+
+      const idsUnicos = [...new Set(input.produtoIds.filter((id) => id > 0 && id !== produtoId))];
+      let selecionados: number[] = [];
+      if (idsUnicos.length > 0) {
+        const validos = await tx.select({ id: produtos.id }).from(produtos).where(and(inArray(produtos.id, idsUnicos), eq(produtos.loja_id, lojaId)));
+        const validosSet = new Set(validos.map((v) => v.id));
+        selecionados = idsUnicos.filter((id) => validosSet.has(id));
+      }
+
+      if (selecionados.length === 0) {
+        await tx.delete(estoqueGrupoMembros).where(and(eq(estoqueGrupoMembros.produto_id, produtoId), eq(estoqueGrupoMembros.loja_id, lojaId)));
+        await bumpCatalogoVersao(tx, lojaId);
+        return { ok: true };
+      }
+
+      const desejados = [produtoId, ...selecionados];
+
+      const [grupoAtual] = await tx.select({ grupoId: estoqueGrupoMembros.grupo_id }).from(estoqueGrupoMembros).where(and(eq(estoqueGrupoMembros.produto_id, produtoId), eq(estoqueGrupoMembros.loja_id, lojaId))).limit(1);
+      let grupoId = grupoAtual?.grupoId ?? 0;
+
+      if (grupoId <= 0) {
+        const [novoGrupo] = await tx.insert(estoqueGrupos).values({ loja_id: lojaId }).returning({ id: estoqueGrupos.id });
+        grupoId = novoGrupo.id;
+      }
+
+      await tx.delete(estoqueGrupoMembros).where(and(eq(estoqueGrupoMembros.grupo_id, grupoId), eq(estoqueGrupoMembros.loja_id, lojaId), notInArray(estoqueGrupoMembros.produto_id, desejados)));
+
+      for (const id of desejados) {
+        await tx
+          .insert(estoqueGrupoMembros)
+          .values({ produto_id: id, grupo_id: grupoId, loja_id: lojaId })
+          .onConflictDoUpdate({ target: estoqueGrupoMembros.produto_id, set: { grupo_id: grupoId } });
+      }
+
+      await sincronizarEstoqueVinculo(tx, produtoId, lojaId);
+      await bumpCatalogoVersao(tx, lojaId);
+      return { ok: true };
+    });
+  } catch (e) {
+    return { ok: false, msg: e instanceof Error ? e.message : "Erro ao salvar vinculo." };
+  }
 }

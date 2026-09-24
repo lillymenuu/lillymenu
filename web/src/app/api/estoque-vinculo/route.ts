@@ -1,36 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { phpApiFetch, PhpApiError } from "@/lib/phpApi";
-
-function erroResposta(e: unknown) {
-  const status = e instanceof PhpApiError ? e.status : 500;
-  const erro = e instanceof PhpApiError ? e.message : "Erro ao falar com a API.";
-  return NextResponse.json({ ok: false, msg: erro }, { status });
-}
+import { getSessaoAdmin } from "@/lib/session";
+import { listarProdutosVinculo, salvarVinculoEstoque } from "@/db/queries/estoqueVinculo";
 
 export async function GET(request: NextRequest) {
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
   const params = request.nextUrl.searchParams;
-  const produtoId = params.get("produto_id") ?? "";
+  const produtoId = Number(params.get("produto_id") ?? "0");
   const search = params.get("search") ?? "";
-  try {
-    const data = await phpApiFetch(
-      `/admin/api/v1/estoque_vinculo.php?produto_id=${encodeURIComponent(produtoId)}&search=${encodeURIComponent(search)}`
-    );
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+
+  const resultado = await listarProdutosVinculo(sessao.lojaId, produtoId, search);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  return NextResponse.json({
+    ok: true,
+    produtos: resultado.produtos.map((p) => ({ id: p.id, nome: p.nome, imagem: p.imagem, categoria_id: p.categoriaId, vinculado: p.vinculado })),
+  });
 }
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  try {
-    const data = await phpApiFetch("/admin/api/v1/estoque_vinculo.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-    return NextResponse.json(data);
-  } catch (e) {
-    return erroResposta(e);
-  }
+  const sessao = await getSessaoAdmin();
+  if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
+
+  const body = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ ok: false, msg: "Dados invalidos." }, { status: 400 });
+
+  const resultado = await salvarVinculoEstoque(sessao.lojaId, {
+    produtoId: Number(body.produto_id ?? 0),
+    produtoIds: Array.isArray(body.produto_ids) ? body.produto_ids.map((v: unknown) => Number(v)) : [],
+  });
+
+  return NextResponse.json(resultado);
 }
