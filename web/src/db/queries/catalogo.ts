@@ -70,6 +70,7 @@ export type CatalogoProduto = {
   nome: string;
   descricao: string | null;
   imagem: string | null;
+  precoProduto: number;
   precoBase: number;
   precoFinal: number;
   emPromo: boolean;
@@ -205,6 +206,7 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
       nome: p.nome ?? "",
       descricao: p.descricao,
       imagem: resolverImagem(p.imagem, phpAdminUrl),
+      precoProduto: precoBaseBruto,
       precoBase,
       precoFinal,
       emPromo,
