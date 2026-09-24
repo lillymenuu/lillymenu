@@ -3,9 +3,17 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BarChart3, CheckCircle2, ShieldCheck, Smartphone } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+const ERROS_GOOGLE: Record<string, string> = {
+  google_nao_configurado: "Login com Google indisponível no momento.",
+  google_falha: "Não foi possível entrar com o Google. Tente novamente.",
+  google_sem_conta: "Nenhuma conta LillyMenu com esse e-mail Google.",
+  google_inativa: "Conta ou loja inativa. Entre em contato com o suporte.",
+};
 
 const DESTAQUES = [
   { icone: ShieldCheck, texto: "Acesso seguro ao seu painel" },
@@ -26,7 +34,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [erro, setErro] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(ERROS_GOOGLE[searchParams.get("erro") ?? ""] ?? null);
   const [carregando, setCarregando] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -69,6 +77,22 @@ function LoginForm() {
             <div className="mb-8 flex flex-col gap-1.5">
               <h1 className="text-2xl font-semibold tracking-tight">Bem-vindo de volta</h1>
               <p className="text-sm text-muted-foreground">Entre com seu e-mail e senha para acessar o painel.</p>
+            </div>
+
+            <a href="/api/auth/google/start" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
+              <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
+                <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z" />
+                <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z" />
+                <path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8l4-3.1z" />
+                <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9z" />
+              </svg>
+              Entrar com Google
+            </a>
+
+            <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              ou continue com e-mail
+              <span className="h-px flex-1 bg-border" />
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
