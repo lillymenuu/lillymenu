@@ -65,13 +65,17 @@ export type CriarPedidoInput = {
   agendamento?: { data: string; slot: string } | null;
   cupomCodigo?: string;
   cupomDesconto?: number;
+  clienteAniversario?: string;
 };
 
 export type CriarPedidoResultado = { ok: true; id: number; codigo: number } | { ok: false; msg: string };
 
-async function obterOuCriarCliente(tx: NeonTx, lojaId: number, nome: string, telefoneBruto: string): Promise<number> {
+async function obterOuCriarCliente(tx: NeonTx, lojaId: number, nome: string, telefoneBruto: string, aniversario?: string): Promise<number> {
   const telFormatado = formatarTelefoneBR(telefoneBruto);
   const telDigitos = apenasDigitos(telefoneBruto);
+  /* opcional: so grava/atualiza se o cliente informou (nao apaga o que ja
+     estava cadastrado quando ele deixa em branco num pedido seguinte) */
+  const aniversarioValido = aniversario && /^\d{4}-\d{2}-\d{2}$/.test(aniversario) ? aniversario : undefined;
 
   const existente = await tx
     .select({ id: clientes.id })
@@ -80,11 +84,14 @@ async function obterOuCriarCliente(tx: NeonTx, lojaId: number, nome: string, tel
     .limit(1);
 
   if (existente.length > 0) {
-    await tx.update(clientes).set({ nome }).where(eq(clientes.id, existente[0].id));
+    await tx.update(clientes).set({ nome, ...(aniversarioValido ? { aniversario: aniversarioValido } : {}) }).where(eq(clientes.id, existente[0].id));
     return existente[0].id;
   }
 
-  const [novo] = await tx.insert(clientes).values({ nome, telefone: telFormatado, loja_id: lojaId, criado_em: timestampFortaleza() }).returning({ id: clientes.id });
+  const [novo] = await tx
+    .insert(clientes)
+    .values({ nome, telefone: telFormatado, loja_id: lojaId, criado_em: timestampFortaleza(), aniversario: aniversarioValido ?? null })
+    .returning({ id: clientes.id });
   return novo.id;
 }
 
@@ -165,7 +172,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
 
   try {
     await withTransaction(async (tx) => {
-      clienteId = await obterOuCriarCliente(tx, lojaId, nome, telefone);
+      clienteId = await obterOuCriarCliente(tx, lojaId, nome, telefone, input.clienteAniversario);
 
       const [novoPedido] = await tx
         .insert(pedidos)

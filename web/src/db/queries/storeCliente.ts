@@ -218,3 +218,21 @@ export async function detalhePedidoPublico(pedidoId: number, clienteIdValidar: n
     itens: itensLinhas.map((i) => ({ ...i, observacoes: i.observacoes ?? "" })),
   };
 }
+
+/*
+ * Autocomplete do telefone na etapa "Contato" do checkout: se o cliente ja
+ * pediu antes (mesmo telefone), devolve nome/aniversario ja cadastrados pra
+ * pre-preencher o formulario e evitar duplicar cadastro.
+ */
+export async function buscarClienteLojaPorTelefone(lojaId: number, telefoneBruto: string): Promise<{ nome: string; aniversario: string | null } | null> {
+  const telefone = apenasDigitos(telefoneBruto);
+  if (telefone.length < 10) return null;
+
+  const [linha] = await db
+    .select({ nome: clientes.nome, aniversario: clientes.aniversario })
+    .from(clientes)
+    .where(and(eq(clientes.loja_id, lojaId), or(eq(telefoneSemMascara, telefone), eq(clientes.telefone, telefone))))
+    .limit(1);
+
+  return linha ? { nome: linha.nome ?? "", aniversario: linha.aniversario } : null;
+}

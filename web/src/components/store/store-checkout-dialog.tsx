@@ -55,6 +55,11 @@ export function StoreCheckoutDialog({
   const [etapa, setEtapa] = useState<Etapa>("dados");
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [aniversario, setAniversario] = useState("");
+  /* null = ainda nao verificado pra esse telefone; so passa a true/false
+     depois que a busca em /api/store/cliente-por-telefone responde. */
+  const [clienteEncontrado, setClienteEncontrado] = useState<boolean | null>(null);
+  const [buscandoCliente, setBuscandoCliente] = useState(false);
   /* "" = nenhum tipo escolhido ainda (mesmo estado inicial do loja.js legado,
      mostra o aviso "Escolha o tipo de entrega!" ate o cliente clicar um card). */
   const [tipo, setTipo] = useState<"" | "entrega" | "entrega_agendada" | "retirada" | "retirada_agendada">("");
@@ -253,6 +258,41 @@ export function StoreCheckoutDialog({
     }
   }
 
+  /* Autocomplete da etapa "Contato": ao completar o telefone, busca se ja
+     existe cadastro (mesmo numero) e pre-preenche nome/aniversario, evitando
+     duplicar cliente. Debounce simples pra nao disparar a cada digito. */
+  useEffect(() => {
+    const digits = telefone.replace(/\D/g, "");
+    if (digits.length < 10) return;
+    let cancelado = false;
+    const t = setTimeout(() => {
+      setBuscandoCliente(true);
+      fetch(`/api/store/cliente-por-telefone?tel=${digits}&loja_id=${perfil.loja_id}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelado) return;
+          if (data.ok && data.encontrado) {
+            setClienteEncontrado(true);
+            setNome((atual) => atual.trim() || data.nome || "");
+            setAniversario((atual) => atual || data.aniversario || "");
+          } else {
+            setClienteEncontrado(false);
+          }
+        })
+        .catch(() => {
+          if (!cancelado) setClienteEncontrado(false);
+        })
+        .finally(() => {
+          if (!cancelado) setBuscandoCliente(false);
+        });
+    }, 500);
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+      setBuscandoCliente(false);
+    };
+  }, [telefone, perfil.loja_id]);
+
   const cashbackValorInputNumerico = parseValorMascarado(cashbackValorInput);
   const cashbackValorInputValido =
     cashbackValorInput.trim() !== "" && !isNaN(cashbackValorInputNumerico) && cashbackValorInputNumerico > 0 && cashbackValorInputNumerico <= cashbackDisponivel;
@@ -319,6 +359,7 @@ export function StoreCheckoutDialog({
           loja_id: perfil.loja_id,
           cliente_nome: nome.trim(),
           cliente_telefone: telefone.replace(/\D/g, ""),
+          cliente_aniversario: aniversario || undefined,
           /* pedido_criar.php so reconhece "entrega"/"retirada"/"mesa" no campo tipo;
              a variante "_agendada" (usada so pra UI/cupom) e normalizada aqui. */
           tipo: isEntregaTipo ? "entrega" : "retirada",
@@ -430,15 +471,45 @@ export function StoreCheckoutDialog({
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
               {etapa === "dados" && (
                 <div className="space-y-3">
-                  <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome*" className={fieldClass()} />
                   <input
                     value={telefone}
                     onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
                     onBlur={verificarCashback}
                     inputMode="tel"
                     placeholder="Telefone*"
+                    autoFocus
                     className={fieldClass()}
                   />
+
+                  {telefone.replace(/\D/g, "").length >= 10 && (
+                    <>
+                      {buscandoCliente ? (
+                        <p className="flex items-center gap-1.5 text-[.78rem] text-neutral-400">
+                          <Loader2 size={13} className="animate-spin" />
+                          Verificando seu cadastro...
+                        </p>
+                      ) : (
+                        clienteEncontrado && (
+                          <p className="text-[.78rem] text-emerald-600">Encontramos seu cadastro! Confira seu nome abaixo.</p>
+                        )
+                      )}
+
+                      <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome*" className={fieldClass()} />
+
+                      <div>
+                        <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">
+                          Data de aniversário (opcional)
+                        </label>
+                        <input
+                          type="date"
+                          value={aniversario}
+                          onChange={(e) => setAniversario(e.target.value)}
+                          max={new Date().toISOString().slice(0, 10)}
+                          className={fieldClass()}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
