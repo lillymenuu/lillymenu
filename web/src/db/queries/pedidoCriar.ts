@@ -19,6 +19,7 @@ import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
 import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
 import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
 import { saldoCashbackLiberado } from "@/db/queries/cashback";
+import { timestampFortaleza } from "@/db/queries/tempo";
 
 /*
  * Equivalente de public/api/pedido_criar.php — cria um pedido da loja publica
@@ -83,7 +84,7 @@ async function obterOuCriarCliente(tx: NeonTx, lojaId: number, nome: string, tel
     return existente[0].id;
   }
 
-  const [novo] = await tx.insert(clientes).values({ nome, telefone: telFormatado, loja_id: lojaId }).returning({ id: clientes.id });
+  const [novo] = await tx.insert(clientes).values({ nome, telefone: telFormatado, loja_id: lojaId, criado_em: timestampFortaleza() }).returning({ id: clientes.id });
   return novo.id;
 }
 
@@ -179,6 +180,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           taxa_entrega: input.taxaEntrega ?? 0,
           endereco_entrega: input.endereco ?? "",
           origem: "loja",
+          criado_em: timestampFortaleza(),
           troco: input.trocoSolicitado && (input.trocoValor ?? 0) > 0 ? input.trocoValor : null,
           cashback_usado: cashbackUsar ? cashbackValorUsar : 0,
           cashback_aplicado: cashbackUsar,
@@ -251,6 +253,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
         await tx.insert(pontosMovimentacoes).values({
           cliente_id: clienteId,
           tipo: "resgate",
+          criado_em: timestampFortaleza(),
           pontos: -custoTotal,
           saldo_antes: saldoAntes,
           saldo_depois: saldoDepois,
@@ -258,7 +261,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
         });
       }
 
-      await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: input.formaPagamento, valor: input.total, loja_id: lojaId });
+      await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: input.formaPagamento, valor: input.total, loja_id: lojaId, criado_em: timestampFortaleza() });
     });
   } catch (e) {
     return { ok: false, msg: e instanceof Error ? e.message : "Erro interno ao criar o pedido." };
@@ -303,6 +306,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           cliente_id: clienteId,
           pedido_id: pedidoId,
           tipo: "uso",
+          criado_em: timestampFortaleza(),
           valor: cashbackValorUsar,
           saldo_antes: saldoAntesUso,
           saldo_depois: saldoDepoisUso,
@@ -320,6 +324,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
             cliente_id: clienteId,
             pedido_id: pedidoId,
             tipo: "pendente",
+            criado_em: timestampFortaleza(),
             valor: novoValor,
             saldo_antes: saldoAtualPendente,
             saldo_depois: saldoAtualPendente,
@@ -356,6 +361,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           cliente_id: clienteId,
           pedido_id: pedidoId,
           tipo: "pendente",
+          criado_em: timestampFortaleza(),
           pontos: pontosGanhoTotal,
           saldo_antes: saldoAtual,
           saldo_depois: saldoAtual,
