@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /* pdfkit le as fontes .afm do disco em runtime; nao pode ser empacotado */
+  serverExternalPackages: ["pdfkit"],
   /*
    * O link publico real da loja e a raiz (ex.: lillymenu.com/tewconfeitaria,
    * ja gravado em configuracoes.link_loja) — nao /store/[slug]. Como rewrite
