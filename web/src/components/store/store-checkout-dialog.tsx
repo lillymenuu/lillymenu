@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, User, Wallet } from "lucide-react";
+import { cn } from "cn";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
 import { PontosBadge } from "@/components/store/pontos-badge";
@@ -502,17 +503,23 @@ export function StoreCheckoutDialog({
                       <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome*" className={fieldClass()} />
 
                       {!aniversarioJaCadastrado && (
-                        <div>
+                        <div className="w-full">
                           <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">
                             Data de aniversário (opcional)
                           </label>
-                          <input
-                            type="date"
-                            value={aniversario}
-                            onChange={(e) => setAniversario(e.target.value)}
-                            max={new Date().toISOString().slice(0, 10)}
-                            className={fieldClass()}
-                          />
+                          {/* type="date" no mobile ignora width:100% se o wrapper nao tiver
+                              overflow-hidden — o widget nativo (dd/mm/aaaa + icone) forca a
+                              propria largura minima e estoura a caixa, ficando mais largo
+                              que Telefone/Nome ao lado. */}
+                          <div className="w-full overflow-hidden rounded-xl">
+                            <input
+                              type="date"
+                              value={aniversario}
+                              onChange={(e) => setAniversario(e.target.value)}
+                              max={new Date().toISOString().slice(0, 10)}
+                              className={cn(fieldClass(), "block w-full min-w-0 max-w-full")}
+                            />
+                          </div>
                         </div>
                       )}
                     </>
