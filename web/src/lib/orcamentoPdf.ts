@@ -66,20 +66,26 @@ export async function gerarPdfOrcamento(dados: DadosPdfOrcamento): Promise<Buffe
   const descontoTexto = dados.descontoTipo === "percent" ? `${dados.descontoValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%` : brl(dados.descontoValor);
 
   /* capa / logo */
+  const yTopo = doc.y;
   if (capa) {
     try {
-      doc.image(capa, M, doc.y, { width: largura, height: 140, fit: [largura, 140], align: "center", valign: "center" });
-      if (logo) doc.image(logo, M + 16, doc.y + 110, { fit: [64, 64] });
-      doc.y += 156;
+      doc.image(capa, M, yTopo, { fit: [largura, 140], align: "center", valign: "center" });
+      let fim = yTopo + 140;
+      if (logo) {
+        doc.image(logo, M + 16, yTopo + 110, { fit: [64, 64] });
+        fim = yTopo + 182;
+      }
+      doc.y = fim + 8;
     } catch {
-      /* imagem invalida: segue sem capa */
+      doc.y = yTopo; /* imagem invalida: segue sem capa */
     }
   } else if (logo) {
     try {
-      doc.image(logo, M, doc.y, { fit: [recibo ? 54 : 64, recibo ? 54 : 64] });
-      doc.y += recibo ? 62 : 72;
+      const t = recibo ? 54 : 64;
+      doc.image(logo, M, yTopo, { fit: [t, t] });
+      doc.y = yTopo + t + 8;
     } catch {
-      /* segue sem logo */
+      doc.y = yTopo; /* segue sem logo */
     }
   }
 
