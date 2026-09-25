@@ -56,6 +56,9 @@ export function StoreCheckoutDialog({
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [aniversario, setAniversario] = useState("");
+  /* true quando o cliente encontrado ja tinha aniversario cadastrado — nesse
+     caso o campo nem aparece, so pedimos pra quem ainda nao informou. */
+  const [aniversarioJaCadastrado, setAniversarioJaCadastrado] = useState(false);
   /* null = ainda nao verificado pra esse telefone; so passa a true/false
      depois que a busca em /api/store/cliente-por-telefone responde. */
   const [clienteEncontrado, setClienteEncontrado] = useState<boolean | null>(null);
@@ -275,8 +278,10 @@ export function StoreCheckoutDialog({
             setClienteEncontrado(true);
             setNome((atual) => atual.trim() || data.nome || "");
             setAniversario((atual) => atual || data.aniversario || "");
+            setAniversarioJaCadastrado(Boolean(data.aniversario));
           } else {
             setClienteEncontrado(false);
+            setAniversarioJaCadastrado(false);
           }
         })
         .catch(() => {
@@ -496,18 +501,20 @@ export function StoreCheckoutDialog({
 
                       <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome*" className={fieldClass()} />
 
-                      <div>
-                        <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">
-                          Data de aniversário (opcional)
-                        </label>
-                        <input
-                          type="date"
-                          value={aniversario}
-                          onChange={(e) => setAniversario(e.target.value)}
-                          max={new Date().toISOString().slice(0, 10)}
-                          className={fieldClass()}
-                        />
-                      </div>
+                      {!aniversarioJaCadastrado && (
+                        <div>
+                          <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">
+                            Data de aniversário (opcional)
+                          </label>
+                          <input
+                            type="date"
+                            value={aniversario}
+                            onChange={(e) => setAniversario(e.target.value)}
+                            max={new Date().toISOString().slice(0, 10)}
+                            className={fieldClass()}
+                          />
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
