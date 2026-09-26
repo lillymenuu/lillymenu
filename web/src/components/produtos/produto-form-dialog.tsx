@@ -288,17 +288,31 @@ export function ProdutoFormDialog({
         imagem_base64: imagemBase64 ?? "",
         imagem_remover: imagemRemover,
       };
-      const res = await fetch("/api/produtos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setErro(data.msg ?? "Erro ao salvar produto.");
+      /* sem isso, uma requisicao que trava (rede instavel, upload de imagem
+         grande, etc.) deixa o botao "Salvando..." preso pra sempre — o
+         usuario nao tem como saber se deve tentar de novo. */
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
+      let res: Response;
+      try {
+        res = await fetch("/api/produtos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        setErro(data?.msg ?? "Erro ao salvar produto.");
         return false;
       }
       return true;
+    } catch (e) {
+      setErro(e instanceof DOMException && e.name === "AbortError" ? "A requisição demorou demais. Tente novamente." : "Erro de conexão. Tente novamente.");
+      return false;
     } finally {
       setSalvando(false);
     }

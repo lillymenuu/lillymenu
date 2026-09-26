@@ -14,6 +14,7 @@ export async function GET() {
     produtos: resultado.produtos.map((p) => ({
       id: p.id,
       nome: p.nome,
+      codigo: p.codigo,
       descricao: p.descricao,
       categoria_id: p.categoriaId,
       preco: p.preco,

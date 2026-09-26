@@ -1172,6 +1172,7 @@ export const produtos = pgTable(
     id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
     categoria_id: integer("categoria_id"),
     nome: varchar("nome", { length: 150 }),
+    codigo: varchar("codigo", { length: 60 }),
     descricao: text("descricao"),
     preco: numeric("preco", { precision: 10, scale: 2, mode: "number" }),
     pontos_ganho: integer("pontos_ganho").notNull().default(0),

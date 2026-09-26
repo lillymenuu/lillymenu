@@ -23,6 +23,7 @@ async function bumpCatalogoVersao(lojaId: number): Promise<void> {
 export type ProdutoAdmin = {
   id: number;
   nome: string | null;
+  codigo: string | null;
   precoBase: number | null;
   preco: number;
   ativo: boolean | null;
@@ -55,6 +56,7 @@ export async function listarProdutosAdmin(lojaId: number): Promise<ProdutoAdmin[
     .select({
       id: produtos.id,
       nome: produtos.nome,
+      codigo: produtos.codigo,
       precoBase: produtos.preco,
       preco: precoExpr,
       ativo: produtos.ativo,
@@ -164,6 +166,7 @@ async function salvarComplementosItens(produtoId: number, lojaId: number, itens:
 export type SalvarProdutoInput = {
   id?: number;
   nome: string;
+  codigo?: string;
   preco: number;
   categoriaId?: number | null;
   descricao?: string;
@@ -198,6 +201,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
   if (preco <= 0) return { ok: false, msg: "Informe um preco valido." };
 
   const categoriaId = input.categoriaId && input.categoriaId > 0 ? input.categoriaId : null;
+  const codigo = (input.codigo ?? "").trim() || null;
   const descricao = (input.descricao ?? "").trim() || null;
   const precoPromocional = input.precoPromocional !== undefined && input.precoPromocional !== null ? Number(input.precoPromocional) : null;
   const diasSemanaJson = input.diasSemana && input.diasSemana.length > 0 ? JSON.stringify(input.diasSemana) : null;
@@ -208,6 +212,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
 
   const campos = {
     nome,
+    codigo,
     preco,
     categoria_id: categoriaId,
     ativo: Boolean(input.ativo),

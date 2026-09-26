@@ -87,7 +87,7 @@ export function PosCatalog({
     return todas
       .map((g) => ({
         ...g,
-        produtos: g.produtos.filter((p) => p.nome.toLowerCase().includes(termo)),
+        produtos: g.produtos.filter((p) => p.nome.toLowerCase().includes(termo) || (p.codigo ?? "").toLowerCase().includes(termo)),
         combos: g.combos.filter((c) => c.nome.toLowerCase().includes(termo)),
       }))
       .filter((g) => g.produtos.length + g.combos.length > 0);

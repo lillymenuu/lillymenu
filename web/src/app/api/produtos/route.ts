@@ -12,6 +12,7 @@ export async function GET() {
     produtos: produtos.map((p) => ({
       id: p.id,
       nome: p.nome,
+      codigo: p.codigo,
       preco_base: p.precoBase,
       preco: p.preco,
       ativo: p.ativo ? 1 : 0,
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
   const resultado = await salvarProduto(sessao.lojaId, {
     id: idRaw && Number(idRaw) > 0 ? Number(idRaw) : undefined,
     nome: typeof body.nome === "string" ? body.nome : "",
+    codigo: typeof body.codigo === "string" ? body.codigo : undefined,
     preco: Number(body.preco ?? 0),
     categoriaId: categoriaIdRaw !== null && categoriaIdRaw !== undefined && categoriaIdRaw !== "" ? Number(categoriaIdRaw) : null,
     descricao: typeof body.descricao === "string" ? body.descricao : undefined,

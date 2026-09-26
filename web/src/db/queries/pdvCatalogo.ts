@@ -10,6 +10,7 @@ export type CategoriaPdv = { id: number; nome: string | null };
 export type ProdutoPdv = {
   id: number;
   nome: string | null;
+  codigo: string | null;
   descricao: string | null;
   categoriaId: number | null;
   preco: number;
@@ -45,6 +46,7 @@ export async function catalogoPdv(lojaId: number): Promise<CatalogoPdvResultado>
     .select({
       id: produtos.id,
       nome: produtos.nome,
+      codigo: produtos.codigo,
       descricao: produtos.descricao,
       categoriaId: produtos.categoria_id,
       preco: produtos.preco,
@@ -68,6 +70,7 @@ export async function catalogoPdv(lojaId: number): Promise<CatalogoPdvResultado>
     return {
       id: p.id,
       nome: p.nome,
+      codigo: p.codigo,
       descricao: p.descricao && p.descricao.trim() !== "" ? p.descricao : null,
       categoriaId: p.categoriaId,
       preco: Number(p.preco ?? 0),
