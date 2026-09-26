@@ -87,6 +87,7 @@ export async function getProdutos(lojaId: number): Promise<{ ok: true; produtos:
     produtos: produtos.map((p) => ({
       id: p.id,
       nome: p.nome ?? "",
+      codigo: p.codigo,
       preco_base: p.precoBase ?? 0,
       preco: p.preco,
       ativo: p.ativo ? 1 : 0,
