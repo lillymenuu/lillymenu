@@ -51,6 +51,23 @@ export const adminApiTokens = pgTable(
   ]
 );
 
+/** Sessao do app do garcom (/[slug]/garcom) — mesmo desenho do admin_api_tokens, token separado da sessao do lojista. */
+export const garcomApiTokens = pgTable(
+  "garcom_api_tokens",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    garcom_id: integer("garcom_id").notNull(),
+    loja_id: integer("loja_id").notNull(),
+    token_hash: char("token_hash", { length: 64 }).notNull(),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    expira_em: timestamp("expira_em", { mode: "string" }).notNull(),
+  },
+  (t) => [
+    unique("garcom_api_tokens_uq_token_hash").on(t.token_hash),
+    index("garcom_api_tokens_idx_garcom").on(t.garcom_id),
+  ]
+);
+
 export const assinaturas = pgTable(
   "assinaturas",
   {

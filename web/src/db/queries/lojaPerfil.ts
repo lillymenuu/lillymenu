@@ -40,7 +40,7 @@ export async function resolverLojaIdPorSlug(slugInput: string): Promise<number |
  * proprias funcoes.
  */
 
-function fixImgPath(caminho: string, baseUrl: string): string {
+export function fixImgPath(caminho: string, baseUrl: string): string {
   if (!caminho) return "";
   if (/^https?:\/\//i.test(caminho) || caminho.startsWith("/")) return caminho;
   return `${baseUrl.replace(/\/+$/, "")}/${caminho}`;

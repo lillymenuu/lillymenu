@@ -1,11 +1,14 @@
 import "server-only";
-import { and, eq, ne, isNotNull, notInArray, sql } from "drizzle-orm";
+import { and, eq, ne, inArray, isNotNull, notInArray, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { db } from "@/db";
-import { mesas, garcons, pedidos, clientes } from "@/db/schema";
-import { getConfig } from "@/db/queries/config";
+import { db, withTransaction, type NeonTx } from "@/db";
+import { mesas, garcons, pedidos, pedidoItens, produtos, estoque, clientes } from "@/db/schema";
+import { getConfig, getConfigs } from "@/db/queries/config";
+import { fixImgPath } from "@/db/queries/lojaPerfil";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
+import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
+import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
 
 /*
  * Equivalente de admin/api/v1/modo_garcom_detalhe.php, modo_garcom_stats.php,
@@ -33,7 +36,7 @@ function gerarCodigoAcesso(): string {
 }
 
 /** Cliente-placeholder da mesa (cria se ainda nao existir) — pedidos_kanban usa INNER JOIN com clientes. */
-async function clienteDaMesa(mesaId: number, nomeMesa: string, lojaId: number): Promise<number> {
+export async function clienteDaMesa(mesaId: number, nomeMesa: string, lojaId: number): Promise<number> {
   const [linha] = await db.select({ clienteId: mesas.cliente_id }).from(mesas).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId))).limit(1);
   if (linha?.clienteId) return linha.clienteId;
 
@@ -227,4 +230,181 @@ export async function toggleGarcom(lojaId: number, id: number, ativo: boolean | 
   if (id <= 0 || ativo === null) return { ok: false };
   await db.update(garcons).set({ ativo }).where(and(eq(garcons.id, id), eq(garcons.loja_id, lojaId)));
   return { ok: true };
+}
+
+/*
+ * A partir daqui: o app do garcom em si (public/garcom_login.php,
+ * public/garcom.php e as APIs public/api/garcom_*.php) — a parte que ficou
+ * de fora do escopo original desta migracao (ver comentario no topo do
+ * arquivo) e que precisou ser portada quando o PHP saiu do ar.
+ */
+
+export type PerfilGarcomLoja = { nomeLoja: string; logoUrl: string; temaCorMenu: string; dinAtivo: boolean; pixAtivo: boolean; credAtivo: boolean; debAtivo: boolean };
+
+/** Equivalente ao SELECT de configuracoes no topo de public/garcom.php. */
+export async function perfilGarcomLoja(lojaId: number, baseUrl: string): Promise<PerfilGarcomLoja> {
+  const cfg = await getConfigs(lojaId, ["nome_loja", "loja_perfil", "tema_cor_menu", "pagamento_dinheiro_ativo", "pagamento_pix_ativo", "pagamento_credito_ativo", "pagamento_debito_ativo"]);
+  return {
+    nomeLoja: cfg.nome_loja || "Loja",
+    logoUrl: fixImgPath(cfg.loja_perfil, baseUrl),
+    temaCorMenu: cfg.tema_cor_menu || "#e63770",
+    dinAtivo: cfg.pagamento_dinheiro_ativo !== "0",
+    pixAtivo: cfg.pagamento_pix_ativo !== "0",
+    credAtivo: cfg.pagamento_credito_ativo !== "0",
+    debAtivo: cfg.pagamento_debito_ativo !== "0",
+  };
+}
+
+export type MesaGarcom = { id: number; nome: string };
+
+/** Mesas ativas pro seletor do garcom (public/garcom.php: "SELECT id, nome FROM mesas WHERE ativo=1"). */
+export async function mesasAtivasGarcom(lojaId: number): Promise<MesaGarcom[]> {
+  return db.select({ id: mesas.id, nome: mesas.nome }).from(mesas).where(and(eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).orderBy(mesas.nome);
+}
+
+export type PedidoAbertoGarcom = { id: number; codigo: number; status: string; total: number; criadoEm: string | null; mesaNome: string | null; itensResumo: string };
+
+/** Equivalente de public/api/garcom_pedidos_abertos.php — pedidos de mesa ainda nao finalizados/cancelados. */
+export async function pedidosAbertosGarcom(lojaId: number): Promise<PedidoAbertoGarcom[]> {
+  const linhas = await db
+    .select({ id: pedidos.id, status: pedidos.status, total: pedidos.total, criadoEm: pedidos.criado_em, mesaNome: mesas.nome })
+    .from(pedidos)
+    .leftJoin(mesas, and(eq(mesas.id, pedidos.mesa_id), eq(mesas.loja_id, pedidos.loja_id)))
+    .where(and(eq(pedidos.loja_id, lojaId), isNotNull(pedidos.mesa_id), notInArray(pedidos.status, ["finalizado", "cancelado"])))
+    .orderBy(sql`${pedidos.id} desc`)
+    .limit(100);
+
+  if (linhas.length === 0) return [];
+
+  const base = await pedidoCodigoBase(lojaId);
+  const ids = linhas.map((l) => l.id);
+  const itensRaw = await db.select({ pedidoId: pedidoItens.pedido_id, nome: pedidoItens.produto_nome, qtd: pedidoItens.quantidade }).from(pedidoItens).where(inArray(pedidoItens.pedido_id, ids));
+
+  const itensPorPedido = new Map<number, string[]>();
+  for (const item of itensRaw) {
+    if (item.pedidoId === null) continue;
+    const qtd = item.qtd ?? 1;
+    const lista = itensPorPedido.get(item.pedidoId) ?? [];
+    lista.push(`${qtd > 1 ? `${qtd}x ` : ""}${item.nome}`);
+    itensPorPedido.set(item.pedidoId, lista);
+  }
+
+  return linhas.map((p) => ({
+    id: p.id,
+    codigo: codigoDisplay(p.id, base),
+    status: p.status,
+    total: Number(p.total ?? 0),
+    criadoEm: p.criadoEm,
+    mesaNome: p.mesaNome,
+    itensResumo: (itensPorPedido.get(p.id) ?? []).join(", "),
+  }));
+}
+
+export type ItemPedidoMesa = { id?: number; nome: string; preco: number; qtd: number; obs?: string; combosels?: { id: number; qtd?: number }[] | null };
+
+export type CriarPedidoMesaInput = {
+  lojaId: number;
+  garcomId: number;
+  mesaId: number;
+  itens: ItemPedidoMesa[];
+  formaPagamento: string;
+  trocoSolicitado?: boolean;
+  trocoValor?: number;
+};
+
+const FORMAS_PAGAMENTO_VALIDAS = ["dinheiro", "pix", "credito", "debito"];
+
+/** Equivalente de public/api/garcom_pedido_criar.php — pedido de mesa lancado pelo garcom. */
+export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok: true; id: number; codigo: number } | { ok: false; msg: string }> {
+  const { lojaId, garcomId, mesaId } = input;
+  if (mesaId <= 0 || !input.itens || input.itens.length === 0) return { ok: false, msg: "Selecione a mesa e adicione ao menos um item." };
+  if (!FORMAS_PAGAMENTO_VALIDAS.includes(input.formaPagamento)) return { ok: false, msg: "Escolha a forma de pagamento." };
+
+  const [mesa] = await db.select({ id: mesas.id, nome: mesas.nome }).from(mesas).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).limit(1);
+  if (!mesa) return { ok: false, msg: "Mesa inválida ou desativada." };
+
+  /* estoque: soma por produto (avulso ou dentro de combo) e bloqueia o pedido
+     inteiro se faltar — mesma checagem de public/api/pedido_criar.php, ja
+     considerando reservas simultaneas do PDV. */
+  const necessario = new Map<number, number>();
+  for (const item of input.itens) {
+    const qtdItem = Math.max(1, item.qtd || 1);
+    if (item.combosels && item.combosels.length > 0) {
+      for (const sel of item.combosels) {
+        const selQtd = (sel.qtd ?? 1) * qtdItem;
+        if (sel.id > 0 && selQtd > 0) necessario.set(sel.id, (necessario.get(sel.id) ?? 0) + selQtd);
+      }
+    } else if (item.id && item.id > 0) {
+      necessario.set(item.id, (necessario.get(item.id) ?? 0) + qtdItem);
+    }
+  }
+  if (necessario.size > 0) {
+    const ids = [...necessario.keys()];
+    const linhas = await db
+      .select({ id: produtos.id, nome: produtos.nome, estoqueQtd: estoque.quantidade })
+      .from(produtos)
+      .leftJoin(estoque, and(eq(estoque.produto_id, produtos.id), eq(estoque.loja_id, produtos.loja_id)))
+      .where(and(inArray(produtos.id, ids), eq(produtos.loja_id, lojaId)));
+    const reservasPdv = await reservaMapaPdv(lojaId);
+    for (const p of linhas) {
+      const preciso = necessario.get(p.id) ?? 0;
+      if (preciso > 0 && aplicarReservaPdv(p.estoqueQtd ?? 0, p.id, reservasPdv) < preciso) {
+        return { ok: false, msg: `"${p.nome}" está sem estoque suficiente no momento.` };
+      }
+    }
+  }
+
+  const subtotal = input.itens.reduce((soma, item) => soma + item.preco * Math.max(1, item.qtd || 1), 0);
+
+  let pedidoId = 0;
+  try {
+    await withTransaction(async (tx: NeonTx) => {
+      const clienteId = await clienteDaMesa(mesaId, mesa.nome, lojaId);
+
+      const [novoPedido] = await tx
+        .insert(pedidos)
+        .values({
+          cliente_id: clienteId,
+          mesa_id: mesaId,
+          garcom_id: garcomId,
+          forma_pagamento: input.formaPagamento,
+          total: subtotal,
+          subtotal,
+          status: "pendente",
+          loja_id: lojaId,
+          tipo: "mesa",
+          origem: "garcom",
+          criado_em: timestampFortaleza(),
+          troco: input.formaPagamento === "dinheiro" && input.trocoSolicitado && (input.trocoValor ?? 0) > 0 ? input.trocoValor : null,
+        })
+        .returning({ id: pedidos.id });
+      pedidoId = novoPedido.id;
+
+      for (const item of input.itens) {
+        const qtd = Math.max(1, item.qtd || 1);
+        const isCombo = Boolean(item.combosels && item.combosels.length > 0);
+
+        const [novoItem] = await tx
+          .insert(pedidoItens)
+          .values({ pedido_id: pedidoId, produto_nome: item.nome.trim(), quantidade: qtd, preco: item.preco, loja_id: lojaId, produto_id: item.id ?? null, observacoes: item.obs?.trim() ?? "" })
+          .returning({ id: pedidoItens.id });
+
+        if (!isCombo && item.id) {
+          await baixarEstoque(tx, item.id, lojaId, qtd, "pedido", pedidoId);
+        }
+        if (isCombo && item.combosels) {
+          for (const sel of item.combosels) {
+            const selQtd = (sel.qtd ?? 1) * qtd;
+            if (sel.id > 0 && selQtd > 0) await baixarEstoque(tx, sel.id, lojaId, selQtd, "pedido", pedidoId);
+          }
+          await registrarComponentesCombo(tx, pedidoId, novoItem.id, item.combosels, qtd, lojaId);
+        }
+      }
+    });
+  } catch {
+    return { ok: false, msg: "Erro ao enviar o pedido." };
+  }
+
+  const base = await pedidoCodigoBase(lojaId);
+  return { ok: true, id: pedidoId, codigo: codigoDisplay(pedidoId, base) };
 }

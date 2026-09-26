@@ -2,8 +2,10 @@ import "server-only";
 import { cookies } from "next/headers";
 import { TOKEN_COOKIE } from "@/lib/authCookie";
 import { SA_TOKEN_COOKIE } from "@/lib/superAuthCookie";
+import { GARCOM_TOKEN_COOKIE } from "@/lib/garcomAuthCookie";
 import { validarSessao, type AdminAutenticado } from "@/db/queries/auth";
 import { exigirSuperadmin } from "@/db/queries/superadminAuth";
+import { validarSessaoGarcom, type GarcomAutenticado } from "@/db/queries/garcomAuth";
 
 /*
  * Substitui phpApiFetch/superApiFetch como fonte de identidade do
@@ -32,4 +34,12 @@ export async function getSessaoSuperadmin(): Promise<AdminAutenticado | null> {
   const token = store.get(SA_TOKEN_COOKIE)?.value;
   if (!token) return null;
   return exigirSuperadmin(token);
+}
+
+/** Sessao do garcom (/[slug]/garcom) — separada da sessao do lojista. */
+export async function getSessaoGarcom(): Promise<GarcomAutenticado | null> {
+  const store = await cookies();
+  const token = store.get(GARCOM_TOKEN_COOKIE)?.value;
+  if (!token) return null;
+  return validarSessaoGarcom(token);
 }
