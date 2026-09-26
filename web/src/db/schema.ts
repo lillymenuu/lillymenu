@@ -997,6 +997,7 @@ export const pedidos = pgTable(
     offline_uuid: varchar("offline_uuid", { length: 36 }),
     tipo_entrega: text("tipo_entrega").$type<"retirada" | "entrega">(),
     taxa_entrega: numeric("taxa_entrega", { precision: 10, scale: 2, mode: "number" }),
+    taxa_servico: numeric("taxa_servico", { precision: 10, scale: 2, mode: "number" }),
     total: numeric("total", { precision: 10, scale: 2, mode: "number" }),
     criado_em: timestamp("criado_em", { mode: "string" }).defaultNow(),
     tipo: text("tipo").$type<"retirada" | "entrega" | "mesa">().notNull().default("retirada"),

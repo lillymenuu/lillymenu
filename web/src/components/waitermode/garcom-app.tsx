@@ -140,8 +140,13 @@ function GarcomAppInterno({
     setCarrinho((atual) => atual.flatMap((i) => (i.key === key ? (i.qtd + delta <= 0 ? [] : [{ ...i, qtd: i.qtd + delta }]) : [i])));
   }
 
-  const totalCarrinho = carrinho.reduce((s, i) => s + i.precoUnit * i.qtd, 0);
+  const subtotalCarrinho = carrinho.reduce((s, i) => s + i.precoUnit * i.qtd, 0);
   const qtdCarrinho = carrinho.reduce((s, i) => s + i.qtd, 0);
+  /* mesmo calculo do servidor (arredondado igual) — so pra exibir; quem manda
+     na cobrança de verdade e o criarPedidoMesa, que recalcula a partir da
+     config da loja e ignora qualquer valor vindo daqui. */
+  const taxaServicoValor = perfil.taxaServicoAtiva ? Math.round(subtotalCarrinho * (perfil.taxaServicoPct / 100) * 100) / 100 : 0;
+  const totalCarrinho = subtotalCarrinho + taxaServicoValor;
 
   const trocoValorNumerico = parseValorMascarado(trocoValor);
   const trocoValido = trocoValor.trim() === "" || (!isNaN(trocoValorNumerico) && trocoValorNumerico > totalCarrinho);
@@ -423,6 +428,18 @@ function GarcomAppInterno({
         footer={
           carrinho.length > 0 ? (
             <>
+              {taxaServicoValor > 0 && (
+                <div className="mb-1 flex items-center justify-between text-[.78rem] text-neutral-500">
+                  <span>Subtotal</span>
+                  <span>{formatarPreco(subtotalCarrinho)}</span>
+                </div>
+              )}
+              {taxaServicoValor > 0 && (
+                <div className="mb-1 flex items-center justify-between text-[.78rem] text-neutral-500">
+                  <span>Taxa de serviço ({perfil.taxaServicoPct}%)</span>
+                  <span>{formatarPreco(taxaServicoValor)}</span>
+                </div>
+              )}
               <div className="mb-2.5 flex items-center justify-between">
                 <span className="text-[.78rem] text-neutral-500">Total do pedido</span>
                 <span className="text-[.9rem] font-bold text-neutral-900">{formatarPreco(totalCarrinho)}</span>

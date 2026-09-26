@@ -2,8 +2,8 @@ import "server-only";
 import { and, eq, ne, inArray, isNotNull, notInArray, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db, withTransaction, type NeonTx } from "@/db";
-import { mesas, garcons, pedidos, pedidoItens, produtos, estoque, clientes } from "@/db/schema";
-import { getConfig, getConfigs } from "@/db/queries/config";
+import { mesas, garcons, pedidos, pedidoItens, produtos, estoque, clientes, configuracoes } from "@/db/schema";
+import { getConfigs } from "@/db/queries/config";
 import { fixImgPath } from "@/db/queries/lojaPerfil";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
@@ -75,6 +75,8 @@ export type DetalheModoGarcomResultado = {
   garconsAtivos: number;
   garcomLoginUrl: string;
   cardapioUrl: string;
+  taxaServicoAtiva: boolean;
+  taxaServicoPct: number;
 };
 
 export async function detalheModoGarcom(lojaId: number, protocoloHost: string): Promise<DetalheModoGarcomResultado> {
@@ -97,9 +99,8 @@ export async function detalheModoGarcom(lojaId: number, protocoloHost: string): 
   const mesasAtivasCount = mesasRaw.filter((m) => m.ativo).length;
   const garconsAtivosCount = garconsRaw.filter((g) => g.ativo).length;
 
-  const nomeLojaCfg = await getConfig(lojaId, "nome_loja", "");
-  const linkLojaCfg = await getConfig(lojaId, "link_loja", "");
-  const slug = resolverSlugLoja(linkLojaCfg, nomeLojaCfg);
+  const cfg = await getConfigs(lojaId, ["nome_loja", "link_loja", "taxa_servico_ativa", "taxa_servico_pct"]);
+  const slug = resolverSlugLoja(cfg.link_loja, cfg.nome_loja);
 
   const garcomLoginUrl = slug !== "" ? `${protocoloHost}/${encodeURIComponent(slug)}/garcom_login` : `${protocoloHost}/public/garcom_login.php?loja_id=${lojaId}`;
   const cardapioUrl = slug !== "" ? `${protocoloHost}/${encodeURIComponent(slug)}` : `${protocoloHost}/public/loja.php?loja_id=${lojaId}`;
@@ -112,7 +113,26 @@ export async function detalheModoGarcom(lojaId: number, protocoloHost: string): 
     garconsAtivos: garconsAtivosCount,
     garcomLoginUrl,
     cardapioUrl,
+    taxaServicoAtiva: cfg.taxa_servico_ativa === "1",
+    taxaServicoPct: Number(cfg.taxa_servico_pct || "0"),
   };
+}
+
+/** Liga/desliga a taxa de servico do garcom e define a porcentagem cobrada sobre o subtotal do pedido de mesa. */
+export async function salvarTaxaServico(lojaId: number, ativa: boolean, pctInput: number): Promise<{ ok: true; ativa: boolean; pct: number } | { ok: false; msg: string }> {
+  if (!Number.isFinite(pctInput) || pctInput < 0 || pctInput > 100) return { ok: false, msg: "Informe uma porcentagem entre 0 e 100." };
+
+  const pct = Math.round(pctInput * 100) / 100;
+  await db
+    .insert(configuracoes)
+    .values({ loja_id: lojaId, chave: "taxa_servico_ativa", valor: ativa ? "1" : "0" })
+    .onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor: ativa ? "1" : "0" } });
+  await db
+    .insert(configuracoes)
+    .values({ loja_id: lojaId, chave: "taxa_servico_pct", valor: String(pct) })
+    .onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor: String(pct) } });
+
+  return { ok: true, ativa, pct };
 }
 
 export type StatsModoGarcomResultado = { pedidosPendentes: number; mesasAtivas: number; garconsAtivos: number };
@@ -239,11 +259,31 @@ export async function toggleGarcom(lojaId: number, id: number, ativo: boolean | 
  * arquivo) e que precisou ser portada quando o PHP saiu do ar.
  */
 
-export type PerfilGarcomLoja = { nomeLoja: string; logoUrl: string; temaCorMenu: string; dinAtivo: boolean; pixAtivo: boolean; credAtivo: boolean; debAtivo: boolean };
+export type PerfilGarcomLoja = {
+  nomeLoja: string;
+  logoUrl: string;
+  temaCorMenu: string;
+  dinAtivo: boolean;
+  pixAtivo: boolean;
+  credAtivo: boolean;
+  debAtivo: boolean;
+  taxaServicoAtiva: boolean;
+  taxaServicoPct: number;
+};
 
 /** Equivalente ao SELECT de configuracoes no topo de public/garcom.php. */
 export async function perfilGarcomLoja(lojaId: number, baseUrl: string): Promise<PerfilGarcomLoja> {
-  const cfg = await getConfigs(lojaId, ["nome_loja", "loja_perfil", "tema_cor_menu", "pagamento_dinheiro_ativo", "pagamento_pix_ativo", "pagamento_credito_ativo", "pagamento_debito_ativo"]);
+  const cfg = await getConfigs(lojaId, [
+    "nome_loja",
+    "loja_perfil",
+    "tema_cor_menu",
+    "pagamento_dinheiro_ativo",
+    "pagamento_pix_ativo",
+    "pagamento_credito_ativo",
+    "pagamento_debito_ativo",
+    "taxa_servico_ativa",
+    "taxa_servico_pct",
+  ]);
   return {
     nomeLoja: cfg.nome_loja || "Loja",
     logoUrl: fixImgPath(cfg.loja_perfil, baseUrl),
@@ -252,6 +292,8 @@ export async function perfilGarcomLoja(lojaId: number, baseUrl: string): Promise
     pixAtivo: cfg.pagamento_pix_ativo !== "0",
     credAtivo: cfg.pagamento_credito_ativo !== "0",
     debAtivo: cfg.pagamento_debito_ativo !== "0",
+    taxaServicoAtiva: cfg.taxa_servico_ativa === "1",
+    taxaServicoPct: Number(cfg.taxa_servico_pct || "0"),
   };
 }
 
@@ -356,6 +398,11 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
 
   const subtotal = input.itens.reduce((soma, item) => soma + item.preco * Math.max(1, item.qtd || 1), 0);
 
+  /* taxa de servico do garcom: calculada aqui a partir da config da loja
+     (nunca confia em valor vindo do cliente), igual ao resto do sistema. */
+  const cfgTaxa = await getConfigs(lojaId, ["taxa_servico_ativa", "taxa_servico_pct"]);
+  const taxaServico = cfgTaxa.taxa_servico_ativa === "1" ? Math.round(subtotal * (Number(cfgTaxa.taxa_servico_pct || "0") / 100) * 100) / 100 : 0;
+
   let pedidoId = 0;
   try {
     await withTransaction(async (tx: NeonTx) => {
@@ -368,8 +415,9 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           mesa_id: mesaId,
           garcom_id: garcomId,
           forma_pagamento: input.formaPagamento,
-          total: subtotal,
+          total: subtotal + taxaServico,
           subtotal,
+          taxa_servico: taxaServico > 0 ? taxaServico : null,
           status: "pendente",
           loja_id: lojaId,
           tipo: "mesa",

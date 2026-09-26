@@ -27,6 +27,8 @@ export type ModoGarcomDetalheResposta = {
   garcons_ativos: number;
   garcom_login_url: string;
   cardapio_url: string;
+  taxa_servico_ativa: boolean;
+  taxa_servico_pct: number;
 };
 
 export type ModoGarcomStats = {
@@ -65,5 +67,7 @@ export async function getModoGarcomDetalhe(lojaId: number): Promise<ModoGarcomDe
     garcons_ativos: resultado.garconsAtivos,
     garcom_login_url: resultado.garcomLoginUrl,
     cardapio_url: resultado.cardapioUrl,
+    taxa_servico_ativa: resultado.taxaServicoAtiva,
+    taxa_servico_pct: resultado.taxaServicoPct,
   };
 }

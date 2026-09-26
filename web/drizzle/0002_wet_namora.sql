@@ -1,0 +1,1 @@
+ALTER TABLE "pedidos" ADD COLUMN "taxa_servico" numeric(10, 2);

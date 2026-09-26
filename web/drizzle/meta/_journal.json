@@ -15,6 +15,13 @@
       "when": 1790386016989,
       "tag": "0001_left_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790387954990,
+      "tag": "0002_wet_namora",
+      "breakpoints": true
     }
   ]
 }

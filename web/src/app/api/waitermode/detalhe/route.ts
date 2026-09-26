@@ -24,5 +24,7 @@ export async function GET(request: Request) {
     garcons_ativos: resultado.garconsAtivos,
     garcom_login_url: resultado.garcomLoginUrl,
     cardapio_url: resultado.cardapioUrl,
+    taxa_servico_ativa: resultado.taxaServicoAtiva,
+    taxa_servico_pct: resultado.taxaServicoPct,
   });
 }

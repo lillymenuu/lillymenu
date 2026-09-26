@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 import { STATUS_CORES, STATUS_LABELS, PROXIMA_ETAPA, formatBRL, formatHora } from "@/components/ordermanager/constants";
@@ -41,6 +43,9 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
   const [garcomGerarCodigo, setGarcomGerarCodigo] = useState<Garcom | null>(null);
   const [gerandoCodigo, setGerandoCodigo] = useState(false);
   const [codigoGerado, setCodigoGerado] = useState<string | null>(null);
+
+  const [taxaServicoPctInput, setTaxaServicoPctInput] = useState(String(dadosIniciais.taxa_servico_pct || ""));
+  const [salvandoTaxaServico, setSalvandoTaxaServico] = useState(false);
 
   async function recarregarDetalhe() {
     try {
@@ -259,6 +264,29 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
     }
   }
 
+  async function salvarTaxaServico(ativa: boolean, pct: number) {
+    setSalvandoTaxaServico(true);
+    try {
+      const res = await fetch("/api/waitermode/taxa-servico-salvar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ativa, pct }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        toast.error(data.msg ?? "Erro ao salvar a taxa de serviço.");
+        return;
+      }
+      setDados((d) => ({ ...d, taxa_servico_ativa: data.ativa, taxa_servico_pct: data.pct }));
+      setTaxaServicoPctInput(String(data.pct));
+      toast.success("Taxa de serviço atualizada!");
+    } catch {
+      toast.error("Erro ao salvar a taxa de serviço.");
+    } finally {
+      setSalvandoTaxaServico(false);
+    }
+  }
+
   function copiarLink() {
     navigator.clipboard.writeText(dados.garcom_login_url).then(() => toast.success("Link copiado!"));
   }
@@ -290,6 +318,50 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={dados.taxa_servico_ativa}
+              disabled={salvandoTaxaServico}
+              onCheckedChange={(v) => salvarTaxaServico(v, Number(taxaServicoPctInput.replace(",", ".")) || 0)}
+            />
+            <div>
+              <div className="text-sm font-medium">Taxa de serviço do garçom</div>
+              <div className="text-xs text-muted-foreground">Cobrada em cima do subtotal de cada pedido de mesa.</div>
+            </div>
+          </div>
+          <div className="ml-auto flex items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="taxaServicoPct" className="text-xs text-muted-foreground">
+                Porcentagem
+              </Label>
+              <div className="flex items-center gap-1.5">
+                <Input
+                  id="taxaServicoPct"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  className="w-24"
+                  value={taxaServicoPctInput}
+                  onChange={(e) => setTaxaServicoPctInput(e.target.value)}
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="rounded-lg font-normal"
+              disabled={salvandoTaxaServico}
+              onClick={() => salvarTaxaServico(dados.taxa_servico_ativa, Number(taxaServicoPctInput.replace(",", ".")) || 0)}
+            >
+              Salvar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs value={aba} onValueChange={(v) => v && setAba(v)}>
         <TabsList>
