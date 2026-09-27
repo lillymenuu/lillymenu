@@ -46,6 +46,26 @@ export type CaixaResumoResposta = {
   movimentos?: CaixaMovimento[];
 };
 
+export type CaixaSupervisor = {
+  id: number;
+  nome: string;
+};
+
+export type CaixaSupervisoresResposta = { ok: true; itens: CaixaSupervisor[] } | { ok: false; msg: string };
+
+export type CaixaSaidaItem = {
+  id: number;
+  caixa_id: number;
+  valor: number;
+  motivo: string | null;
+  observacoes: string | null;
+  operador: string | null;
+  autorizado_por: string | null;
+  criado_em: string;
+};
+
+export type CaixaSaidasResposta = { ok: true; itens: CaixaSaidaItem[] } | { ok: false; msg: string };
+
 export type CaixaHistoricoItem = {
   id: number;
   status: "aberto" | "fechado";

@@ -62,6 +62,22 @@ export async function verificarCredenciais(login: string, senha: string): Promis
   };
 }
 
+/**
+ * Confere a senha de um admin especifico (ja identificado por id, nao por
+ * login) contra a tabela `admins`. Usado na autorizacao de supervisor para
+ * saidas de caixa de valor alto: o supervisor ja foi escolhido em uma lista
+ * (perfil admin/gerente da mesma loja), so falta confirmar a senha dele.
+ */
+export async function verificarSenhaPorId(adminId: number, lojaId: number, senha: string): Promise<boolean> {
+  const [admin] = await db
+    .select({ senha: admins.senha })
+    .from(admins)
+    .where(and(eq(admins.id, adminId), eq(admins.loja_id, lojaId)))
+    .limit(1);
+  if (!admin || !admin.senha) return false;
+  return bcrypt.compareSync(senha, admin.senha);
+}
+
 /** Igual a verificarCredenciais, mas so aceita perfil "superadmin" + ativo=1 (igual ao WHERE de superadmin_login.php: inativo cai no mesmo 401 generico, sem 403 separado). */
 export async function verificarCredenciaisSuperadmin(login: string, senha: string): Promise<AdminAutenticado | null> {
   const admin = await verificarCredenciais(login, senha);

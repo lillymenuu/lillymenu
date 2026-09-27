@@ -13,6 +13,8 @@ import { formatDataHoraCurta } from "@/components/cliente/types";
 import { OpenCloseDialog } from "@/components/cashcontrol/open-close-dialog";
 import { EditAberturaDialog } from "@/components/cashcontrol/edit-abertura-dialog";
 import { CaixaDetalheDialog } from "@/components/cashcontrol/caixa-detalhe-dialog";
+import { LancarSaidaDialog } from "@/components/cashcontrol/lancar-saida-dialog";
+import { SaidasCard } from "@/components/cashcontrol/saidas-card";
 import type { CaixaHistoricoResposta, CaixaMovimento, CaixaResumoResposta } from "@/lib/caixa";
 import { cn } from "cn";
 
@@ -150,13 +152,7 @@ function HistoricoCard({
   );
 }
 
-function MovimentoForm({
-  tipo,
-  onRegistrado,
-}: {
-  tipo: "suprimento" | "sangria";
-  onRegistrado: () => void;
-}) {
+function MovimentoForm({ tipo, onRegistrado }: { tipo: "suprimento"; onRegistrado: () => void }) {
   const [valor, setValor] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -193,7 +189,7 @@ function MovimentoForm({
 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-2 rounded-lg border p-3">
-      <div className="text-sm font-semibold">{tipo === "suprimento" ? "Suprimento" : "Sangria"}</div>
+      <div className="text-sm font-semibold">Suprimento</div>
       <div className="flex flex-col gap-1.5">
         <Label>Valor</Label>
         <MoneyInput value={valor} onChange={setValor} />
@@ -202,13 +198,8 @@ function MovimentoForm({
         <Label>Observações</Label>
         <Input value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" maxLength={120} />
       </div>
-      <Button
-        type="submit"
-        variant={tipo === "sangria" ? "outline" : "default"}
-        className="rounded-lg font-normal"
-        disabled={enviando}
-      >
-        {enviando ? "Registrando..." : tipo === "suprimento" ? "Registrar suprimento" : "Registrar sangria"}
+      <Button type="submit" className="rounded-lg font-normal" disabled={enviando}>
+        {enviando ? "Registrando..." : "Registrar suprimento"}
       </Button>
     </form>
   );
@@ -221,6 +212,7 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
   const [editarAberturaAberto, setEditarAberturaAberto] = useState(false);
   const [detalheId, setDetalheId] = useState<number | null>(null);
   const [movFormAberto, setMovFormAberto] = useState(false);
+  const [lancarSaidaAberto, setLancarSaidaAberto] = useState(false);
   const [pillAtiva, setPillAtiva] = useState<(typeof PILLS)[number]["forma"]>("todos");
 
   async function recarregar() {
@@ -330,17 +322,17 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
 
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold">Movimentações</div>
-                <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setMovFormAberto((v) => !v)}>
-                  <Plus className="size-3.5" /> Nova movimentação
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setMovFormAberto((v) => !v)}>
+                    <Plus className="size-3.5" /> Registrar suprimento
+                  </Button>
+                  <Button size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setLancarSaidaAberto(true)}>
+                    <Plus className="size-3.5" /> Lançar saída
+                  </Button>
+                </div>
               </div>
 
-              {movFormAberto && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <MovimentoForm tipo="suprimento" onRegistrado={recarregar} />
-                  <MovimentoForm tipo="sangria" onRegistrado={recarregar} />
-                </div>
-              )}
+              {movFormAberto && <MovimentoForm tipo="suprimento" onRegistrado={recarregar} />}
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <div className="rounded-lg border p-3 text-center">
@@ -384,6 +376,8 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
             </CardContent>
           </Card>
 
+          <SaidasCard refreshKey={historicoRefresh} />
+
           <HistoricoCard titulo="Histórico completo" tipo="completo" refreshKey={historicoRefresh} onSelecionar={setDetalheId} />
         </>
       )}
@@ -402,6 +396,12 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
         onSucesso={recarregar}
       />
       <CaixaDetalheDialog caixaId={detalheId} onOpenChange={(v) => !v && setDetalheId(null)} />
+      <LancarSaidaDialog
+        open={lancarSaidaAberto}
+        onOpenChange={setLancarSaidaAberto}
+        saldoDisponivel={resumo?.saldo_esperado ?? 0}
+        onSucesso={recarregar}
+      />
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import "server-only";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import type { NeonTx } from "@/db";
-import { admins, caixaTurnos, caixaMovimentacoes, operacaoLogs, pedidos } from "@/db/schema";
+import { admins, caixaTurnos, caixaMovimentacoes, operacaoLogs, pedidos, lojas } from "@/db/schema";
 import { timestampFortaleza, dataFortaleza } from "@/db/queries/tempo";
+import { resumoCaixaAtual } from "@/db/queries/caixaResumo";
+import { verificarSenhaPorId } from "@/db/queries/auth";
+import { MOTIVOS_SAIDA_VALORES, LIMITE_AUTORIZACAO_SENHA } from "@/lib/caixaMotivos";
 
 type Queryable = typeof db | NeonTx;
 
@@ -140,9 +143,12 @@ export type MovimentarCaixaInput = {
   tipo: "suprimento" | "sangria";
   valor: number;
   observacoes?: string;
+  motivo?: string;
+  autorizadoPorId?: number;
+  autorizadoPorSenha?: string;
 };
 
-export type MovimentarCaixaResultado = { ok: true; caixaId: number } | { ok: false; msg: string };
+export type MovimentarCaixaResultado = { ok: true; caixaId: number; movimentacaoId: number } | { ok: false; msg: string };
 
 export async function movimentarCaixa(input: MovimentarCaixaInput): Promise<MovimentarCaixaResultado> {
   if (!input.tipo || input.valor <= 0) return { ok: false, msg: "Dados incompletos" };
@@ -158,21 +164,151 @@ export async function movimentarCaixa(input: MovimentarCaixaInput): Promise<Movi
   if (!caixaId) return { ok: false, msg: "Caixa fechado" };
 
   const observacoes = (input.observacoes ?? "").trim();
+  let motivo: string | null = null;
+  let autorizadoPorId: number | null = null;
+  let autorizadoPorNome: string | null = null;
+
+  if (input.tipo === "sangria") {
+    motivo = (input.motivo ?? "").trim();
+    if (!motivo || !MOTIVOS_SAIDA_VALORES.includes(motivo)) return { ok: false, msg: "Informe o motivo da saída." };
+
+    const resumo = await resumoCaixaAtual(input.lojaId);
+    const saldoDisponivel = resumo.caixa ? resumo.resumo.saldoEsperado : 0;
+    if (input.valor > saldoDisponivel) {
+      return { ok: false, msg: `Saldo insuficiente em caixa. Saldo disponível: ${formatBRLServidor(saldoDisponivel)}` };
+    }
+
+    if (!input.autorizadoPorId) return { ok: false, msg: "Selecione o responsável pela autorização." };
+    const [supervisor] = await db
+      .select({ id: admins.id, nome: admins.nome, perfil: admins.perfil, ativo: admins.ativo })
+      .from(admins)
+      .where(and(eq(admins.id, input.autorizadoPorId), eq(admins.loja_id, input.lojaId)))
+      .limit(1);
+    if (!supervisor || !supervisor.ativo || (supervisor.perfil !== "admin" && supervisor.perfil !== "gerente")) {
+      return { ok: false, msg: "Responsável pela autorização inválido." };
+    }
+    autorizadoPorId = supervisor.id;
+    autorizadoPorNome = supervisor.nome ?? "";
+
+    if (input.valor >= LIMITE_AUTORIZACAO_SENHA) {
+      if (!input.autorizadoPorSenha) return { ok: false, msg: "Confirme a senha do responsável para autorizar essa saída." };
+      const senhaOk = await verificarSenhaPorId(supervisor.id, input.lojaId, input.autorizadoPorSenha);
+      if (!senhaOk) return { ok: false, msg: "Senha do responsável incorreta." };
+    }
+  }
+
   const agora = timestampFortaleza();
 
-  await db.insert(caixaMovimentacoes).values({
-    caixa_id: caixaId,
-    operador_id: input.adminId,
-    tipo: input.tipo,
-    valor: input.valor,
-    observacoes: observacoes || null,
-    criado_em: agora,
-    loja_id: input.lojaId,
-  });
+  const [inserido] = await db
+    .insert(caixaMovimentacoes)
+    .values({
+      caixa_id: caixaId,
+      operador_id: input.adminId,
+      tipo: input.tipo,
+      motivo,
+      valor: input.valor,
+      observacoes: observacoes || null,
+      autorizado_por_id: autorizadoPorId,
+      autorizado_por_nome: autorizadoPorNome,
+      criado_em: agora,
+      loja_id: input.lojaId,
+    })
+    .returning({ id: caixaMovimentacoes.id });
 
-  await registrarOperacao(input.adminId, "caixa_movimentacao", `caixa:${caixaId}`, { tipo: input.tipo, valor: input.valor });
+  await registrarOperacao(input.adminId, "caixa_movimentacao", `caixa:${caixaId}`, { tipo: input.tipo, valor: input.valor, motivo });
 
-  return { ok: true, caixaId };
+  return { ok: true, caixaId, movimentacaoId: inserido.id };
+}
+
+function formatBRLServidor(valor: number): string {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+export type CaixaSupervisor = { id: number; nome: string };
+
+/** Admins da loja com perfil admin/gerente, elegiveis a autorizar uma saida de caixa. */
+export async function listarSupervisores(lojaId: number): Promise<CaixaSupervisor[]> {
+  const linhas = await db
+    .select({ id: admins.id, nome: admins.nome })
+    .from(admins)
+    .where(and(eq(admins.loja_id, lojaId), eq(admins.ativo, true), inArray(admins.perfil, ["admin", "gerente"])))
+    .orderBy(admins.nome);
+  return linhas.map((a) => ({ id: a.id, nome: a.nome ?? `Admin #${a.id}` }));
+}
+
+export type CaixaSaidaItem = {
+  id: number;
+  caixaId: number;
+  valor: number;
+  motivo: string | null;
+  observacoes: string | null;
+  operador: string | null;
+  autorizadoPor: string | null;
+  criadoEm: string;
+};
+
+/** Saidas (sangria) do caixa aberto no momento, mais recentes primeiro — alimenta o card de acompanhamento. */
+export async function listarSaidasCaixaAberto(lojaId: number): Promise<CaixaSaidaItem[]> {
+  const aberto = await db
+    .select({ id: caixaTurnos.id })
+    .from(caixaTurnos)
+    .where(and(eq(caixaTurnos.status, "aberto"), eq(caixaTurnos.loja_id, lojaId)))
+    .orderBy(desc(caixaTurnos.id))
+    .limit(1);
+  const caixaId = aberto[0]?.id;
+  if (!caixaId) return [];
+
+  const linhas = await db
+    .select({
+      id: caixaMovimentacoes.id,
+      caixaId: caixaMovimentacoes.caixa_id,
+      valor: caixaMovimentacoes.valor,
+      motivo: caixaMovimentacoes.motivo,
+      observacoes: caixaMovimentacoes.observacoes,
+      operador: admins.nome,
+      autorizadoPor: caixaMovimentacoes.autorizado_por_nome,
+      criadoEm: caixaMovimentacoes.criado_em,
+    })
+    .from(caixaMovimentacoes)
+    .leftJoin(admins, eq(admins.id, caixaMovimentacoes.operador_id))
+    .where(and(eq(caixaMovimentacoes.caixa_id, caixaId), eq(caixaMovimentacoes.loja_id, lojaId), eq(caixaMovimentacoes.tipo, "sangria")))
+    .orderBy(desc(caixaMovimentacoes.criado_em), desc(caixaMovimentacoes.id));
+
+  return linhas;
+}
+
+export type CaixaSaidaComprovante = {
+  id: number;
+  caixaId: number;
+  valor: number;
+  motivo: string | null;
+  observacoes: string | null;
+  operador: string | null;
+  autorizadoPor: string | null;
+  criadoEm: string;
+  lojaNome: string | null;
+};
+
+/** Dados de uma saida especifica para montar o comprovante de impressao. */
+export async function buscarSaidaComprovante(lojaId: number, movimentacaoId: number): Promise<CaixaSaidaComprovante | null> {
+  const [linha] = await db
+    .select({
+      id: caixaMovimentacoes.id,
+      caixaId: caixaMovimentacoes.caixa_id,
+      valor: caixaMovimentacoes.valor,
+      motivo: caixaMovimentacoes.motivo,
+      observacoes: caixaMovimentacoes.observacoes,
+      operador: admins.nome,
+      autorizadoPor: caixaMovimentacoes.autorizado_por_nome,
+      criadoEm: caixaMovimentacoes.criado_em,
+      lojaNome: lojas.nome,
+    })
+    .from(caixaMovimentacoes)
+    .leftJoin(admins, eq(admins.id, caixaMovimentacoes.operador_id))
+    .leftJoin(lojas, eq(lojas.id, lojaId))
+    .where(and(eq(caixaMovimentacoes.id, movimentacaoId), eq(caixaMovimentacoes.loja_id, lojaId), eq(caixaMovimentacoes.tipo, "sangria")))
+    .limit(1);
+  return linha ?? null;
 }
 
 /*
