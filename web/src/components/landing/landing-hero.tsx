@@ -1,41 +1,4 @@
-import { Check } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "cn";
-
-function ConstelacaoDeFundo() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 800 500"
-      className="pointer-events-none absolute -top-16 -left-24 h-[420px] w-[620px] text-[#9c5523] opacity-[0.08]"
-      fill="none"
-    >
-      <g stroke="currentColor" strokeWidth="1.2">
-        <path d="M20 40 L180 120 L340 60 L520 160 L680 90" />
-        <path d="M180 120 L220 260 L400 220 L520 160" />
-        <path d="M220 260 L120 360 L280 420" />
-        <path d="M400 220 L460 380 L620 340 L680 90" />
-      </g>
-      <g fill="currentColor">
-        {[
-          [20, 40],
-          [180, 120],
-          [340, 60],
-          [520, 160],
-          [680, 90],
-          [220, 260],
-          [400, 220],
-          [120, 360],
-          [280, 420],
-          [460, 380],
-          [620, 340],
-        ].map(([cx, cy]) => (
-          <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="3.5" />
-        ))}
-      </g>
-    </svg>
-  );
-}
+import { Check, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export function LandingHero({
   titulo,
@@ -48,50 +11,80 @@ export function LandingHero({
   bgImage: string;
   stats: string[];
 }) {
+  const linhas = titulo.split(" ");
+  const destaque = linhas.slice(-3).join(" ");
+  const resto = linhas.slice(0, -3).join(" ");
+
   return (
-    <section className="relative overflow-hidden bg-[#faf9f7]">
-      {bgImage ? (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={bgImage} alt="" aria-hidden className="pointer-events-none absolute inset-0 size-full object-cover" />
-          <div className="pointer-events-none absolute inset-0 bg-[#faf9f7]/55" aria-hidden />
-        </>
-      ) : (
-        <ConstelacaoDeFundo />
-      )}
+    <section className="relative overflow-hidden bg-linear-to-br from-[#eef2ff] via-[#f5f7ff] to-white">
+      <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-24">
+        <div className="flex flex-col items-start gap-6">
+          <h1 className="text-[40px] leading-[1.15] font-extrabold tracking-tight text-balance sm:text-[52px]">
+            <span className="text-[#0b1220]">{resto} </span>
+            <span className="text-[#2563eb]">{destaque}</span>
+          </h1>
+          <p className="max-w-md text-base leading-relaxed text-[#4b5563] sm:text-lg">{subtitulo}</p>
 
-      <div className="relative mx-auto flex max-w-[1180px] flex-col items-start gap-6 px-4 py-20 sm:px-6 md:py-28">
-        <h1 className="max-w-2xl text-[38px] leading-[1.2] font-bold tracking-[-0.5px] sm:text-[48px] sm:leading-[1.15]">{titulo}</h1>
-        <p className="max-w-lg text-base leading-relaxed text-[#5b6169] sm:text-lg">{subtitulo}</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <a
+              href="#cadastro"
+              className="flex h-12 items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-6 text-base font-semibold text-white shadow-[0_10px_25px_-6px_rgba(37,99,235,0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
+            >
+              Começar grátis <ArrowRight className="size-4" />
+            </a>
+            <a href="#como-funciona" className="text-base font-semibold text-[#2563eb] hover:text-[#1d4ed8]">
+              Ver como funciona
+            </a>
+          </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <a
-            href="#cadastro"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "h-11 rounded-[10px] px-6 text-base shadow-[0_10px_22px_-6px_rgba(156,85,35,0.4)] transition-transform hover:-translate-y-0.5"
-            )}
-          >
-            Cadastre-se grátis
-          </a>
-          <a
-            href="#como-funciona"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 rounded-[10px] border-[#ece7e0] px-6 text-base")}
-          >
-            Ver como funciona
-          </a>
+          {stats.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#4b5563]">
+              {stats.map((stat) => (
+                <span key={stat} className="flex items-center gap-1.5">
+                  <Check className="size-4 shrink-0 text-emerald-500" />
+                  {stat}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {stats.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 text-sm text-[#5b6169]">
-            {stats.map((stat) => (
-              <span key={stat} className="flex items-center gap-1.5">
-                <Check className="size-3.5 shrink-0 text-[#9c5523]" />
-                {stat}
-              </span>
-            ))}
+        <div className="relative">
+          <div className="relative overflow-hidden rounded-[22px] shadow-[0_24px_50px_rgba(11,18,32,0.18)]">
+            {bgImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={bgImage} alt="" className="aspect-[4/3] w-full object-cover" />
+            ) : (
+              <div className="aspect-[4/3] w-full bg-linear-to-br from-[#2563eb] to-[#1d4ed8]" />
+            )}
           </div>
-        )}
+
+          <div className="absolute -top-4 right-4 flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-[0_16px_35px_rgba(11,18,32,0.18)] sm:right-8">
+            <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />
+            <div className="leading-tight">
+              <div className="text-[13px] font-bold">Pedido #482 confirmado</div>
+              <div className="text-xs text-[#6b7280]">Mesa 4 · agora</div>
+            </div>
+          </div>
+
+          <div className="absolute -bottom-6 left-4 w-[220px] rounded-xl bg-white p-3.5 shadow-[0_16px_35px_rgba(11,18,32,0.18)] sm:left-8">
+            <div className="text-[13px] font-bold">Resumo do pedido</div>
+            <div className="mt-2 flex flex-col gap-1 text-xs text-[#6b7280]">
+              <div className="flex justify-between">
+                <span>2x Combo executivo</span>
+                <span>R$ 58,00</span>
+              </div>
+              <div className="flex justify-between">
+                <span>1x Refrigerante</span>
+                <span>R$ 8,00</span>
+              </div>
+            </div>
+            <div className="mt-2 flex items-center justify-between border-t border-[#e5e7eb] pt-2 text-[13px] font-bold">
+              <span>Total</span>
+              <span className="text-[#2563eb]">R$ 66,00</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

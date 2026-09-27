@@ -19,10 +19,11 @@ export function LandingCta({
 }) {
   return (
     <section id="contato" className="mx-auto max-w-[1180px] px-4 py-16 sm:px-6 md:py-24">
-      <div className="grid gap-10 rounded-[22px] bg-gradient-to-br from-[#9c5523] to-[#7a3f10] p-8 shadow-[0_24px_50px_rgba(8,20,33,0.3)] md:grid-cols-2 md:items-center md:p-14">
-        <div className="flex flex-col gap-6 text-white">
+      <div className="landing-dots-bg relative grid gap-10 overflow-hidden rounded-[22px] p-8 shadow-[0_24px_50px_rgba(37,99,235,0.3)] md:grid-cols-2 md:items-center md:p-14">
+        <div className="relative flex flex-col gap-6 text-white">
+          <span className="w-fit rounded-full bg-white/15 px-3 py-1 text-xs font-bold tracking-widest uppercase">Contato</span>
           <div>
-            <h2 className="text-[28px] leading-[1.25] font-bold tracking-tight sm:text-[30px]">{titulo}</h2>
+            <h2 className="text-[30px] leading-[1.2] font-extrabold tracking-tight">{titulo}</h2>
             <p className="mt-2 max-w-md text-[14.5px] leading-relaxed text-white/75">{texto}</p>
           </div>
           {itens.length > 0 && (
@@ -37,7 +38,9 @@ export function LandingCta({
           )}
         </div>
 
-        <EspecialistaLeadForm faturamentoOpcoes={faturamentoOpcoes} modeloNegocioOpcoes={modeloNegocioOpcoes} botaoTexto={botaoTexto} />
+        <div className="relative">
+          <EspecialistaLeadForm faturamentoOpcoes={faturamentoOpcoes} modeloNegocioOpcoes={modeloNegocioOpcoes} botaoTexto={botaoTexto} />
+        </div>
       </div>
     </section>
   );

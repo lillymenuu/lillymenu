@@ -6,22 +6,39 @@ const PASSOS = [
 
 export function LandingComoFunciona() {
   return (
-    <section id="como-funciona" className="mx-auto max-w-[1180px] px-4 py-16 sm:px-6 md:py-24">
-      <h2 className="max-w-xl text-[28px] leading-[1.25] font-bold tracking-tight sm:text-[30px]">Do cadastro à primeira venda</h2>
+    <section id="como-funciona" className="bg-[#0b1220]">
+      <div className="mx-auto max-w-[1180px] px-4 py-16 text-center sm:px-6 md:py-24">
+        <span className="text-xs font-bold tracking-widest text-[#60a5fa] uppercase">Como funciona</span>
+        <h2 className="mt-3 text-[30px] leading-[1.2] font-extrabold tracking-tight text-white">Do cadastro à primeira venda</h2>
+        <p className="mx-auto mt-3 max-w-md text-[15px] text-white/60">Três passos simples pra colocar sua loja no ar.</p>
 
-      <div className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-6">
-        {PASSOS.map((passo, i) => (
-          <div key={passo.titulo} className="relative flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f5ede5] text-base font-bold text-[#7a3f10]">
+        <div className="mt-12 grid gap-5 text-left sm:grid-cols-3">
+          {PASSOS.map((passo, i) => (
+            <div
+              key={passo.titulo}
+              className={`flex flex-col gap-4 rounded-2xl border p-6 ${
+                i === PASSOS.length - 1 ? "border-[#2563eb]/50 bg-[#111a2e]" : "border-white/10 bg-white/5"
+              }`}
+            >
+              <span
+                className={`flex size-9 items-center justify-center rounded-lg text-base font-bold ${
+                  i === PASSOS.length - 1 ? "bg-white text-[#0b1220]" : "bg-[#1e293b] text-[#60a5fa]"
+                }`}
+              >
                 {i + 1}
               </span>
-              {i < PASSOS.length - 1 && <span className="hidden h-px flex-1 bg-[#ece7e0] sm:block" aria-hidden />}
+              <h3 className="text-base font-bold text-white">{passo.titulo}</h3>
+              <p className="text-[14px] leading-relaxed text-white/60">{passo.texto}</p>
             </div>
-            <h3 className="text-[17px] font-bold">{passo.titulo}</h3>
-            <p className="text-[14.5px] leading-relaxed text-[#5b6169]">{passo.texto}</p>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        <a
+          href="#cadastro"
+          className="mt-12 inline-flex h-12 items-center justify-center rounded-lg bg-white px-8 text-base font-semibold text-[#0b1220] transition-transform hover:-translate-y-0.5"
+        >
+          Criar minha loja grátis
+        </a>
       </div>
     </section>
   );

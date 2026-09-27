@@ -863,6 +863,24 @@
         ],
         "createdAt": "2026-09-27T21:09:14.648Z",
         "reason": "valor tecnico do truque de mask CSS (linear-gradient(#000 0 0) content-box) para revelar o anel giratorio do card de cadastro, nao e uma cor visivel do design"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "40px",
+        "files": [
+          "web/src/components/landing/landing-hero.tsx"
+        ],
+        "createdAt": "2026-09-27T21:37:26.969Z",
+        "reason": "titulo do hero da landing v2 (kukie.io) usa escala maior/mais bold que o display de 48px documentado, pedido explicito do usuario para copiar o print"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "52px",
+        "files": [
+          "web/src/components/landing/landing-hero.tsx"
+        ],
+        "createdAt": "2026-09-27T21:37:27.173Z",
+        "reason": "mesma decisao: titulo do hero da landing v2 (kukie.io) maior que o display padrao"
       }
     ]
   }

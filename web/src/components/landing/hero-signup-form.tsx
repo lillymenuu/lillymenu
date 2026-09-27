@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,7 +76,7 @@ export function HeroSignupForm({
         <p className="text-[14.5px] text-[#5b6169]">
           Acabamos de enviar o acesso ao sistema para <strong className="text-[#1f2328]">{sucesso.email}</strong>.
         </p>
-        <a href="/login" className="text-sm font-semibold text-[#9c5523] underline underline-offset-4">
+        <a href="/login" className="text-sm font-semibold text-[#2563eb] underline underline-offset-4">
           Ir para o login
         </a>
       </div>
@@ -164,14 +163,13 @@ export function HeroSignupForm({
         {labels.aceite}
       </label>
 
-      <Button
+      <button
         type="submit"
-        size="lg"
         disabled={enviando}
-        className="mt-1 h-11 w-full rounded-[10px] shadow-[0_10px_22px_-6px_rgba(156,85,35,0.4)] transition-transform hover:-translate-y-0.5"
+        className="mt-1 flex h-11 w-full items-center justify-center rounded-lg bg-[#2563eb] text-base font-semibold text-white shadow-[0_10px_22px_-6px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8] disabled:opacity-60"
       >
         {enviando ? "Enviando..." : labels.botao}
-      </Button>
+      </button>
     </form>
   );
 }

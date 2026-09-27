@@ -3,12 +3,14 @@ import { getLandingConfig, getPlanosSignup, getPlanosMarketing, lc, parseLines, 
 import { aplicarBrand } from "@/lib/landing";
 import { LandingHeader } from "@/components/landing/landing-header";
 import { LandingHero } from "@/components/landing/landing-hero";
+import { LandingHighlights } from "@/components/landing/landing-highlights";
 import { LandingComoFunciona } from "@/components/landing/landing-como-funciona";
 import { LandingSolucoes } from "@/components/landing/landing-solucoes";
 import { LandingSegmentos } from "@/components/landing/landing-segmentos";
 import { LandingSignup } from "@/components/landing/landing-signup";
 import { LandingPlanos } from "@/components/landing/landing-planos";
 import { LandingCta } from "@/components/landing/landing-cta";
+import { LandingFinalCta } from "@/components/landing/landing-final-cta";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { WhatsappFloatButton } from "@/components/landing/whatsapp-float-button";
 
@@ -56,7 +58,7 @@ export default async function LandingPage() {
   };
 
   return (
-    <div className={`${poppins.className} flex flex-1 flex-col bg-[#faf9f7] text-[#1f2328]`}>
+    <div className={`${poppins.className} flex flex-1 flex-col bg-white text-[#111827]`}>
       <LandingHeader
         brand={brand}
         logoImage={lc(config, "logo_image")}
@@ -72,17 +74,17 @@ export default async function LandingPage() {
           stats={[config.hero_stat1, config.hero_stat2, config.hero_stat3].filter((s): s is string => Boolean(s))}
         />
 
-        <LandingComoFunciona />
+        <LandingHighlights />
 
         <LandingSolucoes titulo={aplicarBrand(lc(config, "solucoes_titulo"), brand)} itens={solucoes} />
+
+        <LandingComoFunciona />
 
         <LandingSegmentos
           titulo={aplicarBrand(lc(config, "segmentos_titulo"), brand)}
           itens={parseLines(config.segmentos_items)}
           imagem={lc(config, "segmentos_imagem")}
         />
-
-        <LandingSignup planos={planosSignup} faturamentoOpcoes={faturamentoOpcoes} segmentoOpcoes={segmentoOpcoes} leadLabels={leadLabels} />
 
         <LandingPlanos
           titulo={lc(config, "planos_tabela_titulo", "Nossos planos")}
@@ -91,6 +93,10 @@ export default async function LandingPage() {
           beneficiosTitulo={lc(config, "planos_beneficios_titulo")}
           beneficios={beneficios}
         />
+
+        <LandingSignup planos={planosSignup} faturamentoOpcoes={faturamentoOpcoes} segmentoOpcoes={segmentoOpcoes} leadLabels={leadLabels} />
+
+        <LandingFinalCta />
 
         <LandingCta
           titulo={lc(config, "cta_title", "Fale com um especialista")}

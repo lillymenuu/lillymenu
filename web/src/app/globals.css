@@ -159,14 +159,13 @@
   }
 }
 /*
- * Landing page (superficie publica, modo Persuade — ver DESIGN.md). Sombras
- * tingidas de navy/cobre (nunca cinza neutro), pulso reservado a 1 CTA por
- * vez, e o anel giratório do card de cadastro — os 3 tratamentos de
- * assinatura documentados no design system, sem equivalente nos componentes
- * genericos de admin/operate.
+ * Landing page (superficie publica, modo Persuade). Direcao visual v2:
+ * referencia explicita do usuario (kukie.io) — azul como acento principal,
+ * tipografia bold/preta, cards em bento. Pulso reservado a 1 CTA por vez, e
+ * o anel giratorio do card de cadastro seguem existindo, so recoloridos.
  */
 @keyframes landing-pulse-ring {
-  0% { box-shadow: 0 0 0 0 var(--landing-pulse-color, rgba(156, 85, 35, 0.45)); }
+  0% { box-shadow: 0 0 0 0 var(--landing-pulse-color, rgba(37, 99, 235, 0.45)); }
   100% { box-shadow: 0 0 0 14px transparent; }
 }
 .landing-pulse {
@@ -190,12 +189,26 @@
   inset: -1.5px;
   border-radius: inherit;
   padding: 1.5px;
-  background: conic-gradient(from var(--landing-glow-angle), #9c5523, #f5ede5, #7a3f10, #9c5523);
+  background: conic-gradient(from var(--landing-glow-angle), #2563eb, #eef2ff, #1d4ed8, #2563eb);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   animation: landing-glow-spin 7s linear infinite;
   pointer-events: none;
+}
+
+/*
+ * Pontos decorativos do banner azul (padrao "newsletter" do Kukie). O
+ * degrade de base vem junto nessa mesma declaracao (nao como classe
+ * Tailwind separada): unlayered CSS sempre vence utilities do Tailwind na
+ * mesma propriedade (background-image), entao uma classe `bg-linear-to-br`
+ * ao lado dessa aqui seria descartada silenciosamente.
+ */
+.landing-dots-bg {
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.35) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom right, #2563eb, #1d4ed8);
+  background-size: 28px 28px, 100% 100%;
 }
 
 /* Tela de pedido confirmado da Store */

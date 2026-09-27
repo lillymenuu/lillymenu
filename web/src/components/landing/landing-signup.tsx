@@ -26,17 +26,17 @@ export function LandingSignup({
   };
 }) {
   return (
-    <section id="cadastro" className="border-y border-[#ece7e0] bg-[#faf9f7]">
+    <section id="cadastro" className="border-y border-[#e5e7eb] bg-[#f9fafb]">
       <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-24">
         <div className="flex flex-col gap-5">
-          <h2 className="text-[28px] leading-[1.25] font-bold tracking-tight sm:text-[30px]">Comece a operar hoje mesmo</h2>
-          <p className="max-w-md text-[14.5px] leading-relaxed text-[#5b6169]">
+          <h2 className="text-[30px] leading-[1.2] font-extrabold tracking-tight">Comece a operar hoje mesmo</h2>
+          <p className="max-w-md text-[14.5px] leading-relaxed text-[#4b5563]">
             Escolha seu plano, cadastre sua loja e já recebe o acesso ao painel por e-mail.
           </p>
           <ul className="flex flex-col gap-2.5">
             {REFORCOS.map((r) => (
               <li key={r} className="flex items-center gap-2.5 text-sm">
-                <Check className="size-4 shrink-0 text-[#9c5523]" />
+                <Check className="size-4 shrink-0 text-[#2563eb]" />
                 {r}
               </li>
             ))}

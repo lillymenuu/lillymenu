@@ -25,6 +25,10 @@ colors:
   admin-warning-text: "#92400e"
   admin-error-text: "#b91c1c"
   admin-error-text-alt: "#be123c"
+  landing-blue: "#2563eb"
+  landing-blue-deep: "#1d4ed8"
+  landing-blue-soft-bg: "#eef2ff"
+  landing-navy-dark: "#0b1220"
 typography:
   display:
     fontFamily: "Poppins, sans-serif"
@@ -139,6 +143,8 @@ components:
 
 **Escopo:** este documento cobre a superfície pública (`public/`) — a landing, `planos.php` e o formulário de cadastro, modo **Persuade**. O painel administrativo (`admin/`, incluindo o PDV) é uma superfície **Operate** separada: usa a paleta cobre nos seus acentos (confirmado ao corrigir `admin/assets/css/pdv.css` nesta sessão), mas tem sua própria fonte — Manrope, carregada em `admin/pdv.php` e `admin/assets/css/dashboard.css` — que não faz parte do sistema Poppins abaixo. Isso é uma escolha tipográfica legítima (uma ferramenta de operação do dia a dia pode ter uma voz diferente de uma página de conversão), não deriva a corrigir; ela só nunca tinha sido documentada.
 
+**Atualização (nova landing em Next.js):** a landing pública foi reconstruída em `web/src/app/page.tsx` + `web/src/components/landing/*`, e nessa implementação nova o usuário pediu explicitamente para adotar azul (`#2563eb`/`#1d4ed8`) como acento principal, inspirado em kukie.io — substituindo o Cobre Queimado **só nessa superfície**. É uma decisão de produto confirmada, não uma reintrodução acidental da "terceira cor" que a Regra dos Dois Tons proibia. O Cobre Queimado continua sendo a cor real do produto em todo o resto do sistema (painel admin, `/login`, e o `public/` em PHP legado, que não foi tocado) — só a landing Next passou a usar azul. Ver seção Colors > **Azul (landing Next, v2)** abaixo.
+
 **Creative North Star: "O Balcão de Cobre"**
 
 LillyMenu se apresenta como um balcão limpo e bem cuidado: fundo branco-papel que nunca compete com o conteúdo, e um único acento de cobre queimado que aparece exatamente onde precisa guiar a decisão do visitante — nunca em excesso. É um sistema de gestão de comida vendido como produto sério e profissional, não como um app "fofo" nem como um dashboard corporativo frio; a calidez vem da cor, não de ilustrações fofas ou linguagem casual.
@@ -162,6 +168,12 @@ Paleta restrita por design: dois acentos (cobre + seu tom claro) e uma escala ne
 
 ### Secondary
 - **Realce Suave** (`#f5ede5` fundo / `#7A3F10` texto): fundo de tag/pill (ex: badge "Sistema para Delivery e Restaurante" no hero) e do botão azul nominal (`--blue-btn`) — a paleta reaproveita esse par em vez de introduzir uma terceira cor.
+
+### Azul (landing Next, v2 — kukie.io)
+- **Azul Kukie** (`#2563eb`): acento principal da landing Next (`web/src/app/page.tsx`), substituindo o Cobre Queimado só nessa superfície. Usado em botões primários, links, segunda linha do título do hero, ícones de destaque e tags de feature.
+- **Azul Profundo** (`#1d4ed8`): hover/pressed do Azul Kukie, mesmo papel que o Cobre Profundo tinha antes nessa superfície.
+- **Navy Escuro** (`#0b1220`): fundo da seção "Como funciona" (cards escuros com número em destaque) — único lugar da landing Next com fundo escuro de seção inteira, espelhando o "How It Works" do kukie.io.
+- Essa paleta **não** se aplica ao painel admin, ao `/login`, nem ao `public/` em PHP — todos continuam Cobre Queimado como documentado no restante deste arquivo.
 
 ### Neutral
 - **Branco Papel** (`#faf9f7`): fundo padrão de seções claras — branco levemente quente, não clínico.
@@ -287,6 +299,6 @@ Padrão de "constelação" — SVG de linhas finas conectando nós, em Cobre Que
 
 ### Don't:
 - **Don't** reintroduzir a direção visual escura/maximalista (navy sólido + rosa + dourado, sombras pesadas) sem pedido explícito — foi testada e rejeitada nesta sessão.
-- **Don't** adicionar uma terceira cor de acento só porque as variáveis de tema (`--blue-btn`, `--pink`, `--link`) existem — o tema ativo as colapsa deliberadamente em duas.
+- **Don't** adicionar uma terceira cor de acento só porque as variáveis de tema (`--blue-btn`, `--pink`, `--link`) existem — o tema ativo as colapsa deliberadamente em duas. **Exceção sancionada:** a landing Next (v2) usa Azul Kukie como acento principal por pedido explícito do usuário — ver Colors > Azul (landing Next, v2) — isso não reabre a porta para cor nova em qualquer outro lugar sem pedido equivalente.
 - **Don't** tratar textos de prova social do hero ("usado por centenas de lojas…") como número verificado — é copy de marketing, não dado auditado (ver PRODUCT.md).
 - **Don't** aplicar o anel de "brilho vivo" giratório (`.lead-card-glow`) em qualquer card além do formulário de cadastro — é um destaque de conversão, não um ornamento genérico.

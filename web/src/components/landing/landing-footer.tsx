@@ -55,53 +55,80 @@ export function LandingFooter({
   youtube: string;
 }) {
   return (
-    <footer className="border-t border-[#ece7e0] bg-white">
-      <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-        <div className="flex flex-col gap-3">
-          <span className="text-[17px] font-bold">{brand}</span>
-          <p className="text-[14.5px] text-[#5b6169]">{endereco}</p>
-          <p className="text-[14.5px] text-[#5b6169]">{telefone}</p>
-          <p className="text-[14.5px] text-[#5b6169]">{email}</p>
-          <div className="mt-1 flex items-center gap-3 text-[#5b6169]">
+    <footer className="border-t border-[#e5e7eb] bg-white">
+      <div className="mx-auto max-w-[1180px] px-4 py-12 sm:px-6">
+        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
+          <div className="flex max-w-sm flex-col gap-3">
+            <span className="text-[17px] font-extrabold">{brand}</span>
+            <p className="text-sm text-[#6b7280]">Sistema de gestão para negócios de alimentação — PDV, delivery próprio e financeiro em um só lugar.</p>
+          </div>
+          <div className="flex items-center gap-3 text-[#6b7280]">
             {instagram && (
-              <a href={instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:text-[#9c5523]">
+              <a
+                href={instagram}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[#2563eb] hover:text-[#2563eb]"
+              >
                 <InstagramIcon />
               </a>
             )}
             {linkedin && (
-              <a href={linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="hover:text-[#9c5523]">
+              <a
+                href={linkedin}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="LinkedIn"
+                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[#2563eb] hover:text-[#2563eb]"
+              >
                 <LinkedinIcon />
               </a>
             )}
             {youtube && (
-              <a href={youtube} target="_blank" rel="noreferrer" aria-label="YouTube" className="hover:text-[#9c5523]">
+              <a
+                href={youtube}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="YouTube"
+                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[#2563eb] hover:text-[#2563eb]"
+              >
                 <YoutubeIcon />
               </a>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <span className="text-[13px] font-semibold">{menuTitulo}</span>
-          {menuItens.map((item) => (
-            <a key={item.label} href={remapLegacyHref(item.href)} className="text-[14.5px] text-[#5b6169] hover:text-[#1f2328]">
-              {aplicarBrand(item.label, brand)}
-            </a>
-          ))}
+        <div className="mt-10 grid gap-8 border-t border-[#e5e7eb] pt-10 sm:grid-cols-3">
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-bold tracking-widest text-[#6b7280] uppercase">{menuTitulo}</span>
+            {menuItens.map((item) => (
+              <a key={item.label} href={remapLegacyHref(item.href)} className="text-sm text-[#4b5563] hover:text-[#111827]">
+                {aplicarBrand(item.label, brand)}
+              </a>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-bold tracking-widest text-[#6b7280] uppercase">{paraVoceTitulo}</span>
+            {paraVoceItens.map((item) => (
+              <a key={item.label} href={remapLegacyHref(item.href)} className="text-sm text-[#4b5563] hover:text-[#111827]">
+                {aplicarBrand(item.label, brand)}
+              </a>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-bold tracking-widest text-[#6b7280] uppercase">Contato</span>
+            <span className="text-sm text-[#4b5563]">{endereco}</span>
+            <span className="text-sm text-[#4b5563]">{telefone}</span>
+            <span className="text-sm text-[#4b5563]">{email}</span>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <span className="text-[13px] font-semibold">{paraVoceTitulo}</span>
-          {paraVoceItens.map((item) => (
-            <a key={item.label} href={remapLegacyHref(item.href)} className="text-[14.5px] text-[#5b6169] hover:text-[#1f2328]">
-              {aplicarBrand(item.label, brand)}
-            </a>
-          ))}
+        <div className="mt-10 border-t border-[#e5e7eb] pt-6 text-center text-xs text-[#6b7280]">
+          © {new Date().getFullYear()} {brand}. Todos os direitos reservados.
         </div>
-      </div>
-
-      <div className="border-t border-[#ece7e0] py-4 text-center text-xs text-[#5b6169]">
-        © {new Date().getFullYear()} {brand}. Todos os direitos reservados.
       </div>
     </footer>
   );
