@@ -14,6 +14,3 @@ export const MOTIVOS_SAIDA_VALORES = MOTIVOS_SAIDA.map((m) => m.valor) as string
 export function labelMotivoSaida(motivo: string | null | undefined): string {
   return MOTIVOS_SAIDA.find((m) => m.valor === motivo)?.label ?? "Outro";
 }
-
-/** Acima desse valor, a saida exige confirmar a senha do supervisor selecionado. */
-export const LIMITE_AUTORIZACAO_SENHA = 200;

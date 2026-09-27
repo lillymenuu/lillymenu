@@ -6,7 +6,7 @@ import { admins, caixaTurnos, caixaMovimentacoes, operacaoLogs, pedidos, lojas }
 import { timestampFortaleza, dataFortaleza } from "@/db/queries/tempo";
 import { resumoCaixaAtual } from "@/db/queries/caixaResumo";
 import { verificarSenhaPorId } from "@/db/queries/auth";
-import { MOTIVOS_SAIDA_VALORES, LIMITE_AUTORIZACAO_SENHA } from "@/lib/caixaMotivos";
+import { MOTIVOS_SAIDA_VALORES } from "@/lib/caixaMotivos";
 
 type Queryable = typeof db | NeonTx;
 
@@ -165,8 +165,18 @@ export async function movimentarCaixa(input: MovimentarCaixaInput): Promise<Movi
 
   const observacoes = (input.observacoes ?? "").trim();
   let motivo: string | null = null;
-  let autorizadoPorId: number | null = null;
-  let autorizadoPorNome: string | null = null;
+
+  if (!input.autorizadoPorId) return { ok: false, msg: "Selecione o responsável pela autorização." };
+  const [supervisor] = await db
+    .select({ id: admins.id, nome: admins.nome, perfil: admins.perfil, ativo: admins.ativo })
+    .from(admins)
+    .where(and(eq(admins.id, input.autorizadoPorId), eq(admins.loja_id, input.lojaId)))
+    .limit(1);
+  if (!supervisor || !supervisor.ativo || (supervisor.perfil !== "admin" && supervisor.perfil !== "gerente")) {
+    return { ok: false, msg: "Responsável pela autorização inválido." };
+  }
+  const autorizadoPorId = supervisor.id;
+  const autorizadoPorNome = supervisor.nome ?? "";
 
   if (input.tipo === "sangria") {
     motivo = (input.motivo ?? "").trim();
@@ -178,23 +188,9 @@ export async function movimentarCaixa(input: MovimentarCaixaInput): Promise<Movi
       return { ok: false, msg: `Saldo insuficiente em caixa. Saldo disponível: ${formatBRLServidor(saldoDisponivel)}` };
     }
 
-    if (!input.autorizadoPorId) return { ok: false, msg: "Selecione o responsável pela autorização." };
-    const [supervisor] = await db
-      .select({ id: admins.id, nome: admins.nome, perfil: admins.perfil, ativo: admins.ativo })
-      .from(admins)
-      .where(and(eq(admins.id, input.autorizadoPorId), eq(admins.loja_id, input.lojaId)))
-      .limit(1);
-    if (!supervisor || !supervisor.ativo || (supervisor.perfil !== "admin" && supervisor.perfil !== "gerente")) {
-      return { ok: false, msg: "Responsável pela autorização inválido." };
-    }
-    autorizadoPorId = supervisor.id;
-    autorizadoPorNome = supervisor.nome ?? "";
-
-    if (input.valor >= LIMITE_AUTORIZACAO_SENHA) {
-      if (!input.autorizadoPorSenha) return { ok: false, msg: "Confirme a senha do responsável para autorizar essa saída." };
-      const senhaOk = await verificarSenhaPorId(supervisor.id, input.lojaId, input.autorizadoPorSenha);
-      if (!senhaOk) return { ok: false, msg: "Senha do responsável incorreta." };
-    }
+    if (!input.autorizadoPorSenha) return { ok: false, msg: "Confirme a senha do responsável para autorizar essa saída." };
+    const senhaOk = await verificarSenhaPorId(supervisor.id, input.lojaId, input.autorizadoPorSenha);
+    if (!senhaOk) return { ok: false, msg: "Senha do responsável incorreta." };
   }
 
   const agora = timestampFortaleza();

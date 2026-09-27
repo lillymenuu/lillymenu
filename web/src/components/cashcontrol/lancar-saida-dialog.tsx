@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MoneyInput } from "@/components/produtos/money-input";
 import { formatBRL } from "@/components/ordermanager/constants";
-import { MOTIVOS_SAIDA, LIMITE_AUTORIZACAO_SENHA } from "@/lib/caixaMotivos";
+import { MOTIVOS_SAIDA, labelMotivoSaida } from "@/lib/caixaMotivos";
 import type { CaixaSupervisor } from "@/lib/caixa";
 
 export function LancarSaidaDialog({
@@ -23,6 +23,7 @@ export function LancarSaidaDialog({
   saldoDisponivel: number;
   onSucesso: () => void;
 }) {
+  const [etapa, setEtapa] = useState<"dados" | "senha">("dados");
   const [valor, setValor] = useState("");
   const [motivo, setMotivo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -32,11 +33,12 @@ export function LancarSaidaDialog({
   const [enviando, setEnviando] = useState(false);
 
   const valorNumero = parseFloat(valor || "0");
-  const precisaSenha = valorNumero >= LIMITE_AUTORIZACAO_SENHA;
   const saldoInsuficiente = valorNumero > 0 && valorNumero > saldoDisponivel;
+  const supervisorSelecionado = supervisores.find((s) => String(s.id) === autorizadoPorId);
 
   useEffect(() => {
     if (!open) return;
+    setEtapa("dados");
     setValor("");
     setMotivo("");
     setDescricao("");
@@ -51,7 +53,7 @@ export function LancarSaidaDialog({
       .catch(() => setSupervisores([]));
   }, [open]);
 
-  async function confirmar() {
+  function avancar() {
     if (!valorNumero || valorNumero <= 0) {
       toast.error("Informe um valor válido.");
       return;
@@ -72,8 +74,12 @@ export function LancarSaidaDialog({
       toast.error("Selecione o responsável pela autorização.");
       return;
     }
-    if (precisaSenha && !senha) {
-      toast.error("Confirme a senha do responsável para autorizar essa saída.");
+    setEtapa("senha");
+  }
+
+  async function confirmarComSenha() {
+    if (!senha) {
+      toast.error("Digite a senha do responsável para autorizar a saída.");
       return;
     }
 
@@ -88,7 +94,7 @@ export function LancarSaidaDialog({
           motivo,
           observacoes: descricao,
           autorizado_por_id: Number(autorizadoPorId),
-          autorizado_por_senha: precisaSenha ? senha : undefined,
+          autorizado_por_senha: senha,
         }),
       });
       const data = await res.json();
@@ -110,74 +116,106 @@ export function LancarSaidaDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Lançar saída</DialogTitle>
+          <DialogTitle>{etapa === "dados" ? "Lançar saída" : "Autorização da saída"}</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-3">
-          <p className="text-xs text-muted-foreground">Saldo disponível em dinheiro: {formatBRL(saldoDisponivel)}</p>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="saida-valor">Valor</Label>
-            <MoneyInput id="saida-valor" value={valor} onChange={setValor} />
-            {saldoInsuficiente && <p className="text-xs text-destructive">Valor maior que o saldo disponível em caixa.</p>}
-          </div>
+        {etapa === "dados" ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-muted-foreground">Saldo disponível em dinheiro: {formatBRL(saldoDisponivel)}</p>
 
-          <div className="flex flex-col gap-1.5">
-            <Label>Motivo da saída</Label>
-            <Select value={motivo} onValueChange={(v) => setMotivo(v ?? "")}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o motivo" />
-              </SelectTrigger>
-              <SelectContent>
-                {MOTIVOS_SAIDA.map((m) => (
-                  <SelectItem key={m.valor} value={m.valor}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="saida-descricao">Descrição / observação</Label>
-            <textarea
-              id="saida-descricao"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Ex: Pago R$ 50,00 ao motoboy Carlos pelo conserto do pneu"
-              rows={3}
-              maxLength={255}
-              className="w-full rounded-lg border border-input bg-transparent p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label>Responsável pela autorização</Label>
-            <Select value={autorizadoPorId} onValueChange={(v) => setAutorizadoPorId(v ?? "")}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o gerente/supervisor" />
-              </SelectTrigger>
-              <SelectContent>
-                {supervisores.map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>
-                    {s.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {precisaSenha && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="saida-senha">Senha do responsável</Label>
-              <Input id="saida-senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Obrigatória para valores acima de 200,00" />
+              <Label htmlFor="saida-valor">Valor</Label>
+              <MoneyInput id="saida-valor" value={valor} onChange={setValor} />
+              {saldoInsuficiente && <p className="text-xs text-destructive">Valor maior que o saldo disponível em caixa.</p>}
             </div>
-          )}
-        </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>Motivo da saída</Label>
+              <Select value={motivo} onValueChange={(v) => setMotivo(v ?? "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o motivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MOTIVOS_SAIDA.map((m) => (
+                    <SelectItem key={m.valor} value={m.valor}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="saida-descricao">Descrição / observação</Label>
+              <textarea
+                id="saida-descricao"
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                placeholder="Ex: Pago R$ 50,00 ao motoboy Carlos pelo conserto do pneu"
+                rows={3}
+                maxLength={255}
+                className="w-full rounded-lg border border-input bg-transparent p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>Responsável pela autorização</Label>
+              <Select value={autorizadoPorId} onValueChange={(v) => setAutorizadoPorId(v ?? "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o gerente/supervisor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {supervisores.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5 rounded-lg border p-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Valor</span>
+                <strong className="text-destructive">{formatBRL(valorNumero)}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Motivo</span>
+                <span>{labelMotivoSaida(motivo)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Responsável</span>
+                <span>{supervisorSelecionado?.nome ?? "-"}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="saida-senha">Senha de {supervisorSelecionado?.nome ?? "autorização"}</Label>
+              <Input
+                id="saida-senha"
+                type="password"
+                autoFocus
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="Digite a senha para autorizar"
+              />
+            </div>
+          </div>
+        )}
+
         <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={enviando}>
-            Cancelar
-          </Button>
-          <Button className="rounded-lg font-normal" onClick={confirmar} disabled={enviando || saldoInsuficiente}>
+          {etapa === "senha" && (
+            <Button variant="outline" className="rounded-lg font-normal" onClick={() => setEtapa("dados")} disabled={enviando}>
+              Voltar
+            </Button>
+          )}
+          <Button
+            className="rounded-lg font-normal"
+            onClick={etapa === "dados" ? avancar : confirmarComSenha}
+            disabled={enviando || (etapa === "dados" && saldoInsuficiente)}
+          >
             {enviando ? "Registrando..." : "Confirmar saída"}
           </Button>
         </DialogFooter>

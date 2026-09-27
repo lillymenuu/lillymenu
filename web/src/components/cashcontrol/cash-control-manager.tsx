@@ -5,15 +5,13 @@ import { toast } from "sonner";
 import { Wallet, Clock, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { MoneyInput } from "@/components/produtos/money-input";
 import { formatBRL } from "@/components/ordermanager/constants";
 import { formatDataHoraCurta } from "@/components/cliente/types";
 import { OpenCloseDialog } from "@/components/cashcontrol/open-close-dialog";
 import { EditAberturaDialog } from "@/components/cashcontrol/edit-abertura-dialog";
 import { CaixaDetalheDialog } from "@/components/cashcontrol/caixa-detalhe-dialog";
 import { LancarSaidaDialog } from "@/components/cashcontrol/lancar-saida-dialog";
+import { RegistrarSuprimentoDialog } from "@/components/cashcontrol/registrar-suprimento-dialog";
 import { SaidasCard } from "@/components/cashcontrol/saidas-card";
 import type { CaixaHistoricoResposta, CaixaMovimento, CaixaResumoResposta } from "@/lib/caixa";
 import { cn } from "cn";
@@ -152,66 +150,13 @@ function HistoricoCard({
   );
 }
 
-function MovimentoForm({ tipo, onRegistrado }: { tipo: "suprimento"; onRegistrado: () => void }) {
-  const [valor, setValor] = useState("");
-  const [observacoes, setObservacoes] = useState("");
-  const [enviando, setEnviando] = useState(false);
-
-  async function enviar(e: React.FormEvent) {
-    e.preventDefault();
-    const numero = parseFloat(valor || "0");
-    if (!numero || numero <= 0) {
-      toast.error("Informe um valor válido.");
-      return;
-    }
-    setEnviando(true);
-    try {
-      const res = await fetch("/api/cashcontrol/movimentar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipo, valor: numero, observacoes }),
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        toast.error(data.msg ?? "Não foi possível registrar a movimentação.");
-        return;
-      }
-      toast.success("Movimentação registrada.");
-      setValor("");
-      setObservacoes("");
-      onRegistrado();
-    } catch {
-      toast.error("Não foi possível registrar a movimentação.");
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  return (
-    <form onSubmit={enviar} className="flex flex-col gap-2 rounded-lg border p-3">
-      <div className="text-sm font-semibold">Suprimento</div>
-      <div className="flex flex-col gap-1.5">
-        <Label>Valor</Label>
-        <MoneyInput value={valor} onChange={setValor} />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label>Observações</Label>
-        <Input value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" maxLength={120} />
-      </div>
-      <Button type="submit" className="rounded-lg font-normal" disabled={enviando}>
-        {enviando ? "Registrando..." : "Registrar suprimento"}
-      </Button>
-    </form>
-  );
-}
-
 export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResumoResposta }) {
   const [dados, setDados] = useState(dadosIniciais);
   const [historicoRefresh, setHistoricoRefresh] = useState(0);
   const [openCloseAberto, setOpenCloseAberto] = useState(false);
   const [editarAberturaAberto, setEditarAberturaAberto] = useState(false);
   const [detalheId, setDetalheId] = useState<number | null>(null);
-  const [movFormAberto, setMovFormAberto] = useState(false);
+  const [suprimentoAberto, setSuprimentoAberto] = useState(false);
   const [lancarSaidaAberto, setLancarSaidaAberto] = useState(false);
   const [pillAtiva, setPillAtiva] = useState<(typeof PILLS)[number]["forma"]>("todos");
 
@@ -236,7 +181,7 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
 
   const movimentosFiltrados = pillAtiva === "todos" ? movimentos : movimentos.filter((m) => m.forma === pillAtiva);
   const entradaFiltrada = movimentosFiltrados.filter((m) => m.direcao === "entrada").reduce((acc, m) => acc + m.valor, 0);
-  const saidaFiltrada = movimentosFiltrados.filter((m) => m.direcao === "saida").reduce((acc, m) => acc + m.valor, 0);
+  const saidaTotal = resumo?.sangrias_total ?? 0;
 
   return (
     <div className="mx-auto flex h-full max-w-4xl flex-col gap-4 p-4 md:p-6">
@@ -323,7 +268,7 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold">Movimentações</div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setMovFormAberto((v) => !v)}>
+                  <Button variant="ghost" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setSuprimentoAberto(true)}>
                     <Plus className="size-3.5" /> Registrar suprimento
                   </Button>
                   <Button size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setLancarSaidaAberto(true)}>
@@ -332,8 +277,6 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
                 </div>
               </div>
 
-              {movFormAberto && <MovimentoForm tipo="suprimento" onRegistrado={recarregar} />}
-
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <div className="rounded-lg border p-3 text-center">
                   <div className="text-xs text-muted-foreground">Entrada</div>
@@ -341,11 +284,11 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
                 </div>
                 <div className="rounded-lg border p-3 text-center">
                   <div className="text-xs text-muted-foreground">Saída</div>
-                  <div className="font-semibold text-destructive">{formatBRL(saidaFiltrada)}</div>
+                  <div className="font-semibold text-destructive">{formatBRL(saidaTotal)}</div>
                 </div>
                 <div className="rounded-lg border p-3 text-center">
                   <div className="text-xs text-muted-foreground">Saldo</div>
-                  <div className="font-semibold">{formatBRL(entradaFiltrada - saidaFiltrada)}</div>
+                  <div className="font-semibold">{formatBRL(entradaFiltrada - saidaTotal)}</div>
                 </div>
                 <div className="rounded-lg border p-3 text-center">
                   <div className="text-xs text-muted-foreground">Total sem taxa de entrega</div>
@@ -402,6 +345,7 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
         saldoDisponivel={resumo?.saldo_esperado ?? 0}
         onSucesso={recarregar}
       />
+      <RegistrarSuprimentoDialog open={suprimentoAberto} onOpenChange={setSuprimentoAberto} onSucesso={recarregar} />
     </div>
   );
 }
