@@ -45,6 +45,8 @@ export type MensagemSuporte = { id: number; remetente: string; mensagem: string;
 
 export async function mensagensLoja(lojaId: number, afterId: number): Promise<{ ok: true; mensagens: MensagemSuporte[] } | { ok: false; erro: string }> {
   try {
+    await limparMensagensExpiradas();
+
     const linhas = await db
       .select({ id: suporteMensagens.id, remetente: suporteMensagens.remetente, mensagem: suporteMensagens.mensagem, anexoArquivo: suporteMensagens.anexo_arquivo, criadoEm: suporteMensagens.criado_em })
       .from(suporteMensagens)
@@ -131,6 +133,8 @@ export async function unreadSuporte(): Promise<number> {
 
 export async function mensagensSuporte(lojaId: number, afterId: number): Promise<{ ok: true; mensagens: MensagemSuporte[] } | { ok: false; msg: string }> {
   if (lojaId <= 0) return { ok: false, msg: "Loja invalida." };
+
+  await limparMensagensExpiradas();
 
   const linhas = await db
     .select({ id: suporteMensagens.id, remetente: suporteMensagens.remetente, mensagem: suporteMensagens.mensagem, anexoArquivo: suporteMensagens.anexo_arquivo, criadoEm: suporteMensagens.criado_em })
