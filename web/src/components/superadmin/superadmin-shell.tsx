@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Store, Headset, LogOut, Menu, X, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Store, Headset, LogOut, Menu, X, ShieldCheck, Globe } from "lucide-react";
 import { cn } from "cn";
 
 const NAV = [
   { href: "/superadmin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/superadmin/lojas", label: "Lojas", icon: Store },
   { href: "/superadmin/suporte", label: "Suporte", icon: Headset },
+  { href: "/superadmin/landing", label: "Landing page", icon: Globe },
 ];
 
 function iniciais(nome: string) {

@@ -1,69 +1,115 @@
-import Image from "next/image";
+import { getLandingConfig, getPlanosSignup, getPlanosMarketing, lc, parseLines, parseLinkList } from "@/db/queries/landingConfig";
+import { aplicarBrand } from "@/lib/landing";
+import { LandingHeader } from "@/components/landing/landing-header";
+import { LandingHero } from "@/components/landing/landing-hero";
+import { LandingSolucoes } from "@/components/landing/landing-solucoes";
+import { LandingSegmentos } from "@/components/landing/landing-segmentos";
+import { LandingPlanos } from "@/components/landing/landing-planos";
+import { LandingCta } from "@/components/landing/landing-cta";
+import { LandingFooter } from "@/components/landing/landing-footer";
+import { WhatsappFloatButton } from "@/components/landing/whatsapp-float-button";
 
-export default function Home() {
+export const revalidate = 300;
+
+export default async function LandingPage() {
+  const [config, planosSignup] = await Promise.all([getLandingConfig(), getPlanosSignup()]);
+  const brand = lc(config, "brand", "LillyMenu");
+
+  const faturamentoOpcoes = parseLines(config.lead_revenue_options).filter((o) => o.toLowerCase() !== "selecionar");
+  const segmentoOpcoes = parseLines(config.lead_segment_options).filter((o) => o.toLowerCase() !== "selecionar");
+
+  const solucoes = [1, 2, 3, 4, 5]
+    .map((n) => ({
+      titulo: lc(config, `solucao${n}_titulo`),
+      texto: lc(config, `solucao${n}_texto`),
+      imagem: lc(config, `solucao${n}_imagem`),
+    }))
+    .filter((s) => s.titulo !== "");
+
+  const beneficios = [1, 2, 3, 4, 5, 6]
+    .map((n) => ({ titulo: lc(config, `planos_beneficio${n}_titulo`), texto: lc(config, `planos_beneficio${n}_texto`) }))
+    .filter((b) => b.titulo !== "");
+
+  const ctaItens = [1, 2, 3]
+    .map((n) => ({
+      titulo: aplicarBrand(lc(config, `cta_item${n}_titulo`), brand),
+      texto: lc(config, `cta_item${n}_texto`),
+    }))
+    .filter((i) => i.titulo !== "");
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="flex flex-1 flex-col">
+      <LandingHeader
+        brand={brand}
+        logoImage={lc(config, "logo_image")}
+        navLinks={parseLinkList(config.nav_links_items)}
+        ctaSecondarioTexto={lc(config, "nav_cta_secondary_text", "Entrar")}
+      />
+
+      <main className="flex flex-1 flex-col">
+        <LandingHero
+          badge={lc(config, "hero_badge")}
+          titulo={lc(config, "hero_title")}
+          subtitulo={lc(config, "hero_subtitle")}
+          bgImage={lc(config, "hero_bg_image")}
+          stats={[config.hero_stat1, config.hero_stat2, config.hero_stat3].filter((s): s is string => Boolean(s))}
+          planos={planosSignup}
+          faturamentoOpcoes={faturamentoOpcoes}
+          segmentoOpcoes={segmentoOpcoes}
+          leadLabels={{
+            titulo: lc(config, "lead_title", "Cadastre sua loja"),
+            nome: lc(config, "lead_name_label", "Seu nome"),
+            empresa: lc(config, "lead_company_label", "Nome da empresa"),
+            email: lc(config, "lead_email_label", "E-mail"),
+            whatsapp: lc(config, "lead_whatsapp_label", "Telefone"),
+            faturamento: lc(config, "lead_revenue_label", "Faturamento mensal"),
+            segmento: lc(config, "lead_segment_label", "Modelo de negócio"),
+            aceite: lc(config, "lead_privacy_text", "Aceito receber contato no WhatsApp."),
+            botao: lc(config, "lead_button_text", "Enviar"),
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        <LandingSolucoes titulo={aplicarBrand(lc(config, "solucoes_titulo"), brand)} itens={solucoes} />
+
+        <LandingSegmentos
+          titulo={aplicarBrand(lc(config, "segmentos_titulo"), brand)}
+          itens={parseLines(config.segmentos_items)}
+          imagem={lc(config, "segmentos_imagem")}
+        />
+
+        <LandingPlanos
+          titulo={lc(config, "planos_tabela_titulo", "Nossos planos")}
+          destaques={parseLines(config.planos_tabela_destaques)}
+          planos={getPlanosMarketing(config)}
+          beneficiosTitulo={lc(config, "planos_beneficios_titulo")}
+          beneficios={beneficios}
+        />
+
+        <LandingCta
+          titulo={lc(config, "cta_title", "Fale com um especialista")}
+          texto={lc(config, "cta_text")}
+          itens={ctaItens}
+          botaoTexto={lc(config, "cta_button_text", "Falar agora")}
+          faturamentoOpcoes={faturamentoOpcoes}
+          modeloNegocioOpcoes={segmentoOpcoes}
+        />
       </main>
+
+      <LandingFooter
+        brand={brand}
+        menuTitulo={lc(config, "footer_menu_titulo", "Menu")}
+        menuItens={parseLinkList(config.footer_menu_items)}
+        paraVoceTitulo={lc(config, "footer_para_voce_titulo", "Para você")}
+        paraVoceItens={parseLinkList(config.footer_para_voce_items)}
+        email={lc(config, "footer_email")}
+        telefone={lc(config, "footer_telefone")}
+        endereco={lc(config, "footer_endereco")}
+        instagram={lc(config, "footer_social_instagram")}
+        linkedin={lc(config, "footer_social_linkedin")}
+        youtube={lc(config, "footer_social_youtube")}
+      />
+
+      <WhatsappFloatButton numero={lc(config, "whatsapp_number")} mensagem={lc(config, "whatsapp_message", "Olá! Quero conhecer o sistema.")} />
     </div>
   );
 }
