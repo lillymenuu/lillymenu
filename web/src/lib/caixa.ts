@@ -53,9 +53,10 @@ export type CaixaSupervisor = {
 
 export type CaixaSupervisoresResposta = { ok: true; itens: CaixaSupervisor[] } | { ok: false; msg: string };
 
-export type CaixaSaidaItem = {
+export type CaixaMovimentacaoItem = {
   id: number;
   caixa_id: number;
+  tipo: "suprimento" | "sangria";
   valor: number;
   motivo: string | null;
   observacoes: string | null;
@@ -64,7 +65,10 @@ export type CaixaSaidaItem = {
   criado_em: string;
 };
 
-export type CaixaSaidasResposta = { ok: true; itens: CaixaSaidaItem[] } | { ok: false; msg: string };
+export type CaixaSaidaItem = CaixaMovimentacaoItem;
+
+export type CaixaSaidasResposta = { ok: true; itens: CaixaMovimentacaoItem[] } | { ok: false; msg: string };
+export type CaixaSuprimentosResposta = { ok: true; itens: CaixaMovimentacaoItem[] } | { ok: false; msg: string };
 
 export type CaixaHistoricoItem = {
   id: number;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessaoAdmin } from "@/lib/session";
-import { buscarSaidaComprovante } from "@/db/queries/caixa";
+import { buscarMovimentacaoComprovante } from "@/db/queries/caixa";
 import { labelMotivoSaida } from "@/lib/caixaMotivos";
 import { formatDataHoraCurta } from "@/components/cliente/types";
 
@@ -22,14 +22,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ ok: false, msg: "Comprovante invalido." }, { status: 400 });
   }
 
-  const saida = await buscarSaidaComprovante(sessao.lojaId, movimentacaoId);
-  if (!saida) return NextResponse.json({ ok: false, msg: "Saída não encontrada." }, { status: 404 });
+  const mov = await buscarMovimentacaoComprovante(sessao.lojaId, movimentacaoId);
+  if (!mov) return NextResponse.json({ ok: false, msg: "Movimentação não encontrada." }, { status: 404 });
+
+  const isSaida = mov.tipo === "sangria";
+  const titulo = isSaida ? "COMPROVANTE DE SAÍDA DE CAIXA" : "COMPROVANTE DE SUPRIMENTO DE CAIXA";
+  const numeroLabel = isSaida ? "Nº saída" : "Nº suprimento";
+  const assinaturaSegunda = isSaida ? "Assinatura de quem recebeu" : "Assinatura de quem entregou";
 
   const html = `<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
-<title>Comprovante de saída #${saida.id}</title>
+<title>${escapeHtml(titulo)} #${mov.id}</title>
 <style>
   @page { size: 80mm auto; margin: 4mm; }
   * { box-sizing: border-box; }
@@ -49,22 +54,22 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 </style>
 </head>
 <body>
-  <div class="loja">${escapeHtml(saida.lojaNome ?? "")}</div>
-  <h1>COMPROVANTE DE SAÍDA DE CAIXA</h1>
+  <div class="loja">${escapeHtml(mov.lojaNome ?? "")}</div>
+  <h1>${titulo}</h1>
   <hr />
-  <div class="linha"><span class="label">Nº saída</span><span>#${saida.id}</span></div>
-  <div class="linha"><span class="label">Caixa (turno)</span><span>#${saida.caixaId}</span></div>
-  <div class="linha"><span class="label">Data/hora</span><span>${escapeHtml(formatDataHoraCurta(saida.criadoEm))}</span></div>
-  <div class="linha"><span class="label">Operador</span><span>${escapeHtml(saida.operador ?? "-")}</span></div>
-  <div class="linha"><span class="label">Motivo</span><span>${escapeHtml(labelMotivoSaida(saida.motivo))}</span></div>
-  <div class="linha"><span class="label">Autorizado por</span><span>${escapeHtml(saida.autorizadoPor ?? "-")}</span></div>
+  <div class="linha"><span class="label">${numeroLabel}</span><span>#${mov.id}</span></div>
+  <div class="linha"><span class="label">Caixa (turno)</span><span>#${mov.caixaId}</span></div>
+  <div class="linha"><span class="label">Data/hora</span><span>${escapeHtml(formatDataHoraCurta(mov.criadoEm))}</span></div>
+  <div class="linha"><span class="label">Operador</span><span>${escapeHtml(mov.operador ?? "-")}</span></div>
+  ${isSaida ? `<div class="linha"><span class="label">Motivo</span><span>${escapeHtml(labelMotivoSaida(mov.motivo))}</span></div>` : ""}
+  <div class="linha"><span class="label">Autorizado por</span><span>${escapeHtml(mov.autorizadoPor ?? "-")}</span></div>
   <hr />
-  <div class="valor">${formatBRL(saida.valor)}</div>
-  ${saida.observacoes ? `<div class="obs">${escapeHtml(saida.observacoes)}</div>` : ""}
+  <div class="valor">${formatBRL(mov.valor)}</div>
+  ${mov.observacoes ? `<div class="obs">${escapeHtml(mov.observacoes)}</div>` : ""}
   <hr />
   <div class="assinatura">
     <div class="campo">Assinatura do operador</div>
-    <div class="campo">Assinatura de quem recebeu</div>
+    <div class="campo">${assinaturaSegunda}</div>
   </div>
   <div class="botoes"><button onclick="window.print()">Imprimir</button></div>
   <script>window.print();</script>

@@ -13,6 +13,7 @@ import { CaixaDetalheDialog } from "@/components/cashcontrol/caixa-detalhe-dialo
 import { LancarSaidaDialog } from "@/components/cashcontrol/lancar-saida-dialog";
 import { RegistrarSuprimentoDialog } from "@/components/cashcontrol/registrar-suprimento-dialog";
 import { SaidasCard } from "@/components/cashcontrol/saidas-card";
+import { SuprimentosCard } from "@/components/cashcontrol/suprimentos-card";
 import type { CaixaHistoricoResposta, CaixaMovimento, CaixaResumoResposta } from "@/lib/caixa";
 import { cn } from "cn";
 
@@ -318,6 +319,8 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
               </div>
             </CardContent>
           </Card>
+
+          <SuprimentosCard refreshKey={historicoRefresh} />
 
           <SaidasCard refreshKey={historicoRefresh} />
 

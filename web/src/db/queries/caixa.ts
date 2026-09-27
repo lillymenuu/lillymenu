@@ -232,9 +232,10 @@ export async function listarSupervisores(lojaId: number): Promise<CaixaSuperviso
   return linhas.map((a) => ({ id: a.id, nome: a.nome ?? `Admin #${a.id}` }));
 }
 
-export type CaixaSaidaItem = {
+export type CaixaMovimentacaoItem = {
   id: number;
   caixaId: number;
+  tipo: "suprimento" | "sangria";
   valor: number;
   motivo: string | null;
   observacoes: string | null;
@@ -243,8 +244,8 @@ export type CaixaSaidaItem = {
   criadoEm: string;
 };
 
-/** Saidas (sangria) do caixa aberto no momento, mais recentes primeiro — alimenta o card de acompanhamento. */
-export async function listarSaidasCaixaAberto(lojaId: number): Promise<CaixaSaidaItem[]> {
+/** Movimentacoes manuais (suprimento ou sangria) do caixa aberto no momento, mais recentes primeiro — alimenta os cards de acompanhamento. */
+async function listarMovimentacoesCaixaAberto(lojaId: number, tipo: "suprimento" | "sangria"): Promise<CaixaMovimentacaoItem[]> {
   const aberto = await db
     .select({ id: caixaTurnos.id })
     .from(caixaTurnos)
@@ -254,10 +255,11 @@ export async function listarSaidasCaixaAberto(lojaId: number): Promise<CaixaSaid
   const caixaId = aberto[0]?.id;
   if (!caixaId) return [];
 
-  const linhas = await db
+  return db
     .select({
       id: caixaMovimentacoes.id,
       caixaId: caixaMovimentacoes.caixa_id,
+      tipo: caixaMovimentacoes.tipo,
       valor: caixaMovimentacoes.valor,
       motivo: caixaMovimentacoes.motivo,
       observacoes: caixaMovimentacoes.observacoes,
@@ -267,30 +269,27 @@ export async function listarSaidasCaixaAberto(lojaId: number): Promise<CaixaSaid
     })
     .from(caixaMovimentacoes)
     .leftJoin(admins, eq(admins.id, caixaMovimentacoes.operador_id))
-    .where(and(eq(caixaMovimentacoes.caixa_id, caixaId), eq(caixaMovimentacoes.loja_id, lojaId), eq(caixaMovimentacoes.tipo, "sangria")))
+    .where(and(eq(caixaMovimentacoes.caixa_id, caixaId), eq(caixaMovimentacoes.loja_id, lojaId), eq(caixaMovimentacoes.tipo, tipo)))
     .orderBy(desc(caixaMovimentacoes.criado_em), desc(caixaMovimentacoes.id));
-
-  return linhas;
 }
 
-export type CaixaSaidaComprovante = {
-  id: number;
-  caixaId: number;
-  valor: number;
-  motivo: string | null;
-  observacoes: string | null;
-  operador: string | null;
-  autorizadoPor: string | null;
-  criadoEm: string;
-  lojaNome: string | null;
-};
+export function listarSaidasCaixaAberto(lojaId: number): Promise<CaixaMovimentacaoItem[]> {
+  return listarMovimentacoesCaixaAberto(lojaId, "sangria");
+}
 
-/** Dados de uma saida especifica para montar o comprovante de impressao. */
-export async function buscarSaidaComprovante(lojaId: number, movimentacaoId: number): Promise<CaixaSaidaComprovante | null> {
+export function listarSuprimentosCaixaAberto(lojaId: number): Promise<CaixaMovimentacaoItem[]> {
+  return listarMovimentacoesCaixaAberto(lojaId, "suprimento");
+}
+
+export type CaixaMovimentacaoComprovante = CaixaMovimentacaoItem & { lojaNome: string | null };
+
+/** Dados de uma movimentacao especifica (suprimento ou sangria) para montar o comprovante de impressao. */
+export async function buscarMovimentacaoComprovante(lojaId: number, movimentacaoId: number): Promise<CaixaMovimentacaoComprovante | null> {
   const [linha] = await db
     .select({
       id: caixaMovimentacoes.id,
       caixaId: caixaMovimentacoes.caixa_id,
+      tipo: caixaMovimentacoes.tipo,
       valor: caixaMovimentacoes.valor,
       motivo: caixaMovimentacoes.motivo,
       observacoes: caixaMovimentacoes.observacoes,
@@ -302,7 +301,7 @@ export async function buscarSaidaComprovante(lojaId: number, movimentacaoId: num
     .from(caixaMovimentacoes)
     .leftJoin(admins, eq(admins.id, caixaMovimentacoes.operador_id))
     .leftJoin(lojas, eq(lojas.id, lojaId))
-    .where(and(eq(caixaMovimentacoes.id, movimentacaoId), eq(caixaMovimentacoes.loja_id, lojaId), eq(caixaMovimentacoes.tipo, "sangria")))
+    .where(and(eq(caixaMovimentacoes.id, movimentacaoId), eq(caixaMovimentacoes.loja_id, lojaId)))
     .limit(1);
   return linha ?? null;
 }
