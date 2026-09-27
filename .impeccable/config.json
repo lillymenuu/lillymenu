@@ -854,6 +854,15 @@
         ],
         "createdAt": "2026-09-27T19:24:03.600Z",
         "reason": "comprovante termico impresso (preto e branco) e intencionalmente fora do design system do app"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "files": [
+          "web/src/app/globals.css"
+        ],
+        "createdAt": "2026-09-27T21:09:14.648Z",
+        "reason": "valor tecnico do truque de mask CSS (linear-gradient(#000 0 0) content-box) para revelar o anel giratorio do card de cadastro, nao e uma cor visivel do design"
       }
     ]
   }

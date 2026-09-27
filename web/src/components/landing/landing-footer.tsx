@@ -55,26 +55,26 @@ export function LandingFooter({
   youtube: string;
 }) {
   return (
-    <footer className="border-t bg-background">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-6">
+    <footer className="border-t border-[#ece7e0] bg-white">
+      <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div className="flex flex-col gap-3">
-          <span className="text-lg font-semibold">{brand}</span>
-          <p className="text-sm text-muted-foreground">{endereco}</p>
-          <p className="text-sm text-muted-foreground">{telefone}</p>
-          <p className="text-sm text-muted-foreground">{email}</p>
-          <div className="mt-1 flex items-center gap-3 text-muted-foreground">
+          <span className="text-[17px] font-bold">{brand}</span>
+          <p className="text-[14.5px] text-[#5b6169]">{endereco}</p>
+          <p className="text-[14.5px] text-[#5b6169]">{telefone}</p>
+          <p className="text-[14.5px] text-[#5b6169]">{email}</p>
+          <div className="mt-1 flex items-center gap-3 text-[#5b6169]">
             {instagram && (
-              <a href={instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:text-foreground">
+              <a href={instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:text-[#9c5523]">
                 <InstagramIcon />
               </a>
             )}
             {linkedin && (
-              <a href={linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="hover:text-foreground">
+              <a href={linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="hover:text-[#9c5523]">
                 <LinkedinIcon />
               </a>
             )}
             {youtube && (
-              <a href={youtube} target="_blank" rel="noreferrer" aria-label="YouTube" className="hover:text-foreground">
+              <a href={youtube} target="_blank" rel="noreferrer" aria-label="YouTube" className="hover:text-[#9c5523]">
                 <YoutubeIcon />
               </a>
             )}
@@ -82,25 +82,25 @@ export function LandingFooter({
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-semibold">{menuTitulo}</span>
+          <span className="text-[13px] font-semibold">{menuTitulo}</span>
           {menuItens.map((item) => (
-            <a key={item.label} href={remapLegacyHref(item.href)} className="text-sm text-muted-foreground hover:text-foreground">
+            <a key={item.label} href={remapLegacyHref(item.href)} className="text-[14.5px] text-[#5b6169] hover:text-[#1f2328]">
               {aplicarBrand(item.label, brand)}
             </a>
           ))}
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-semibold">{paraVoceTitulo}</span>
+          <span className="text-[13px] font-semibold">{paraVoceTitulo}</span>
           {paraVoceItens.map((item) => (
-            <a key={item.label} href={remapLegacyHref(item.href)} className="text-sm text-muted-foreground hover:text-foreground">
+            <a key={item.label} href={remapLegacyHref(item.href)} className="text-[14.5px] text-[#5b6169] hover:text-[#1f2328]">
               {aplicarBrand(item.label, brand)}
             </a>
           ))}
         </div>
       </div>
 
-      <div className="border-t py-4 text-center text-xs text-muted-foreground">
+      <div className="border-t border-[#ece7e0] py-4 text-center text-xs text-[#5b6169]">
         © {new Date().getFullYear()} {brand}. Todos os direitos reservados.
       </div>
     </footer>

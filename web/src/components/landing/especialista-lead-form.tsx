@@ -57,16 +57,16 @@ export function EspecialistaLeadForm({
 
   if (enviado) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border bg-card p-8 text-center shadow-sm">
+      <div className="flex flex-col items-center gap-3 rounded-[20px] bg-white p-8 text-center shadow-[0_24px_50px_rgba(8,20,33,0.3)]">
         <CheckCircle2 className="size-10 text-emerald-500" />
-        <h3 className="text-lg font-semibold">Recebemos seus dados!</h3>
-        <p className="text-sm text-muted-foreground">Nosso time vai entrar em contato em breve.</p>
+        <h3 className="text-[17px] font-bold">Recebemos seus dados!</h3>
+        <p className="text-[14.5px] text-[#5b6169]">Nosso time vai entrar em contato em breve.</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+    <form onSubmit={enviar} className="flex flex-col gap-3 rounded-[20px] bg-white p-6 shadow-[0_24px_50px_rgba(8,20,33,0.3)] sm:p-7">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="esp-nome">Seu nome</Label>
@@ -124,7 +124,12 @@ export function EspecialistaLeadForm({
         Aceito receber contato no WhatsApp.
       </label>
 
-      <Button type="submit" size="lg" disabled={enviando} className="mt-1 w-full">
+      <Button
+        type="submit"
+        size="lg"
+        disabled={enviando}
+        className="mt-1 h-11 w-full rounded-[10px] shadow-[0_10px_22px_-6px_rgba(156,85,35,0.4)] transition-transform hover:-translate-y-0.5"
+      >
         {enviando ? "Enviando..." : botaoTexto}
       </Button>
     </form>

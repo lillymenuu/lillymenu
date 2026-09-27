@@ -18,19 +18,19 @@ export function LandingCta({
   modeloNegocioOpcoes: string[];
 }) {
   return (
-    <section id="contato" className="border-t bg-muted/30">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-2 md:items-center md:py-20 lg:px-6">
-        <div className="flex flex-col gap-6">
+    <section id="contato" className="mx-auto max-w-[1180px] px-4 py-16 sm:px-6 md:py-24">
+      <div className="grid gap-10 rounded-[22px] bg-gradient-to-br from-[#9c5523] to-[#7a3f10] p-8 shadow-[0_24px_50px_rgba(8,20,33,0.3)] md:grid-cols-2 md:items-center md:p-14">
+        <div className="flex flex-col gap-6 text-white">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{titulo}</h2>
-            <p className="mt-2 max-w-md text-muted-foreground">{texto}</p>
+            <h2 className="text-[28px] leading-[1.25] font-bold tracking-tight sm:text-[30px]">{titulo}</h2>
+            <p className="mt-2 max-w-md text-[14.5px] leading-relaxed text-white/75">{texto}</p>
           </div>
           {itens.length > 0 && (
             <ul className="flex flex-col gap-4">
               {itens.map((item) => (
                 <li key={item.titulo} className="flex flex-col gap-0.5">
-                  <span className="font-medium">{item.titulo}</span>
-                  <span className="text-sm text-muted-foreground">{item.texto}</span>
+                  <span className="font-bold">{item.titulo}</span>
+                  <span className="text-[14.5px] leading-relaxed text-white/75">{item.texto}</span>
                 </li>
               ))}
             </ul>

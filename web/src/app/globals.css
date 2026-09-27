@@ -158,6 +158,46 @@
     height: 0;
   }
 }
+/*
+ * Landing page (superficie publica, modo Persuade — ver DESIGN.md). Sombras
+ * tingidas de navy/cobre (nunca cinza neutro), pulso reservado a 1 CTA por
+ * vez, e o anel giratório do card de cadastro — os 3 tratamentos de
+ * assinatura documentados no design system, sem equivalente nos componentes
+ * genericos de admin/operate.
+ */
+@keyframes landing-pulse-ring {
+  0% { box-shadow: 0 0 0 0 var(--landing-pulse-color, rgba(156, 85, 35, 0.45)); }
+  100% { box-shadow: 0 0 0 14px transparent; }
+}
+.landing-pulse {
+  animation: landing-pulse-ring 2.6s ease-out infinite;
+}
+
+@property --landing-glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes landing-glow-spin {
+  to { --landing-glow-angle: 360deg; }
+}
+.landing-lead-glow {
+  position: relative;
+}
+.landing-lead-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from var(--landing-glow-angle), #9c5523, #f5ede5, #7a3f10, #9c5523);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: landing-glow-spin 7s linear infinite;
+  pointer-events: none;
+}
+
 /* Tela de pedido confirmado da Store */
 @keyframes store-success-pop { 0% { transform: scale(.3); opacity: 0 } 60% { transform: scale(1.12); opacity: 1 } 100% { transform: scale(1) } }
 @keyframes store-success-draw { to { stroke-dashoffset: 0 } }

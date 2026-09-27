@@ -71,13 +71,13 @@ export function HeroSignupForm({
 
   if (sucesso) {
     return (
-      <div id="cadastro" className="flex flex-col items-center gap-3 rounded-2xl border bg-card p-8 text-center shadow-sm">
+      <div className="flex flex-col items-center gap-3 rounded-[20px] bg-white p-8 text-center shadow-[0_22px_45px_rgba(8,20,33,0.16)]">
         <CheckCircle2 className="size-10 text-emerald-500" />
-        <h3 className="text-lg font-semibold">Cadastro realizado!</h3>
-        <p className="text-sm text-muted-foreground">
-          Acabamos de enviar o acesso ao sistema para <strong>{sucesso.email}</strong>.
+        <h3 className="text-[17px] font-bold">Cadastro realizado!</h3>
+        <p className="text-[14.5px] text-[#5b6169]">
+          Acabamos de enviar o acesso ao sistema para <strong className="text-[#1f2328]">{sucesso.email}</strong>.
         </p>
-        <a href="/login" className="text-sm font-medium text-primary underline underline-offset-4">
+        <a href="/login" className="text-sm font-semibold text-[#9c5523] underline underline-offset-4">
           Ir para o login
         </a>
       </div>
@@ -85,8 +85,11 @@ export function HeroSignupForm({
   }
 
   return (
-    <form id="cadastro" onSubmit={enviar} className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
-      <h3 className="text-base font-semibold">{labels.titulo}</h3>
+    <form
+      onSubmit={enviar}
+      className="landing-lead-glow flex flex-col gap-3 rounded-[20px] bg-white p-6 shadow-[0_22px_45px_rgba(8,20,33,0.16)] sm:p-7"
+    >
+      <h3 className="text-[17px] font-bold">{labels.titulo}</h3>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
@@ -161,7 +164,12 @@ export function HeroSignupForm({
         {labels.aceite}
       </label>
 
-      <Button type="submit" size="lg" disabled={enviando} className="mt-1 w-full">
+      <Button
+        type="submit"
+        size="lg"
+        disabled={enviando}
+        className="mt-1 h-11 w-full rounded-[10px] shadow-[0_10px_22px_-6px_rgba(156,85,35,0.4)] transition-transform hover:-translate-y-0.5"
+      >
         {enviando ? "Enviando..." : labels.botao}
       </Button>
     </form>
