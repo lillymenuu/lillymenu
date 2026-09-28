@@ -17,7 +17,7 @@ export function LandingHero({
   const resto = linhas.slice(0, -3).join(" ");
 
   return (
-    <section className="relative overflow-hidden bg-linear-to-br from-[#eef2ff] via-[#f5f7ff] to-white">
+    <section className="relative mx-3 mt-3 overflow-hidden rounded-3xl bg-linear-to-br from-[#eef2ff] via-[#f5f7ff] to-white shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)] sm:mx-6 sm:mt-6 md:mx-8 md:mt-8">
       <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-24">
         <div className="flex flex-col items-start gap-6">
           <HeroTypedTitle resto={resto} destaque={destaque} />
