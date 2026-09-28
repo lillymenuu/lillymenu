@@ -36,11 +36,20 @@ export function LandingHeader({
     };
   }, []);
 
-  /** Header e sticky top-0: seu proprio bounding rect ja fica em y=0, entao o navegador ignora o link de ancora "#top" e nao rola nada. Faz a subida manualmente. */
-  function aoClicarTopo(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
-    if (href !== "#top") return;
+  /**
+   * Rola manualmente pra secao em vez de deixar o navegador navegar pra "#id" -- isso evita que o
+   * hash fique visivel na barra de enderecos. Tambem cobre o "#top": como o header e sticky top-0,
+   * seu bounding rect ja fica em y=0 e o navegador ignoraria a ancora sem rolar nada.
+   */
+  function aoClicarAncora(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+    if (!href.startsWith("#")) return;
     e.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const id = href.slice(1);
+    if (id === "" || id === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -52,7 +61,7 @@ export function LandingHeader({
       )}
     >
       <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 sm:px-6">
-        <a href="#top" onClick={(e) => aoClicarTopo(e, "#top")} className="flex items-center gap-2 text-[17px] font-bold">
+        <a href="#top" onClick={(e) => aoClicarAncora(e, "#top")} className="flex items-center gap-2 text-[17px] font-bold">
           {logoImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoImage} alt={brand} className="size-8 rounded-lg object-contain" />
@@ -71,7 +80,7 @@ export function LandingHeader({
               <a
                 key={item.label}
                 href={href}
-                onClick={(e) => aoClicarTopo(e, href)}
+                onClick={(e) => aoClicarAncora(e, href)}
                 className="rounded-full px-3.5 py-1.5 transition-all duration-200 hover:bg-[#eef2ff] hover:text-[#2563eb]"
               >
                 {aplicarBrand(item.label, brand)}
@@ -86,6 +95,7 @@ export function LandingHeader({
           </a>
           <a
             href="#cadastro"
+            onClick={(e) => aoClicarAncora(e, "#cadastro")}
             className={cn(
               "landing-pulse flex h-9 items-center gap-1.5 rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
             )}
@@ -109,7 +119,7 @@ export function LandingHeader({
                   key={item.label}
                   href={href}
                   onClick={(e) => {
-                    aoClicarTopo(e, href);
+                    aoClicarAncora(e, href);
                     setMenuAberto(false);
                   }}
                   className="rounded-lg px-2 py-2.5 text-[#4b5563] hover:bg-[#eef2ff] hover:text-[#111827]"
@@ -128,7 +138,10 @@ export function LandingHeader({
             </a>
             <a
               href="#cadastro"
-              onClick={() => setMenuAberto(false)}
+              onClick={(e) => {
+                aoClicarAncora(e, "#cadastro");
+                setMenuAberto(false);
+              }}
               className="flex items-center justify-center gap-1.5 rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white"
             >
               Começar grátis <ArrowRight className="size-3.5" />
