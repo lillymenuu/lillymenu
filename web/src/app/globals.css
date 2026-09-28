@@ -172,6 +172,18 @@
   animation: landing-pulse-ring 2.6s ease-out infinite;
 }
 
+/* Pulso leve (escala) dos CTAs "Assine ja!" dos cards de plano */
+@keyframes landing-cta-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+.landing-cta-pulse {
+  animation: landing-cta-pulse 2.4s ease-in-out infinite;
+}
+.landing-cta-pulse:hover {
+  animation-play-state: paused;
+}
+
 @property --landing-glow-angle {
   syntax: "<angle>";
   initial-value: 0deg;

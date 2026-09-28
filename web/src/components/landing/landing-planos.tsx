@@ -44,13 +44,13 @@ export function LandingPlanos({
         )}
       </div>
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-10 flex flex-wrap justify-center gap-6">
         {planos.map((plano) => (
           <div
             key={plano.slug}
             className={cn(
-              "flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-6",
-              plano.badge && "border-[#2563eb] shadow-[0_20px_40px_rgba(37,99,235,0.12)]"
+              "flex w-full flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-6 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-[#c7d2fe] hover:shadow-[0_24px_44px_rgba(15,23,42,0.12)] sm:w-[calc(50%-12px)] lg:w-[270px]",
+              plano.badge && "border-[#2563eb] shadow-[0_20px_40px_rgba(37,99,235,0.12)] hover:shadow-[0_28px_52px_rgba(37,99,235,0.2)]"
             )}
           >
             {plano.badge && (
@@ -76,7 +76,7 @@ export function LandingPlanos({
             </ul>
             <a
               href={resolverLinkPlano(plano)}
-              className="mt-auto flex h-10 w-full items-center justify-center rounded-lg bg-[#2563eb] text-sm font-semibold text-white shadow-[0_10px_22px_-6px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
+              className="landing-cta-pulse mt-auto flex h-10 w-full items-center justify-center rounded-lg bg-[#2563eb] text-sm font-semibold text-white shadow-[0_10px_22px_-6px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
             >
               {plano.botaoTexto}
             </a>
