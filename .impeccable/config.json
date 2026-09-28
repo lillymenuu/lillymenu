@@ -881,6 +881,18 @@
         ],
         "createdAt": "2026-09-27T21:37:27.173Z",
         "reason": "mesma decisao: titulo do hero da landing v2 (kukie.io) maior que o display padrao"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "40px",
+        "createdAt": "2026-09-28T14:38:13.505Z",
+        "reason": "pre-existing hero H1 size moved unchanged from landing-hero.tsx into hero-typed-title.tsx"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "52px",
+        "createdAt": "2026-09-28T14:38:13.641Z",
+        "reason": "pre-existing hero H1 size moved unchanged from landing-hero.tsx into hero-typed-title.tsx"
       }
     ]
   }

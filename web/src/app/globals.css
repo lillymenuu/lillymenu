@@ -192,9 +192,34 @@
 .landing-card-reveal {
   animation: landing-card-reveal 0.6s ease-out both;
 }
+/* Cursor piscante do efeito de "digitando" do titulo do hero */
+@keyframes landing-caret-blink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+.landing-caret-blink {
+  animation: landing-caret-blink 0.9s step-end infinite;
+}
+
+/* Flutuacao suave dos cards flutuantes do hero (desencontrados via delay) */
+@keyframes landing-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.landing-float {
+  animation: landing-float 4s ease-in-out infinite;
+}
+.landing-float-delay {
+  animation: landing-float 4.6s ease-in-out infinite;
+  animation-delay: 0.6s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-card-reveal,
-  .landing-cta-pulse {
+  .landing-cta-pulse,
+  .landing-caret-blink,
+  .landing-float,
+  .landing-float-delay {
     animation: none;
   }
 }

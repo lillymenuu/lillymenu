@@ -1,4 +1,5 @@
 import { Check, ArrowRight, CheckCircle2 } from "lucide-react";
+import { HeroTypedTitle } from "./hero-typed-title";
 
 export function LandingHero({
   titulo,
@@ -19,16 +20,13 @@ export function LandingHero({
     <section className="relative overflow-hidden bg-linear-to-br from-[#eef2ff] via-[#f5f7ff] to-white">
       <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-24">
         <div className="flex flex-col items-start gap-6">
-          <h1 className="text-[40px] leading-[1.15] font-extrabold tracking-tight text-balance sm:text-[52px]">
-            <span className="text-[#0b1220]">{resto} </span>
-            <span className="text-[#2563eb]">{destaque}</span>
-          </h1>
+          <HeroTypedTitle resto={resto} destaque={destaque} />
           <p className="max-w-md text-base leading-relaxed text-[#4b5563] sm:text-lg">{subtitulo}</p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               href="#cadastro"
-              className="flex h-12 items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-6 text-base font-semibold text-white shadow-[0_10px_25px_-6px_rgba(37,99,235,0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
+              className="landing-cta-pulse flex h-12 items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-6 text-base font-semibold text-white shadow-[0_10px_25px_-6px_rgba(37,99,235,0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
             >
               Começar grátis <ArrowRight className="size-4" />
             </a>
@@ -59,7 +57,7 @@ export function LandingHero({
             )}
           </div>
 
-          <div className="absolute -top-4 right-4 flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-[0_16px_35px_rgba(11,18,32,0.18)] sm:right-8">
+          <div className="landing-float absolute -top-4 right-4 flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-[0_16px_35px_rgba(11,18,32,0.18)] sm:right-8">
             <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />
             <div className="leading-tight">
               <div className="text-[13px] font-bold">Pedido #482 confirmado</div>
@@ -67,7 +65,7 @@ export function LandingHero({
             </div>
           </div>
 
-          <div className="absolute -bottom-6 left-4 w-[220px] rounded-xl bg-white p-3.5 shadow-[0_16px_35px_rgba(11,18,32,0.18)] sm:left-8">
+          <div className="landing-float-delay absolute -bottom-6 left-4 w-[220px] rounded-xl bg-white p-3.5 shadow-[0_16px_35px_rgba(11,18,32,0.18)] sm:left-8">
             <div className="text-[13px] font-bold">Resumo do pedido</div>
             <div className="mt-2 flex flex-col gap-1 text-xs text-[#6b7280]">
               <div className="flex justify-between">
