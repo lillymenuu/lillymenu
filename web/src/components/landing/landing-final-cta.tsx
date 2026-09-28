@@ -4,7 +4,7 @@ const PILLS = ["Grátis por 30 dias", "Sem cartão de crédito", "Cancele quando
 
 export function LandingFinalCta() {
   return (
-    <section className="mx-auto max-w-[1180px] px-4 pb-16 sm:px-6 md:pb-24">
+    <section className="mx-auto w-full max-w-[1180px] px-4 py-16 sm:px-6 md:py-24">
       <div className="relative overflow-hidden rounded-[22px] bg-linear-to-br from-[#0b1220] via-[#111a2e] to-[#1d4ed8] p-8 shadow-[0_24px_50px_rgba(11,18,32,0.3)] sm:p-14">
         <div className="relative flex max-w-lg flex-col gap-5">
           <h2 className="text-[30px] leading-[1.2] font-extrabold tracking-tight text-white">
