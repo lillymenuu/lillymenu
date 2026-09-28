@@ -36,6 +36,13 @@ export function LandingHeader({
     };
   }, []);
 
+  /** Header e sticky top-0: seu proprio bounding rect ja fica em y=0, entao o navegador ignora o link de ancora "#top" e nao rola nada. Faz a subida manualmente. */
+  function aoClicarTopo(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+    if (href !== "#top") return;
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   return (
     <header
       id="top"
@@ -45,7 +52,7 @@ export function LandingHeader({
       )}
     >
       <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 sm:px-6">
-        <a href="#top" className="flex items-center gap-2 text-[17px] font-bold">
+        <a href="#top" onClick={(e) => aoClicarTopo(e, "#top")} className="flex items-center gap-2 text-[17px] font-bold">
           {logoImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoImage} alt={brand} className="size-8 rounded-lg object-contain" />
@@ -58,15 +65,19 @@ export function LandingHeader({
         </a>
 
         <nav className="hidden items-center gap-1 text-sm font-medium text-[#4b5563] min-[880px]:flex">
-          {navLinks.map((item) => (
-            <a
-              key={item.label}
-              href={remapLegacyHref(item.href)}
-              className="rounded-full px-3.5 py-1.5 transition-all duration-200 hover:bg-[#eef2ff] hover:text-[#2563eb]"
-            >
-              {aplicarBrand(item.label, brand)}
-            </a>
-          ))}
+          {navLinks.map((item) => {
+            const href = remapLegacyHref(item.href);
+            return (
+              <a
+                key={item.label}
+                href={href}
+                onClick={(e) => aoClicarTopo(e, href)}
+                className="rounded-full px-3.5 py-1.5 transition-all duration-200 hover:bg-[#eef2ff] hover:text-[#2563eb]"
+              >
+                {aplicarBrand(item.label, brand)}
+              </a>
+            );
+          })}
         </nav>
 
         <div className="hidden items-center gap-5 min-[880px]:flex">
@@ -91,16 +102,22 @@ export function LandingHeader({
       {menuAberto && (
         <div className="border-t border-[#e5e7eb] bg-white px-4 pb-4 min-[880px]:hidden">
           <nav className="flex flex-col gap-1 pt-2 text-sm font-medium">
-            {navLinks.map((item) => (
-              <a
-                key={item.label}
-                href={remapLegacyHref(item.href)}
-                onClick={() => setMenuAberto(false)}
-                className="rounded-lg px-2 py-2.5 text-[#4b5563] hover:bg-[#eef2ff] hover:text-[#111827]"
-              >
-                {aplicarBrand(item.label, brand)}
-              </a>
-            ))}
+            {navLinks.map((item) => {
+              const href = remapLegacyHref(item.href);
+              return (
+                <a
+                  key={item.label}
+                  href={href}
+                  onClick={(e) => {
+                    aoClicarTopo(e, href);
+                    setMenuAberto(false);
+                  }}
+                  className="rounded-lg px-2 py-2.5 text-[#4b5563] hover:bg-[#eef2ff] hover:text-[#111827]"
+                >
+                  {aplicarBrand(item.label, brand)}
+                </a>
+              );
+            })}
           </nav>
           <div className="mt-2 flex flex-col gap-2">
             <a
