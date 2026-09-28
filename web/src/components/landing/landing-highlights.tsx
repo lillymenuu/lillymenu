@@ -35,7 +35,7 @@ export function LandingHighlights() {
   }, []);
 
   return (
-    <section className="border-y border-[#e5e7eb] bg-white">
+    <section className="bg-white">
       <div ref={ref} className="mx-auto grid max-w-[1180px] grid-cols-2 gap-8 px-4 py-10 sm:px-6 lg:grid-cols-4">
         {DESTAQUES.map((d, i) => (
           <div
