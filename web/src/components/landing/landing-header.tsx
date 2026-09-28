@@ -31,8 +31,8 @@ export function LandingHeader({
     <header
       id="top"
       className={cn(
-        "sticky top-0 z-40 border-b bg-white/95 backdrop-blur transition-colors",
-        rolado ? "border-[#e5e7eb]" : "border-transparent"
+        "sticky top-0 z-40 border-b transition-all duration-300",
+        rolado ? "border-[#e5e7eb] bg-white/70 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-xl" : "border-transparent bg-white"
       )}
     >
       <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 sm:px-6">
@@ -48,9 +48,13 @@ export function LandingHeader({
           <span>{brand}</span>
         </a>
 
-        <nav className="hidden items-center gap-7 text-sm font-medium text-[#4b5563] min-[880px]:flex">
+        <nav className="hidden items-center gap-1 text-sm font-medium text-[#4b5563] min-[880px]:flex">
           {navLinks.map((item) => (
-            <a key={item.label} href={remapLegacyHref(item.href)} className="transition-colors hover:text-[#111827]">
+            <a
+              key={item.label}
+              href={remapLegacyHref(item.href)}
+              className="rounded-full px-3.5 py-1.5 transition-all duration-200 hover:bg-[#eef2ff] hover:text-[#2563eb]"
+            >
               {aplicarBrand(item.label, brand)}
             </a>
           ))}
