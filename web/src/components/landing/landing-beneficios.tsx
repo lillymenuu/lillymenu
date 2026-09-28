@@ -36,7 +36,7 @@ export function LandingBeneficios({ titulo, beneficios }: { titulo: string; bene
   if (beneficios.length === 0) return null;
 
   return (
-    <div className="mt-20">
+    <div id="beneficios" className="mt-20 scroll-mt-20">
       <h3 className="text-center text-[24px] font-bold tracking-tight">{titulo}</h3>
       <div ref={ref} className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {beneficios.map((b, i) => {
