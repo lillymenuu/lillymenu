@@ -13,6 +13,7 @@ import { LandingCta } from "@/components/landing/landing-cta";
 import { LandingFinalCta } from "@/components/landing/landing-final-cta";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { WhatsappFloatButton } from "@/components/landing/whatsapp-float-button";
+import { ScrollToTopButton } from "@/components/landing/scroll-to-top-button";
 
 export const revalidate = 300;
 
@@ -123,6 +124,7 @@ export default async function LandingPage() {
       />
 
       <WhatsappFloatButton numero={lc(config, "whatsapp_number")} mensagem={lc(config, "whatsapp_message", "Olá! Quero conhecer o sistema.")} />
+      <ScrollToTopButton />
     </div>
   );
 }
