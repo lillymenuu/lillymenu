@@ -131,9 +131,6 @@ export function HeroSignupForm({
         <p className="text-[14.5px] text-[#5b6169]">
           Em breve você receberá um e-mail com o link para acessar sua loja.
         </p>
-        <a href="/login" className="text-sm font-semibold text-[#2563eb] underline underline-offset-4">
-          Ir para o login
-        </a>
       </div>
     );
   }
