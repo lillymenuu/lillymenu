@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
@@ -18,9 +18,23 @@ export function LandingHeader({
   ctaSecondarioTexto: string;
 }) {
   const [menuAberto, setMenuAberto] = useState(false);
+  const [rolado, setRolado] = useState(false);
+
+  useEffect(() => {
+    const aoRolar = () => setRolado(window.scrollY > 8);
+    aoRolar();
+    window.addEventListener("scroll", aoRolar, { passive: true });
+    return () => window.removeEventListener("scroll", aoRolar);
+  }, []);
 
   return (
-    <header id="top" className="sticky top-0 z-40 border-b border-[#e5e7eb] bg-white/95 backdrop-blur">
+    <header
+      id="top"
+      className={cn(
+        "sticky top-0 z-40 border-b bg-white/95 backdrop-blur transition-colors",
+        rolado ? "border-[#e5e7eb]" : "border-transparent"
+      )}
+    >
       <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 sm:px-6">
         <a href="#top" className="flex items-center gap-2 text-[17px] font-bold">
           {logoImage ? (
