@@ -65,19 +65,29 @@ export function HeroSignupForm({
   const [mostraFinal, setMostraFinal] = useState(false);
 
   useEffect(() => {
-    if (liberaContato) setMostraContato(true);
+    if (!liberaContato) return;
+    const t = setTimeout(() => setMostraContato(true), 0);
+    return () => clearTimeout(t);
   }, [liberaContato]);
   useEffect(() => {
-    if (liberaSenha) setMostraSenhaEtapa(true);
+    if (!liberaSenha) return;
+    const t = setTimeout(() => setMostraSenhaEtapa(true), 0);
+    return () => clearTimeout(t);
   }, [liberaSenha]);
   useEffect(() => {
-    if (liberaDocumento) setMostraDocumento(true);
+    if (!liberaDocumento) return;
+    const t = setTimeout(() => setMostraDocumento(true), 0);
+    return () => clearTimeout(t);
   }, [liberaDocumento]);
   useEffect(() => {
-    if (liberaPerfil) setMostraPerfil(true);
+    if (!liberaPerfil) return;
+    const t = setTimeout(() => setMostraPerfil(true), 0);
+    return () => clearTimeout(t);
   }, [liberaPerfil]);
   useEffect(() => {
-    if (liberaFinal) setMostraFinal(true);
+    if (!liberaFinal) return;
+    const t = setTimeout(() => setMostraFinal(true), 0);
+    return () => clearTimeout(t);
   }, [liberaFinal]);
 
   async function enviar(e: React.FormEvent) {

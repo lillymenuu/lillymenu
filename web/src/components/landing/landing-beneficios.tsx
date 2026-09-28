@@ -17,8 +17,8 @@ export function LandingBeneficios({ titulo, beneficios }: { titulo: string; bene
     const el = ref.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") {
-      setVisivel(true);
-      return;
+      const t = setTimeout(() => setVisivel(true), 0);
+      return () => clearTimeout(t);
     }
     const obs = new IntersectionObserver(
       ([entrada]) => {

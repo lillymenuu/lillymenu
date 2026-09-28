@@ -1,4 +1,5 @@
 import { Check, ArrowRight } from "lucide-react";
+import { SmoothAnchor } from "./smooth-anchor";
 
 const PILLS = ["Grátis por 30 dias", "Sem cartão de crédito", "Cancele quando quiser"];
 
@@ -15,15 +16,15 @@ export function LandingFinalCta() {
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a
+            <SmoothAnchor
               href="#cadastro"
               className="flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-6 text-base font-bold text-[#0b1220] transition-transform hover:-translate-y-0.5"
             >
               Cadastre-se grátis <ArrowRight className="size-4" />
-            </a>
-            <a href="#planos" className="text-base font-semibold text-white underline underline-offset-4">
+            </SmoothAnchor>
+            <SmoothAnchor href="#planos" className="text-base font-semibold text-white underline underline-offset-4">
               Ver planos
-            </a>
+            </SmoothAnchor>
           </div>
 
           <div className="flex flex-wrap gap-2 pt-1">

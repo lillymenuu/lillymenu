@@ -18,8 +18,8 @@ export function LandingHighlights() {
     const el = ref.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") {
-      setVisivel(true);
-      return;
+      const t = setTimeout(() => setVisivel(true), 0);
+      return () => clearTimeout(t);
     }
     const obs = new IntersectionObserver(
       ([entrada]) => {

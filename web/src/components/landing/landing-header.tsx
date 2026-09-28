@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
-import { remapLegacyHref, aplicarBrand } from "@/lib/landing";
+import { remapLegacyHref, aplicarBrand, rolarParaAncora } from "@/lib/landing";
 
 export function LandingHeader({
   brand,
@@ -36,20 +36,10 @@ export function LandingHeader({
     };
   }, []);
 
-  /**
-   * Rola manualmente pra secao em vez de deixar o navegador navegar pra "#id" -- isso evita que o
-   * hash fique visivel na barra de enderecos. Tambem cobre o "#top": como o header e sticky top-0,
-   * seu bounding rect ja fica em y=0 e o navegador ignoraria a ancora sem rolar nada.
-   */
   function aoClicarAncora(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
     if (!href.startsWith("#")) return;
     e.preventDefault();
-    const id = href.slice(1);
-    if (id === "" || id === "top") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    rolarParaAncora(href);
   }
 
   return (

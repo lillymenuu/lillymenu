@@ -3,6 +3,7 @@ import { cn } from "cn";
 import { remapLegacyHref } from "@/lib/landing";
 import type { PlanoMarketing } from "@/db/queries/landingConfig";
 import { LandingBeneficios } from "./landing-beneficios";
+import { SmoothAnchor } from "./smooth-anchor";
 
 type Beneficio = { titulo: string; texto: string };
 
@@ -73,12 +74,12 @@ export function LandingPlanos({
                 </li>
               ))}
             </ul>
-            <a
+            <SmoothAnchor
               href={resolverLinkPlano(plano)}
               className="landing-cta-pulse mt-auto flex h-10 w-full items-center justify-center rounded-lg bg-[#2563eb] text-sm font-semibold text-white shadow-[0_10px_22px_-6px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
             >
               {plano.botaoTexto}
-            </a>
+            </SmoothAnchor>
           </div>
         ))}
       </div>

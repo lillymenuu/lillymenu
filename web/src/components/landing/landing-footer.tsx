@@ -1,4 +1,5 @@
 import { remapLegacyHref, aplicarBrand } from "@/lib/landing";
+import { SmoothAnchor } from "./smooth-anchor";
 
 function InstagramIcon() {
   return (
@@ -103,18 +104,18 @@ export function LandingFooter({
           <div className="flex flex-col gap-2">
             <span className="text-xs font-bold tracking-widest text-[#6b7280] uppercase">{menuTitulo}</span>
             {menuItens.map((item) => (
-              <a key={item.label} href={remapLegacyHref(item.href)} className="text-sm text-[#4b5563] hover:text-[#111827]">
+              <SmoothAnchor key={item.label} href={remapLegacyHref(item.href)} className="text-sm text-[#4b5563] hover:text-[#111827]">
                 {aplicarBrand(item.label, brand)}
-              </a>
+              </SmoothAnchor>
             ))}
           </div>
 
           <div className="flex flex-col gap-2">
             <span className="text-xs font-bold tracking-widest text-[#6b7280] uppercase">{paraVoceTitulo}</span>
             {paraVoceItens.map((item) => (
-              <a key={item.label} href={remapLegacyHref(item.href)} className="text-sm text-[#4b5563] hover:text-[#111827]">
+              <SmoothAnchor key={item.label} href={remapLegacyHref(item.href)} className="text-sm text-[#4b5563] hover:text-[#111827]">
                 {aplicarBrand(item.label, brand)}
-              </a>
+              </SmoothAnchor>
             ))}
           </div>
 

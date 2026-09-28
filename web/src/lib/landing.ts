@@ -16,3 +16,17 @@ export function buildWhatsappLink(numero: string, mensagem: string): string {
 export function aplicarBrand(texto: string, brand: string): string {
   return texto.replaceAll("{brand}", brand);
 }
+
+/**
+ * Rola manualmente ate a secao em vez de deixar o navegador navegar por "#id" -- evita que o hash
+ * fique visivel na URL. Tambem cobre "#top": como o header e sticky top-0, seu bounding rect ja
+ * fica em y=0 e o navegador ignoraria a ancora sem rolar nada. So roda no client (usa window/document).
+ */
+export function rolarParaAncora(href: string): void {
+  const id = href.slice(1);
+  if (id === "" || id === "top") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}

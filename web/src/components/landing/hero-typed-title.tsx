@@ -10,8 +10,8 @@ export function HeroTypedTitle({ resto, destaque }: { resto: string; destaque: s
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setCount(full.length);
-      return;
+      const t = setTimeout(() => setCount(full.length), 0);
+      return () => clearTimeout(t);
     }
     let i = 0;
     const id = setInterval(() => {

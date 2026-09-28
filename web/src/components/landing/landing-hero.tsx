@@ -1,5 +1,6 @@
 import { Check, ArrowRight, CheckCircle2 } from "lucide-react";
 import { HeroTypedTitle } from "./hero-typed-title";
+import { SmoothAnchor } from "./smooth-anchor";
 
 export function LandingHero({
   titulo,
@@ -24,15 +25,15 @@ export function LandingHero({
           <p className="max-w-md text-base leading-relaxed text-[#4b5563] sm:text-lg">{subtitulo}</p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a
+            <SmoothAnchor
               href="#cadastro"
               className="landing-cta-pulse flex h-12 items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-6 text-base font-semibold text-white shadow-[0_10px_25px_-6px_rgba(37,99,235,0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
             >
               Começar grátis <ArrowRight className="size-4" />
-            </a>
-            <a href="#como-funciona" className="text-base font-semibold text-[#2563eb] hover:text-[#1d4ed8]">
+            </SmoothAnchor>
+            <SmoothAnchor href="#como-funciona" className="text-base font-semibold text-[#2563eb] hover:text-[#1d4ed8]">
               Ver como funciona
-            </a>
+            </SmoothAnchor>
           </div>
 
           {stats.length > 0 && (

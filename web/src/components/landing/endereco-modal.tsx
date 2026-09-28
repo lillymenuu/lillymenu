@@ -27,7 +27,9 @@ export function EnderecoModal({
   const [buscandoCep, setBuscandoCep] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(valorInicial ?? VAZIO);
+    if (!open) return;
+    const t = setTimeout(() => setForm(valorInicial ?? VAZIO), 0);
+    return () => clearTimeout(t);
   }, [open, valorInicial]);
 
   async function aoMudarCep(e: React.ChangeEvent<HTMLInputElement>) {

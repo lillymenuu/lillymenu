@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
+import { rolarParaAncora } from "@/lib/landing";
 
 const PASSOS = [
   { titulo: "Cadastre sua loja", texto: "Leva menos de 2 minutos: seus dados, sua empresa e o plano que combina com o seu negócio." },
@@ -17,8 +18,8 @@ export function LandingComoFunciona() {
     const el = ref.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") {
-      setVisivel(true);
-      return;
+      const t = setTimeout(() => setVisivel(true), 0);
+      return () => clearTimeout(t);
     }
     const obs = new IntersectionObserver(
       ([entrada]) => {
@@ -68,6 +69,10 @@ export function LandingComoFunciona() {
 
         <a
           href="#cadastro"
+          onClick={(e) => {
+            e.preventDefault();
+            rolarParaAncora("#cadastro");
+          }}
           className="landing-cta-pulse mt-12 inline-flex h-12 items-center justify-center rounded-lg bg-white px-8 text-base font-semibold text-[#0b1220] transition-transform hover:-translate-y-0.5"
         >
           Criar minha loja grátis
