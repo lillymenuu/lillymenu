@@ -34,7 +34,7 @@ export function LandingComoFunciona() {
   }, []);
 
   return (
-    <section id="como-funciona" className="bg-[#0b1220]">
+    <section id="como-funciona" className="scroll-mt-20 bg-[#0b1220]">
       <div className="mx-auto max-w-[1180px] px-4 py-16 text-center sm:px-6 md:py-24">
         <span className="text-sm font-bold tracking-widest text-[#60a5fa] uppercase">Como funciona</span>
         <h2 className="mt-3 text-[30px] leading-[1.2] font-extrabold tracking-tight text-white">Do cadastro à primeira venda</h2>

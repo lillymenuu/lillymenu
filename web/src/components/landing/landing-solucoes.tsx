@@ -46,7 +46,7 @@ export function LandingSolucoes({ titulo, itens }: { titulo: string; itens: Solu
   const [primeira, ...resto] = itens;
 
   return (
-    <section id="solucoes" className="mx-auto max-w-[1180px] px-4 py-16 sm:px-6 md:py-24">
+    <section id="solucoes" className="mx-auto max-w-[1180px] scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
       <div className="flex flex-col items-center gap-3 text-center">
         <span className="text-xs font-bold tracking-widest text-[#2563eb] uppercase">Recursos</span>
         <h2 className="max-w-xl text-[30px] leading-[1.2] font-extrabold tracking-tight">{titulo}</h2>

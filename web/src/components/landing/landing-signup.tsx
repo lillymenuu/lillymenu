@@ -26,7 +26,7 @@ export function LandingSignup({
   };
 }) {
   return (
-    <section id="cadastro" className="border-y border-[#e5e7eb] bg-[#f9fafb]">
+    <section id="cadastro" className="scroll-mt-20 border-y border-[#e5e7eb] bg-[#f9fafb]">
       <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-24">
         <div className="flex flex-col gap-5">
           <h2 className="text-[30px] leading-[1.2] font-extrabold tracking-tight">Comece a operar hoje mesmo</h2>

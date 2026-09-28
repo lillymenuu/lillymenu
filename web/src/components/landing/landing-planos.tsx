@@ -28,7 +28,7 @@ export function LandingPlanos({
   if (planos.length === 0) return null;
 
   return (
-    <section id="planos" className="mx-auto max-w-[1180px] px-4 py-16 sm:px-6 md:py-24">
+    <section id="planos" className="mx-auto max-w-[1180px] scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
       <div className="flex flex-col items-center gap-3 text-center">
         <span className="text-xs font-bold tracking-widest text-[#2563eb] uppercase">Planos</span>
         <h2 className="text-[30px] leading-[1.2] font-extrabold tracking-tight">{titulo}</h2>

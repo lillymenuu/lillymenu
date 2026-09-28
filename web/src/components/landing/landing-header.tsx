@@ -27,6 +27,15 @@ export function LandingHeader({
     return () => window.removeEventListener("scroll", aoRolar);
   }, []);
 
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const original = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "smooth";
+    return () => {
+      document.documentElement.style.scrollBehavior = original;
+    };
+  }, []);
+
   return (
     <header
       id="top"
