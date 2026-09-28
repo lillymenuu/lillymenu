@@ -1,11 +1,10 @@
-import { Check, Users, PiggyBank, Layers, Ticket, Percent, Gift, type LucideIcon } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "cn";
 import { remapLegacyHref } from "@/lib/landing";
 import type { PlanoMarketing } from "@/db/queries/landingConfig";
+import { LandingBeneficios } from "./landing-beneficios";
 
 type Beneficio = { titulo: string; texto: string };
-
-const ICONES_BENEFICIO: LucideIcon[] = [Users, PiggyBank, Layers, Ticket, Percent, Gift];
 
 /** Botoes "Assine ja!" (self-serve) apontavam pro dominio antigo — o destino certo agora e a secao de cadastro. */
 function resolverLinkPlano(plano: PlanoMarketing): string {
@@ -84,25 +83,7 @@ export function LandingPlanos({
         ))}
       </div>
 
-      {beneficios.length > 0 && (
-        <div className="mt-20">
-          <h3 className="text-center text-[24px] font-bold tracking-tight">{beneficiosTitulo}</h3>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {beneficios.map((b, i) => {
-              const Icone = ICONES_BENEFICIO[i % ICONES_BENEFICIO.length];
-              return (
-                <div key={b.titulo} className="flex flex-col gap-2 rounded-2xl bg-[#f9fafb] p-6">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef2ff] text-[#2563eb]">
-                    <Icone className="size-4.5" />
-                  </span>
-                  <h4 className="text-[15px] font-bold">{b.titulo}</h4>
-                  <p className="text-[14.5px] leading-relaxed text-[#4b5563]">{b.texto}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <LandingBeneficios titulo={beneficiosTitulo} beneficios={beneficios} />
     </section>
   );
 }
