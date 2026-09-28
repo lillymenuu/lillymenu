@@ -91,6 +91,19 @@ export async function getPlanosSignup(): Promise<PlanoSignup[]> {
   return linhas.filter((p): p is PlanoSignup => p.landingSlug !== null);
 }
 
+/** Plano gratuito de teste (menor valor entre os elegiveis) — usado no cadastro self-service, que nao pede mais o plano no formulario. */
+export async function getPlanoTrialGratuito(): Promise<PlanoSignup | null> {
+  const linhas = await db
+    .select({ id: planos.id, nome: planos.nome, valor: planos.valor, landingSlug: planos.landing_slug, diasTrial: planos.dias_trial })
+    .from(planos)
+    .where(and(eq(planos.ativo, true), isNotNull(planos.landing_slug)))
+    .orderBy(planos.valor)
+    .limit(1);
+  const [linha] = linhas;
+  if (!linha || !linha.landingSlug) return null;
+  return { ...linha, landingSlug: linha.landingSlug };
+}
+
 /** Resolve um plano real pelo landing_slug escolhido no formulario (plano1/plano2/plano3...). */
 export async function getPlanoPorLandingSlug(slug: string): Promise<PlanoSignup | null> {
   const [linha] = await db

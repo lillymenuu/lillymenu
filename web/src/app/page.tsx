@@ -1,5 +1,5 @@
 import { Poppins } from "next/font/google";
-import { getLandingConfig, getPlanosSignup, getPlanosMarketing, lc, parseLines, parseLinkList } from "@/db/queries/landingConfig";
+import { getLandingConfig, getPlanosMarketing, lc, parseLines, parseLinkList } from "@/db/queries/landingConfig";
 import { aplicarBrand } from "@/lib/landing";
 import { LandingHeader } from "@/components/landing/landing-header";
 import { LandingHero } from "@/components/landing/landing-hero";
@@ -21,7 +21,7 @@ export const revalidate = 300;
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700"] });
 
 export default async function LandingPage() {
-  const [config, planosSignup] = await Promise.all([getLandingConfig(), getPlanosSignup()]);
+  const config = await getLandingConfig();
   const brand = lc(config, "brand", "LillyMenu");
 
   const faturamentoOpcoes = parseLines(config.lead_revenue_options).filter((o) => o.toLowerCase() !== "selecionar");
@@ -95,7 +95,7 @@ export default async function LandingPage() {
           beneficios={beneficios}
         />
 
-        <LandingSignup planos={planosSignup} faturamentoOpcoes={faturamentoOpcoes} segmentoOpcoes={segmentoOpcoes} leadLabels={leadLabels} />
+        <LandingSignup faturamentoOpcoes={faturamentoOpcoes} segmentoOpcoes={segmentoOpcoes} leadLabels={leadLabels} />
 
         <LandingFinalCta />
 

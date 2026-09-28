@@ -1,16 +1,13 @@
 import { Check } from "lucide-react";
 import { HeroSignupForm } from "@/components/landing/hero-signup-form";
-import type { PlanoSignup } from "@/db/queries/landingConfig";
 
 const REFORCOS = ["Sem cartão de crédito", "Cancele quando quiser", "Suporte para configurar tudo"];
 
 export function LandingSignup({
-  planos,
   faturamentoOpcoes,
   segmentoOpcoes,
   leadLabels,
 }: {
-  planos: PlanoSignup[];
   faturamentoOpcoes: string[];
   segmentoOpcoes: string[];
   leadLabels: {
@@ -31,7 +28,7 @@ export function LandingSignup({
         <div className="flex flex-col gap-5">
           <h2 className="text-[30px] leading-[1.2] font-extrabold tracking-tight">Comece a operar hoje mesmo</h2>
           <p className="max-w-md text-[14.5px] leading-relaxed text-[#4b5563]">
-            Escolha seu plano, cadastre sua loja e já recebe o acesso ao painel por e-mail.
+            Cadastre sua loja e comece agora no plano grátis de 30 dias — o acesso ao painel chega no seu e-mail.
           </p>
           <ul className="flex flex-col gap-2.5">
             {REFORCOS.map((r) => (
@@ -43,7 +40,7 @@ export function LandingSignup({
           </ul>
         </div>
 
-        <HeroSignupForm planos={planos} faturamentoOpcoes={faturamentoOpcoes} segmentoOpcoes={segmentoOpcoes} labels={leadLabels} />
+        <HeroSignupForm faturamentoOpcoes={faturamentoOpcoes} segmentoOpcoes={segmentoOpcoes} labels={leadLabels} />
       </div>
     </section>
   );

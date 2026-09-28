@@ -1,12 +1,12 @@
 import "server-only";
-import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { admins, assinaturas, leadsEspecialista, leadsLojas, lojas } from "@/db/schema";
 import { dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
-import { getPlanoPorLandingSlug } from "@/db/queries/landingConfig";
+import { getPlanoTrialGratuito } from "@/db/queries/landingConfig";
 import { enviarEmail } from "@/lib/email";
+import { validarCpfCnpj } from "@/lib/cpfCnpj";
 
 /*
  * Equivalente de public/api/cadastro_loja.php (cadastro self-service da
@@ -14,10 +14,6 @@ import { enviarEmail } from "@/lib/email";
  * de verdade (loja + admin + assinatura trial), diferente do fluxo de
  * "so lead" usado em outros formularios de contato.
  */
-
-function gerarSenhaTemporaria(): string {
-  return randomBytes(9).toString("base64url");
-}
 
 async function gerarUsuarioUnico(base: string): Promise<string> {
   const raiz = base
@@ -35,13 +31,12 @@ async function gerarUsuarioUnico(base: string): Promise<string> {
   return `${raiz}${Date.now()}`;
 }
 
-function emailBoasVindasHtml(nome: string, email: string, senha: string, loginUrl: string): string {
+function emailBoasVindasHtml(nome: string, loginUrl: string): string {
   return `
     <p>Olá, ${nome}!</p>
-    <p>Sua loja no LillyMenu foi criada com sucesso. Use os dados abaixo para acessar o painel:</p>
-    <p><strong>E-mail:</strong> ${email}<br/><strong>Senha:</strong> ${senha}</p>
+    <p>Sua loja no LillyMenu foi criada com sucesso 🎉</p>
+    <p>Use o e-mail e a senha que você cadastrou para acessar o painel:</p>
     <p><a href="${loginUrl}">Acessar o painel</a></p>
-    <p>Recomendamos trocar a senha assim que entrar.</p>
   `;
 }
 
@@ -50,7 +45,14 @@ export type CadastroLojaInput = {
   empresa: string;
   email: string;
   whatsapp: string;
-  planoSlug: string;
+  senha: string;
+  cpfCnpj: string;
+  cep?: string;
+  rua?: string;
+  numero?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
   faturamento?: string;
   segmento?: string;
 };
@@ -62,20 +64,34 @@ export async function criarContaLoja(input: CadastroLojaInput): Promise<Cadastro
   const empresa = input.empresa.trim();
   const email = input.email.trim().toLowerCase();
   const whatsapp = input.whatsapp.trim();
+  const cpfCnpj = input.cpfCnpj.trim();
+  const cep = (input.cep || "").trim();
+  const rua = (input.rua || "").trim();
+  const numero = (input.numero || "").trim();
+  const bairro = (input.bairro || "").trim();
+  const cidade = (input.cidade || "").trim();
+  const estado = (input.estado || "").trim();
 
-  if (!nome || !empresa || !email || !whatsapp) return { ok: false, msg: "Preencha todos os campos obrigatórios." };
+  if (!nome || !empresa || !email || !whatsapp || !input.senha || !cpfCnpj) {
+    return { ok: false, msg: "Preencha todos os campos obrigatórios." };
+  }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, msg: "E-mail inválido." };
+  if (input.senha.length < 6) return { ok: false, msg: "A senha deve ter pelo menos 6 caracteres." };
+  if (!validarCpfCnpj(cpfCnpj)) return { ok: false, msg: "CPF/CNPJ inválido." };
 
   const [emailExistente] = await db.select({ id: admins.id }).from(admins).where(eq(admins.email, email)).limit(1);
   if (emailExistente) return { ok: false, msg: "Já existe uma conta com esse e-mail." };
 
-  const plano = await getPlanoPorLandingSlug(input.planoSlug);
-  if (!plano) return { ok: false, msg: "Plano inválido." };
+  const plano = await getPlanoTrialGratuito();
+  if (!plano) return { ok: false, msg: "Não há plano de teste disponível no momento." };
 
-  const [novaLoja] = await db.insert(lojas).values({ nome: empresa, ativo: true, plano_id: plano.id }).returning({ id: lojas.id });
+  const enderecoResumo = rua ? `${rua}, ${numero} - ${bairro}, ${cidade}/${estado} - CEP ${cep}` : null;
+  const [novaLoja] = await db
+    .insert(lojas)
+    .values({ nome: empresa, ativo: true, plano_id: plano.id, endereco: enderecoResumo })
+    .returning({ id: lojas.id });
 
-  const senha = gerarSenhaTemporaria();
-  const senhaHash = bcrypt.hashSync(senha, 10);
+  const senhaHash = bcrypt.hashSync(input.senha, 10);
   const usuario = await gerarUsuarioUnico(email.split("@")[0]);
 
   await db.insert(admins).values({ nome, usuario, email, senha: senhaHash, perfil: "admin", ativo: true, loja_id: novaLoja.id });
@@ -89,19 +105,19 @@ export async function criarContaLoja(input: CadastroLojaInput): Promise<Cadastro
     empresa,
     email,
     whatsapp,
-    cnpj: "",
-    cep: "",
-    rua: "",
-    numero: "",
-    bairro: "",
-    cidade: "",
-    estado: "",
+    cnpj: cpfCnpj,
+    cep,
+    rua,
+    numero,
+    bairro,
+    cidade,
+    estado,
     faturamento: input.faturamento || null,
     segmento: input.segmento || null,
   });
 
   const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://lillymenu.com"}/login`;
-  await enviarEmail(email, "Seu acesso ao LillyMenu", emailBoasVindasHtml(nome, email, senha, loginUrl));
+  await enviarEmail(email, "Sua loja no LillyMenu foi criada!", emailBoasVindasHtml(nome, loginUrl));
 
   return { ok: true, lojaId: novaLoja.id, adminEmail: email };
 }
