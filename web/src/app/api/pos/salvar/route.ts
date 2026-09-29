@@ -74,5 +74,5 @@ export async function POST(request: Request) {
   });
 
   if (!resultado.ok) return NextResponse.json(resultado);
-  return NextResponse.json({ ok: true, pedido_id: resultado.pedidoId, tipo: resultado.tipo });
+  return NextResponse.json({ ok: true, pedido_id: resultado.pedidoId, codigo: resultado.codigo, tipo: resultado.tipo });
 }

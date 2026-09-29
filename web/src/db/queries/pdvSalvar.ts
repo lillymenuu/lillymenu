@@ -106,7 +106,7 @@ export type SalvarPedidoPdvInput = {
   observacoesCliente?: string;
 };
 
-export type SalvarPedidoPdvResultado = { ok: true; pedidoId: number; tipo: string; jaExistia?: boolean } | { ok: false; msg: string };
+export type SalvarPedidoPdvResultado = { ok: true; pedidoId: number; codigo: number; tipo: string; jaExistia?: boolean } | { ok: false; msg: string };
 
 async function calcularTaxaEntrega(lojaId: number, tipo: string, endereco: string | undefined, distanciaKm: number): Promise<number> {
   if (tipo !== "entrega") return 0;
@@ -180,8 +180,11 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
 
   const offlineUuid = input.offlineUuid && /^[0-9a-fA-F-]{32,36}$/.test(input.offlineUuid) ? input.offlineUuid : "";
   if (offlineUuid) {
-    const [existente] = await db.select({ id: pedidos.id }).from(pedidos).where(and(eq(pedidos.offline_uuid, offlineUuid), eq(pedidos.loja_id, lojaId))).limit(1);
-    if (existente) return { ok: true, pedidoId: existente.id, tipo: input.tipo, jaExistia: true };
+    const [existente] = await db.select({ id: pedidos.id, codigo: pedidos.codigo }).from(pedidos).where(and(eq(pedidos.offline_uuid, offlineUuid), eq(pedidos.loja_id, lojaId))).limit(1);
+    if (existente) {
+      const codigoExistente = existente.codigo ? Number(existente.codigo) : codigoDisplay(existente.id, await pedidoCodigoBase(lojaId));
+      return { ok: true, pedidoId: existente.id, codigo: codigoExistente, tipo: input.tipo, jaExistia: true };
+    }
   }
 
   const pedidoEdicaoId = input.pedidoEdicaoId && input.pedidoEdicaoId > 0 ? input.pedidoEdicaoId : null;
@@ -647,6 +650,8 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
       return { apenasPagamento: false as const, pedidoId, pedidoEdicaoId };
     });
 
+    const codigo = codigoDisplay(resultadoTx.pedidoId, await pedidoCodigoBase(lojaId));
+
     if (resultadoTx.apenasPagamento) {
       try {
         await syncOrderRevenue(lojaId, resultadoTx.pedidoId);
@@ -654,7 +659,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         console.error("Erro ao sincronizar pedido editado no financeiro:", e);
       }
       await registrarOperacao(adminId, "pedido_editado", `pedido:${resultadoTx.pedidoId}`, { apenas_pagamento: true });
-      return { ok: true, pedidoId: resultadoTx.pedidoId, tipo: input.tipo };
+      return { ok: true, pedidoId: resultadoTx.pedidoId, codigo, tipo: input.tipo };
     }
 
     if (resultadoTx.pedidoEdicaoId) {
@@ -670,7 +675,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
       await registrarOperacao(adminId, "pedido_editado", `pedido:${resultadoTx.pedidoEdicaoId}`, { novo_pedido: resultadoTx.pedidoId });
     }
 
-    return { ok: true, pedidoId: resultadoTx.pedidoId, tipo: input.tipo };
+    return { ok: true, pedidoId: resultadoTx.pedidoId, codigo, tipo: input.tipo };
   } catch (e) {
     return { ok: false, msg: e instanceof Error ? e.message : "Erro interno ao salvar o pedido." };
   }

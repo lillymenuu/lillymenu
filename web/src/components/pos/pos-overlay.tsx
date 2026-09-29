@@ -409,7 +409,7 @@ export function PosOverlay({
         toast.error(data.msg ?? "Erro ao finalizar pedido.");
         return;
       }
-      toast.success(pedidoEditandoId ? "Pedido atualizado com sucesso!" : `Pedido #${data.pedido_id} criado com sucesso!`);
+      toast.success(pedidoEditandoId ? "Pedido atualizado com sucesso!" : `Pedido #${data.codigo} criado com sucesso!`);
       if (window.impressaoQZ) {
         try {
           await Promise.race([
