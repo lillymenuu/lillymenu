@@ -2,7 +2,7 @@ import "server-only";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { admins, assinaturas, leadsEspecialista, leadsLojas, lojas } from "@/db/schema";
+import { admins, assinaturas, configuracoes, leadsEspecialista, leadsLojas, lojas } from "@/db/schema";
 import { dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
 import { getPlanoTrialGratuito } from "@/db/queries/landingConfig";
 import { enviarEmail } from "@/lib/email";
@@ -95,6 +95,31 @@ export async function criarContaLoja(input: CadastroLojaInput): Promise<Cadastro
   const usuario = await gerarUsuarioUnico(email.split("@")[0]);
 
   await db.insert(admins).values({ nome, usuario, email, senha: senhaHash, perfil: "admin", ativo: true, loja_id: novaLoja.id });
+
+  /*
+   * "Informacoes da loja" (admin/configuracoes) le esses dados da tabela
+   * configuracoes (chave/valor por loja), nao de leadsLojas -- que e so o
+   * registro de marketing do cadastro. Sem isso, o formulario de signup
+   * gravava CPF/CNPJ e endereco no lead mas o admin continuava vazio.
+   */
+  const digitos = cpfCnpj.replace(/\D/g, "");
+  const configuracoesIniciais: Record<string, string> = {
+    nome_loja: empresa,
+    loja_contato: whatsapp,
+    ...(digitos.length === 14 ? { loja_cnpj: cpfCnpj } : { cobranca_cpf: cpfCnpj }),
+    ...(cep && { loja_cep: cep }),
+    ...(rua && { loja_rua: rua }),
+    ...(numero && { loja_numero: numero }),
+    ...(bairro && { loja_bairro: bairro }),
+    ...(cidade && { loja_cidade: cidade }),
+    ...(estado && { loja_estado: estado }),
+  };
+  for (const [chave, valor] of Object.entries(configuracoesIniciais)) {
+    await db
+      .insert(configuracoes)
+      .values({ loja_id: novaLoja.id, chave, valor })
+      .onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor } });
+  }
 
   const trialInicio = dataFortaleza();
   const trialFim = adicionarDiasFortaleza(plano.diasTrial);
