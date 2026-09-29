@@ -27,6 +27,16 @@ export async function criarPagamentoPix(lojaId: number, adminId: number): Promis
   const planoNome = plano?.nome ?? "Mensal";
   const planoValor = Number(plano?.valor ?? 50);
 
+  /*
+   * Plano gratuito (ex.: o trial de 30 dias) nao tem mensalidade pra cobrar -- o Mercado Pago
+   * rejeita transaction_amount=0 com um erro cru ("transaction_amount must be positive"). Sem
+   * essa checagem, o lojista via essa mensagem tecnica em vez de entender que precisa TROCAR
+   * de plano (secao que ja existe nessa mesma tela) pra continuar apos o periodo gratuito.
+   */
+  if (planoValor <= 0) {
+    return { ok: false, msg: "O plano gratuito não tem mensalidade — escolha um plano pago em \"Trocar de plano\" para continuar usando o sistema." };
+  }
+
   const [adminLogado] = await db.select({ email: admins.email }).from(admins).where(eq(admins.id, adminId)).limit(1);
   let emailPagador = (adminLogado?.email ?? "").trim();
 
