@@ -103,6 +103,7 @@ export type CaixaDetalheResposta = {
   ok: true;
   caixa: {
     id: number;
+    numero: number;
     status: "aberto" | "fechado";
     aberto_em: string;
     fechado_em: string | null;

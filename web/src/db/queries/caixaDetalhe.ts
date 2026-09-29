@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, ne, desc, sql } from "drizzle-orm";
+import { and, eq, ne, lte, desc, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { caixaTurnos, caixaMovimentacoes, pedidoPagamentos, pedidos, admins } from "@/db/schema";
 
@@ -26,7 +26,7 @@ function normalizarForma(formaInput: string | null | undefined): "pix" | "dinhei
 type LinhaExtrato = { uid: string; direcao: "entrada" | "saida"; forma: string; valor: number; criadoEm: string | null; observacoes: string; origem: string };
 
 export type DetalheCaixaResultado = {
-  caixa: { id: number; status: string; abertoEm: string | null; fechadoEm: string | null; saldoInicial: number; saldoFinal: number | null; operador: string };
+  caixa: { id: number; numero: number; status: string; abertoEm: string | null; fechadoEm: string | null; saldoInicial: number; saldoFinal: number | null; operador: string };
   resumo: { entrada: number; saida: number; saldo: number; pedidosTotal: number; manualEntrada: number; manualSaida: number };
   formas: Record<"pix" | "dinheiro" | "credito" | "debito" | "voucher" | "outro", number>;
   linhas: LinhaExtrato[];
@@ -50,6 +50,13 @@ export async function detalheCaixa(lojaId: number, caixaId: number): Promise<{ o
     .where(and(eq(caixaTurnos.id, caixaId), eq(caixaTurnos.loja_id, lojaId)))
     .limit(1);
   if (!caixa) return { ok: false, msg: "Caixa não encontrado" };
+
+  /* caixa_turnos.id e uma sequencia global (compartilhada entre todas as lojas) -- pra loja o que importa e a
+     posicao dele entre os proprios turnos dela, entao "Caixa #1" e sempre o primeiro turno daquela loja. */
+  const [{ numero }] = await db
+    .select({ numero: sql<string>`count(*)` })
+    .from(caixaTurnos)
+    .where(and(eq(caixaTurnos.loja_id, lojaId), lte(caixaTurnos.id, caixaId)));
 
   const codigoExpr = sql<string>`coalesce(nullif(${pedidos.codigo}, ''), ${pedidos.id}::text)`;
 
@@ -131,6 +138,7 @@ export async function detalheCaixa(lojaId: number, caixaId: number): Promise<{ o
     ok: true,
     caixa: {
       id: caixa.id,
+      numero: Number(numero),
       status: caixa.status,
       abertoEm: caixa.abertoEm,
       fechadoEm: caixa.fechadoEm,

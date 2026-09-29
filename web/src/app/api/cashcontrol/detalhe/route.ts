@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     ok: true,
     caixa: {
       id: caixa.id,
+      numero: caixa.numero,
       status: caixa.status,
       aberto_em: caixa.abertoEm,
       fechado_em: caixa.fechadoEm,

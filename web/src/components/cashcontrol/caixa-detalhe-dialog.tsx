@@ -58,7 +58,7 @@ export function CaixaDetalheDialog({
     <Dialog open={caixaId !== null} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Caixa {dados ? `#${dados.caixa.id}` : ""}</DialogTitle>
+          <DialogTitle>Caixa {dados ? `#${dados.caixa.numero}` : ""}</DialogTitle>
         </DialogHeader>
         {carregando && <p className="py-6 text-center text-sm text-muted-foreground">Carregando...</p>}
         {!carregando && erro && <p className="py-6 text-center text-sm text-destructive">{erro}</p>}

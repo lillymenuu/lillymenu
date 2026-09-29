@@ -1,8 +1,8 @@
 import "server-only";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { admins, assinaturas, configuracoes, leadsEspecialista, leadsLojas, lojas } from "@/db/schema";
+import { admins, assinaturas, configuracoes, leadsEspecialista, leadsLojas, lojas, pedidos } from "@/db/schema";
 import { dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
 import { getPlanoTrialGratuito } from "@/db/queries/landingConfig";
 import { enviarEmail } from "@/lib/email";
@@ -102,10 +102,19 @@ export async function criarContaLoja(input: CadastroLojaInput): Promise<Cadastro
    * registro de marketing do cadastro. Sem isso, o formulario de signup
    * gravava CPF/CNPJ e endereco no lead mas o admin continuava vazio.
    */
+  /*
+   * pedidos.id e uma sequencia global (compartilhada entre todas as lojas), entao sem esse offset
+   * o primeiro pedido de uma loja nova exibiria o id bruto (ex.: #1200) em vez de #1. Mesmo mecanismo
+   * de zerarSequenciaPedidos(), so que calculado no momento da criacao da loja (que ainda nao tem
+   * nenhum pedido) em vez de a partir do maior id ja usado por ela.
+   */
+  const [{ maxPedidoId }] = await db.select({ maxPedidoId: sql<string>`coalesce(max(${pedidos.id}),0)` }).from(pedidos);
+
   const digitos = cpfCnpj.replace(/\D/g, "");
   const configuracoesIniciais: Record<string, string> = {
     nome_loja: empresa,
     loja_contato: whatsapp,
+    pedido_codigo_base: String(Number(maxPedidoId)),
     ...(digitos.length === 14 ? { loja_cnpj: cpfCnpj } : { cobranca_cpf: cpfCnpj }),
     ...(cep && { loja_cep: cep }),
     ...(rua && { loja_rua: rua }),
