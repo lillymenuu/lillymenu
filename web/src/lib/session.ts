@@ -6,6 +6,7 @@ import { GARCOM_TOKEN_COOKIE } from "@/lib/garcomAuthCookie";
 import { validarSessao, type AdminAutenticado } from "@/db/queries/auth";
 import { exigirSuperadmin } from "@/db/queries/superadminAuth";
 import { validarSessaoGarcom, type GarcomAutenticado } from "@/db/queries/garcomAuth";
+import { bloquearSeAssinaturaExpirada } from "@/db/queries/assinatura";
 
 /*
  * Substitui phpApiFetch/superApiFetch como fonte de identidade do
@@ -25,6 +26,11 @@ export async function getSessaoAdmin(): Promise<AdminAutenticado | null> {
 
   const admin = await validarSessao(token);
   if (!admin || !admin.lojaAtiva) return null;
+
+  /* Perfil superadmin nao esta preso a assinatura de uma loja especifica (equivalente ao
+     `if ($_SESSION['admin_perfil'] !== 'superadmin')` de protect.php). */
+  if (admin.perfil !== "superadmin" && (await bloquearSeAssinaturaExpirada(admin.lojaId))) return null;
+
   return admin;
 }
 

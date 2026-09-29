@@ -3,6 +3,7 @@ import { and, eq, desc, gt, inArray, ne, sql } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { assinaturas, planos, cobrancas, configuracoes, admins, lojas, operacaoLogs } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
+import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/assinatura_detalhe.php, assinatura_historico.php,
@@ -18,6 +19,56 @@ async function registrarOperacao(operadorId: number | null, acao: string, refere
   } catch {
     // silencia — log nao pode interromper o fluxo principal
   }
+}
+
+/**
+ * Equivalente de admin/protect.php (bloco de checagem de assinatura, que nunca foi portado):
+ * se o trial ou o ciclo pago da loja venceu, suspende de verdade (assinaturas.status='suspensa',
+ * lojas.ativo=false, admins.ativo=false) e abre uma cobranca pendente, se ainda nao houver uma.
+ * Chamada a cada sessao validada (getSessaoAdmin) -- sem isso a loja continuava com acesso total
+ * indefinidamente apos o plano vencer, so com um badge "Expirado" cosmetico na sidebar.
+ * Reativacao e via superadmin (ativarLoja), que ja existia e ja faz o caminho inverso.
+ * Retorna true se a loja esta (ou acabou de ficar) bloqueada.
+ */
+export async function bloquearSeAssinaturaExpirada(lojaId: number): Promise<boolean> {
+  const [assinatura] = await db
+    .select({ id: assinaturas.id, status: assinaturas.status, trialFim: assinaturas.trial_fim, cicloFim: assinaturas.ciclo_fim, planoId: assinaturas.plano_id })
+    .from(assinaturas)
+    .where(eq(assinaturas.loja_id, lojaId))
+    .orderBy(desc(assinaturas.id))
+    .limit(1);
+  if (!assinatura) return false; // sem assinatura: dado ausente, nao trata como expirada
+
+  let status = (assinatura.status ?? "trial").toLowerCase().trim();
+  if (status === "ativo") status = "ativa";
+  if (status === "suspensa" || status === "cancelada") return true;
+  if (status !== "trial" && status !== "ativa") return false; // status desconhecido: nao bloqueia
+
+  const hoje = dataFortaleza();
+  const dataLimite = status === "trial" ? assinatura.trialFim : assinatura.cicloFim;
+  if (dataLimite && dataLimite >= hoje) return false;
+
+  const [plano] = await db.select({ valor: planos.valor }).from(planos).where(eq(planos.id, assinatura.planoId ?? 0)).limit(1);
+  const valorPlano = Number(plano?.valor ?? 0);
+
+  await withTransaction(async (tx) => {
+    await tx.update(assinaturas).set({ status: "suspensa", bloqueada_em: timestampFortaleza() }).where(eq(assinaturas.id, assinatura.id));
+    await tx.update(lojas).set({ ativo: false }).where(eq(lojas.id, lojaId));
+    await tx.update(admins).set({ ativo: false }).where(eq(admins.loja_id, lojaId));
+
+    const [cobrancaPendente] = await tx
+      .select({ id: cobrancas.id })
+      .from(cobrancas)
+      .where(and(eq(cobrancas.assinatura_id, assinatura.id), inArray(cobrancas.status, ["pendente", "atrasado"])))
+      .limit(1);
+    if (!cobrancaPendente && valorPlano > 0) {
+      await tx.insert(cobrancas).values({ assinatura_id: assinatura.id, valor: valorPlano, vencimento: hoje, status: "pendente" });
+    }
+  });
+
+  await registrarOperacao(null, "assinatura_expirou", `loja:${lojaId}`, { status_anterior: status, data_limite: dataLimite });
+
+  return true;
 }
 
 export type CobrancaPendente = {
