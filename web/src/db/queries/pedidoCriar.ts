@@ -162,6 +162,9 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
     agendamentoDt = `${input.agendamento.data} ${slotStart}:00`;
   }
 
+  /* trocoValor e o valor com que o cliente vai pagar (ex.: "troco para 20"), nao o troco em si -- o troco de verdade e a diferenca pro total do pedido. */
+  const trocoValorRecebido = input.trocoValor ?? 0;
+
   const cupomCodigo = (input.cupomCodigo ?? "").trim().toUpperCase();
   const cupomDesconto = input.cupomDesconto ?? 0;
   const cashbackUsar = Boolean(input.cashbackUsar) && (input.cashbackValor ?? 0) > 0;
@@ -188,7 +191,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           endereco_entrega: input.endereco ?? "",
           origem: "loja",
           criado_em: timestampFortaleza(),
-          troco: input.trocoSolicitado && (input.trocoValor ?? 0) > 0 ? input.trocoValor : null,
+          troco: input.trocoSolicitado && trocoValorRecebido > input.total ? trocoValorRecebido - input.total : null,
           cashback_usado: cashbackUsar ? cashbackValorUsar : 0,
           cashback_aplicado: cashbackUsar,
           agendamento: agendamentoDt,
