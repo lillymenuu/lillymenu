@@ -24,10 +24,18 @@ async function registrarOperacao(operadorId: number | null, acao: string, refere
 /**
  * Equivalente de admin/protect.php (bloco de checagem de assinatura, que nunca foi portado):
  * se o trial ou o ciclo pago da loja venceu, suspende de verdade (assinaturas.status='suspensa',
- * lojas.ativo=false, admins.ativo=false) e abre uma cobranca pendente, se ainda nao houver uma.
- * Chamada a cada sessao validada (getSessaoAdmin) -- sem isso a loja continuava com acesso total
- * indefinidamente apos o plano vencer, so com um badge "Expirado" cosmetico na sidebar.
- * Reativacao e via superadmin (ativarLoja), que ja existia e ja faz o caminho inverso.
+ * lojas.ativo=false) e abre uma cobranca pendente, se ainda nao houver uma. Chamada a cada
+ * sessao validada (getSessaoAdmin) -- sem isso a loja continuava com acesso total indefinidamente
+ * apos o plano vencer, so com um badge "Expirado" cosmetico na sidebar.
+ *
+ * Deliberadamente NAO desativa admins.ativo (diferente de suspenderLoja(), o bloqueio manual do
+ * superadmin, que desativa os dois pra um hard-lock de verdade): se desativasse, validarSessao()
+ * nunca mais autenticaria esse admin, nem pra ver a tela de pagamento (getSessaoAdminParaCobranca)
+ * -- o lojista ficaria sem nenhum jeito de se autodesbloquear pagando o Pix. lojas.ativo=false
+ * ja basta pra tirar o acesso do resto do admin (getSessaoAdmin normal) e da loja publica.
+ *
+ * Reativacao e via pagamento confirmado (confirmarPagamentoAssinatura, em pagamentoPix.ts) ou,
+ * manualmente, pelo superadmin (ativarLoja) -- os dois ja existiam e ja fazem o caminho inverso.
  * Retorna true se a loja esta (ou acabou de ficar) bloqueada.
  */
 export async function bloquearSeAssinaturaExpirada(lojaId: number): Promise<boolean> {
@@ -54,7 +62,6 @@ export async function bloquearSeAssinaturaExpirada(lojaId: number): Promise<bool
   await withTransaction(async (tx) => {
     await tx.update(assinaturas).set({ status: "suspensa", bloqueada_em: timestampFortaleza() }).where(eq(assinaturas.id, assinatura.id));
     await tx.update(lojas).set({ ativo: false }).where(eq(lojas.id, lojaId));
-    await tx.update(admins).set({ ativo: false }).where(eq(admins.loja_id, lojaId));
 
     const [cobrancaPendente] = await tx
       .select({ id: cobrancas.id })

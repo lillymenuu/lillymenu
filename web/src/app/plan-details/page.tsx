@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { getSessaoAdmin } from "@/lib/session";
+import { getSessaoAdminParaCobranca } from "@/lib/session";
 import { getAssinaturaDetalhe } from "@/lib/assinatura";
 import { PlanDetailsManager } from "@/components/plandetails/plan-details-manager";
 
 export default async function PlanDetailsPage() {
-  const sessao = await getSessaoAdmin();
+  const sessao = await getSessaoAdminParaCobranca();
   if (!sessao) redirect("/login");
 
   let dados: Awaited<ReturnType<typeof getAssinaturaDetalhe>> | null = null;

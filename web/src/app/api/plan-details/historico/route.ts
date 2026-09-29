@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getSessaoAdmin } from "@/lib/session";
+import { getSessaoAdminParaCobranca } from "@/lib/session";
 import { historicoAssinatura } from "@/db/queries/assinatura";
 
 export async function GET() {
-  const sessao = await getSessaoAdmin();
+  const sessao = await getSessaoAdminParaCobranca();
   if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
 
   const linhas = await historicoAssinatura(sessao.lojaId);

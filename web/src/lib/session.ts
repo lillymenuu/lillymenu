@@ -34,6 +34,25 @@ export async function getSessaoAdmin(): Promise<AdminAutenticado | null> {
   return admin;
 }
 
+/**
+ * Mesma validacao de token que getSessaoAdmin(), mas sem exigir lojaAtiva — usada
+ * exclusivamente pela tela de assinatura/pagamento (/plan-details) e suas rotas, que
+ * precisam continuar acessiveis mesmo com a loja bloqueada por assinatura vencida
+ * (senao o lojista nunca conseguiria ver o Pix pra pagar e se desbloquear sozinho).
+ * bloquearSeAssinaturaExpirada() nunca desativa admins.ativo por conta propria (so
+ * lojas.ativo — suspenderLoja(), essa sim, desativa os dois pra um bloqueio manual de
+ * verdade do superadmin), entao validarSessao() continua autenticando normalmente aqui.
+ */
+export async function getSessaoAdminParaCobranca(): Promise<AdminAutenticado | null> {
+  const store = await cookies();
+  const token = store.get(TOKEN_COOKIE)?.value;
+  if (!token) return null;
+
+  const admin = await validarSessao(token);
+  if (!admin || admin.perfil === "superadmin") return null;
+  return admin;
+}
+
 /** Sessao do superadmin. Igual a admin/helpers/superadmin_auth.php::apiSuperadminExigir. */
 export async function getSessaoSuperadmin(): Promise<AdminAutenticado | null> {
   const store = await cookies();
