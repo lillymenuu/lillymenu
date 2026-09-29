@@ -164,7 +164,18 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
           <CardContent className="flex flex-col gap-3">
             <div className="text-base font-medium">Trocar de plano</div>
             {cobrancaPendente ? (
-              <p className="text-sm text-destructive">Finalize o pagamento pendente antes de trocar de plano.</p>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-muted-foreground">Você tem um pagamento em aberto. Finalize-o para trocar de plano.</p>
+                <Button
+                  className="rounded-lg font-normal"
+                  onClick={() => {
+                    setTrocarAberto(false);
+                    setRenovarAberto(true);
+                  }}
+                >
+                  Finalizar pagamento
+                </Button>
+              </div>
             ) : planosDisponiveis.length === 0 ? (
               <p className="text-sm text-muted-foreground">Você já está no plano mais completo disponível.</p>
             ) : (

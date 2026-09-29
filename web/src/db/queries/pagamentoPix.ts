@@ -58,15 +58,14 @@ export async function criarPagamentoPix(lojaId: number, adminId: number, planoId
     emailPagador = `loja${lojaId}@sememail.com`;
   }
 
-  const [cobrancaExistente] = await db
+  const cobrancasExistentes = await db
     .select({ id: cobrancas.id, planoId: cobrancas.plano_id, mpQrCode: cobrancas.mp_qr_code, mpQrCodeBase64: cobrancas.mp_qr_code_base64, mpExpiracao: cobrancas.mp_expiracao, valor: cobrancas.valor })
     .from(cobrancas)
     .where(and(eq(cobrancas.assinatura_id, assinaturaId), inArray(cobrancas.status, ["pendente", "atrasado"])))
-    .orderBy(desc(cobrancas.id))
-    .limit(1);
+    .orderBy(desc(cobrancas.id));
 
   const agora = timestampFortaleza();
-  const cobrancaReaproveitavel = cobrancaExistente && cobrancaExistente.planoId === plano.id ? cobrancaExistente : null;
+  const cobrancaReaproveitavel = cobrancasExistentes.find((c) => c.planoId === plano.id) ?? null;
   if (cobrancaReaproveitavel?.mpQrCode && cobrancaReaproveitavel.mpExpiracao && cobrancaReaproveitavel.mpExpiracao > agora) {
     return {
       ok: true,
@@ -82,6 +81,12 @@ export async function criarPagamentoPix(lojaId: number, adminId: number, planoId
   if (cobrancaReaproveitavel) {
     cobrancaId = cobrancaReaproveitavel.id;
   } else {
+    // Trocou de plano antes de pagar: descarta pendencias de outros planos pra nao
+    // deixar cobranca fantasma travando "Trocar de plano" depois que essa aqui for paga.
+    const idsParaDescartar = cobrancasExistentes.map((c) => c.id);
+    if (idsParaDescartar.length > 0) {
+      await db.delete(cobrancas).where(inArray(cobrancas.id, idsParaDescartar));
+    }
     const [nova] = await db.insert(cobrancas).values({ assinatura_id: assinaturaId, plano_id: plano.id, valor: planoValor, vencimento: dataFortaleza(), status: "pendente", origem: "mercadopago" }).returning({ id: cobrancas.id });
     cobrancaId = nova.id;
   }
