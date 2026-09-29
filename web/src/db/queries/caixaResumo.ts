@@ -200,10 +200,16 @@ export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResul
 
   const movimentos = [...movimentosPedidos, ...movimentosFiado].sort((a, b) => (a.criadoEm < b.criadoEm ? 1 : a.criadoEm > b.criadoEm ? -1 : 0));
 
+  /*
+   * pedidoPagamentos.valor pra forma "dinheiro" ja e o valor liquido da venda
+   * (o troco ja foi descontado na hora de gravar o pedido, ver
+   * pedidoCriar.ts/pdvSalvar.ts) — subtrair troco aqui de novo contava o
+   * troco duas vezes e derrubava "Dinheiro em caixa" abaixo do valor real.
+   */
   const saldoInicialNum = num(saldoInicialDia);
-  const saldoEsperado = saldoInicialNum + totaisPagamento.dinheiro - troco + suprimentosTotal - sangriasTotal;
+  const saldoEsperado = saldoInicialNum + totaisPagamento.dinheiro + suprimentosTotal - sangriasTotal;
   const entradaTotal = Object.values(totaisPagamento).reduce((a, b) => a + b, 0) + suprimentosTotal;
-  const saidaTotal = troco + taxaMaquininha + sangriasTotal;
+  const saidaTotal = taxaMaquininha + sangriasTotal;
   const saldoTotal = entradaTotal - saidaTotal;
 
   return {
