@@ -46,7 +46,8 @@ export async function GET(request: Request) {
   if (!resultado.ok) return voltar(resultado.erro);
 
   const sessao = await criarSessao(resultado.admin.id, resultado.admin.lojaId);
-  const resposta = NextResponse.redirect(new URL("/dashboard", url));
+  const destino = resultado.assinaturaBloqueada ? "/plan-details" : "/dashboard";
+  const resposta = NextResponse.redirect(new URL(destino, url));
   resposta.cookies.delete("lm_google_state");
   resposta.cookies.set(TOKEN_COOKIE, sessao, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
   return resposta;

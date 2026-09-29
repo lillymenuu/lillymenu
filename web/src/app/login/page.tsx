@@ -55,7 +55,7 @@ function LoginForm() {
         return;
       }
 
-      router.push(searchParams.get("next") || "/dashboard");
+      router.push(data.assinaturaBloqueada ? "/plan-details" : searchParams.get("next") || "/dashboard");
       router.refresh();
     } catch {
       setErro("Erro de conexao. Tente novamente.");

@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!admin.ativo || !admin.lojaAtiva) {
+  if (!admin.ativo) {
     return NextResponse.json(
       { ok: false, erro: "Conta ou loja inativa. Acesse pelo painel atual para regularizar." },
       { status: 403 }
@@ -41,8 +41,16 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 24 * 30,
   });
 
+  /*
+   * lojaAtiva=false aqui so acontece por assinatura vencida (bloquearSeAssinaturaExpirada
+   * nunca desativa admin.ativo -- ver session.ts/getSessaoAdminParaCobranca). Deixa logar
+   * mesmo assim, senao a loja nunca consegue chegar em /plan-details pra pagar o Pix e se
+   * desbloquear sozinha. O front usa esse flag pra mandar pra /plan-details em vez do
+   * /dashboard normal (que bateria de volta no login pela checagem estrita de sessao).
+   */
   return NextResponse.json({
     ok: true,
     admin: { id: admin.id, nome: admin.nome, email: admin.email, perfil: admin.perfil },
+    assinaturaBloqueada: !admin.lojaAtiva,
   });
 }

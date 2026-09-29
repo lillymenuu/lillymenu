@@ -10,7 +10,9 @@ import type { AdminAutenticado } from "@/db/queries/auth";
  * admin se a loja estiver ativa. Nao cria conta nova (igual ao PHP).
  */
 
-export type ResultadoGoogle = { ok: true; admin: AdminAutenticado } | { ok: false; erro: "google_sem_conta" | "google_inativa" };
+export type ResultadoGoogle =
+  | { ok: true; admin: AdminAutenticado; assinaturaBloqueada: boolean }
+  | { ok: false; erro: "google_sem_conta" | "google_inativa" };
 
 export async function loginComGoogle(email: string, googleId: string): Promise<ResultadoGoogle> {
   const [linha] = await db
@@ -25,11 +27,24 @@ export async function loginComGoogle(email: string, googleId: string): Promise<R
   if (!linha.googleId) await db.update(admins).set({ google_id: googleId }).where(eq(admins.id, linha.id));
 
   const lojaAtiva = linha.lojaAtiva !== false;
-  if (!lojaAtiva) return { ok: false, erro: "google_inativa" };
-  if (!linha.ativo) await db.update(admins).set({ ativo: true }).where(eq(admins.id, linha.id));
+  let adminAtivo = linha.ativo;
+
+  /*
+   * lojaAtiva=false por assinatura vencida (bloquearSeAssinaturaExpirada) NUNCA desativa
+   * admin.ativo -- so um bloqueio "de verdade" (suspenderLoja, manual do superadmin) desativa
+   * os dois juntos. Entao so reativa automaticamente o admin individual quando a loja em si
+   * esta ok (comportamento pre-existente); loja bloqueada por assinatura passa direto, sem
+   * reativar nada, pra chegar em /plan-details e pagar o Pix.
+   */
+  if (lojaAtiva && !adminAtivo) {
+    await db.update(admins).set({ ativo: true }).where(eq(admins.id, linha.id));
+    adminAtivo = true;
+  }
+  if (!adminAtivo) return { ok: false, erro: "google_inativa" };
 
   return {
     ok: true,
-    admin: { id: linha.id, nome: linha.nome ?? "", email: linha.email ?? "", perfil: linha.perfil, lojaId: linha.lojaId, lojaAtiva: true, ativo: true },
+    admin: { id: linha.id, nome: linha.nome ?? "", email: linha.email ?? "", perfil: linha.perfil, lojaId: linha.lojaId, lojaAtiva, ativo: true },
+    assinaturaBloqueada: !lojaAtiva,
   };
 }
