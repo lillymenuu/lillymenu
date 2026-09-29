@@ -14,6 +14,7 @@ import {
   pontosMovimentacoes,
 } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
+import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { estaAberto } from "@/db/queries/lojaStatus";
 import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
 import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
@@ -112,10 +113,6 @@ function calcularEstoqueNecessario(itens: ItemCarrinho[]): Map<number, number> {
   return mapa;
 }
 
-function calcularCodigoDisplay(id: number, base: number): number {
-  return base > 0 && id > base ? Math.max(1, id - base) : id;
-}
-
 export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPedidoResultado> {
   const { lojaId } = input;
   const nome = input.clienteNome.trim();
@@ -202,10 +199,8 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
       pedidoId = novoPedido.id;
 
       /* codigo de exibicao (respeita sequencia zerada, se configurada) */
-      const codigoBaseStr = await getConfig(lojaId, "pedido_codigo_base", "0");
-      const codigoBase = parseInt(codigoBaseStr, 10) || 0;
-      const codigoDisplay = calcularCodigoDisplay(pedidoId, codigoBase);
-      await tx.update(pedidos).set({ codigo: String(codigoDisplay) }).where(eq(pedidos.id, pedidoId));
+      const codigoBase = await pedidoCodigoBase(lojaId);
+      await tx.update(pedidos).set({ codigo: String(codigoDisplay(pedidoId, codigoBase)) }).where(eq(pedidos.id, pedidoId));
 
       /* itens + baixa de estoque */
       for (const item of input.itens) {
@@ -383,6 +378,6 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
     /* idem */
   }
 
-  const codigoBaseFinal = parseInt(await getConfig(lojaId, "pedido_codigo_base", "0"), 10) || 0;
-  return { ok: true, id: pedidoId, codigo: calcularCodigoDisplay(pedidoId, codigoBaseFinal) };
+  const codigoBaseFinal = await pedidoCodigoBase(lojaId);
+  return { ok: true, id: pedidoId, codigo: codigoDisplay(pedidoId, codigoBaseFinal) };
 }

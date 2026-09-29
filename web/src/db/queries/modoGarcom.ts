@@ -403,6 +403,10 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
   const cfgTaxa = await getConfigs(lojaId, ["taxa_servico_ativa", "taxa_servico_pct"]);
   const taxaServico = cfgTaxa.taxa_servico_ativa === "1" ? Math.round(subtotal * (Number(cfgTaxa.taxa_servico_pct || "0") / 100) * 100) / 100 : 0;
 
+  const total = subtotal + taxaServico;
+  /* trocoValor e o valor com que o cliente vai pagar (ex.: "troco para 20"), nao o troco em si -- o troco de verdade e a diferenca pro total do pedido. */
+  const trocoValorRecebido = input.trocoValor ?? 0;
+
   let pedidoId = 0;
   try {
     await withTransaction(async (tx: NeonTx) => {
@@ -415,7 +419,7 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           mesa_id: mesaId,
           garcom_id: garcomId,
           forma_pagamento: input.formaPagamento,
-          total: subtotal + taxaServico,
+          total,
           subtotal,
           taxa_servico: taxaServico > 0 ? taxaServico : null,
           status: "pendente",
@@ -423,10 +427,15 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           tipo: "mesa",
           origem: "garcom",
           criado_em: timestampFortaleza(),
-          troco: input.formaPagamento === "dinheiro" && input.trocoSolicitado && (input.trocoValor ?? 0) > 0 ? input.trocoValor : null,
+          troco: input.formaPagamento === "dinheiro" && input.trocoSolicitado && trocoValorRecebido > total ? trocoValorRecebido - total : null,
         })
         .returning({ id: pedidos.id });
       pedidoId = novoPedido.id;
+
+      /* codigo de exibicao (respeita sequencia zerada, se configurada) — sem isso o pedido de mesa
+         sempre caia no fallback do id bruto (COALESCE(codigo, id)) em qualquer tela que le pedidos.codigo. */
+      const codigoBaseTx = await pedidoCodigoBase(lojaId);
+      await tx.update(pedidos).set({ codigo: String(codigoDisplay(pedidoId, codigoBaseTx)) }).where(eq(pedidos.id, pedidoId));
 
       for (const item of input.itens) {
         const qtd = Math.max(1, item.qtd || 1);

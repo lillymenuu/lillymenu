@@ -20,6 +20,7 @@ import {
   operacaoLogs,
 } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
+import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { timestampFortaleza, dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
 import { sincronizarEstoqueVinculo, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
 import { pedidoRestaurarEstoqueCancelado } from "@/db/queries/pedidoEstoque";
@@ -511,6 +512,11 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
 
       const [novoPedido] = await tx.insert(pedidos).values(camposPedido as typeof pedidos.$inferInsert).returning({ id: pedidos.id });
       const pedidoId = novoPedido.id;
+
+      /* codigo de exibicao (respeita sequencia zerada, se configurada) — sem isso o pedido de balcao
+         sempre caia no fallback do id bruto (COALESCE(codigo, id)) em qualquer tela que le pedidos.codigo. */
+      const codigoBase = await pedidoCodigoBase(lojaId);
+      await tx.update(pedidos).set({ codigo: String(codigoDisplay(pedidoId, codigoBase)) }).where(eq(pedidos.id, pedidoId));
 
       for (const i of itens) {
         const nomeItem = (i.nome ?? "").trim();
