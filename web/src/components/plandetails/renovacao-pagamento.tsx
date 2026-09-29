@@ -65,7 +65,10 @@ export function RenovacaoPagamento({
       if (data.ok && data.pago) {
         if (pollRef.current) clearInterval(pollRef.current);
         setPixEstado("pago");
-        setTimeout(() => router.push("/dashboard"), 1500);
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 1500);
       }
     } catch {
       // ignora falha isolada de polling, tenta de novo no proximo tick

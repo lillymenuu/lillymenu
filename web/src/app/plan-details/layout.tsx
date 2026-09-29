@@ -18,7 +18,7 @@ export default async function PlanDetailsLayout({ children }: { children: React.
   const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
 
   return (
-    <AppShell sidebarData={sidebarData} phpAdminUrl={phpAdminUrl}>
+    <AppShell sidebarData={sidebarData} phpAdminUrl={phpAdminUrl} bloqueado={!sessao.lojaAtiva}>
       {children}
     </AppShell>
   );

@@ -19,7 +19,7 @@ const COLLAPSE_KEY = "sidebarCollapsed";
 const SIDEBAR_BRAND_BG =
   "radial-gradient(130% 55% at 12% 0%, rgba(255,255,255,.16), transparent 60%), linear-gradient(190deg, #9c5523 0%, #7a3f10 100%)";
 
-export function AppShell(props: { sidebarData: SidebarData; phpAdminUrl: string; children: React.ReactNode }) {
+export function AppShell(props: { sidebarData: SidebarData; phpAdminUrl: string; bloqueado?: boolean; children: React.ReactNode }) {
   return (
     <PosOverlayProvider adminPerfil={props.sidebarData.admin.perfil} phpAdminUrl={props.phpAdminUrl}>
       <AppShellInner {...props} />
@@ -30,10 +30,12 @@ export function AppShell(props: { sidebarData: SidebarData; phpAdminUrl: string;
 function AppShellInner({
   sidebarData,
   phpAdminUrl,
+  bloqueado = false,
   children,
 }: {
   sidebarData: SidebarData;
   phpAdminUrl: string;
+  bloqueado?: boolean;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -268,7 +270,7 @@ function AppShellInner({
                 <Switch
                   checked={lojaAberta}
                   onCheckedChange={handleToggleLoja}
-                  disabled={alternandoLoja}
+                  disabled={alternandoLoja || bloqueado}
                   aria-label={lojaAberta ? "Fechar loja" : "Abrir loja"}
                 />
               </div>
@@ -312,17 +314,36 @@ function AppShellInner({
                     {items.map((item) => {
                       const Icon = item.icon;
                       const active = pathname === item.href;
+                      const itemBloqueado = bloqueado && item.href !== "/plan-details";
                       const className = cn(
                         "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                         collapsed && "md:justify-center md:px-0",
-                        collapsed
-                          ? active
-                            ? "bg-white/20 font-medium text-white"
-                            : "text-white/80 hover:bg-white/10 hover:text-white"
-                          : active
-                            ? "bg-primary/10 font-medium text-primary"
-                            : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                        itemBloqueado
+                          ? cn("cursor-not-allowed opacity-40", collapsed ? "text-white/60" : "text-foreground/40")
+                          : collapsed
+                            ? active
+                              ? "bg-white/20 font-medium text-white"
+                              : "text-white/80 hover:bg-white/10 hover:text-white"
+                            : active
+                              ? "bg-primary/10 font-medium text-primary"
+                              : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       );
+                      if (itemBloqueado) {
+                        const itemBloqueadoNode = (
+                          <span className={className} aria-disabled="true">
+                            <Icon size={16} />
+                            <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
+                          </span>
+                        );
+                        return (
+                          <li key={item.href}>
+                            <Tooltip>
+                              <TooltipTrigger render={itemBloqueadoNode} />
+                              <TooltipContent side="right">Disponível após renovar o plano</TooltipContent>
+                            </Tooltip>
+                          </li>
+                        );
+                      }
                       const badge =
                         item.href === "/suporte" && suporteNaoLidas > 0 && pathname !== "/suporte" ? (
                           <span className="ml-auto flex size-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">
