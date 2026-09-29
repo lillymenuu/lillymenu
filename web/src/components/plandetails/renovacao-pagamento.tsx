@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatBRL } from "@/components/ordermanager/constants";
 import { formatDataHoraCurta } from "@/components/cliente/types";
-import type { CobrancaPendente } from "@/lib/assinatura";
+import type { CobrancaPendente, PlanoResumo } from "@/lib/assinatura";
 
 type PixEstado = "idle" | "gerando" | "erro" | "pronto" | "pago";
 
@@ -20,29 +22,35 @@ function lerComoBase64(file: File): Promise<string> {
 
 /**
  * Bloco de renovacao (Pix automatico via Mercado Pago + fallback manual com
- * comprovante), portado de admin/partials/renovacao_pagamento.php. Ao
- * confirmar o pagamento via Pix, redireciona para /dashboard em vez de so
+ * comprovante), portado de admin/partials/renovacao_pagamento.php. Primeiro
+ * passo escolhe o plano (o lojista pode ter saido do trial gratis, que nao
+ * tem valor pra cobrar) e so entao gera o Pix com o valor do plano escolhido.
+ * Ao confirmar o pagamento via Pix, redireciona para /dashboard em vez de so
  * recarregar a pagina — o bug relatado pelo usuario no legado.
  */
 export function RenovacaoPagamento({
   cobrancaPendenteInicial,
+  planosRenovacao,
   saasPixChave,
   saasPixNome,
   whatsLink,
   lojaNome,
 }: {
   cobrancaPendenteInicial: CobrancaPendente | null;
+  planosRenovacao: PlanoResumo[];
   saasPixChave: string;
   saasPixNome: string;
   whatsLink: string;
   lojaNome: string;
 }) {
   const router = useRouter();
+  const [planoEscolhidoId, setPlanoEscolhidoId] = useState<number | null>(cobrancaPendenteInicial?.plano_id ?? null);
   const [pixEstado, setPixEstado] = useState<PixEstado>("idle");
   const [pixErro, setPixErro] = useState("");
   const [qrCode, setQrCode] = useState("");
   const [qrCodeBase64, setQrCodeBase64] = useState("");
-  const [cobrancaId, setCobrancaId] = useState<number | null>(null);
+  const [valorPix, setValorPix] = useState(0);
+  const [, setCobrancaId] = useState<number | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [manualAberto, setManualAberto] = useState(false);
@@ -56,6 +64,11 @@ export function RenovacaoPagamento({
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    if (planoEscolhidoId) gerarPix(planoEscolhidoId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function verificarStatus(id: number) {
@@ -75,11 +88,16 @@ export function RenovacaoPagamento({
     }
   }
 
-  async function gerarPix() {
+  async function gerarPix(planoId: number) {
+    setPlanoEscolhidoId(planoId);
     setPixEstado("gerando");
     setPixErro("");
     try {
-      const res = await fetch("/api/plan-details/pix-criar", { method: "POST" });
+      const res = await fetch("/api/plan-details/pix-criar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plano_id: planoId }),
+      });
       const data = await res.json();
       if (!data.ok) {
         setPixErro(data.msg ?? "Erro ao gerar o Pix.");
@@ -88,6 +106,7 @@ export function RenovacaoPagamento({
       }
       setQrCode(data.qr_code);
       setQrCodeBase64(data.qr_code_base64);
+      setValorPix(data.valor ?? 0);
       setCobrancaId(data.cobranca_id);
       setPixEstado("pronto");
       if (pollRef.current) clearInterval(pollRef.current);
@@ -96,6 +115,17 @@ export function RenovacaoPagamento({
       setPixErro("Erro ao gerar o Pix.");
       setPixEstado("erro");
     }
+  }
+
+  function trocarPlano() {
+    if (pollRef.current) clearInterval(pollRef.current);
+    setPlanoEscolhidoId(null);
+    setPixEstado("idle");
+    setPixErro("");
+    setQrCode("");
+    setQrCodeBase64("");
+    setCobrancaId(null);
+    setManualAberto(false);
   }
 
   function copiarPixAuto() {
@@ -143,107 +173,159 @@ export function RenovacaoPagamento({
     }
   }
 
+  if (planoEscolhidoId === null) {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground">Escolha um plano para gerar o Pix e renovar o acesso de {lojaNome}.</p>
+        <div className="flex flex-col gap-2.5">
+          {planosRenovacao.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => gerarPix(p.id)}
+              className="group flex items-center justify-between rounded-xl border p-4 text-left transition-colors hover:border-primary hover:bg-primary/5"
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">{p.nome}</span>
+                <span className="text-xs text-muted-foreground">Renovação mensal</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-end">
+                  <span className="text-base font-semibold">{formatBRL(p.valor)}</span>
+                  <span className="text-xs text-muted-foreground">/mês</span>
+                </div>
+                <ChevronLeft className="size-4 rotate-180 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const planoEscolhido = planosRenovacao.find((p) => p.id === planoEscolhidoId);
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2">
-        {pixEstado === "idle" && (
-          <Button className="rounded-lg font-normal" onClick={gerarPix}>
-            Pagar com Pix
-          </Button>
-        )}
+    <div className="flex min-w-0 flex-col gap-3">
+      {pixEstado !== "pago" && (
+        <button
+          type="button"
+          onClick={trocarPlano}
+          className="flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="size-3.5" /> Trocar plano
+        </button>
+      )}
+
+      {planoEscolhido && pixEstado !== "idle" && (
+        <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm">
+          <span className="font-medium">{planoEscolhido.nome}</span>
+          <span className="font-semibold">{formatBRL(valorPix || planoEscolhido.valor)}/mês</span>
+        </div>
+      )}
+
+      <div className="flex min-w-0 flex-col gap-2">
         {pixEstado === "gerando" && (
-          <p className="text-sm text-muted-foreground">Gerando Pix...</p>
+          <div className="flex items-center justify-center gap-2 rounded-xl bg-muted/40 p-6 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" /> Gerando Pix...
+          </div>
         )}
         {pixEstado === "erro" && (
           <>
             <p className="text-sm text-destructive">{pixErro}</p>
-            <Button className="rounded-lg font-normal" onClick={gerarPix}>
-              Pagar com Pix
+            <Button className="rounded-lg font-normal" onClick={() => gerarPix(planoEscolhidoId)}>
+              Tentar novamente
             </Button>
           </>
         )}
         {pixEstado === "pronto" && (
-          <div className="flex flex-col items-center gap-3 rounded-xl bg-muted/40 p-4">
+          <div className="flex min-w-0 flex-col items-center gap-3 rounded-xl bg-muted/40 p-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`data:image/png;base64,${qrCodeBase64}`}
               alt="QR Code Pix"
               className="size-44 rounded-lg bg-white p-2"
             />
-            <div className="flex w-full items-center gap-2">
-              <span className="flex-1 truncate rounded-lg bg-background px-2 py-1.5 text-xs">{qrCode}</span>
+            <div className="flex w-full min-w-0 items-center gap-2">
+              <span className="min-w-0 flex-1 truncate rounded-lg bg-background px-2 py-1.5 text-xs">{qrCode}</span>
               <Button variant="outline" size="sm" className="rounded-lg font-normal" onClick={copiarPixAuto}>
                 Copiar
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">Aguardando confirmação do pagamento...</p>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Loader2 className="size-3 animate-spin" /> Aguardando confirmação do pagamento...
+            </p>
           </div>
         )}
         {pixEstado === "pago" && (
-          <p className="rounded-xl bg-emerald-50 p-3 text-center text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-            Pagamento confirmado! Redirecionando...
+          <p className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-50 p-3 text-center text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+            <Check className="size-4" /> Pagamento confirmado! Redirecionando...
           </p>
         )}
       </div>
 
-      <button
-        type="button"
-        className="text-left text-sm text-muted-foreground underline underline-offset-2"
-        onClick={() => setManualAberto((v) => !v)}
-      >
-        Prefere pagar de outro jeito?
-      </button>
+      {pixEstado !== "pago" && (
+        <>
+          <button
+            type="button"
+            className="text-left text-sm text-muted-foreground underline underline-offset-2"
+            onClick={() => setManualAberto((v) => !v)}
+          >
+            Prefere pagar de outro jeito?
+          </button>
 
-      {manualAberto && (
-        <div className="flex flex-col gap-3 rounded-xl border p-3">
-          {saasPixChave !== "" && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase">Chave PIX para pagamento</span>
-              <div className="flex items-center gap-2">
-                <span className="flex-1 truncate rounded-lg bg-muted/40 px-2 py-1.5 text-xs">{saasPixChave}</span>
-                <Button variant="outline" size="sm" className="rounded-lg font-normal" onClick={copiarPixManual}>
-                  Copiar
+          {manualAberto && (
+            <div className="flex min-w-0 flex-col gap-3 rounded-xl border p-3">
+              {saasPixChave !== "" && (
+                <div className="flex min-w-0 flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground uppercase">Chave PIX para pagamento</span>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate rounded-lg bg-muted/40 px-2 py-1.5 text-xs">{saasPixChave}</span>
+                    <Button variant="outline" size="sm" className="rounded-lg font-normal" onClick={copiarPixManual}>
+                      Copiar
+                    </Button>
+                  </div>
+                  {saasPixNome !== "" && (
+                    <span className="text-xs text-muted-foreground">Favorecido: {saasPixNome}</span>
+                  )}
+                </div>
+              )}
+
+              {comprovanteJaEnviado ? (
+                <div className="text-sm text-muted-foreground">
+                  {cobrancaPendente?.comprovante_enviado_em && (
+                    <p>Comprovante enviado em {formatDataHoraCurta(cobrancaPendente.comprovante_enviado_em)} — aguardando aprovação.</p>
+                  )}
+                  {cobrancaPendente?.motivo_rejeicao && (
+                    <p className="mt-1 text-destructive">Motivo da última rejeição: {cobrancaPendente.motivo_rejeicao}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {cobrancaPendente?.motivo_rejeicao && (
+                    <p className="text-sm text-destructive">Comprovante anterior rejeitado: {cobrancaPendente.motivo_rejeicao}</p>
+                  )}
+                  <label className="text-sm">
+                    Enviar comprovante (imagem ou PDF, até 5MB)
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,.pdf"
+                      disabled={enviandoComprovante}
+                      onChange={handleComprovante}
+                      className="mt-1 block w-full text-sm"
+                    />
+                  </label>
+                </div>
+              )}
+
+              <a href={whatsLink} target="_blank" rel="noopener" className="w-full">
+                <Button variant="outline" className="w-full rounded-lg font-normal">
+                  Enviar comprovante no WhatsApp
                 </Button>
-              </div>
-              {saasPixNome !== "" && (
-                <span className="text-xs text-muted-foreground">Favorecido: {saasPixNome}</span>
-              )}
+              </a>
             </div>
           )}
-
-          {comprovanteJaEnviado ? (
-            <div className="text-sm text-muted-foreground">
-              {cobrancaPendente?.comprovante_enviado_em && (
-                <p>Comprovante enviado em {formatDataHoraCurta(cobrancaPendente.comprovante_enviado_em)} — aguardando aprovação.</p>
-              )}
-              {cobrancaPendente?.motivo_rejeicao && (
-                <p className="mt-1 text-destructive">Motivo da última rejeição: {cobrancaPendente.motivo_rejeicao}</p>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {cobrancaPendente?.motivo_rejeicao && (
-                <p className="text-sm text-destructive">Comprovante anterior rejeitado: {cobrancaPendente.motivo_rejeicao}</p>
-              )}
-              <label className="text-sm">
-                Enviar comprovante (imagem ou PDF, até 5MB)
-                <input
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.webp,.pdf"
-                  disabled={enviandoComprovante}
-                  onChange={handleComprovante}
-                  className="mt-1 block w-full text-sm"
-                />
-              </label>
-            </div>
-          )}
-
-          <a href={whatsLink} target="_blank" rel="noopener" className="w-full">
-            <Button variant="outline" className="w-full rounded-lg font-normal">
-              Enviar comprovante no WhatsApp
-            </Button>
-          </a>
-        </div>
+        </>
       )}
     </div>
   );

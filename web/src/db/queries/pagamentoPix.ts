@@ -18,23 +18,25 @@ import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
  * migracao, listado a parte no checklist).
  */
 
-export async function criarPagamentoPix(lojaId: number, adminId: number): Promise<{ ok: true; cobrancaId: number; qrCode: string; qrCodeBase64: string; expiraEm: string; valor: number } | { ok: false; msg: string }> {
+export async function criarPagamentoPix(lojaId: number, adminId: number, planoIdEscolhido: number): Promise<{ ok: true; cobrancaId: number; qrCode: string; qrCodeBase64: string; expiraEm: string; valor: number } | { ok: false; msg: string }> {
   const [assinatura] = await db.select({ id: assinaturas.id, planoId: assinaturas.plano_id }).from(assinaturas).where(eq(assinaturas.loja_id, lojaId)).orderBy(desc(assinaturas.id)).limit(1);
   if (!assinatura) return { ok: false, msg: "Assinatura nao encontrada." };
   const assinaturaId = assinatura.id;
 
-  const [plano] = await db.select({ nome: planos.nome, valor: planos.valor }).from(planos).where(eq(planos.id, assinatura.planoId ?? 1)).limit(1);
-  const planoNome = plano?.nome ?? "Mensal";
-  const planoValor = Number(plano?.valor ?? 50);
+  const [plano] = await db
+    .select({ id: planos.id, nome: planos.nome, valor: planos.valor })
+    .from(planos)
+    .where(and(eq(planos.id, planoIdEscolhido), eq(planos.ativo, true), sql`${planos.landing_slug} is not null`))
+    .limit(1);
+  if (!plano) return { ok: false, msg: "Plano invalido." };
+  const planoNome = plano.nome;
+  const planoValor = Number(plano.valor);
 
-  /*
-   * Plano gratuito (ex.: o trial de 30 dias) nao tem mensalidade pra cobrar -- o Mercado Pago
-   * rejeita transaction_amount=0 com um erro cru ("transaction_amount must be positive"). Sem
-   * essa checagem, o lojista via essa mensagem tecnica em vez de entender que precisa TROCAR
-   * de plano (secao que ja existe nessa mesma tela) pra continuar apos o periodo gratuito.
-   */
+  /* Defesa contra plano sem mensalidade (nao deveria acontecer: so planos com landing_slug entram
+     na lista de escolha, e o trial gratuito nao tem um) -- evita o Mercado Pago rejeitar com
+     transaction_amount=0 e um erro cru chegar pro lojista. */
   if (planoValor <= 0) {
-    return { ok: false, msg: "O plano gratuito não tem mensalidade — escolha um plano pago em \"Trocar de plano\" para continuar usando o sistema." };
+    return { ok: false, msg: "Este plano não tem mensalidade — escolha outro plano para continuar." };
   }
 
   const [adminLogado] = await db.select({ email: admins.email }).from(admins).where(eq(admins.id, adminId)).limit(1);
@@ -57,29 +59,30 @@ export async function criarPagamentoPix(lojaId: number, adminId: number): Promis
   }
 
   const [cobrancaExistente] = await db
-    .select({ id: cobrancas.id, mpQrCode: cobrancas.mp_qr_code, mpQrCodeBase64: cobrancas.mp_qr_code_base64, mpExpiracao: cobrancas.mp_expiracao, valor: cobrancas.valor })
+    .select({ id: cobrancas.id, planoId: cobrancas.plano_id, mpQrCode: cobrancas.mp_qr_code, mpQrCodeBase64: cobrancas.mp_qr_code_base64, mpExpiracao: cobrancas.mp_expiracao, valor: cobrancas.valor })
     .from(cobrancas)
     .where(and(eq(cobrancas.assinatura_id, assinaturaId), inArray(cobrancas.status, ["pendente", "atrasado"])))
     .orderBy(desc(cobrancas.id))
     .limit(1);
 
   const agora = timestampFortaleza();
-  if (cobrancaExistente?.mpQrCode && cobrancaExistente.mpExpiracao && cobrancaExistente.mpExpiracao > agora) {
+  const cobrancaReaproveitavel = cobrancaExistente && cobrancaExistente.planoId === plano.id ? cobrancaExistente : null;
+  if (cobrancaReaproveitavel?.mpQrCode && cobrancaReaproveitavel.mpExpiracao && cobrancaReaproveitavel.mpExpiracao > agora) {
     return {
       ok: true,
-      cobrancaId: cobrancaExistente.id,
-      qrCode: cobrancaExistente.mpQrCode,
-      qrCodeBase64: cobrancaExistente.mpQrCodeBase64 ?? "",
-      expiraEm: cobrancaExistente.mpExpiracao,
-      valor: Number(cobrancaExistente.valor),
+      cobrancaId: cobrancaReaproveitavel.id,
+      qrCode: cobrancaReaproveitavel.mpQrCode,
+      qrCodeBase64: cobrancaReaproveitavel.mpQrCodeBase64 ?? "",
+      expiraEm: cobrancaReaproveitavel.mpExpiracao,
+      valor: Number(cobrancaReaproveitavel.valor),
     };
   }
 
   let cobrancaId: number;
-  if (cobrancaExistente) {
-    cobrancaId = cobrancaExistente.id;
+  if (cobrancaReaproveitavel) {
+    cobrancaId = cobrancaReaproveitavel.id;
   } else {
-    const [nova] = await db.insert(cobrancas).values({ assinatura_id: assinaturaId, valor: planoValor, vencimento: dataFortaleza(), status: "pendente", origem: "mercadopago" }).returning({ id: cobrancas.id });
+    const [nova] = await db.insert(cobrancas).values({ assinatura_id: assinaturaId, plano_id: plano.id, valor: planoValor, vencimento: dataFortaleza(), status: "pendente", origem: "mercadopago" }).returning({ id: cobrancas.id });
     cobrancaId = nova.id;
   }
 
@@ -177,7 +180,7 @@ export async function confirmarPagamentoAssinatura(cobrancaId: number, mpPayment
   try {
     return await withTransaction(async (tx: NeonTx) => {
       const [cobranca] = await tx
-        .select({ id: cobrancas.id, status: cobrancas.status, vencimento: cobrancas.vencimento, assinaturaId: cobrancas.assinatura_id, lojaId: assinaturas.loja_id })
+        .select({ id: cobrancas.id, status: cobrancas.status, vencimento: cobrancas.vencimento, planoId: cobrancas.plano_id, assinaturaId: cobrancas.assinatura_id, lojaId: assinaturas.loja_id })
         .from(cobrancas)
         .innerJoin(assinaturas, eq(assinaturas.id, cobrancas.assinatura_id))
         .where(eq(cobrancas.id, cobrancaId))
@@ -192,8 +195,8 @@ export async function confirmarPagamentoAssinatura(cobrancaId: number, mpPayment
 
       const baseCiclo = cobranca.vencimento || dataFortaleza();
       const cicloFim = somarDiasIso(baseCiclo, 30);
-      await tx.update(assinaturas).set({ status: "ativa", ciclo_inicio: baseCiclo, ciclo_fim: cicloFim, bloqueada_em: null }).where(eq(assinaturas.id, cobranca.assinaturaId));
-      await tx.update(lojas).set({ ativo: true }).where(eq(lojas.id, cobranca.lojaId));
+      await tx.update(assinaturas).set({ status: "ativa", ciclo_inicio: baseCiclo, ciclo_fim: cicloFim, bloqueada_em: null, ...(cobranca.planoId ? { plano_id: cobranca.planoId } : {}) }).where(eq(assinaturas.id, cobranca.assinaturaId));
+      await tx.update(lojas).set({ ativo: true, ...(cobranca.planoId ? { plano_id: cobranca.planoId } : {}) }).where(eq(lojas.id, cobranca.lojaId));
       await tx.update(admins).set({ ativo: true }).where(eq(admins.loja_id, cobranca.lojaId));
 
       return true;

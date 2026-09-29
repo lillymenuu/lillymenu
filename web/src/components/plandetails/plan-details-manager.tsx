@@ -241,6 +241,7 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
           </DialogHeader>
           <RenovacaoPagamento
             cobrancaPendenteInicial={cobrancaPendente}
+            planosRenovacao={dados.planos_renovacao}
             saasPixChave={saas.pix_chave}
             saasPixNome={saas.pix_nome}
             whatsLink={whatsLink}

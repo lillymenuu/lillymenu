@@ -5,6 +5,7 @@ export type AssinaturaStatus = "trial" | "ativa" | "suspensa" | "cancelada";
 
 export type CobrancaPendente = {
   id: number;
+  plano_id: number | null;
   valor: number;
   vencimento: string | null;
   status: string;
@@ -42,6 +43,7 @@ export type AssinaturaDetalheResposta = {
   loja_nome: string;
   cobranca_pendente: CobrancaPendente | null;
   planos_disponiveis: PlanoResumo[];
+  planos_renovacao: PlanoResumo[];
   perfil_cobranca: { cpf: string; telefone: string };
   saas: { pix_chave: string; pix_nome: string; whatsapp_numero: string };
 };
@@ -57,6 +59,7 @@ export async function getAssinaturaDetalhe(lojaId: number): Promise<AssinaturaDe
     cobranca_pendente: d.cobrancaPendente
       ? {
           id: d.cobrancaPendente.id,
+          plano_id: d.cobrancaPendente.planoId,
           valor: d.cobrancaPendente.valor,
           vencimento: d.cobrancaPendente.vencimento,
           status: d.cobrancaPendente.status,
@@ -66,6 +69,7 @@ export async function getAssinaturaDetalhe(lojaId: number): Promise<AssinaturaDe
         }
       : null,
     planos_disponiveis: d.planosDisponiveis,
+    planos_renovacao: d.planosRenovacao,
     perfil_cobranca: d.perfilCobranca,
     saas: { pix_chave: d.saas.pixChave, pix_nome: d.saas.pixNome, whatsapp_numero: d.saas.whatsappNumero },
   };

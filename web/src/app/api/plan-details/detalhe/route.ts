@@ -17,6 +17,7 @@ export async function GET() {
     cobranca_pendente: d.cobrancaPendente
       ? {
           id: d.cobrancaPendente.id,
+          plano_id: d.cobrancaPendente.planoId,
           valor: d.cobrancaPendente.valor,
           vencimento: d.cobrancaPendente.vencimento,
           status: d.cobrancaPendente.status,
@@ -26,6 +27,7 @@ export async function GET() {
         }
       : null,
     planos_disponiveis: d.planosDisponiveis,
+    planos_renovacao: d.planosRenovacao,
     perfil_cobranca: d.perfilCobranca,
     saas: { pix_chave: d.saas.pixChave, pix_nome: d.saas.pixNome, whatsapp_numero: d.saas.whatsappNumero },
   });

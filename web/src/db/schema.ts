@@ -213,6 +213,7 @@ export const cobrancas = pgTable(
   {
     id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
     assinatura_id: integer("assinatura_id").notNull(),
+    plano_id: integer("plano_id"),
     valor: numeric("valor", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
     vencimento: date("vencimento", { mode: "string" }).notNull(),
     status: text("status").$type<"pendente" | "pago" | "atrasado">().notNull().default("pendente"),

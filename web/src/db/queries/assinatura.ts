@@ -80,6 +80,7 @@ export async function bloquearSeAssinaturaExpirada(lojaId: number): Promise<bool
 
 export type CobrancaPendente = {
   id: number;
+  planoId: number | null;
   valor: number;
   vencimento: string;
   status: string;
@@ -95,6 +96,7 @@ export type DetalheAssinaturaResultado = {
   lojaNome: string;
   cobrancaPendente: CobrancaPendente | null;
   planosDisponiveis: { id: number; nome: string; valor: number }[];
+  planosRenovacao: { id: number; nome: string; valor: number }[];
   perfilCobranca: { cpf: string; telefone: string };
   saas: { pixChave: string; pixNome: string; whatsappNumero: string };
 };
@@ -124,7 +126,7 @@ export async function detalheAssinatura(lojaId: number): Promise<DetalheAssinatu
   let cobrancaPendente: CobrancaPendente | null = null;
   if (assinatura?.id) {
     const [c] = await db
-      .select({ id: cobrancas.id, valor: cobrancas.valor, vencimento: cobrancas.vencimento, status: cobrancas.status, comprovanteArquivo: cobrancas.comprovante_arquivo, comprovanteEnviadoEm: cobrancas.comprovante_enviado_em, motivoRejeicao: cobrancas.motivo_rejeicao })
+      .select({ id: cobrancas.id, planoId: cobrancas.plano_id, valor: cobrancas.valor, vencimento: cobrancas.vencimento, status: cobrancas.status, comprovanteArquivo: cobrancas.comprovante_arquivo, comprovanteEnviadoEm: cobrancas.comprovante_enviado_em, motivoRejeicao: cobrancas.motivo_rejeicao })
       .from(cobrancas)
       .where(and(eq(cobrancas.assinatura_id, assinatura.id), inArray(cobrancas.status, ["pendente", "atrasado"])))
       .orderBy(desc(cobrancas.id))
@@ -144,6 +146,15 @@ export async function detalheAssinatura(lojaId: number): Promise<DetalheAssinatu
     .where(and(eq(planos.ativo, true), sql`${planos.landing_slug} is not null`, ne(planos.id, assinatura?.planoId ?? 0), gt(planos.valor, plano.valor)))
     .orderBy(planos.valor);
 
+  // Todos os planos pagos vendaveis, pra escolher na renovacao (Renovar) --
+  // diferente de planosDisponiveis (so upgrade), aqui o lojista pode renovar
+  // no mesmo plano ou trocar pra qualquer outro, ja que esta pagando na hora.
+  const planosRenovacao = await db
+    .select({ id: planos.id, nome: planos.nome, valor: planos.valor })
+    .from(planos)
+    .where(and(eq(planos.ativo, true), sql`${planos.landing_slug} is not null`, gt(planos.valor, 0)))
+    .orderBy(planos.valor);
+
   const perfilCfgRaw = await db.select({ chave: configuracoes.chave, valor: configuracoes.valor }).from(configuracoes).where(and(eq(configuracoes.loja_id, lojaId), inArray(configuracoes.chave, ["cobranca_cpf", "cobranca_telefone"])));
   const perfilCfg: Record<string, string> = {};
   for (const l of perfilCfgRaw) perfilCfg[l.chave] = l.valor;
@@ -155,6 +166,7 @@ export async function detalheAssinatura(lojaId: number): Promise<DetalheAssinatu
     lojaNome,
     cobrancaPendente,
     planosDisponiveis,
+    planosRenovacao,
     perfilCobranca: { cpf: perfilCfg.cobranca_cpf ?? "", telefone: perfilCfg.cobranca_telefone ?? "" },
     saas: { pixChave: saasCfg.saas_pix_chave ?? "", pixNome: saasCfg.saas_pix_nome ?? "", whatsappNumero: saasCfg.saas_whatsapp_numero ?? "5585985049577" },
   };

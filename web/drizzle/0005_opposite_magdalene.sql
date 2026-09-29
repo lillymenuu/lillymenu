@@ -1,0 +1,1 @@
+ALTER TABLE "cobrancas" ADD COLUMN "plano_id" integer;
