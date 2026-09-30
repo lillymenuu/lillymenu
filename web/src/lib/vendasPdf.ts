@@ -226,11 +226,15 @@ export async function gerarPdfVendas(dados: DadosPdfVendas): Promise<Buffer> {
     ])
   );
 
-  /* Numeracao de pagina no rodape */
+  /* Numeracao de pagina no rodape. A posicao fica dentro da margem inferior
+     (fora da area "segura" de conteudo) -- sem zerar o bottom margin aqui, o
+     pdfkit interpreta o texto como um overflow e cria uma pagina nova em
+     branco pra cada chamada, em vez de desenhar na pagina ja existente. */
   const paginas = doc.bufferedPageRange();
   for (let i = 0; i < paginas.count; i++) {
     doc.switchToPage(i);
-    doc.font("Helvetica").fontSize(8).fillColor(COR.claro).text(`Página ${i + 1} de ${paginas.count}`, M, doc.page.height - 26, { width: largura, align: "center" });
+    doc.page.margins.bottom = 0;
+    doc.font("Helvetica").fontSize(8).fillColor(COR.claro).text(`Página ${i + 1} de ${paginas.count}`, M, doc.page.height - 26, { width: largura, align: "center", lineBreak: false });
   }
 
   doc.end();
