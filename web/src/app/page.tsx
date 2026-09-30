@@ -10,6 +10,7 @@ import { LandingSegmentos } from "@/components/landing/landing-segmentos";
 import { LandingSignup } from "@/components/landing/landing-signup";
 import { LandingPlanos } from "@/components/landing/landing-planos";
 import { LandingCta } from "@/components/landing/landing-cta";
+import { LandingContato } from "@/components/landing/landing-contato";
 import { LandingFinalCta } from "@/components/landing/landing-final-cta";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { WhatsappFloatButton } from "@/components/landing/whatsapp-float-button";
@@ -107,6 +108,8 @@ export default async function LandingPage() {
           faturamentoOpcoes={faturamentoOpcoes}
           modeloNegocioOpcoes={segmentoOpcoes}
         />
+
+        <LandingContato />
       </main>
 
       <LandingFooter
