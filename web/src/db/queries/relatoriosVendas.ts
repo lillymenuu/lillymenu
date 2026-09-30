@@ -31,9 +31,11 @@ function resolverPeriodo(periodo: string, dataIni?: string, dataFim?: string): {
   return { inicio: hojeISO, fim: hojeISO };
 }
 
-export type RelatorioVendasInput = { lojaId: number; periodo?: string; dataIni?: string; dataFim?: string; tipo?: string; pagina?: number; limite?: number };
+export type RelatorioVendasInput = { lojaId: number; periodo?: string; dataIni?: string; dataFim?: string; tipo?: string; pagina?: number; limite?: number; todos?: boolean };
 
 export type RelatorioVendasResultado = {
+  periodoInicio: string;
+  periodoFim: string;
   resumo: { totalPedidos: number; faturamento: number; ticketMedio: number; taxaEntrega: number };
   fiadoRecebido: number;
   cancelados: number;
@@ -146,18 +148,24 @@ export async function relatorioVendas(input: RelatorioVendasInput): Promise<Rela
   const pagina = Math.min(pagina0, paginas);
   const offset = (pagina - 1) * limite;
 
+  /* Export (PDF/Excel) quer a lista completa do periodo, nao so a pagina
+     atual da tela -- limite alto em vez de paginar, com um teto de
+     seguranca pra nao travar num periodo gigante sem filtro. */
+  const LIMITE_EXPORT = 5000;
+
   const base = await pedidoCodigoBase(lojaId);
-  const pedidosLinhas = await db
+  const pedidosQuery = db
     .select({ id: pedidos.id, total: pedidos.total, status: pedidos.status, tipo: pedidos.tipo, formaPagamento: pedidos.forma_pagamento, criadoEm: pedidos.criado_em, cliente: clientes.nome })
     .from(pedidos)
     .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
     .leftJoin(caixaTurnos, joinCaixa)
     .where(whereRelatorio)
-    .orderBy(desc(pedidos.criado_em))
-    .limit(limite)
-    .offset(offset);
+    .orderBy(desc(pedidos.criado_em));
+  const pedidosLinhas = input.todos ? await pedidosQuery.limit(LIMITE_EXPORT) : await pedidosQuery.limit(limite).offset(offset);
 
   return {
+    periodoInicio: inicio,
+    periodoFim: fim,
     resumo: { totalPedidos, faturamento, ticketMedio, taxaEntrega },
     fiadoRecebido: Number(fiadoRecebido),
     cancelados,

@@ -1,5 +1,6 @@
 import "server-only";
 import { relatorioVendas } from "@/db/queries/relatoriosVendas";
+import type { RelatorioVendasResultado } from "@/db/queries/relatoriosVendas";
 
 export type PedidoRelatorio = {
   id: number;
@@ -89,4 +90,16 @@ export async function getRelatorios(lojaId: number, params: RelatoriosParams = {
     pagina: resultado.pagina,
     limite: resultado.limite,
   };
+}
+
+/** Mesmo relatorio, mas com a lista de pedidos completa do periodo (sem paginar) -- usado pelos exports em PDF/Excel. */
+export async function getRelatorioVendasExport(lojaId: number, params: RelatoriosParams = {}): Promise<RelatorioVendasResultado> {
+  return relatorioVendas({
+    lojaId,
+    periodo: params.periodo,
+    dataIni: params.data_ini,
+    dataFim: params.data_fim,
+    tipo: params.tipo,
+    todos: true,
+  });
 }

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Banknote, Receipt, ShoppingBag, Truck, XCircle, Wallet } from "lucide-react";
+import { Banknote, Receipt, ShoppingBag, Truck, XCircle, Wallet, FileText, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -126,6 +127,16 @@ export function SalesManager({
     setPagina(1);
   }
 
+  function urlExport(formato: "pdf" | "excel") {
+    const qs = new URLSearchParams({ periodo });
+    if (tipo) qs.set("tipo", tipo);
+    if (periodo === "customizado") {
+      qs.set("data_ini", dataIni);
+      qs.set("data_fim", dataFim);
+    }
+    return `/api/sales/export/${formato}?${qs.toString()}`;
+  }
+
   const pagamentoPorForma = Object.fromEntries(dados.vendas_pagamento.map((v) => [v.forma, v]));
 
   const inicioItem = dados.total === 0 ? 0 : (dados.pagina - 1) * dados.limite + 1;
@@ -175,6 +186,14 @@ export function SalesManager({
               }
             />
           )}
+          <div className="ml-1 flex items-center gap-1.5 border-l pl-2.5">
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" nativeButton={false} render={<a href={urlExport("pdf")} />}>
+              <FileText size={14} /> PDF
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" nativeButton={false} render={<a href={urlExport("excel")} />}>
+              <FileSpreadsheet size={14} /> Excel
+            </Button>
+          </div>
         </div>
       </div>
 
