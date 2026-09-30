@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "cn";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ERROS_GOOGLE: Record<string, string> = {
   google_nao_configurado: "Login com Google indisponível no momento.",
@@ -36,6 +37,31 @@ function LoginForm() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(ERROS_GOOGLE[searchParams.get("erro") ?? ""] ?? null);
   const [carregando, setCarregando] = useState(false);
+  const [resetAberto, setResetAberto] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetEnviando, setResetEnviando] = useState(false);
+  const [resetEnviado, setResetEnviado] = useState(false);
+
+  async function handleResetRequest(e: React.FormEvent) {
+    e.preventDefault();
+    setResetEnviando(true);
+    try {
+      await fetch("/api/auth/reset-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      setResetEnviado(true);
+    } finally {
+      setResetEnviando(false);
+    }
+  }
+
+  function fecharResetDialog() {
+    setResetAberto(false);
+    setResetEnviado(false);
+    setResetEmail("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,14 +93,13 @@ function LoginForm() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="flex flex-col p-6 md:p-10">
-        <div className="flex items-center gap-2 text-lg font-semibold">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">L</span>
-          LillyMenu
-        </div>
-
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">
             <div className="mb-8 flex flex-col gap-1.5">
+              <div className="mb-3 flex items-center gap-2 text-lg font-semibold">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">L</span>
+                LillyMenu
+              </div>
               <h1 className="text-2xl font-semibold tracking-tight">Bem-vindo de volta</h1>
               <p className="text-sm text-muted-foreground">Entre com seu e-mail e senha para acessar o painel.</p>
             </div>
@@ -109,7 +134,16 @@ function LoginForm() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="senha">Senha</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="senha">Senha</Label>
+                  <button
+                    type="button"
+                    onClick={() => setResetAberto(true)}
+                    className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  >
+                    Esqueceu a senha?
+                  </button>
+                </div>
                 <Input
                   id="senha"
                   type="password"
@@ -120,6 +154,9 @@ function LoginForm() {
                   required
                 />
               </div>
+              {searchParams.get("reset") === "1" && (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400">Senha redefinida com sucesso. Faça login com a nova senha.</p>
+              )}
               {erro && <p className="text-sm text-destructive">{erro}</p>}
               <Button type="submit" disabled={carregando} size="lg" className="mt-2 w-full">
                 {carregando ? "Entrando..." : "Entrar"}
@@ -130,6 +167,36 @@ function LoginForm() {
 
         <p className="text-center text-xs text-muted-foreground">© {new Date().getFullYear()} LillyMenu. Todos os direitos reservados.</p>
       </div>
+
+      <Dialog open={resetAberto} onOpenChange={(open) => (open ? setResetAberto(true) : fecharResetDialog())}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Redefinir senha</DialogTitle>
+          </DialogHeader>
+          {resetEnviado ? (
+            <p className="text-sm text-muted-foreground">
+              Se houver uma conta com o e-mail informado, enviamos um link para redefinir a senha. Confira sua caixa de entrada (e o spam).
+            </p>
+          ) : (
+            <form onSubmit={handleResetRequest} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="reset-email">E-mail</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="voce@exemplo.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={resetEnviando} className="w-full">
+                {resetEnviando ? "Enviando..." : "Enviar link de redefinição"}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="relative hidden flex-col justify-center gap-8 overflow-hidden bg-primary p-12 text-primary-foreground lg:flex">
         <div className="absolute -top-24 -right-24 size-80 rounded-full bg-white/10" />
