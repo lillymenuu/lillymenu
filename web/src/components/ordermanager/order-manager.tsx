@@ -228,7 +228,7 @@ export function OrderManager({
               onDragLeave={() => setDragOverStatus((s) => (s === coluna.status ? null : s))}
               onDrop={(e) => onDrop(e, coluna.status)}
               className={cn(
-                "flex min-h-[320px] flex-col overflow-hidden rounded-xl border transition-shadow",
+                "flex min-h-[320px] flex-col self-start overflow-hidden rounded-xl border transition-shadow",
                 dragOverStatus === coluna.status && "ring-2 ring-primary ring-offset-2"
               )}
             >
@@ -270,7 +270,7 @@ export function OrderManager({
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto bg-muted/30 p-2">
+              <div className="flex max-h-[1300px] flex-1 flex-col gap-1.5 overflow-y-auto bg-muted/30 p-2">
                 {pedidosColuna.length === 0 && (
                   <div className="flex flex-1 items-center justify-center py-10 text-center text-xs text-muted-foreground">
                     Nenhum pedido aqui.
