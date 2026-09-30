@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
+import { DICA_SENHA_FORTE, validarSenhaForte } from "@/lib/senha";
 import { EnderecoModal, type Endereco } from "./endereco-modal";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,11 +51,12 @@ export function HeroSignupForm({
 
   const emailValido = EMAIL_REGEX.test(email);
   const senhasConferem = confirmarSenha.length > 0 && senha === confirmarSenha;
+  const erroSenha = senha.length > 0 ? validarSenhaForte(senha) : null;
   const cpfCnpjValido = validarCpfCnpj(cpfCnpj);
 
   const liberaContato = nome.trim().length >= 2 && empresa.trim().length >= 2;
   const liberaSenha = liberaContato && emailValido && whatsapp.trim().length >= 8;
-  const liberaDocumento = liberaSenha && senha.length >= 6 && senhasConferem;
+  const liberaDocumento = liberaSenha && validarSenhaForte(senha) === null && senhasConferem;
   const liberaPerfil = liberaDocumento && cpfCnpjValido && endereco !== null;
   const liberaFinal = liberaPerfil && faturamento !== "" && segmento !== "";
 
@@ -199,6 +201,7 @@ export function HeroSignupForm({
                   {mostrarSenha ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                 </button>
               </div>
+              <p className={cn("text-xs", erroSenha ? "text-destructive" : "text-muted-foreground")}>{erroSenha ?? DICA_SENHA_FORTE}</p>
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="lead-confirmar-senha">Repita a senha</Label>

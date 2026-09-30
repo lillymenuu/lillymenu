@@ -5,6 +5,7 @@ import { and, eq, gt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { admins } from "@/db/schema";
 import { enviarEmail } from "@/lib/email";
+import { validarSenhaForte } from "@/lib/senha";
 
 /*
  * Equivalente de admin/reset_request.php + admin/reset_save.php: pedido de
@@ -57,7 +58,8 @@ export async function validarTokenReset(token: string): Promise<boolean> {
 
 export async function salvarNovaSenha(token: string, senha: string): Promise<{ ok: true } | { ok: false; msg: string }> {
   if (!TOKEN_REGEX.test(token)) return { ok: false, msg: "Link inválido ou expirado." };
-  if (senha.length < 6) return { ok: false, msg: "A senha deve ter pelo menos 6 caracteres." };
+  const erroSenha = validarSenhaForte(senha);
+  if (erroSenha) return { ok: false, msg: erroSenha };
 
   const [admin] = await db
     .select({ id: admins.id })

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DICA_SENHA_FORTE, validarSenhaForte } from "@/lib/senha";
 
 export function NovaSenhaForm({ token }: { token: string }) {
   const router = useRouter();
@@ -17,6 +18,11 @@ export function NovaSenhaForm({ token }: { token: string }) {
     e.preventDefault();
     setErro(null);
 
+    const erroSenha = validarSenhaForte(senha);
+    if (erroSenha) {
+      setErro(erroSenha);
+      return;
+    }
     if (senha !== confirmacao) {
       setErro("As senhas não são iguais.");
       return;
@@ -55,9 +61,10 @@ export function NovaSenhaForm({ token }: { token: string }) {
           placeholder="Nova senha"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
-          minLength={6}
+          minLength={8}
           required
         />
+        <p className="text-xs text-muted-foreground">{DICA_SENHA_FORTE}</p>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="confirmacao">Confirmar senha</Label>
@@ -68,7 +75,7 @@ export function NovaSenhaForm({ token }: { token: string }) {
           placeholder="Confirme a nova senha"
           value={confirmacao}
           onChange={(e) => setConfirmacao(e.target.value)}
-          minLength={6}
+          minLength={8}
           required
         />
       </div>

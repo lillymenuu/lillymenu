@@ -7,6 +7,7 @@ import { dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
 import { getPlanoTrialGratuito } from "@/db/queries/landingConfig";
 import { enviarEmail } from "@/lib/email";
 import { validarCpfCnpj } from "@/lib/cpfCnpj";
+import { validarSenhaForte } from "@/lib/senha";
 
 /*
  * Equivalente de public/api/cadastro_loja.php (cadastro self-service da
@@ -76,7 +77,8 @@ export async function criarContaLoja(input: CadastroLojaInput): Promise<Cadastro
     return { ok: false, msg: "Preencha todos os campos obrigatórios." };
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, msg: "E-mail inválido." };
-  if (input.senha.length < 6) return { ok: false, msg: "A senha deve ter pelo menos 6 caracteres." };
+  const erroSenha = validarSenhaForte(input.senha);
+  if (erroSenha) return { ok: false, msg: erroSenha };
   if (!validarCpfCnpj(cpfCnpj)) return { ok: false, msg: "CPF/CNPJ inválido." };
 
   const [emailExistente] = await db.select({ id: admins.id }).from(admins).where(eq(admins.email, email)).limit(1);

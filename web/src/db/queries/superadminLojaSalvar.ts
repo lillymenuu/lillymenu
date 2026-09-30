@@ -3,6 +3,7 @@ import { and, eq, ne, or } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { lojas, admins, configuracoes, assinaturas, planos } from "@/db/schema";
 import bcrypt from "bcryptjs";
+import { validarSenhaForte } from "@/lib/senha";
 
 /* Equivalente de admin/api/v1/superadmin_loja_salvar.php: edita nome/admin/contato/trial de uma loja pelo superadmin. */
 
@@ -39,7 +40,10 @@ export async function salvarLojaSuperadmin(input: SalvarLojaSuperadminInput): Pr
   if (lojaId <= 0 || nome === "" || email === "" || usuario === "") return { ok: false, msg: "Preencha todos os campos obrigatorios." };
   if (!RE_EMAIL.test(email)) return { ok: false, msg: "Email invalido." };
   if (senha !== "" && senha !== senha2) return { ok: false, msg: "As senhas nao conferem." };
-  if (senha !== "" && senha.length < 6) return { ok: false, msg: "A senha deve ter ao menos 6 caracteres." };
+  if (senha !== "") {
+    const erroSenha = validarSenhaForte(senha);
+    if (erroSenha) return { ok: false, msg: erroSenha };
+  }
 
   try {
     if (adminId <= 0) {
