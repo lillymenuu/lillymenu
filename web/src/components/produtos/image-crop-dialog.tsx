@@ -4,14 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-// Moldura de recorte na mesma proporcao usada nos cards de produto (aspect-[4/3]),
-// pra nao cortar de novo na exibicao depois de cortar aqui. Area maior que o
-// card real (mesma proporcao, so escalada) pra dar mais espaco na tela pra
-// escolher o angulo/enquadramento com precisao.
-const FRAME_W = 420;
-const FRAME_H = 315;
+// Moldura quadrada (1:1) -- mesmo formato salvo pelo sistema antigo. O card
+// de produto exibe a foto numa caixa 4:3 (aspect-[4/3]), entao uma foto
+// quadrada leva um corte extra em cima/embaixo so na hora de exibir (via
+// object-cover), aproximando o produto -- igual ao efeito das fotos antigas.
+// Se a moldura aqui fosse 4:3 (pra bater com o card), esse corte extra some
+// e a foto aparece mais "afastada". Nao ha corte escondido: o que a pessoa
+// ve e posiciona aqui e exatamente o que e salvo.
+const FRAME_W = 400;
+const FRAME_H = 400;
 const OUTPUT_W = 800;
-const OUTPUT_H = 600;
+const OUTPUT_H = 800;
 const ZOOM_MIN = 1;
 
 export function ImageCropDialog({
