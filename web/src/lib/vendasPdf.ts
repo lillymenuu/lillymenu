@@ -108,17 +108,20 @@ export async function gerarPdfVendas(dados: DadosPdfVendas): Promise<Buffer> {
   const gap = 8;
   const larguraCaixa = (largura - gap * (colunas - 1)) / colunas;
   const alturaCaixa = 46;
-  garantirEspaco(alturaCaixa * Math.ceil(kpis.length / colunas) + gap * (Math.ceil(kpis.length / colunas) - 1));
+  const linhasKpi = Math.ceil(kpis.length / colunas);
+  garantirEspaco(alturaCaixa * linhasKpi + gap * (linhasKpi - 1));
+  const yInicioKpi = doc.y;
   kpis.forEach((k, i) => {
     const col = i % colunas;
     const lin = Math.floor(i / colunas);
     const x = M + col * (larguraCaixa + gap);
-    const y = doc.y + lin * (alturaCaixa + gap);
+    const y = yInicioKpi + lin * (alturaCaixa + gap);
     doc.roundedRect(x, y, larguraCaixa, alturaCaixa, 6).fillAndStroke(COR.fundo, COR.borda);
-    doc.font("Helvetica").fontSize(8).fillColor(COR.suave).text(k.label.toUpperCase(), x + 10, y + 9, { width: larguraCaixa - 20 });
-    doc.font("Helvetica-Bold").fontSize(12.5).fillColor(k.cor ?? COR.texto).text(k.valor, x + 10, y + 22, { width: larguraCaixa - 20 });
+    doc.font("Helvetica").fontSize(8).fillColor(COR.suave).text(k.label.toUpperCase(), x + 10, y + 9, { width: larguraCaixa - 20, lineBreak: false });
+    doc.font("Helvetica-Bold").fontSize(12.5).fillColor(k.cor ?? COR.texto).text(k.valor, x + 10, y + 22, { width: larguraCaixa - 20, lineBreak: false });
   });
-  doc.y += Math.ceil(kpis.length / colunas) * (alturaCaixa + gap) + 6;
+  doc.y = yInicioKpi + linhasKpi * (alturaCaixa + gap) + 6;
+  doc.x = M;
 
   /* Tabela reutilizavel com cabecalho repetido em nova pagina */
   const tabela = (titulo: string, colunasDef: { titulo: string; largura: number; alinhar: "left" | "center" | "right" }[], linhas: string[][]) => {
