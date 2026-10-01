@@ -109,7 +109,7 @@ export default async function LandingPage() {
           modeloNegocioOpcoes={segmentoOpcoes}
         />
 
-        <LandingContato whatsappNumero={lc(config, "whatsapp_number")} />
+        <LandingContato />
       </main>
 
       <LandingFooter
