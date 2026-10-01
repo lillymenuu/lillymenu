@@ -1,32 +1,13 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-/** Mesma largura da caixa azul inteira do "Fale com um especialista"
- * (#contato), que e fluida (max-w-1180 com padding) -- medida em tempo real
- * em vez de copiada num px fixo, pra continuar batendo em qualquer tela. */
-function useLarguraComoCta(): number | undefined {
-  const [largura, setLargura] = useState<number | undefined>(undefined);
-
-  useLayoutEffect(() => {
-    const alvo = document.querySelector("#contato .landing-dots-bg");
-    if (!alvo) return;
-    const atualizar = () => setLargura(alvo.getBoundingClientRect().width);
-    atualizar();
-    const observer = new ResizeObserver(atualizar);
-    observer.observe(alvo);
-    return () => observer.disconnect();
-  }, []);
-
-  return largura;
-}
+import { formatarTelefone } from "@/lib/store/format";
 
 export function ContatoForm() {
-  const largura = useLarguraComoCta();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -64,7 +45,7 @@ export function ContatoForm() {
 
   if (enviado) {
     return (
-      <div className="mx-auto flex max-w-[1132px] flex-col items-center gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-8 text-center" style={largura ? { maxWidth: largura } : undefined}>
+      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white p-10 text-center">
         <CheckCircle2 className="size-10 text-emerald-500" />
         <h3 className="text-[17px] font-bold">Mensagem enviada!</h3>
         <p className="text-[14.5px] text-[#5b6169]">Recebemos seu contato e vamos responder em breve.</p>
@@ -73,23 +54,25 @@ export function ContatoForm() {
   }
 
   return (
-    <form
-      onSubmit={enviar}
-      className="mx-auto flex max-w-[1132px] flex-col gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-6 sm:p-7"
-      style={largura ? { maxWidth: largura } : undefined}
-    >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <form onSubmit={enviar} className="flex flex-col gap-4 rounded-2xl border border-[#e5e7eb] bg-white p-6 sm:p-8">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="contato-nome">Seu nome</Label>
+          <Label htmlFor="contato-nome">Nome</Label>
           <Input id="contato-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="contato-email">E-mail</Label>
-          <Input id="contato-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input id="contato-email" type="email" placeholder="nome@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="contato-whatsapp">Contato WhatsApp</Label>
-          <Input id="contato-whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+          <Input
+            id="contato-whatsapp"
+            inputMode="tel"
+            placeholder="(00) 00000-0000"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(formatarTelefone(e.target.value))}
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="contato-assunto">Assunto</Label>
@@ -98,12 +81,12 @@ export function ContatoForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="contato-mensagem">O que você gostaria de falar?</Label>
+        <Label htmlFor="contato-mensagem">Mensagem</Label>
         <textarea
           id="contato-mensagem"
           value={mensagem}
           onChange={(e) => setMensagem(e.target.value)}
-          rows={4}
+          rows={6}
           required
           placeholder="Conte pra gente o que você precisa"
           className="w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-2 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
@@ -113,9 +96,15 @@ export function ContatoForm() {
       <button
         type="submit"
         disabled={enviando}
-        className="mt-1 flex h-11 w-full items-center justify-center rounded-lg bg-[#2563eb] text-base font-semibold text-white shadow-[0_10px_22px_-6px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8] disabled:opacity-60"
+        className="mt-1 flex h-11 w-fit items-center justify-center gap-1.5 rounded-lg bg-[#2563eb] px-6 text-base font-semibold text-white shadow-[0_10px_22px_-6px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8] disabled:opacity-60"
       >
-        {enviando ? "Enviando..." : "Enviar mensagem"}
+        {enviando ? (
+          "Enviando..."
+        ) : (
+          <>
+            Enviar mensagem <ArrowRight className="size-4" />
+          </>
+        )}
       </button>
     </form>
   );

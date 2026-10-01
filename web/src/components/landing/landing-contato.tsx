@@ -1,20 +1,52 @@
+import { Mail, MessageCircle } from "lucide-react";
 import { ContatoForm } from "@/components/landing/contato-form";
+import { buildWhatsappLink } from "@/lib/landing";
 
-export function LandingContato() {
+export function LandingContato({ whatsappNumero }: { whatsappNumero: string }) {
   return (
     <section id="fale-conosco" className="scroll-mt-20 bg-[#f8fafc] py-16 md:py-24">
-      <div className="mx-auto flex max-w-[640px] flex-col items-center gap-2 px-4 text-center sm:px-6">
-        <span className="w-fit rounded-full bg-[#2563eb]/10 px-3 py-1 text-xs font-bold tracking-widest text-[#2563eb] uppercase">
-          Fale com a gente
-        </span>
-        <h2 className="text-[26px] leading-[1.2] font-extrabold tracking-tight text-[#111827]">Tem alguma dúvida ou sugestão?</h2>
-        <p className="max-w-md text-[14.5px] leading-relaxed text-[#5b6169]">
-          Envie sua mensagem direto pra nossa equipe. Respondemos o mais rápido possível.
-        </p>
-      </div>
+      <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
+        <div className="max-w-xl">
+          <h2 className="text-[32px] leading-[1.15] font-extrabold tracking-tight text-[#111827] sm:text-[40px]">
+            Fale com a gente.
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-[#5b6169]">
+            Dúvidas sobre o sistema, seu plano ou uma parceria: manda uma mensagem que a gente responde por e-mail.
+          </p>
+        </div>
 
-      <div className="mx-auto mt-8 px-4 sm:px-6">
-        <ContatoForm />
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
+          <ContatoForm />
+
+          <aside className="flex flex-col gap-5">
+            <div>
+              <span className="text-xs font-medium tracking-wide text-[#6b7280] uppercase">E-mail</span>
+              <div className="mt-1 flex items-center gap-2 text-base font-semibold text-[#111827]">
+                <Mail className="size-4 text-[#2563eb]" />
+                lilly.menuu@gmail.com
+              </div>
+              <p className="mt-1 text-[13px] text-[#6b7280]">Costumamos responder em até 24h úteis.</p>
+            </div>
+
+            {whatsappNumero && (
+              <>
+                <div className="h-px bg-[#e5e7eb]" />
+                <div>
+                  <span className="text-xs font-medium tracking-wide text-[#6b7280] uppercase">WhatsApp</span>
+                  <a
+                    href={buildWhatsappLink(whatsappNumero, "Olá! Tenho uma dúvida sobre o LillyMenu.")}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 flex items-center gap-2 text-base font-semibold text-[#111827] hover:text-[#2563eb]"
+                  >
+                    <MessageCircle className="size-4 text-emerald-500" />
+                    Prefere conversar por lá?
+                  </a>
+                </div>
+              </>
+            )}
+          </aside>
+        </div>
       </div>
     </section>
   );
