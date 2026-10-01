@@ -6,14 +6,14 @@ import { CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-/** Mesma largura do card "Fale com um especialista" (#contato), que e fluida
- * (fracao de um grid) -- medida em tempo real em vez de copiada num px fixo,
- * pra continuar batendo em qualquer tamanho de tela. */
+/** Mesma largura da caixa azul inteira do "Fale com um especialista"
+ * (#contato), que e fluida (max-w-1180 com padding) -- medida em tempo real
+ * em vez de copiada num px fixo, pra continuar batendo em qualquer tela. */
 function useLarguraComoCta(): number | undefined {
   const [largura, setLargura] = useState<number | undefined>(undefined);
 
   useLayoutEffect(() => {
-    const alvo = document.querySelector("#contato form");
+    const alvo = document.querySelector("#contato .landing-dots-bg");
     if (!alvo) return;
     const atualizar = () => setLargura(alvo.getBoundingClientRect().width);
     atualizar();
@@ -64,7 +64,7 @@ export function ContatoForm() {
 
   if (enviado) {
     return (
-      <div className="mx-auto flex max-w-[490px] flex-col items-center gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-8 text-center" style={largura ? { maxWidth: largura } : undefined}>
+      <div className="mx-auto flex max-w-[1132px] flex-col items-center gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-8 text-center" style={largura ? { maxWidth: largura } : undefined}>
         <CheckCircle2 className="size-10 text-emerald-500" />
         <h3 className="text-[17px] font-bold">Mensagem enviada!</h3>
         <p className="text-[14.5px] text-[#5b6169]">Recebemos seu contato e vamos responder em breve.</p>
@@ -75,10 +75,10 @@ export function ContatoForm() {
   return (
     <form
       onSubmit={enviar}
-      className="mx-auto flex max-w-[490px] flex-col gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-6 sm:p-7"
+      className="mx-auto flex max-w-[1132px] flex-col gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-6 sm:p-7"
       style={largura ? { maxWidth: largura } : undefined}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="contato-nome">Seu nome</Label>
           <Input id="contato-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
