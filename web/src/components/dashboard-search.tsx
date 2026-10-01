@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,15 +22,30 @@ export function DashboardSearch({
     ? pages.filter((p) => p.label.toLowerCase().includes(termo.trim().toLowerCase()))
     : pages;
 
+  useEffect(() => {
+    function aoTeclar(e: KeyboardEvent) {
+      if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", aoTeclar);
+    return () => window.removeEventListener("keydown", aoTeclar);
+  }, []);
+
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex size-10 shrink-0 items-center justify-center rounded-full border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="flex h-10 w-64 shrink-0 items-center gap-2 rounded-lg border bg-background px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
         aria-label="Buscar página"
       >
-        <Search size={16} />
+        <Search size={15} className="shrink-0" />
+        <span className="flex-1 text-left">Buscar</span>
+        <span className="flex shrink-0 items-center gap-0.5 rounded-md border bg-muted px-1.5 py-0.5 text-[11px] font-medium">
+          Ctrl K
+        </span>
       </button>
 
       <Dialog
