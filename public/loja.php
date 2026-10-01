@@ -628,10 +628,10 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
       <span id="pdQtdMinimaMsg"></span>
     </div>
     <div class="combo-section" id="pdComboSection" style="display:none"></div>
-    <div class="prod-modal-obs">
-      <div class="prod-modal-obs-lbl">Alguma observação?</div>
-      <textarea class="obs-field" id="pdObs" rows="2" placeholder=""></textarea>
-    </div>
+  </div>
+  <div class="prod-modal-obs">
+    <div class="prod-modal-obs-lbl">Alguma observação?</div>
+    <textarea class="obs-field" id="pdObs" rows="2" placeholder=""></textarea>
   </div>
   <div class="prod-modal-footer">
     <div class="prod-modal-qty">
@@ -684,10 +684,10 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
         </div>
       </div>
     </div>
-    <div class="prod-modal-obs">
-      <div class="prod-modal-obs-lbl">Alguma observação?</div>
-      <textarea class="obs-field" id="varModalObs" rows="1" placeholder="Observações do cliente"></textarea>
-    </div>
+  </div>
+  <div class="prod-modal-obs">
+    <div class="prod-modal-obs-lbl">Alguma observação?</div>
+    <textarea class="obs-field" id="varModalObs" rows="1" placeholder="Observações do cliente"></textarea>
   </div>
   <div class="prod-modal-footer">
     <div class="prod-modal-qty">

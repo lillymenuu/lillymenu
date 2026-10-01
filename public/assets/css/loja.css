@@ -868,7 +868,6 @@ textarea.obs-field:focus{border-color:var(--brown)}
 .prod-modal-sheet .prod-modal-info{padding:16px 18px}
 .prod-modal-sheet .prod-modal-scroll{display:flex;flex-direction:column}
 .prod-modal-sheet .prod-modal-scroll>*{flex-shrink:0}
-.prod-modal-sheet .prod-modal-obs{margin-top:auto}
 .prod-modal-ver-maior{position:absolute;right:14px;bottom:14px;background:rgba(0,0,0,.55);color:#fff;font-size:.72rem;font-weight:600;padding:5px 12px;border-radius:999px;display:flex;align-items:center;gap:5px;pointer-events:none}
 
 /* ── Combo passos modal ── */
