@@ -116,7 +116,7 @@ export default async function DashboardPage({
           </div>
           <p className="text-sm text-muted-foreground">Dashboard</p>
         </div>
-        <div className="justify-self-center">
+        <div className="self-end justify-self-center">
           <DashboardSearch menu={menu} phpAdminUrl={phpAdminUrl} />
         </div>
         <div className="justify-self-start sm:justify-self-end">
