@@ -1,12 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+/** Mesma largura do card "Fale com um especialista" (#contato), que e fluida
+ * (fracao de um grid) -- medida em tempo real em vez de copiada num px fixo,
+ * pra continuar batendo em qualquer tamanho de tela. */
+function useLarguraComoCta(): number | undefined {
+  const [largura, setLargura] = useState<number | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    const alvo = document.querySelector("#contato form");
+    if (!alvo) return;
+    const atualizar = () => setLargura(alvo.getBoundingClientRect().width);
+    atualizar();
+    const observer = new ResizeObserver(atualizar);
+    observer.observe(alvo);
+    return () => observer.disconnect();
+  }, []);
+
+  return largura;
+}
+
 export function ContatoForm() {
+  const largura = useLarguraComoCta();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -44,7 +64,7 @@ export function ContatoForm() {
 
   if (enviado) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-8 text-center">
+      <div className="mx-auto flex max-w-[490px] flex-col items-center gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-8 text-center" style={largura ? { maxWidth: largura } : undefined}>
         <CheckCircle2 className="size-10 text-emerald-500" />
         <h3 className="text-[17px] font-bold">Mensagem enviada!</h3>
         <p className="text-[14.5px] text-[#5b6169]">Recebemos seu contato e vamos responder em breve.</p>
@@ -53,7 +73,11 @@ export function ContatoForm() {
   }
 
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-6 sm:p-7">
+    <form
+      onSubmit={enviar}
+      className="mx-auto flex max-w-[490px] flex-col gap-3 rounded-[20px] border border-[#e5e7eb] bg-white p-6 sm:p-7"
+      style={largura ? { maxWidth: largura } : undefined}
+    >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="contato-nome">Seu nome</Label>

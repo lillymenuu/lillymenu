@@ -13,7 +13,7 @@ export function LandingContato() {
         </p>
       </div>
 
-      <div className="mx-auto mt-8 max-w-[490px] px-4 sm:px-0">
+      <div className="mx-auto mt-8 px-4 sm:px-6">
         <ContatoForm />
       </div>
     </section>
