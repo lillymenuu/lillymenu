@@ -38,12 +38,12 @@ export function DashboardSearch({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 w-64 shrink-0 items-center gap-2 rounded-lg border bg-background px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="flex w-64 shrink-0 items-center gap-2 rounded-full border bg-background py-1.5 pr-3 pl-3.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
         aria-label="Buscar página"
       >
         <Search size={15} className="shrink-0" />
         <span className="flex-1 text-left">Buscar</span>
-        <span className="flex shrink-0 items-center gap-0.5 rounded-md border bg-muted px-1.5 py-0.5 text-[11px] font-medium">
+        <span className="flex shrink-0 items-center gap-0.5 rounded-full border bg-background px-1.5 py-0.5 text-[11px] font-medium">
           Ctrl K
         </span>
       </button>
