@@ -64,7 +64,7 @@ export default async function LandingPage() {
       <LandingHeader
         brand={brand}
         logoImage={lc(config, "logo_image")}
-        navLinks={parseLinkList(config.nav_links_items)}
+        navLinks={[...parseLinkList(config.nav_links_items), { label: "Contato", href: "#fale-conosco" }]}
         ctaSecondarioTexto={lc(config, "nav_cta_secondary_text", "Entrar")}
       />
 
