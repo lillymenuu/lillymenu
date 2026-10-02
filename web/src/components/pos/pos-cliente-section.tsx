@@ -130,24 +130,24 @@ export function PosClienteSection({
             )}
 
             {comboAberto && (
-              <div className="animate-in fade-in slide-in-from-top-1 absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border bg-popover shadow-lg duration-150">
+              <div className="animate-in fade-in slide-in-from-top-0.5 ease-out absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border bg-popover shadow-lg duration-200">
                 <div className="max-h-52 overflow-y-auto">
                   {carregando ? (
-                    <div className="px-3 py-3 text-center text-sm text-muted-foreground">Carregando...</div>
+                    <div className="px-3 py-3 text-center text-xs text-muted-foreground">Carregando...</div>
                   ) : resultados && resultados.length > 0 ? (
                     resultados.map((c) => (
                       <button
                         key={c.id}
                         type="button"
                         onClick={() => selecionarCliente(c)}
-                        className="block w-full truncate border-b px-3 py-2.5 text-left text-sm transition-colors last:border-b-0 hover:bg-muted/60"
+                        className="block w-full truncate border-b border-border/60 px-3 py-2 text-left text-xs transition-colors duration-150 last:border-b-0 hover:bg-muted/40"
                       >
                         <span className="font-medium">{c.nome || "Sem nome"}</span>{" "}
                         <span className="text-muted-foreground">- {c.telefone}</span>
                       </button>
                     ))
                   ) : (
-                    <div className="px-3 py-3 text-center text-sm text-muted-foreground">
+                    <div className="px-3 py-3 text-center text-xs text-muted-foreground">
                       {busca.trim() ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado ainda."}
                     </div>
                   )}
@@ -162,7 +162,7 @@ export function PosClienteSection({
             aria-label="Cadastrar novo cliente"
             className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
-            <UserPlus className="size-4.5" />
+            <UserPlus className="size-3.5" />
           </button>
         </div>
       )}
