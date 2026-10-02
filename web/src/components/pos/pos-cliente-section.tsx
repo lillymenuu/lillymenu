@@ -140,7 +140,7 @@ export function PosClienteSection({
                         key={c.id}
                         type="button"
                         onClick={() => selecionarCliente(c)}
-                        className="block w-full truncate border-b border-border/60 px-3 py-2 text-left text-xs transition-colors duration-150 last:border-b-0 hover:bg-muted/40"
+                        className="block w-full truncate px-3 py-2 text-left text-xs transition-colors duration-150 hover:bg-muted/40"
                       >
                         <span className="font-medium">{c.nome || "Sem nome"}</span>{" "}
                         <span className="text-muted-foreground">- {c.telefone}</span>
@@ -162,7 +162,7 @@ export function PosClienteSection({
             aria-label="Cadastrar novo cliente"
             className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
-            <UserPlus className="size-3.5" />
+            <UserPlus className="size-3" />
           </button>
         </div>
       )}
