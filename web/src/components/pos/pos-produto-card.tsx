@@ -41,7 +41,7 @@ export function PosProdutoCard({
   return (
     <div
       onClick={() => produto.tem_variacoes && !semEstoque && restante > 0 && onAdicionar(produto)}
-      className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card transition-colors ${
+      className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-muted/40 transition-colors ${
         selecionado ? "border-primary bg-primary/5" : ""
       } ${semEstoque ? "opacity-50" : ""} ${produto.tem_variacoes && !semEstoque && restante > 0 ? "cursor-pointer" : ""}`}
     >
