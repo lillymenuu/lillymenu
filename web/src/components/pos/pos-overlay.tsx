@@ -492,7 +492,7 @@ export function PosOverlay({
           <PosCaixaGate onAberto={() => fetch("/api/cashcontrol/resumo").then((r) => r.json()).then((d) => d.ok && setCaixa(d))} />
         ) : (
           <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
-            <div className="min-h-0 min-w-0 border-b p-4 lg:border-b-0 lg:border-r">
+            <div className="min-h-0 min-w-0 border-b bg-muted/60 p-4 lg:border-b-0 lg:border-r">
               {catalogo ? (
                 <PosCatalog
                   catalogo={catalogo}
