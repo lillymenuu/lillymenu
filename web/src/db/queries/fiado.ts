@@ -82,6 +82,23 @@ export async function buscarClientesFiado(lojaId: number, busca: string): Promis
     .limit(10);
 }
 
+/* Para o combobox de cliente do PDV (campo vazio, antes de digitar): mais
+   recentes por atividade — ultima compra, ou data de cadastro pra quem ainda
+   nao comprou. */
+export async function buscarClientesRecentes(lojaId: number, limite: number): Promise<ClienteFiadoBusca[]> {
+  return db
+    .select({ id: clientes.id, nome: clientes.nome, telefone: clientes.telefone })
+    .from(clientes)
+    .where(eq(clientes.loja_id, lojaId))
+    .orderBy(
+      desc(sql`coalesce(
+        (select max(p.criado_em) from pedidos p where p.cliente_id = ${clientes.id} and p.loja_id = ${lojaId}),
+        ${clientes.criado_em}
+      )`)
+    )
+    .limit(limite);
+}
+
 export type LancamentoFiado = {
   id: number;
   tipo: "venda" | "pagamento";
