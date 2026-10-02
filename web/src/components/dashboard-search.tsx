@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { getSearchablePages } from "@/components/sidebar-nav-config";
+import { usePosOverlay } from "@/components/pos/pos-overlay-provider";
 
 export function DashboardSearch({
   menu,
@@ -17,6 +18,7 @@ export function DashboardSearch({
   const pages = getSearchablePages(menu);
   const [termo, setTermo] = useState("");
   const [open, setOpen] = useState(false);
+  const { abrir: abrirPos } = usePosOverlay();
 
   const resultado = termo.trim()
     ? pages.filter((p) => p.label.toLowerCase().includes(termo.trim().toLowerCase()))
@@ -82,7 +84,20 @@ export function DashboardSearch({
               const Icon = item.icon;
               const className =
                 "flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center text-xs hover:bg-muted";
-              return item.migrated ? (
+              return item.opensPos ? (
+                <button
+                  key={item.href}
+                  type="button"
+                  className={className}
+                  onClick={() => {
+                    setOpen(false);
+                    abrirPos();
+                  }}
+                >
+                  <Icon size={20} className="text-primary" />
+                  <span className="leading-tight">{item.label}</span>
+                </button>
+              ) : item.migrated ? (
                 <Link key={item.href} href={item.href} className={className} onClick={() => setOpen(false)}>
                   <Icon size={20} className="text-primary" />
                   <span className="leading-tight">{item.label}</span>
