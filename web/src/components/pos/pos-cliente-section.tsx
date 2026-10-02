@@ -119,7 +119,7 @@ export function PosClienteSection({
               <button
                 type="button"
                 onClick={abrirCombo}
-                className="flex w-full flex-col items-start gap-0.5 rounded-xl border bg-muted/50 px-3 py-1.5 text-left transition-colors hover:bg-muted/70"
+                className="flex w-full cursor-pointer flex-col items-start gap-0.5 rounded-xl border bg-muted/50 px-3 py-1.5 text-left transition-colors hover:bg-muted/70"
               >
                 <span className="text-xs font-medium text-foreground">Busque pelo cliente</span>
                 <span className="flex w-full items-center justify-between gap-2 text-sm text-muted-foreground">
@@ -140,7 +140,7 @@ export function PosClienteSection({
                         key={c.id}
                         type="button"
                         onClick={() => selecionarCliente(c)}
-                        className="block w-full truncate px-3 py-2 text-left text-xs transition-colors duration-150 hover:bg-muted/40"
+                        className="block w-full cursor-pointer truncate px-3 py-2 text-left text-xs transition-colors duration-150 hover:bg-muted/40"
                       >
                         <span className="font-medium">{c.nome || "Sem nome"}</span>{" "}
                         <span className="text-muted-foreground">- {c.telefone}</span>
@@ -160,7 +160,7 @@ export function PosClienteSection({
             type="button"
             onClick={() => setDialogAberto(true)}
             aria-label="Cadastrar novo cliente"
-            className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+            className="flex size-[46px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
             <UserPlus className="size-3" />
           </button>
