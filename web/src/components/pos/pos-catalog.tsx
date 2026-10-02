@@ -132,7 +132,7 @@ export function PosCatalog({
               className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 categoriaAtiva === s.categoria.id
                   ? "bg-primary text-primary-foreground"
-                  : "border text-muted-foreground hover:bg-muted/50"
+                  : "border bg-background text-primary hover:bg-primary/5"
               }`}
             >
               {s.categoria.nome}
