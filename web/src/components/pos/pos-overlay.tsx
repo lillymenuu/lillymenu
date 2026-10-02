@@ -447,8 +447,11 @@ export function PosOverlay({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-6">
-      <div className="flex h-full w-full max-w-[1440px] flex-col overflow-hidden rounded-3xl bg-background shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 duration-200">
+    <div
+      onKeyDown={(e) => e.key === "Escape" && onFechar()}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-4"
+    >
+      <div className="flex h-full w-full max-w-[1680px] flex-col overflow-hidden rounded-3xl bg-background shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 duration-200">
         <header className="flex shrink-0 items-center justify-between border-b bg-card px-5 py-3.5">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
