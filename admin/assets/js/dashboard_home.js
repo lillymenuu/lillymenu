@@ -627,7 +627,7 @@ carregarFunil();
       return;
     }
     dropdown.innerHTML = lista.map((p, i) =>
-      `<a class="dash-nav-search-item" href="${p.url}" data-idx="${i}" style="--i:${i}">
+      `<a class="dash-nav-search-item" href="${p.url}" data-idx="${i}" style="--i:${i}"${p.url === 'pdv' ? ' data-pdv-modal="1"' : ''}>
          <i class="bi ${p.icone}"></i>
          <span>${p.nome}</span>
        </a>`

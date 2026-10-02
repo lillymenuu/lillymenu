@@ -1571,7 +1571,6 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       const frame = document.getElementById('pdvModalFrame');
       const closeBtn = document.getElementById('pdvModalClose');
       const loading = document.getElementById('pdvModalLoading');
-      const pdvLink = document.querySelector('[data-pdv-modal="1"]');
 
       function abrirPdvModal(pedidoId){
         if (!overlay || !frame) return;
@@ -1592,13 +1591,16 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
         if (loading) loading.style.display = 'flex';
       }
 
-      if (pdvLink) {
-        pdvLink.addEventListener('click', (e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-          e.preventDefault();
-          abrirPdvModal();
-        });
-      }
+      // Delegacao no document em vez de bind direto: pega tambem o atalho
+      // "Pedidos (PDV)" do modal de busca do dashboard, que e renderizado
+      // dinamicamente apos este script rodar (ver dashboard_home.js).
+      document.addEventListener('click', (e) => {
+        const pdvLink = e.target.closest('[data-pdv-modal="1"]');
+        if (!pdvLink) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        abrirPdvModal();
+      });
 
       if (closeBtn) {
         closeBtn.addEventListener('click', fecharPdvModal);
