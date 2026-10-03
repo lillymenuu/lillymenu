@@ -15,6 +15,18 @@ import { HistoricoDialog } from "@/components/plandetails/historico-dialog";
 import { RenovacaoPagamento } from "@/components/plandetails/renovacao-pagamento";
 import type { AssinaturaDetalheResposta } from "@/lib/assinatura";
 
+/** Dias entre hoje e a data (pode ser negativo se ja passou). Mesmo cuidado de fuso do formatDataCurta. */
+function diasAte(iso: string | null): number | null {
+  if (!iso) return null;
+  const comHora = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso.replace(" ", "T");
+  const alvo = new Date(comHora);
+  if (Number.isNaN(alvo.getTime())) return null;
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  alvo.setHours(0, 0, 0, 0);
+  return Math.round((alvo.getTime() - hoje.getTime()) / 86400000);
+}
+
 function badgeInfo(status: string): { texto: string; className: string } {
   if (status === "ativa") {
     return { texto: "Assinatura ativa", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" };
@@ -51,6 +63,11 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
   const badge = badgeInfo(assinatura.status);
   const validoAteLabel = assinatura.status === "trial" ? "Trial válido até" : "Válido até";
   const validoAteData = assinatura.status === "trial" ? assinatura.trial_fim : assinatura.ciclo_fim;
+
+  // So libera o botao de Renovar perto do vencimento — sem isso e facil
+  // clicar sem querer e gerar uma cobranca pendente meses antes de precisar.
+  const diasParaExpirar = diasAte(assinatura.ciclo_fim);
+  const podeRenovar = diasParaExpirar === null || diasParaExpirar <= 5;
 
   const msgReduzirPlano = `Olá, gostaria de reduzir o plano da minha loja ${loja_nome}.`;
   const whatsLinkReduzir = `https://wa.me/${saas.whatsapp_numero}?text=${encodeURIComponent(msgReduzirPlano)}`;
@@ -128,7 +145,7 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
                 </div>
               )}
             </div>
-            {assinatura.status !== "trial" && (
+            {assinatura.status !== "trial" && podeRenovar && (
               <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setRenovarAberto(true)}>
                 <RefreshCw className="size-3.5" /> Renovar
               </Button>
