@@ -228,7 +228,7 @@ export function OrderManager({
               onDragLeave={() => setDragOverStatus((s) => (s === coluna.status ? null : s))}
               onDrop={(e) => onDrop(e, coluna.status)}
               className={cn(
-                "flex min-h-[320px] flex-col self-start overflow-hidden rounded-xl border transition-shadow",
+                "flex min-h-[320px] flex-col overflow-hidden rounded-xl border transition-shadow",
                 dragOverStatus === coluna.status && "ring-2 ring-primary ring-offset-2"
               )}
             >
