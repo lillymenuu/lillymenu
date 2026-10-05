@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown, Wallet, Percent, PieChart, BarChart3, Landmark, ClipboardList } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Percent, PieChart, BarChart3, Landmark, ClipboardList, FileText, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatBRLMilhar } from "@/components/ordermanager/constants";
 import { MESES_LABEL, DONUT_CORES, DESPESA_COR } from "@/lib/financeiroDashboard";
@@ -162,6 +163,10 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
   const maxPagamento = Math.max(1, ...porPagamento.map((p) => num(p.total)));
   const maxCategoria = Math.max(1, ...porCategoria.map((c) => num(c.total)));
 
+  function urlExport(formato: "pdf" | "excel") {
+    return `/api/financialdashboard/export/${formato}?mes=${dados.mes}&ano=${dados.ano}`;
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
       <div className="flex animate-in fade-in slide-in-from-bottom-2 flex-col gap-3 duration-500 sm:flex-row sm:items-end sm:justify-between">
@@ -169,7 +174,15 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
           <h1 className="text-xl font-semibold">Dashboard financeiro</h1>
           <p className="text-sm text-muted-foreground">Visão consolidada das receitas, despesas e resultado da sua loja.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 border-r pr-2.5">
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" nativeButton={false} render={<a href={urlExport("pdf")} />}>
+              <FileText size={14} /> PDF
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" nativeButton={false} render={<a href={urlExport("excel")} />}>
+              <FileSpreadsheet size={14} /> Excel
+            </Button>
+          </div>
           <Select value={String(dados.mes)} onValueChange={(v) => v && carregar(Number(v), dados.ano)} disabled={carregando}>
             <SelectTrigger className="w-40">
               <SelectValue>{() => MESES_LABEL[dados.mes] ?? dados.mes}</SelectValue>
