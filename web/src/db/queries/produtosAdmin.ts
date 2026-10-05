@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { produtos, categorias, estoque, produtoVariacoes, produtoExtras, produtoComplementosItens, configuracoes } from "@/db/schema";
+import { produtos, categorias, estoque, estoqueGrupoMembros, produtoVariacoes, produtoExtras, produtoComplementosItens, configuracoes } from "@/db/schema";
 import { storageSaveBase64, storageDelete } from "@/db/queries/storage";
 
 /*
@@ -116,6 +116,9 @@ export async function alterarAtivoDestaque(lojaId: number, id: number, ativo?: b
 export async function excluirProduto(lojaId: number, id: number): Promise<{ ok: true } | { ok: false; msg: string }> {
   if (id <= 0) return { ok: false, msg: "ID invalido." };
   const linhas = await db.select({ imagem: produtos.imagem }).from(produtos).where(and(eq(produtos.id, id), eq(produtos.loja_id, lojaId))).limit(1);
+  // Sem FK entre estoque_grupo_membros e produtos: sem essa limpeza, o produto excluido fica "preso"
+  // como membro do grupo de estoque vinculado e quebra a venda de qualquer outro membro do grupo.
+  await db.delete(estoqueGrupoMembros).where(and(eq(estoqueGrupoMembros.produto_id, id), eq(estoqueGrupoMembros.loja_id, lojaId)));
   await db.delete(produtos).where(and(eq(produtos.id, id), eq(produtos.loja_id, lojaId)));
   await storageDelete(linhas[0]?.imagem ?? null);
   await bumpCatalogoVersao(lojaId);

@@ -24,9 +24,14 @@ export async function membrosDoGrupo(conexao: Queryable, produtoId: number, loja
   const grupoId = proprio[0]?.grupoId;
   if (grupoId === undefined) return [produtoId];
 
+  // Inner join com produtos: uma exclusao de produto nao limpa a membresia do grupo (sem FK entre as
+  // tabelas), entao sem esse filtro um produto excluido continuaria aqui como "membro" — e qualquer
+  // venda de outro produto do mesmo grupo tentaria sincronizar estoque pra um produto_id inexistente,
+  // violando a FK de estoque e derrubando a venda inteira (nao so o espelhamento de estoque).
   const linhas = await conexao
     .select({ produtoId: estoqueGrupoMembros.produto_id })
     .from(estoqueGrupoMembros)
+    .innerJoin(produtos, eq(produtos.id, estoqueGrupoMembros.produto_id))
     .where(and(eq(estoqueGrupoMembros.grupo_id, grupoId), eq(estoqueGrupoMembros.loja_id, lojaId)));
   const ids = linhas.map((l) => l.produtoId);
   return ids.length > 0 ? ids : [produtoId];
