@@ -144,15 +144,19 @@ async function calcularTaxaEntrega(lojaId: number, tipo: string, endereco: strin
 
 type CupomValidado = { id: number; frete: boolean; descontoTipo: "valor" | "percent"; descontoValor: number };
 
-/** Validacao de cupom inline do PDV — mais simples que cupons.ts::validarCupom (cliente ja e conhecido, sem checagem de "publico"). */
-async function validarCupomPdv(lojaId: number, codigo: string, clienteId: number, subtotal: number): Promise<CupomValidado | { erro: string }> {
+/** Validacao de cupom inline do PDV — mais simples que cupons.ts::validarCupom (cliente ja e conhecido, sem checagem de "publico").
+ * `ignorarLimiteUso` e usado ao editar um pedido que ja tinha esse MESMO cupom aplicado: sem isso, o cupom e
+ * revalidado contra o estado que a propria venda original gerou (quantidade_usada ja incrementada, e o cliente
+ * ja "tem pedido" pra regra de primeira compra) e qualquer edicao — mesmo so troca de forma de pagamento — falha
+ * com "Cupom esgotado"/"Cupom valido apenas para primeira compra", sem salvar nada (nem o resto do pedido). */
+async function validarCupomPdv(lojaId: number, codigo: string, clienteId: number, subtotal: number, ignorarLimiteUso = false): Promise<CupomValidado | { erro: string }> {
   const [cupom] = await db.select().from(cupons).where(and(eq(cupons.codigo, codigo), eq(cupons.loja_id, lojaId))).limit(1);
   if (!cupom) return { erro: "Cupom nao encontrado" };
   if (!cupom.ativo) return { erro: "Cupom indisponivel" };
-  if (cupom.quantidade_total > 0 && cupom.quantidade_usada >= cupom.quantidade_total) return { erro: "Cupom esgotado" };
+  if (!ignorarLimiteUso && cupom.quantidade_total > 0 && cupom.quantidade_usada >= cupom.quantidade_total) return { erro: "Cupom esgotado" };
   if (cupom.minimo > 0 && subtotal < cupom.minimo) return { erro: "Pedido abaixo do minimo do cupom" };
 
-  if (cupom.primeira_compra) {
+  if (!ignorarLimiteUso && cupom.primeira_compra) {
     const [{ n }] = await db.select({ n: sql<string>`count(*)` }).from(pedidos).where(and(eq(pedidos.cliente_id, clienteId), eq(pedidos.loja_id, lojaId)));
     if (Number(n) > 0) return { erro: "Cupom valido apenas para primeira compra" };
   }
@@ -281,11 +285,19 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   let subtotal = 0;
   for (const i of itens) subtotal += toFloat(i.preco) * (i.qtd || 0);
 
+  // Se o pedido editado ja tinha esse mesmo cupom, essa "aplicacao" nao e nova — o uso ja foi
+  // contabilizado (quantidade_usada / contagem de primeira compra) quando o pedido foi criado.
+  let cupomMantidoDaEdicao = false;
+  if (pedidoEdicaoId && cupom !== "") {
+    const [pedidoAtual] = await db.select({ cupom: pedidos.cupom }).from(pedidos).where(and(eq(pedidos.id, pedidoEdicaoId), eq(pedidos.loja_id, lojaId))).limit(1);
+    cupomMantidoDaEdicao = (pedidoAtual?.cupom ?? "").toUpperCase() === cupom;
+  }
+
   let cupomAplicado = false;
   let cupomId: number | null = null;
   let cupomFrete = false;
   if (cupom !== "") {
-    const resultado = await validarCupomPdv(lojaId, cupom, input.clienteId, subtotal);
+    const resultado = await validarCupomPdv(lojaId, cupom, input.clienteId, subtotal, cupomMantidoDaEdicao);
     if ("erro" in resultado) return { ok: false, msg: resultado.erro };
     cupomFrete = resultado.frete;
     descontoTipo = resultado.descontoTipo;
@@ -561,7 +573,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
 
       await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: "aceito", loja_id: lojaId });
 
-      if (cupomAplicado && cupomId) {
+      if (cupomAplicado && cupomId && !cupomMantidoDaEdicao) {
         const resCupom = await tx
           .update(cupons)
           .set({ quantidade_usada: sql`${cupons.quantidade_usada} + 1`, atualizado_em: sql`now()` })
