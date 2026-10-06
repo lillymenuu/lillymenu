@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Store, Headset, LogOut, Menu, X, ShieldCheck, Globe } from "lucide-react";
+import { LayoutDashboard, Store, Headset, LogOut, Menu, X, ShieldCheck, Globe, Bell, ChevronDown, ChevronRight } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SaTopbarSearch } from "@/components/superadmin/sa-topbar-search";
 import { cn } from "cn";
 
 const NAV = [
@@ -65,28 +67,28 @@ export function SuperadminShell({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-950 text-slate-300 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
           aberto ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center justify-between gap-2 px-5 py-5">
+        <div className="flex items-center justify-between gap-2 border-b px-5 py-5">
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/favicon_store.png" alt="" className="size-8 rounded-lg bg-white p-1" />
+            <img src="/favicon_store.png" alt="" className="size-8 rounded-lg" />
             <div className="leading-tight">
-              <div className="text-sm font-semibold text-white">Lilly Menu</div>
-              <div className="flex items-center gap-1 text-[11px] text-primary-foreground/60">
+              <div className="text-sm font-semibold">Lilly Menu</div>
+              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                 <ShieldCheck size={11} /> Superadmin
               </div>
             </div>
           </div>
-          <button className="rounded-md p-1 text-slate-400 hover:text-white lg:hidden" onClick={() => setAberto(false)} aria-label="Fechar menu">
+          <button className="rounded-md p-1 text-muted-foreground hover:text-foreground lg:hidden" onClick={() => setAberto(false)} aria-label="Fechar menu">
             <X size={18} />
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-2">
-          <p className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Gestão</p>
+        <nav className="flex-1 space-y-1 px-3 py-4">
+          <p className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Gestão</p>
           {NAV.map(({ href, label, icon: Icon }) => {
             const ativo = pathname.startsWith(href);
             return (
@@ -95,53 +97,75 @@ export function SuperadminShell({
                 href={href}
                 onClick={() => setAberto(false)}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  ativo ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  ativo ? "bg-indigo-50 text-indigo-700" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                {ativo && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-indigo-500" />}
-                <Icon size={18} />
+                <Icon size={18} className={ativo ? "text-indigo-600" : "text-muted-foreground"} />
                 <span className="flex-1">{label}</span>
-                {href === "/superadmin/suporte" && naoLidas > 0 && (
-                  <span className="flex size-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">
+                {href === "/superadmin/suporte" && naoLidas > 0 ? (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white">
                     {naoLidas > 99 ? "99+" : naoLidas}
                   </span>
+                ) : (
+                  <ChevronRight size={14} className="text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100" />
                 )}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-white/10 p-3">
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-              {iniciais(admin.nome)}
-            </div>
+        <div className="border-t p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</div>
             <div className="min-w-0 flex-1 leading-tight">
-              <div className="truncate text-sm font-medium text-white">{admin.nome}</div>
-              <div className="truncate text-xs text-slate-500">{admin.email}</div>
+              <div className="truncate text-sm font-medium">{admin.nome}</div>
+              <div className="truncate text-xs text-muted-foreground">{admin.email}</div>
             </div>
-            <button
-              onClick={sair}
-              className="rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white"
-              aria-label="Sair"
-              title="Sair"
-            >
-              <LogOut size={16} />
-            </button>
           </div>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur lg:px-8">
-          <button className="rounded-md p-1.5 hover:bg-muted lg:hidden" onClick={() => setAberto(true)} aria-label="Abrir menu">
+          <button className="shrink-0 rounded-md p-1.5 hover:bg-muted lg:hidden" onClick={() => setAberto(true)} aria-label="Abrir menu">
             <Menu size={20} />
           </button>
-          <h1 className="flex-1 text-base font-semibold">{atual?.label ?? "Superadmin"}</h1>
-          <span className="hidden text-xs text-muted-foreground capitalize sm:block">
-            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
-          </span>
+          <h1 className="hidden shrink-0 text-base font-semibold sm:block">{atual?.label ?? "Superadmin"}</h1>
+
+          <div className="flex flex-1 justify-end sm:justify-center">
+            <SaTopbarSearch />
+          </div>
+
+          <Link
+            href="/superadmin/suporte"
+            className="relative flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={naoLidas > 0 ? `Suporte — ${naoLidas} não lidas` : "Suporte"}
+          >
+            <Bell size={18} />
+            {naoLidas > 0 && <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-rose-500 ring-2 ring-background" />}
+          </Link>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button type="button" className="flex shrink-0 items-center gap-1.5 rounded-full p-1 pr-1.5 transition-colors hover:bg-muted" aria-label="Conta">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-bold text-white">{iniciais(admin.nome)}</span>
+                  <ChevronDown size={14} className="hidden text-muted-foreground sm:block" />
+                </button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="font-normal">
+                <p className="truncate text-sm font-medium text-foreground">{admin.nome}</p>
+                <p className="truncate text-xs">{admin.email}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={sair}>
+                <LogOut size={14} /> Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
         <main className="min-w-0 flex-1 px-4 py-6 lg:px-8">{children}</main>
         <footer className="border-t py-4 text-center text-sm text-muted-foreground">

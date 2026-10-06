@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, FileCheck2, Pencil, Power, PowerOff, Search, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,6 +40,7 @@ function iniciais(nome: string) {
 type Confirmacao = { loja: SaLoja; acao: "ativar" | "suspender" | "excluir" };
 
 export function SaLojasManager({ inicial, phpAdminUrl }: { inicial: SaLojasResposta; phpAdminUrl: string }) {
+  const searchParams = useSearchParams();
   const [dados, setDados] = useState(inicial);
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState("todas");
@@ -53,6 +55,15 @@ export function SaLojasManager({ inicial, phpAdminUrl }: { inicial: SaLojasRespo
     const r = await saCall<SaLojasResposta | { ok: false }>("superadmin_lojas");
     if (r.ok) setDados(r as SaLojasResposta);
   }
+
+  /* Deep-link da busca do topbar (?loja=<id>): abre direto o editar dessa loja. */
+  useEffect(() => {
+    const id = searchParams.get("loja");
+    if (!id) return;
+    const loja = dados.lojas.find((l) => l.id === Number(id));
+    if (loja) setEditando(loja);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
