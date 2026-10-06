@@ -459,14 +459,22 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
     const resultadoTx = await withTransaction(async (tx) => {
       // edicao com os MESMOS itens: so atualiza pagamento/tipo/endereco/cupom, sem tocar estoque/cashback/pontos/fiado
       if (pedidoEdicaoId) {
-        const itensAtuais = await tx.select({ produtoId: pedidoItens.produto_id, quantidade: pedidoItens.quantidade }).from(pedidoItens).where(and(eq(pedidoItens.pedido_id, pedidoEdicaoId), eq(pedidoItens.loja_id, lojaId)));
+        const itensAtuais = await tx
+          .select({ produtoId: pedidoItens.produto_id, quantidade: pedidoItens.quantidade, produtoNome: pedidoItens.produto_nome, preco: pedidoItens.preco, observacoes: pedidoItens.observacoes })
+          .from(pedidoItens)
+          .where(and(eq(pedidoItens.pedido_id, pedidoEdicaoId), eq(pedidoItens.loja_id, lojaId)));
+        // Assinatura inclui nome (variacao/grupos de opcoes escolhidos ja vem concatenados nele) e preco/
+        // observacoes — so produtoId:quantidade nao basta: dois pedidos do mesmo produto/quantidade podem
+        // ter composicoes diferentes (ex.: trocou os cremes do acai sem mudar o produto nem a quantidade),
+        // e usar so produtoId:quantidade fazia esse caso cair aqui sem nunca atualizar pedido_itens/
+        // pedido_item_opcoes — o resumo do pedido ficava com a composicao antiga pra sempre.
         const assinaturaAntiga = itensAtuais
           .filter((it) => it.produtoId && it.quantidade)
-          .map((it) => `${it.produtoId}:${it.quantidade}`)
+          .map((it) => `${it.produtoId}:${it.quantidade}:${it.produtoNome ?? ""}:${Number(it.preco ?? 0).toFixed(2)}:${it.observacoes ?? ""}`)
           .sort();
         const assinaturaNova = itens
           .filter((i) => (i.id ?? 0) > 0 && (i.qtd ?? 0) > 0)
-          .map((i) => `${i.id}:${i.qtd}`)
+          .map((i) => `${i.id}:${i.qtd}:${i.nome}:${toFloat(i.preco).toFixed(2)}:${i.observacoes ?? ""}`)
           .sort();
         const itensIguais = assinaturaAntiga.length > 0 && JSON.stringify(assinaturaAntiga) === JSON.stringify(assinaturaNova);
 
