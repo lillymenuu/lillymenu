@@ -202,5 +202,6 @@ export const CORES_MENU_OPCOES: { valor: string; nome: string; desc: string }[] 
   { valor: "#a8195f", nome: "Fúcsia", desc: "Boa para marcas femininas e modernas." },
   { valor: "#c98bd9", nome: "Rosa Doce", desc: "Ótima para docerias temáticas e infantis." },
   { valor: "#7b5c3e", nome: "Marrom Rústico", desc: "Estilo rústico combina com pizzarias com forno à lenha." },
+  { valor: "#7c3aed", nome: "Roxo Açaí", desc: "Tom roxo vibrante, inspirado na polpa do açaí — ideal para açaiterias e sorveterias." },
 ];
 
