@@ -8,6 +8,32 @@ function storageKey(lojaId: number): string {
   return `lillymenu_store_cart_${lojaId}`;
 }
 
+function assinaturaSelecoesGrupos(selecoes?: Record<number, number[]>): string {
+  if (!selecoes) return "";
+  return Object.entries(selecoes)
+    .map(([grupoId, ids]) => `${grupoId}:${[...ids].sort((a, b) => a - b).join(",")}`)
+    .sort()
+    .join("|");
+}
+
+function assinaturaCombosels(combosels?: { id: number; qtd: number }[]): string {
+  if (!combosels) return "";
+  return [...combosels]
+    .map((s) => `${s.id}:${s.qtd}`)
+    .sort()
+    .join("|");
+}
+
+/* Identidade da linha do carrinho pra decidir se um item novo soma na quantidade de uma
+   linha existente ou vira uma linha a parte — precisa incluir variacao/grupos de opcoes e
+   combosels, nao so id/tipo/obs: dois pedidos do MESMO produto com coberturas diferentes
+   (ex.: um acai com Creme de Ninho, outro com Creme de Morango) tem o mesmo id/tipo/obs,
+   mas sao composicoes diferentes — sem isso, o segundo so somava na quantidade do primeiro
+   e a composicao escolhida nele desaparecia do carrinho. */
+function assinaturaItem(item: Omit<StoreCartItem, "key" | "qtd">): string {
+  return [item.id, item.tipo, item.obs ?? "", item.variacaoId ?? "", assinaturaSelecoesGrupos(item.selecoesGrupos), assinaturaCombosels(item.combosels)].join("::");
+}
+
 export function useStoreCart(lojaId: number) {
   const [itens, setItens] = useState<StoreCartItem[]>([]);
   const [carregado, setCarregado] = useState(false);
@@ -35,7 +61,8 @@ export function useStoreCart(lojaId: number) {
   const adicionar = useCallback((item: Omit<StoreCartItem, "key">) => {
     trackStoreEvento(lojaId, "carrinho");
     setItens((atual) => {
-      const idxExistente = atual.findIndex((i) => i.id === item.id && i.tipo === item.tipo && i.obs === item.obs);
+      const assinaturaNova = assinaturaItem(item);
+      const idxExistente = atual.findIndex((i) => assinaturaItem(i) === assinaturaNova);
       if (idxExistente >= 0) {
         return atual.map((i, idx) => {
           if (idx !== idxExistente) return i;
