@@ -1057,7 +1057,11 @@ export const pedidoItens = pgTable(
   {
     id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
     pedido_id: integer("pedido_id"),
-    produto_nome: varchar("produto_nome", { length: 150 }),
+    /* text, nao varchar(150): o nome do item inclui o nome de todas as opcoes escolhidas
+       concatenadas (variacao + cada grupo de opcoes selecionado) — com produtos de varios
+       grupos (ex.: acai com Cremes/Mix/Embalagem/Adicionais) isso passa facil de 150
+       caracteres e o insert falhava com "value too long for type character varying(150)". */
+    produto_nome: text("produto_nome"),
     quantidade: integer("quantidade"),
     preco: numeric("preco", { precision: 10, scale: 2, mode: "number" }),
     observacoes: text("observacoes"),

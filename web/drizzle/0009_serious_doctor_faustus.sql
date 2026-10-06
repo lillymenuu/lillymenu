@@ -1,0 +1,1 @@
+ALTER TABLE "pedido_itens" ALTER COLUMN "produto_nome" SET DATA TYPE text;

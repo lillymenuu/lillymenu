@@ -64,6 +64,13 @@
       "when": 1791246947094,
       "tag": "0008_perfect_blacklash",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791247837147,
+      "tag": "0009_serious_doctor_faustus",
+      "breakpoints": true
     }
   ]
 }
