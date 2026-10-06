@@ -19,8 +19,12 @@ const TIPOS_CICLO = ["todos", "entrega", "retirada", "mesa"] as const;
 
 type FiltroColuna = { tipo: (typeof TIPOS_CICLO)[number]; hoje: boolean };
 
+/* Comparação completa (não só id/status/total/motoboy_id): uma edição pode mudar forma de
+   pagamento, composição do pedido, endereço, cupom etc. sem mexer nesses 4 campos — com a
+   assinatura restrita, o polling buscava os dados novos mas descartava em silêncio por
+   "nada mudou", e só um F5 (que ignora esse cache local) mostrava a edição. */
 function snapshot(pedidos: Pedido[]) {
-  return pedidos.map((p) => `${p.id}:${p.status}:${p.total}:${p.motoboy_id ?? ""}`).join("|");
+  return JSON.stringify(pedidos);
 }
 
 function ehHoje(iso: string) {
