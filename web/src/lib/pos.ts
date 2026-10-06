@@ -96,6 +96,11 @@ export type PosCartItem = {
   variacaoId?: number | null;
   /** Ids selecionados por grupo de opcoes (chave = grupo.id), no maximo 1 item quando o grupo e de selecao unica. */
   selecoesGrupos?: Record<number, number[]>;
+  /** So preenchido ao reabrir um pedido existente pra editar: snapshot (titulo+nome) da selecao original,
+   * usado pra re-resolver variacaoId/selecoesGrupos contra o catalogo ATUAL por nome — produto_variacoes/
+   * produto_opcoes_grupos/_itens sao reescritos (ids novos) a cada "Salvar" do produto, entao os ids
+   * gravados no pedido original podem nao existir mais mesmo que o conteudo seja o mesmo. */
+  opcoesSnapshot?: { tipo: "variacao" | "grupo"; titulo: string; nome: string }[];
 };
 
 export type PosClienteBusca = { id: number; nome: string; telefone: string };

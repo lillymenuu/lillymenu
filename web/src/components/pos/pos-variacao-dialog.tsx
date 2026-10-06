@@ -51,10 +51,37 @@ export function PosVariacaoDialog({
       .then((data: PosVariacoesResposta) => {
         if (data.ok) {
           const lista = data.variacoes ?? [];
+          const gruposLista = data.grupos_opcoes ?? [];
           setVariacoes(lista);
           setVariacaoTitulo(data.variacao_titulo ?? null);
           setVariacaoObrigatorio(!!data.variacao_obrigatorio);
-          setGruposOpcoes(data.grupos_opcoes ?? []);
+          setGruposOpcoes(gruposLista);
+
+          // Reabrindo um pedido existente pra editar: os ids gravados no pedido podem nao
+          // existir mais no catalogo (produto_variacoes/produto_opcoes_grupos/_itens sao
+          // reescritos com ids novos a cada "Salvar" do produto, mesmo sem mudar o conteudo).
+          // Resolve a selecao original por nome contra o catalogo atual em vez de confiar nos
+          // ids antigos — sem isso, qualquer "Salvar" no produto (ate um ajuste sem relacao)
+          // fazia o modal reabrir em branco pra pedidos ja feitos.
+          const snapshot = itemEditando?.opcoesSnapshot;
+          if (snapshot?.length) {
+            const snapVariacao = snapshot.find((o) => o.tipo === "variacao");
+            const variacaoPorId = lista.find((v) => v.id === itemEditando?.variacaoId);
+            const variacaoPorNome = snapVariacao
+              ? lista.find((v) => ([v.tamanho, v.cor].filter(Boolean).join(" - ") || "Variação") === snapVariacao.nome)
+              : undefined;
+            setVariacaoId((variacaoPorId ?? variacaoPorNome)?.id ?? null);
+
+            const selecoesResolvidas: Record<number, number[]> = {};
+            for (const grupo of gruposLista) {
+              const nomesDoGrupo = snapshot.filter((o) => o.tipo === "grupo" && o.titulo === grupo.titulo).map((o) => o.nome);
+              if (nomesDoGrupo.length === 0) continue;
+              const ids = grupo.itens.filter((it) => nomesDoGrupo.includes(it.nome)).map((it) => it.id);
+              if (ids.length > 0) selecoesResolvidas[grupo.id] = ids;
+            }
+            setSelecoesGrupos(selecoesResolvidas);
+          }
+
           if (!itemEditando && lista.length > 0) setVariacaoId(lista[0].id);
         }
       })

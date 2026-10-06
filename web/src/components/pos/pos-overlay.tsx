@@ -191,7 +191,7 @@ export function PosOverlay({
           quantidade: number;
           preco: number;
           observacoes: string | null;
-          opcoes: { tipo: "variacao" | "grupo"; grupo_id: number | null; referencia_id: number }[];
+          opcoes: { tipo: "variacao" | "grupo"; grupo_id: number | null; referencia_id: number; titulo: string; nome: string }[];
         }[] = data.itens ?? [];
 
         setPedidoEditandoCodigo(pedido.codigo ?? pedido.id);
@@ -249,6 +249,7 @@ export function PosOverlay({
             estoque: produtoCatalogo?.estoque,
             variacaoId,
             selecoesGrupos,
+            opcoesSnapshot: i.opcoes.map((o) => ({ tipo: o.tipo, titulo: o.titulo, nome: o.nome })),
           });
         });
       })
