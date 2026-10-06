@@ -99,7 +99,7 @@ export function SuperadminShell({
                   ativo ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"
                 )}
               >
-                {ativo && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" />}
+                {ativo && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-indigo-500" />}
                 <Icon size={18} />
                 <span className="flex-1">{label}</span>
                 {href === "/superadmin/suporte" && naoLidas > 0 && (
@@ -114,7 +114,7 @@ export function SuperadminShell({
 
         <div className="border-t border-white/10 p-3">
           <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
               {iniciais(admin.nome)}
             </div>
             <div className="min-w-0 flex-1 leading-tight">
@@ -138,7 +138,10 @@ export function SuperadminShell({
           <button className="rounded-md p-1.5 hover:bg-muted lg:hidden" onClick={() => setAberto(true)} aria-label="Abrir menu">
             <Menu size={20} />
           </button>
-          <h1 className="text-base font-semibold">{atual?.label ?? "Superadmin"}</h1>
+          <h1 className="flex-1 text-base font-semibold">{atual?.label ?? "Superadmin"}</h1>
+          <span className="hidden text-xs text-muted-foreground capitalize sm:block">
+            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+          </span>
         </header>
         <main className="min-w-0 flex-1 px-4 py-6 lg:px-8">{children}</main>
         <footer className="border-t py-4 text-center text-sm text-muted-foreground">
