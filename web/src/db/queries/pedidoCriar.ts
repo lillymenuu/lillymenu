@@ -18,6 +18,7 @@ import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { estaAberto } from "@/db/queries/lojaStatus";
 import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
 import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
+import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
 import { saldoCashbackLiberado } from "@/db/queries/cashback";
 import { timestampFortaleza } from "@/db/queries/tempo";
@@ -45,6 +46,8 @@ export type ItemCarrinho = {
   combosels?: { id: number; qtd?: number }[] | null;
   crossSell?: boolean;
   pontosPendente?: boolean;
+  variacaoId?: number | null;
+  selecoesGrupos?: Record<number, number[]> | null;
 };
 
 export type CriarPedidoInput = {
@@ -220,6 +223,8 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
             cross_sell: Boolean(item.crossSell),
           })
           .returning({ id: pedidoItens.id });
+
+        await registrarItemOpcoes(tx, novoItem.id, item.variacaoId, item.selecoesGrupos, lojaId);
 
         if (!isCombo && item.id) {
           await baixarEstoque(tx, item.id, lojaId, qtd, "pedido", pedidoId);

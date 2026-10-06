@@ -383,6 +383,8 @@ export function StoreCheckoutDialog({
             combosels: i.combosels,
             crossSell: i.crossSell === true,
             pontosPendente: i.pontosCusto != null,
+            variacao_id: i.variacaoId ?? undefined,
+            selecoes_grupos: i.selecoesGrupos,
           })),
           troco_solicitado: formaPagamento === "dinheiro" && trocoPara.trim() !== "",
           troco_valor: formaPagamento === "dinheiro" ? parseValorMascarado(trocoPara) || 0 : 0,

@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server";
 import { criarPedidoLoja, type ItemCarrinho } from "@/db/queries/pedidoCriar";
 
-type ItemPayload = { id?: number; nome?: string; preco?: number; qtd?: number; obs?: string; combosels?: { id: number; qtd?: number }[] | null; crossSell?: boolean; pontosPendente?: boolean };
+type ItemPayload = {
+  id?: number;
+  nome?: string;
+  preco?: number;
+  qtd?: number;
+  obs?: string;
+  combosels?: { id: number; qtd?: number }[] | null;
+  crossSell?: boolean;
+  pontosPendente?: boolean;
+  variacao_id?: number | null;
+  selecoes_grupos?: Record<string, number[]> | null;
+};
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -24,6 +35,8 @@ export async function POST(request: Request) {
     combosels: i.combosels ?? null,
     crossSell: Boolean(i.crossSell),
     pontosPendente: Boolean(i.pontosPendente),
+    variacaoId: i.variacao_id ?? null,
+    selecoesGrupos: i.selecoes_grupos ?? null,
   }));
 
   let agendamento: { data: string; slot: string } | null = null;

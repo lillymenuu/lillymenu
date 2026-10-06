@@ -1075,6 +1075,34 @@ export const pedidoItens = pgTable(
   ]
 );
 
+/*
+ * Selecao estruturada de variacao/grupos de opcoes escolhida pelo cliente num item do
+ * pedido — sem isso, a composicao so existia "achatada" em pedido_itens.produto_nome
+ * (texto livre), entao reabrir o pedido pra editar (loja ou PDV) nunca conseguia
+ * vir com as opcoes ja marcadas. `referencia_id` e o id de produto_variacoes (tipo
+ * "variacao") ou produto_opcoes_itens (tipo "grupo"); `grupo_id` so e preenchido no
+ * tipo "grupo", pra saber em qual grupo encaixar a opcao ao reconstituir a selecao.
+ * Sem FK pras tabelas de catalogo (produto_variacoes/produto_opcoes_itens/_grupos):
+ * elas sao reescritas por delete-all+reinsert a cada "Salvar" do produto, entao os
+ * ids nao sao estaveis — se a opcao referenciada nao existir mais, a reconstituicao
+ * so nao marca nada (sem quebrar a leitura do pedido antigo).
+ */
+export const pedidoItemOpcoes = pgTable(
+  "pedido_item_opcoes",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    pedido_item_id: integer("pedido_item_id").notNull(),
+    tipo: text("tipo").$type<"variacao" | "grupo">().notNull(),
+    grupo_id: integer("grupo_id"),
+    referencia_id: integer("referencia_id").notNull(),
+    loja_id: integer("loja_id").notNull(),
+  },
+  (t) => [
+    index("pedido_item_opcoes_idx_pedido_item_opcoes_item").on(t.pedido_item_id),
+    foreignKey({ columns: [t.pedido_item_id], foreignColumns: [pedidoItens.id], name: "pedido_item_opcoes_fk_pedido_item_opcoes_item" }).onDelete("cascade"),
+  ]
+);
+
 export const pedidoPagamentos = pgTable(
   "pedido_pagamentos",
   {

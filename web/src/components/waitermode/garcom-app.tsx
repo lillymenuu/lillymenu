@@ -161,7 +161,16 @@ function GarcomAppInterno({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mesa_id: mesa.id,
-          itens: carrinho.map((i) => ({ id: i.id, nome: i.nome, preco: i.precoUnit, qtd: i.qtd, obs: i.obs, combosels: i.combosels })),
+          itens: carrinho.map((i) => ({
+            id: i.id,
+            nome: i.nome,
+            preco: i.precoUnit,
+            qtd: i.qtd,
+            obs: i.obs,
+            combosels: i.combosels,
+            variacao_id: i.variacaoId ?? undefined,
+            selecoes_grupos: i.selecoesGrupos,
+          })),
           forma_pagamento: formaPagamento,
           troco_solicitado: formaPagamento === "dinheiro" && trocoPrecisa === true && trocoValorNumerico > 0,
           troco_valor: trocoValorNumerico || 0,

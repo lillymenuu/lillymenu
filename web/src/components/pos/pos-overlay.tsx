@@ -185,8 +185,15 @@ export function PosOverlay({
           return;
         }
         const pedido = data.pedido;
-        const itens: { produto_id: number | null; produto_nome: string; quantidade: number; preco: number; observacoes: string | null }[] =
-          data.itens ?? [];
+        const itens: {
+          produto_id: number | null;
+          produto_nome: string;
+          quantidade: number;
+          preco: number;
+          observacoes: string | null;
+          variacao_id: number | null;
+          selecoes_grupos: Record<number, number[]>;
+        }[] = data.itens ?? [];
 
         setPedidoEditandoCodigo(pedido.codigo ?? pedido.id);
         setCliente({ id: pedido.cliente_id, nome: pedido.nome, telefone: pedido.telefone });
@@ -236,6 +243,8 @@ export function PosOverlay({
             usarPontos: false,
             imagem: produtoCatalogo?.imagem,
             estoque: produtoCatalogo?.estoque,
+            variacaoId: i.variacao_id,
+            selecoesGrupos: i.selecoes_grupos,
           });
         });
       })
@@ -365,6 +374,8 @@ export function PosOverlay({
         observacoes: i.observacoes,
         usar_pontos: i.usarPontos ? 1 : 0,
         ...(i.combosels ? { combosels: i.combosels } : {}),
+        ...(i.variacaoId ? { variacao_id: i.variacaoId } : {}),
+        ...(i.selecoesGrupos && Object.keys(i.selecoesGrupos).length > 0 ? { selecoes_grupos: i.selecoesGrupos } : {}),
       }));
 
       const res = await fetch("/api/pos/salvar", {

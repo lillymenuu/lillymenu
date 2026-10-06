@@ -162,6 +162,8 @@ export function StoreProdutoDialog({
         imagem: produto.imagem,
         estoqueMax: produto.estoque,
         pontosGanho: produto.pontos_ganho,
+        variacaoId,
+        selecoesGrupos,
       });
     }
 

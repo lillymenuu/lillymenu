@@ -2,7 +2,16 @@ import { NextResponse } from "next/server";
 import { getSessaoGarcom } from "@/lib/session";
 import { criarPedidoMesa, type ItemPedidoMesa } from "@/db/queries/modoGarcom";
 
-type ItemPayload = { id?: number; nome?: string; preco?: number; qtd?: number; obs?: string; combosels?: { id: number; qtd?: number }[] | null };
+type ItemPayload = {
+  id?: number;
+  nome?: string;
+  preco?: number;
+  qtd?: number;
+  obs?: string;
+  combosels?: { id: number; qtd?: number }[] | null;
+  variacao_id?: number | null;
+  selecoes_grupos?: Record<string, number[]> | null;
+};
 
 /* Equivalente de public/api/garcom_pedido_criar.php. */
 export async function POST(request: Request) {
@@ -21,6 +30,8 @@ export async function POST(request: Request) {
     qtd: Number(i.qtd ?? 1),
     obs: i.obs,
     combosels: i.combosels ?? null,
+    variacaoId: i.variacao_id ?? null,
+    selecoesGrupos: i.selecoes_grupos ?? null,
   }));
 
   const resultado = await criarPedidoMesa({

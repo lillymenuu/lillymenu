@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { pedidos, clientes, motoboys, pedidoPagamentos, pedidoItens, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
+import { pedidos, clientes, motoboys, pedidoPagamentos, pedidoItens, pedidoItemOpcoes, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
 
 /*
@@ -244,7 +244,15 @@ export async function buscarPedidos(lojaId: number, termoBruto: string): Promise
   };
 }
 
-export type ItemPedido = { produtoId: number | null; produtoNome: string | null; quantidade: number | null; preco: number | null; observacoes: string | null };
+export type ItemPedido = {
+  produtoId: number | null;
+  produtoNome: string | null;
+  quantidade: number | null;
+  preco: number | null;
+  observacoes: string | null;
+  variacaoId: number | null;
+  selecoesGrupos: Record<number, number[]>;
+};
 export type PagamentoDetalhado = { forma: string; valor: number; taxaMaquininha: number };
 
 export type ClienteStats = {
@@ -326,10 +334,31 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
     }
   }
 
-  const itensLinhas = await db
-    .select({ produtoId: pedidoItens.produto_id, produtoNome: pedidoItens.produto_nome, quantidade: pedidoItens.quantidade, preco: pedidoItens.preco, observacoes: pedidoItens.observacoes })
+  const itensRaw = await db
+    .select({ id: pedidoItens.id, produtoId: pedidoItens.produto_id, produtoNome: pedidoItens.produto_nome, quantidade: pedidoItens.quantidade, preco: pedidoItens.preco, observacoes: pedidoItens.observacoes })
     .from(pedidoItens)
     .where(and(eq(pedidoItens.pedido_id, pedidoId), eq(pedidoItens.loja_id, lojaId)));
+
+  /* Selecao de variacao/grupos de opcoes de cada item — pra reabrir o pedido (editar no
+     PDV) com as opcoes do cliente ja marcadas, em vez de so o nome "achatado" em texto. */
+  const opcoesRaw = itensRaw.length
+    ? await db
+        .select({ pedidoItemId: pedidoItemOpcoes.pedido_item_id, tipo: pedidoItemOpcoes.tipo, grupoId: pedidoItemOpcoes.grupo_id, referenciaId: pedidoItemOpcoes.referencia_id })
+        .from(pedidoItemOpcoes)
+        .where(and(inArray(pedidoItemOpcoes.pedido_item_id, itensRaw.map((i) => i.id)), eq(pedidoItemOpcoes.loja_id, lojaId)))
+    : [];
+
+  const itensLinhas: ItemPedido[] = itensRaw.map((i) => {
+    const opcoesDoItem = opcoesRaw.filter((o) => o.pedidoItemId === i.id);
+    const variacaoId = opcoesDoItem.find((o) => o.tipo === "variacao")?.referenciaId ?? null;
+    const selecoesGrupos: Record<number, number[]> = {};
+    for (const o of opcoesDoItem) {
+      if (o.tipo === "grupo" && o.grupoId !== null) {
+        (selecoesGrupos[o.grupoId] ??= []).push(o.referenciaId);
+      }
+    }
+    return { produtoId: i.produtoId, produtoNome: i.produtoNome, quantidade: i.quantidade, preco: i.preco, observacoes: i.observacoes, variacaoId, selecoesGrupos };
+  });
 
   const pagamentosLinhas = await db
     .select({ forma: pedidoPagamentos.forma, valor: pedidoPagamentos.valor, taxaMaquininha: pedidoPagamentos.taxa_maquininha })

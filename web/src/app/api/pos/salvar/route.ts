@@ -11,7 +11,17 @@ function toNum(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-type ItemPayload = { id?: number | null; nome?: string; qtd?: number; preco?: number; observacoes?: string; usar_pontos?: number; combosels?: { id: number; qtd?: number }[] | null };
+type ItemPayload = {
+  id?: number | null;
+  nome?: string;
+  qtd?: number;
+  preco?: number;
+  observacoes?: string;
+  usar_pontos?: number;
+  combosels?: { id: number; qtd?: number }[] | null;
+  variacao_id?: number | null;
+  selecoes_grupos?: Record<string, number[]> | null;
+};
 type PagamentoPayload = { forma?: string; valor?: number };
 
 export async function POST(request: Request) {
@@ -35,6 +45,8 @@ export async function POST(request: Request) {
     observacoes: i.observacoes ? String(i.observacoes) : undefined,
     combosels: Array.isArray(i.combosels) ? i.combosels.map((s) => ({ id: Number(s.id), qtd: s.qtd !== undefined ? Number(s.qtd) : undefined })) : null,
     usarPontos: toBool01(i.usar_pontos),
+    variacaoId: i.variacao_id ?? null,
+    selecoesGrupos: i.selecoes_grupos ?? null,
   }));
 
   let pagamentosRaw: PagamentoPayload[] = [];

@@ -9,6 +9,7 @@ import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
 import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
 import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
+import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 
 /*
  * Equivalente de admin/api/v1/modo_garcom_detalhe.php, modo_garcom_stats.php,
@@ -342,7 +343,16 @@ export async function pedidosAbertosGarcom(lojaId: number): Promise<PedidoAberto
   }));
 }
 
-export type ItemPedidoMesa = { id?: number; nome: string; preco: number; qtd: number; obs?: string; combosels?: { id: number; qtd?: number }[] | null };
+export type ItemPedidoMesa = {
+  id?: number;
+  nome: string;
+  preco: number;
+  qtd: number;
+  obs?: string;
+  combosels?: { id: number; qtd?: number }[] | null;
+  variacaoId?: number | null;
+  selecoesGrupos?: Record<number, number[]> | null;
+};
 
 export type CriarPedidoMesaInput = {
   lojaId: number;
@@ -445,6 +455,8 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           .insert(pedidoItens)
           .values({ pedido_id: pedidoId, produto_nome: item.nome.trim(), quantidade: qtd, preco: item.preco, loja_id: lojaId, produto_id: item.id ?? null, observacoes: item.obs?.trim() ?? "" })
           .returning({ id: pedidoItens.id });
+
+        await registrarItemOpcoes(tx, novoItem.id, item.variacaoId, item.selecoesGrupos, lojaId);
 
         if (!isCombo && item.id) {
           await baixarEstoque(tx, item.id, lojaId, qtd, "pedido", pedidoId);

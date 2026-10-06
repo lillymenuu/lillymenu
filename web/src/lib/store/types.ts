@@ -201,6 +201,9 @@ export type StoreCartItem = {
   pontosCusto?: number;
   /** Pontos que o Clube da por unidade deste produto (o total do item e pontosGanho * qtd). */
   pontosGanho?: number;
+  /** Variacao e grupos de opcoes escolhidos (produtos com `tem_variacoes`) — persistidos em pedido_item_opcoes pra reabrir o pedido com as opcoes ja marcadas. */
+  variacaoId?: number | null;
+  selecoesGrupos?: Record<number, number[]>;
 };
 
 export type StoreCrossSellProduto = {

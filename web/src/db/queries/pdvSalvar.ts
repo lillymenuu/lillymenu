@@ -23,6 +23,7 @@ import { getConfig } from "@/db/queries/config";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { timestampFortaleza, dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
 import { sincronizarEstoqueVinculo, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
+import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 import { pedidoRestaurarEstoqueCancelado } from "@/db/queries/pedidoEstoque";
 import { syncOrderRevenue, reverseCanceledOrder } from "@/db/queries/financeiroSync";
 
@@ -74,6 +75,8 @@ export type ItemCarrinhoPdv = {
   observacoes?: string;
   combosels?: { id: number; qtd?: number }[] | null;
   usarPontos?: boolean;
+  variacaoId?: number | null;
+  selecoesGrupos?: Record<number, number[]> | null;
 };
 
 export type PagamentoPdvInput = { forma: string; valor?: number };
@@ -545,6 +548,8 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
           .insert(pedidoItens)
           .values({ pedido_id: pedidoId, produto_nome: nomeItem, quantidade: qtdItem, preco: precoItem, observacoes: i.observacoes ?? null, loja_id: lojaId, produto_id: produtoIdItem > 0 ? produtoIdItem : null })
           .returning({ id: pedidoItens.id });
+
+        await registrarItemOpcoes(tx, novoItem.id, i.variacaoId, i.selecoesGrupos, lojaId);
 
         if (produtoIdItem > 0 && !isCombo) {
           await tx.insert(estoque).values({ produto_id: produtoIdItem, quantidade: 0, loja_id: lojaId }).onConflictDoNothing({ target: estoque.produto_id });
