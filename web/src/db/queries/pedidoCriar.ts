@@ -224,7 +224,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           })
           .returning({ id: pedidoItens.id });
 
-        await registrarItemOpcoes(tx, novoItem.id, item.variacaoId, item.selecoesGrupos, lojaId);
+        await registrarItemOpcoes(tx, novoItem.id, item.id ?? null, item.variacaoId, item.selecoesGrupos, lojaId);
 
         if (!isCombo && item.id) {
           await baixarEstoque(tx, item.id, lojaId, qtd, "pedido", pedidoId);

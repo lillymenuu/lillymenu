@@ -191,8 +191,7 @@ export function PosOverlay({
           quantidade: number;
           preco: number;
           observacoes: string | null;
-          variacao_id: number | null;
-          selecoes_grupos: Record<number, number[]>;
+          opcoes: { tipo: "variacao" | "grupo"; grupo_id: number | null; referencia_id: number }[];
         }[] = data.itens ?? [];
 
         setPedidoEditandoCodigo(pedido.codigo ?? pedido.id);
@@ -233,6 +232,11 @@ export function PosOverlay({
         itens.forEach((i, idx) => {
           if (!i.produto_nome || i.quantidade <= 0) return;
           const produtoCatalogo = i.produto_id ? catalogo.produtos.find((p) => p.id === i.produto_id) : undefined;
+          const variacaoId = i.opcoes.find((o) => o.tipo === "variacao")?.referencia_id ?? null;
+          const selecoesGrupos: Record<number, number[]> = {};
+          for (const o of i.opcoes) {
+            if (o.tipo === "grupo" && o.grupo_id !== null) (selecoesGrupos[o.grupo_id] ??= []).push(o.referencia_id);
+          }
           cart.adicionar({
             rowKey: `edicao-${pedidoEditandoId}-${idx}`,
             produtoId: i.produto_id,
@@ -243,8 +247,8 @@ export function PosOverlay({
             usarPontos: false,
             imagem: produtoCatalogo?.imagem,
             estoque: produtoCatalogo?.estoque,
-            variacaoId: i.variacao_id,
-            selecoesGrupos: i.selecoes_grupos,
+            variacaoId,
+            selecoesGrupos,
           });
         });
       })

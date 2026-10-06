@@ -1095,6 +1095,13 @@ export const pedidoItemOpcoes = pgTable(
     tipo: text("tipo").$type<"variacao" | "grupo">().notNull(),
     grupo_id: integer("grupo_id"),
     referencia_id: integer("referencia_id").notNull(),
+    /* Snapshot do titulo do grupo (ou do titulo de variacoes) e do nome da opcao escolhida,
+       capturados na hora do pedido — exibir o resumo do pedido depois nao depende mais de
+       um join ao vivo com produto_opcoes_grupos/itens, que sao reescritos por delete-all+
+       reinsert a cada "Salvar" do produto (os ids ficariam orfaos e o resumo perderia a
+       composicao de pedidos antigos assim que o lojista editasse qualquer coisa no produto). */
+    titulo: varchar("titulo", { length: 120 }).notNull().default(""),
+    nome: varchar("nome", { length: 120 }).notNull().default(""),
     loja_id: integer("loja_id").notNull(),
   },
   (t) => [

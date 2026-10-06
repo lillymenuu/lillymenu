@@ -456,7 +456,7 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           .values({ pedido_id: pedidoId, produto_nome: item.nome.trim(), quantidade: qtd, preco: item.preco, loja_id: lojaId, produto_id: item.id ?? null, observacoes: item.obs?.trim() ?? "" })
           .returning({ id: pedidoItens.id });
 
-        await registrarItemOpcoes(tx, novoItem.id, item.variacaoId, item.selecoesGrupos, lojaId);
+        await registrarItemOpcoes(tx, novoItem.id, item.id ?? null, item.variacaoId, item.selecoesGrupos, lojaId);
 
         if (!isCombo && item.id) {
           await baixarEstoque(tx, item.id, lojaId, qtd, "pedido", pedidoId);

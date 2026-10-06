@@ -244,14 +244,14 @@ export async function buscarPedidos(lojaId: number, termoBruto: string): Promise
   };
 }
 
+export type ItemOpcaoSelecionada = { tipo: "variacao" | "grupo"; grupoId: number | null; referenciaId: number; titulo: string; nome: string };
 export type ItemPedido = {
   produtoId: number | null;
   produtoNome: string | null;
   quantidade: number | null;
   preco: number | null;
   observacoes: string | null;
-  variacaoId: number | null;
-  selecoesGrupos: Record<number, number[]>;
+  opcoes: ItemOpcaoSelecionada[];
 };
 export type PagamentoDetalhado = { forma: string; valor: number; taxaMaquininha: number };
 
@@ -339,25 +339,29 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
     .from(pedidoItens)
     .where(and(eq(pedidoItens.pedido_id, pedidoId), eq(pedidoItens.loja_id, lojaId)));
 
-  /* Selecao de variacao/grupos de opcoes de cada item — pra reabrir o pedido (editar no
-     PDV) com as opcoes do cliente ja marcadas, em vez de so o nome "achatado" em texto. */
+  /* Selecao de variacao/grupos de opcoes de cada item — titulo/nome sao o snapshot gravado
+     na hora do pedido (sobrevive a edicoes no produto depois), e grupoId/referenciaId servem
+     pra reabrir o pedido (editar no PDV) com as opcoes do cliente ja marcadas. */
   const opcoesRaw = itensRaw.length
     ? await db
-        .select({ pedidoItemId: pedidoItemOpcoes.pedido_item_id, tipo: pedidoItemOpcoes.tipo, grupoId: pedidoItemOpcoes.grupo_id, referenciaId: pedidoItemOpcoes.referencia_id })
+        .select({
+          pedidoItemId: pedidoItemOpcoes.pedido_item_id,
+          tipo: pedidoItemOpcoes.tipo,
+          grupoId: pedidoItemOpcoes.grupo_id,
+          referenciaId: pedidoItemOpcoes.referencia_id,
+          titulo: pedidoItemOpcoes.titulo,
+          nome: pedidoItemOpcoes.nome,
+        })
         .from(pedidoItemOpcoes)
         .where(and(inArray(pedidoItemOpcoes.pedido_item_id, itensRaw.map((i) => i.id)), eq(pedidoItemOpcoes.loja_id, lojaId)))
+        .orderBy(pedidoItemOpcoes.id)
     : [];
 
   const itensLinhas: ItemPedido[] = itensRaw.map((i) => {
-    const opcoesDoItem = opcoesRaw.filter((o) => o.pedidoItemId === i.id);
-    const variacaoId = opcoesDoItem.find((o) => o.tipo === "variacao")?.referenciaId ?? null;
-    const selecoesGrupos: Record<number, number[]> = {};
-    for (const o of opcoesDoItem) {
-      if (o.tipo === "grupo" && o.grupoId !== null) {
-        (selecoesGrupos[o.grupoId] ??= []).push(o.referenciaId);
-      }
-    }
-    return { produtoId: i.produtoId, produtoNome: i.produtoNome, quantidade: i.quantidade, preco: i.preco, observacoes: i.observacoes, variacaoId, selecoesGrupos };
+    const opcoes: ItemOpcaoSelecionada[] = opcoesRaw
+      .filter((o) => o.pedidoItemId === i.id)
+      .map((o) => ({ tipo: o.tipo, grupoId: o.grupoId, referenciaId: o.referenciaId, titulo: o.titulo, nome: o.nome }));
+    return { produtoId: i.produtoId, produtoNome: i.produtoNome, quantidade: i.quantidade, preco: i.preco, observacoes: i.observacoes, opcoes };
   });
 
   const pagamentosLinhas = await db

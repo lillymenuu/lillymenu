@@ -71,7 +71,30 @@ function DetalheSkeleton() {
   );
 }
 
-type ItemPedido = { produto_id: number | null; produto_nome: string; quantidade: number; preco: number; observacoes: string | null };
+type ItemOpcaoSelecionada = { tipo: "variacao" | "grupo"; grupo_id: number | null; referencia_id: number; titulo: string; nome: string };
+type ItemPedido = { produto_id: number | null; produto_nome: string; quantidade: number; preco: number; observacoes: string | null; opcoes: ItemOpcaoSelecionada[] };
+
+/* Nome base do produto, sem a variacao/opcoes concatenadas no final (ex.: "Açaí - Tradicional + Creme de
+   Morango" vira so "Açaí") — usado quando `opcoes` ja tem a composicao estruturada pra mostrar em lista. */
+function nomeBaseItem(produtoNome: string): string {
+  const idx = produtoNome.search(/ - | \+ /);
+  return idx === -1 ? produtoNome : produtoNome.slice(0, idx);
+}
+
+/* Agrupa as opcoes escolhidas por titulo (Sabores, Cremes, Mix...), preservando a ordem em que cada
+   grupo apareceu pela primeira vez. */
+function agruparOpcoes(opcoes: ItemOpcaoSelecionada[]): { titulo: string; nomes: string[] }[] {
+  const grupos: { titulo: string; nomes: string[] }[] = [];
+  for (const o of opcoes) {
+    let grupo = grupos.find((g) => g.titulo === o.titulo);
+    if (!grupo) {
+      grupo = { titulo: o.titulo, nomes: [] };
+      grupos.push(grupo);
+    }
+    grupo.nomes.push(o.nome);
+  }
+  return grupos;
+}
 type Pagamento = { forma: string; valor: number; taxa_maquininha?: number };
 type ClienteStats = {
   pedidos_feitos: number;
@@ -444,18 +467,33 @@ export function OrderDetailDialog({
                   <div className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                     Resumo do pedido
                   </div>
-                  <div className="flex flex-col gap-1">
-                    {itens.map((item, i) => (
-                      <div key={i} className="flex items-start justify-between gap-2">
-                        <span className="font-normal">
-                          {item.quantidade}x {item.produto_nome}
-                          {item.observacoes && (
-                            <span className="block text-[10px] font-normal text-muted-foreground">{item.observacoes}</span>
-                          )}
-                        </span>
-                        <span className="shrink-0 font-normal">{formatBRL(item.preco * item.quantidade)}</span>
-                      </div>
-                    ))}
+                  <div className="flex flex-col gap-2.5">
+                    {itens.map((item, i) => {
+                      const grupos = agruparOpcoes(item.opcoes);
+                      return (
+                        <div key={i} className="flex items-start justify-between gap-2">
+                          <span className="font-normal">
+                            {item.quantidade}x {grupos.length > 0 ? nomeBaseItem(item.produto_nome) : item.produto_nome}
+                            {grupos.length > 0 && (
+                              <div className="mt-0.5 flex flex-col gap-1 text-[10px] text-muted-foreground">
+                                {grupos.map((g, gi) => (
+                                  <div key={gi}>
+                                    <div className="font-medium text-foreground/70">{g.titulo}</div>
+                                    {g.nomes.map((nome, ni) => (
+                                      <div key={ni}>- {nome}</div>
+                                    ))}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {item.observacoes && (
+                              <span className="block text-[10px] font-normal text-muted-foreground">{item.observacoes}</span>
+                            )}
+                          </span>
+                          <span className="shrink-0 font-normal">{formatBRL(item.preco * item.quantidade)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="mt-1 flex flex-col gap-1 border-t pt-2">
                     <div className="flex items-center justify-between font-normal">

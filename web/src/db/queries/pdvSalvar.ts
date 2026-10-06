@@ -549,7 +549,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
           .values({ pedido_id: pedidoId, produto_nome: nomeItem, quantidade: qtdItem, preco: precoItem, observacoes: i.observacoes ?? null, loja_id: lojaId, produto_id: produtoIdItem > 0 ? produtoIdItem : null })
           .returning({ id: pedidoItens.id });
 
-        await registrarItemOpcoes(tx, novoItem.id, i.variacaoId, i.selecoesGrupos, lojaId);
+        await registrarItemOpcoes(tx, novoItem.id, produtoIdItem > 0 ? produtoIdItem : null, i.variacaoId, i.selecoesGrupos, lojaId);
 
         if (produtoIdItem > 0 && !isCombo) {
           await tx.insert(estoque).values({ produto_id: produtoIdItem, quantidade: 0, loja_id: lojaId }).onConflictDoNothing({ target: estoque.produto_id });

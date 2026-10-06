@@ -29,8 +29,7 @@ export async function GET(request: NextRequest) {
       quantidade: i.quantidade,
       preco: i.preco,
       observacoes: i.observacoes,
-      variacao_id: i.variacaoId,
-      selecoes_grupos: i.selecoesGrupos,
+      opcoes: i.opcoes.map((o) => ({ tipo: o.tipo, grupo_id: o.grupoId, referencia_id: o.referenciaId, titulo: o.titulo, nome: o.nome })),
     })),
     pagamentos: resultado.pagamentos.map((p) => ({ forma: p.forma, valor: p.valor, taxa_maquininha: p.taxaMaquininha })),
   });
