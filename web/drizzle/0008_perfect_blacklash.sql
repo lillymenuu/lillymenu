@@ -1,0 +1,1 @@
+ALTER TABLE "produto_opcoes_grupos" ADD COLUMN "max_selecao" integer DEFAULT 0 NOT NULL;

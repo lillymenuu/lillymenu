@@ -33,6 +33,7 @@ export function ProdutoGrupoOpcoesDialog({
   const [titulo, setTitulo] = useState("");
   const [tipoSelecao, setTipoSelecao] = useState<"unica" | "multipla">("unica");
   const [obrigatorio, setObrigatorio] = useState(false);
+  const [maxSelecao, setMaxSelecao] = useState("");
   const [itens, setItens] = useState<ProdutoOpcaoItem[]>([]);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function ProdutoGrupoOpcoesDialog({
     setTitulo(grupo?.titulo ?? "");
     setTipoSelecao(grupo?.tipoSelecao ?? "unica");
     setObrigatorio(grupo?.obrigatorio ?? false);
+    setMaxSelecao(grupo?.maxSelecao ? String(grupo.maxSelecao) : "");
     setItens(grupo?.itens.length ? grupo.itens : [{ nome: "", preco: "" }]);
   }, [open, grupo]);
 
@@ -57,7 +59,14 @@ export function ProdutoGrupoOpcoesDialog({
 
   function salvar() {
     const validos = itens.filter((it) => it.nome.trim() !== "" || Number(it.preco) > 0);
-    onSalvar({ id: grupo?.id, titulo: titulo.trim() || "Grupo de opções", tipoSelecao, obrigatorio, itens: validos });
+    onSalvar({
+      id: grupo?.id,
+      titulo: titulo.trim() || "Grupo de opções",
+      tipoSelecao,
+      obrigatorio,
+      maxSelecao: tipoSelecao === "multipla" ? Math.max(0, parseInt(maxSelecao, 10) || 0) : 0,
+      itens: validos,
+    });
     onOpenChange(false);
   }
 
@@ -90,6 +99,19 @@ export function ProdutoGrupoOpcoesDialog({
                 Obrigatório
               </label>
             </div>
+            {tipoSelecao === "multipla" && (
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                Máximo de itens que o cliente pode escolher
+                <Input
+                  type="number"
+                  min={0}
+                  value={maxSelecao}
+                  onChange={(e) => setMaxSelecao(e.target.value)}
+                  placeholder="Sem limite"
+                  className="h-7 w-20 text-xs"
+                />
+              </label>
+            )}
           </div>
           <button
             type="button"

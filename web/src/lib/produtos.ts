@@ -72,6 +72,8 @@ export type ProdutoGrupoOpcoes = {
   titulo: string;
   tipoSelecao: "unica" | "multipla";
   obrigatorio: boolean;
+  /** Maximo de itens que o cliente pode escolher (so vale pra tipoSelecao "multipla"); 0 = sem limite. */
+  maxSelecao: number;
   itens: ProdutoOpcaoItem[];
 };
 
@@ -80,7 +82,7 @@ export type ProdutoVariacoesDetalheResposta = {
   variacoes: { id: number; tamanho: string; cor: string; preco: number }[];
   variacoes_titulo: string | null;
   variacoes_obrigatorio: number;
-  grupos_opcoes: { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: number; itens: { id: number; nome: string; preco: number }[] }[];
+  grupos_opcoes: { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: number; max_selecao: number; itens: { id: number; nome: string; preco: number }[] }[];
 };
 
 export async function getCategorias(lojaId: number): Promise<{ ok: true; categorias: Categoria[] }> {

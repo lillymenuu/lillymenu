@@ -139,7 +139,7 @@ export type StoreCatalogo = {
 
 export type StoreVariacao = { id: number; tamanho: string; cor: string; preco: number };
 export type StoreOpcaoItem = { id: number; nome: string; preco: number };
-export type StoreGrupoOpcoes = { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: 0 | 1; itens: StoreOpcaoItem[] };
+export type StoreGrupoOpcoes = { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: 0 | 1; max_selecao: number; itens: StoreOpcaoItem[] };
 
 export type StoreProdutoVariacoes = {
   variacoes: StoreVariacao[];

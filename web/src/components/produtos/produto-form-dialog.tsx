@@ -179,6 +179,7 @@ export function ProdutoFormDialog({
               titulo: g.titulo,
               tipoSelecao: g.tipo_selecao,
               obrigatorio: g.obrigatorio === 1,
+              maxSelecao: g.max_selecao,
               itens: g.itens.map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
             }))
           );
@@ -297,6 +298,7 @@ export function ProdutoFormDialog({
           titulo: g.titulo,
           tipo_selecao: g.tipoSelecao,
           obrigatorio: g.obrigatorio,
+          max_selecao: g.maxSelecao,
           itens: g.itens.map((it) => ({ nome: it.nome, preco: Number(String(it.preco).replace(",", ".")) || 0 })),
         })),
         imagem_base64: imagemBase64 ?? "",
@@ -590,6 +592,7 @@ export function ProdutoFormDialog({
                       {grupo.itens.length} opç{grupo.itens.length === 1 ? "ão" : "ões"} cadastrada{grupo.itens.length === 1 ? "" : "s"}.
                       <span className="text-muted-foreground">
                         · {grupo.obrigatorio ? "Obrigatório" : "Opcional"} · {grupo.tipoSelecao === "multipla" ? "Seleção múltipla" : "Seleção única"}
+                        {grupo.tipoSelecao === "multipla" && grupo.maxSelecao > 0 ? ` · até ${grupo.maxSelecao}` : ""}
                       </span>
                     </div>
                   </div>

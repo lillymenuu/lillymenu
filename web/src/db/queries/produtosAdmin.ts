@@ -127,7 +127,7 @@ export async function excluirProduto(lojaId: number, id: number): Promise<{ ok: 
 
 export type VariacaoInput = { tamanho?: string; cor?: string; preco?: number };
 export type OpcaoItemInput = { nome?: string; preco?: number };
-export type GrupoOpcoesInput = { titulo?: string; tipoSelecao?: "unica" | "multipla"; obrigatorio?: boolean; itens?: OpcaoItemInput[] };
+export type GrupoOpcoesInput = { titulo?: string; tipoSelecao?: "unica" | "multipla"; obrigatorio?: boolean; maxSelecao?: number; itens?: OpcaoItemInput[] };
 
 async function salvarVariacoes(produtoId: number, lojaId: number, variacoes: VariacaoInput[]): Promise<void> {
   await db.delete(produtoVariacoes).where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.loja_id, lojaId)));
@@ -159,6 +159,7 @@ async function salvarGruposOpcoes(produtoId: number, lojaId: number, grupos: Gru
         titulo,
         tipo_selecao: g.tipoSelecao === "multipla" ? "multipla" : "unica",
         obrigatorio: Boolean(g.obrigatorio),
+        max_selecao: Math.max(0, Number(g.maxSelecao ?? 0)),
         ordem: ordemGrupo,
         loja_id: lojaId,
       })
@@ -345,7 +346,7 @@ export async function duplicarProduto(lojaId: number, produtoId: number): Promis
 
 export type VariacaoDetalhe = { id: number; tamanho: string | null; cor: string | null; preco: number };
 export type OpcaoItemDetalhe = { id: number; nome: string; preco: number };
-export type GrupoOpcoesDetalhe = { id: number; titulo: string; tipoSelecao: "unica" | "multipla"; obrigatorio: boolean; itens: OpcaoItemDetalhe[] };
+export type GrupoOpcoesDetalhe = { id: number; titulo: string; tipoSelecao: "unica" | "multipla"; obrigatorio: boolean; maxSelecao: number; itens: OpcaoItemDetalhe[] };
 
 /* Equivalente de admin/api/v1/produto_variacoes_detalhe.php. */
 export async function detalheVariacoesProduto(
@@ -370,7 +371,13 @@ export async function detalheVariacoesProduto(
     .orderBy(produtoVariacoes.ordem, produtoVariacoes.id);
 
   const grupos = await db
-    .select({ id: produtoOpcoesGrupos.id, titulo: produtoOpcoesGrupos.titulo, tipoSelecao: produtoOpcoesGrupos.tipo_selecao, obrigatorio: produtoOpcoesGrupos.obrigatorio })
+    .select({
+      id: produtoOpcoesGrupos.id,
+      titulo: produtoOpcoesGrupos.titulo,
+      tipoSelecao: produtoOpcoesGrupos.tipo_selecao,
+      obrigatorio: produtoOpcoesGrupos.obrigatorio,
+      maxSelecao: produtoOpcoesGrupos.max_selecao,
+    })
     .from(produtoOpcoesGrupos)
     .where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)))
     .orderBy(produtoOpcoesGrupos.ordem, produtoOpcoesGrupos.id);
@@ -388,6 +395,7 @@ export async function detalheVariacoesProduto(
     titulo: g.titulo,
     tipoSelecao: g.tipoSelecao,
     obrigatorio: g.obrigatorio,
+    maxSelecao: g.maxSelecao,
     itens: itens.filter((it) => it.grupoId === g.id).map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
   }));
 

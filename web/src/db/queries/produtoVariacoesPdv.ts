@@ -7,7 +7,7 @@ import { produtos, produtoVariacoes, produtoOpcoesGrupos, produtoOpcoesItens } f
 
 export type VariacaoProdutoPdv = { id: number; tamanho: string | null; cor: string | null; preco: number };
 export type OpcaoItemPdv = { id: number; nome: string; preco: number };
-export type GrupoOpcoesPdv = { id: number; titulo: string; tipoSelecao: "unica" | "multipla"; obrigatorio: boolean; itens: OpcaoItemPdv[] };
+export type GrupoOpcoesPdv = { id: number; titulo: string; tipoSelecao: "unica" | "multipla"; obrigatorio: boolean; maxSelecao: number; itens: OpcaoItemPdv[] };
 
 export type VariacoesProdutoPdvResultado = {
   variacoes: VariacaoProdutoPdv[];
@@ -38,7 +38,13 @@ export async function variacoesProdutoPdv(
   const variacoes = variacoesRaw.map((v) => ({ ...v, preco: Number(v.preco ?? 0) }));
 
   const gruposRaw = await db
-    .select({ id: produtoOpcoesGrupos.id, titulo: produtoOpcoesGrupos.titulo, tipoSelecao: produtoOpcoesGrupos.tipo_selecao, obrigatorio: produtoOpcoesGrupos.obrigatorio })
+    .select({
+      id: produtoOpcoesGrupos.id,
+      titulo: produtoOpcoesGrupos.titulo,
+      tipoSelecao: produtoOpcoesGrupos.tipo_selecao,
+      obrigatorio: produtoOpcoesGrupos.obrigatorio,
+      maxSelecao: produtoOpcoesGrupos.max_selecao,
+    })
     .from(produtoOpcoesGrupos)
     .where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)))
     .orderBy(asc(produtoOpcoesGrupos.ordem), asc(produtoOpcoesGrupos.id));
@@ -56,6 +62,7 @@ export async function variacoesProdutoPdv(
     titulo: g.titulo,
     tipoSelecao: g.tipoSelecao,
     obrigatorio: g.obrigatorio,
+    maxSelecao: g.maxSelecao,
     itens: itensRaw.filter((it) => it.grupoId === g.id).map((it) => ({ id: it.id, nome: it.nome, preco: Number(it.preco ?? 0) })),
   }));
 

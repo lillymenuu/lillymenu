@@ -41,7 +41,7 @@ export type PosVariacao = {
 };
 
 export type PosOpcaoItem = { id: number; nome: string; preco: number };
-export type PosGrupoOpcoes = { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: number; itens: PosOpcaoItem[] };
+export type PosGrupoOpcoes = { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: number; max_selecao: number; itens: PosOpcaoItem[] };
 
 export type PosVariacoesResposta = {
   ok: boolean;

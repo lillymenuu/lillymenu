@@ -1227,6 +1227,9 @@ export const produtoOpcoesGrupos = pgTable(
     titulo: varchar("titulo", { length: 120 }).notNull(),
     tipo_selecao: text("tipo_selecao").$type<"unica" | "multipla">().notNull().default("unica"),
     obrigatorio: boolean("obrigatorio").notNull().default(false),
+    /* Limite de itens que o cliente pode escolher num grupo de selecao multipla — 0 = sem limite
+       (mesma convencao de cupons.quantidade_total). Sem efeito em grupos de selecao unica. */
+    max_selecao: integer("max_selecao").notNull().default(0),
     ordem: integer("ordem").notNull().default(0),
     loja_id: integer("loja_id").notNull(),
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),

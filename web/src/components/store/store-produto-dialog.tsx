@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Expand, ImageIcon, Plus, Shrink, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
@@ -40,6 +40,8 @@ export function StoreProdutoDialog({
   const [imagemAmpliada, setImagemAmpliada] = useState(false);
   const [erroCarregar, setErroCarregar] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  /** Refs das secoes (variacao + cada grupo), na ordem exibida — usadas pra rolar ate a proxima quando uma secao e concluida. */
+  const secaoRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const temVariacoes = produto?.tem_variacoes === 1;
 
@@ -99,13 +101,34 @@ export function StoreProdutoDialog({
   const podeAdicionar =
     !produto.esgotado && estoqueRestante > 0 && qtd <= estoqueRestante && !carregando && !faltaVariacao && !faltaGrupoObrigatorio;
 
-  function alternarOpcao(grupoId: number, itemId: number, tipoSelecao: "unica" | "multipla") {
+  /* Ordem das secoes exibidas (variacao, depois cada grupo) — define pra onde rolar ao concluir uma. */
+  const secaoOrder = [...(temVariacoes ? ["variacao"] : []), ...(detalhe?.grupos_opcoes ?? []).map((g) => `grupo-${g.id}`)];
+
+  function rolarParaProximaSecao(idAtual: string) {
+    const idx = secaoOrder.indexOf(idAtual);
+    const proximoId = idx >= 0 ? secaoOrder[idx + 1] : undefined;
+    if (proximoId) secaoRefs.current[proximoId]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function selecionarVariacao(id: number) {
+    setVariacaoId(id);
+    rolarParaProximaSecao("variacao");
+  }
+
+  function alternarOpcao(grupoId: number, itemId: number, tipoSelecao: "unica" | "multipla", maxSelecao: number) {
     setSelecoesGrupos((atual) => {
       const selecionados = atual[grupoId] ?? [];
+      const jaSelecionado = selecionados.includes(itemId);
+      let novo: number[];
       if (tipoSelecao === "unica") {
-        return { ...atual, [grupoId]: selecionados.includes(itemId) ? [] : [itemId] };
+        novo = jaSelecionado ? [] : [itemId];
+      } else {
+        if (!jaSelecionado && maxSelecao > 0 && selecionados.length >= maxSelecao) return atual;
+        novo = jaSelecionado ? selecionados.filter((x) => x !== itemId) : [...selecionados, itemId];
       }
-      return { ...atual, [grupoId]: selecionados.includes(itemId) ? selecionados.filter((x) => x !== itemId) : [...selecionados, itemId] };
+      const concluiu = !jaSelecionado && (tipoSelecao === "unica" || (maxSelecao > 0 && novo.length === maxSelecao));
+      if (concluiu) rolarParaProximaSecao(`grupo-${grupoId}`);
+      return { ...atual, [grupoId]: novo };
     });
   }
 
@@ -178,7 +201,7 @@ export function StoreProdutoDialog({
     <p className="text-[.86rem] text-red-600">Não foi possível carregar as opções. Feche e tente novamente.</p>
   ) : (
     <>
-      <div>
+      <div ref={(el) => { secaoRefs.current["variacao"] = el; }}>
         <div className="mb-1 flex items-center justify-between">
           <h3 className="text-[.86rem] font-bold text-neutral-900">{detalhe?.variacao_titulo ?? "Escolha uma das opções"}</h3>
           {variacaoObrigatoria && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
@@ -199,7 +222,7 @@ export function StoreProdutoDialog({
                   type="radio"
                   name="variacao"
                   checked={variacaoId === v.id}
-                  onChange={() => setVariacaoId(v.id)}
+                  onChange={() => selecionarVariacao(v.id)}
                   className="size-[18px] shrink-0"
                   style={{ accentColor: brown }}
                 />
@@ -210,25 +233,36 @@ export function StoreProdutoDialog({
         </div>
       </div>
 
-      {(detalhe?.grupos_opcoes ?? []).map((grupo) => (
-        <div key={grupo.id} className="mt-4 border-t border-neutral-100 pt-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">{grupo.titulo}</h3>
-            {grupo.obrigatorio === 1 && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
+      {(detalhe?.grupos_opcoes ?? []).map((grupo) => {
+        const selecionados = selecoesGrupos[grupo.id] ?? [];
+        const atingiuMax = grupo.tipo_selecao === "multipla" && grupo.max_selecao > 0 && selecionados.length >= grupo.max_selecao;
+        return (
+          <div key={grupo.id} ref={(el) => { secaoRefs.current[`grupo-${grupo.id}`] = el; }} className="mt-4 border-t border-neutral-100 pt-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">{grupo.titulo}</h3>
+              {grupo.obrigatorio === 1 && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
+            </div>
+            <p className="mb-1.5 text-[.74rem] text-neutral-500">
+              {grupo.tipo_selecao === "multipla"
+                ? grupo.max_selecao > 0
+                  ? `Escolha até ${grupo.max_selecao} opç${grupo.max_selecao > 1 ? "ões" : "ão"}.`
+                  : "Escolha 1 ou mais opções."
+                : "Escolha 1 opção."}
+            </p>
+            {grupo.itens.map((it) => (
+              <OpcaoExtra
+                key={it.id}
+                nome={it.nome}
+                preco={it.preco}
+                ativo={selecionados.includes(it.id)}
+                desabilitado={atingiuMax && !selecionados.includes(it.id)}
+                cor={brown}
+                onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao, grupo.max_selecao)}
+              />
+            ))}
           </div>
-          <p className="mb-1.5 text-[.74rem] text-neutral-500">{grupo.tipo_selecao === "multipla" ? "Escolha 1 ou mais opções." : "Escolha 1 opção."}</p>
-          {grupo.itens.map((it) => (
-            <OpcaoExtra
-              key={it.id}
-              nome={it.nome}
-              preco={it.preco}
-              ativo={selecoesGrupos[grupo.id]?.includes(it.id) ?? false}
-              cor={brown}
-              onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao)}
-            />
-          ))}
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 
@@ -380,17 +414,20 @@ function OpcaoExtra({
   nome,
   preco,
   ativo,
+  desabilitado = false,
   cor,
   onClick,
 }: {
   nome: string;
   preco: number;
   ativo: boolean;
+  /** Limite de selecao do grupo atingido e este item nao esta entre os escolhidos — fica visivelmente travado. */
+  desabilitado?: boolean;
   cor: string;
   onClick: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0">
+    <div className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${desabilitado ? "opacity-40" : ""}`}>
       <div className="text-base text-neutral-900">
         {nome}
         <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{formatarPreco(preco)}</small>
@@ -398,8 +435,9 @@ function OpcaoExtra({
       <button
         type="button"
         onClick={onClick}
+        disabled={desabilitado}
         aria-pressed={ativo}
-        className="flex size-8 shrink-0 items-center justify-center rounded-[10px] text-white"
+        className="flex size-8 shrink-0 items-center justify-center rounded-[10px] text-white disabled:cursor-not-allowed"
         style={{ background: ativo ? "#171717" : cor }}
       >
         {ativo ? <Check size={15} /> : <Plus size={15} />}

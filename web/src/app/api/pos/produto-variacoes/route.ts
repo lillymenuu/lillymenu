@@ -21,6 +21,7 @@ export async function GET(request: Request) {
       titulo: g.titulo,
       tipo_selecao: g.tipoSelecao,
       obrigatorio: g.obrigatorio ? 1 : 0,
+      max_selecao: g.maxSelecao,
       itens: g.itens.map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
     })),
   });

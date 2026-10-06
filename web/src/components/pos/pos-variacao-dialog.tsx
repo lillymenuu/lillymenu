@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { formatBRL } from "@/components/ordermanager/constants";
@@ -32,6 +32,8 @@ export function PosVariacaoDialog({
   const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
   const [qtd, setQtd] = useState(1);
   const [observacoes, setObservacoes] = useState("");
+  /** Refs das secoes (variacao + cada grupo), na ordem exibida — usadas pra rolar ate a proxima quando uma secao e concluida. */
+  const secaoRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (!produto) return;
@@ -69,13 +71,34 @@ export function PosVariacaoDialog({
   const gruposTotal = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
   const precoUnitario = precoBase + gruposTotal;
 
-  function alternarOpcao(grupoId: number, itemId: number, tipoSelecao: "unica" | "multipla") {
+  /* Ordem das secoes exibidas (variacao, depois cada grupo) — define pra onde rolar ao concluir uma. */
+  const secaoOrder = [...(variacoes.length > 0 ? ["variacao"] : []), ...gruposOpcoes.map((g) => `grupo-${g.id}`)];
+
+  function rolarParaProximaSecao(idAtual: string) {
+    const idx = secaoOrder.indexOf(idAtual);
+    const proximoId = idx >= 0 ? secaoOrder[idx + 1] : undefined;
+    if (proximoId) secaoRefs.current[proximoId]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function selecionarVariacao(id: number) {
+    setVariacaoId(id);
+    rolarParaProximaSecao("variacao");
+  }
+
+  function alternarOpcao(grupoId: number, itemId: number, tipoSelecao: "unica" | "multipla", maxSelecao: number) {
     setSelecoesGrupos((atual) => {
       const selecionados = atual[grupoId] ?? [];
+      const jaSelecionado = selecionados.includes(itemId);
+      let novo: number[];
       if (tipoSelecao === "unica") {
-        return { ...atual, [grupoId]: selecionados.includes(itemId) ? [] : [itemId] };
+        novo = jaSelecionado ? [] : [itemId];
+      } else {
+        if (!jaSelecionado && maxSelecao > 0 && selecionados.length >= maxSelecao) return atual;
+        novo = jaSelecionado ? selecionados.filter((x) => x !== itemId) : [...selecionados, itemId];
       }
-      return { ...atual, [grupoId]: selecionados.includes(itemId) ? selecionados.filter((x) => x !== itemId) : [...selecionados, itemId] };
+      const concluiu = !jaSelecionado && (tipoSelecao === "unica" || (maxSelecao > 0 && novo.length === maxSelecao));
+      if (concluiu) rolarParaProximaSecao(`grupo-${grupoId}`);
+      return { ...atual, [grupoId]: novo };
     });
   }
 
@@ -149,7 +172,7 @@ export function PosVariacaoDialog({
           <div className="py-6 text-center text-sm text-muted-foreground">Carregando opções...</div>
         ) : (
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-            <div>
+            <div ref={(el) => { secaoRefs.current["variacao"] = el; }}>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-primary">{variacaoTitulo ?? "Escolha uma das opções"}</span>
                 {variacaoObrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
@@ -169,7 +192,7 @@ export function PosVariacaoDialog({
                           type="radio"
                           name="variacao"
                           checked={variacaoId === v.id}
-                          onChange={() => setVariacaoId(v.id)}
+                          onChange={() => selecionarVariacao(v.id)}
                           className="accent-primary"
                         />
                         {label}
@@ -181,37 +204,49 @@ export function PosVariacaoDialog({
               </div>
             </div>
 
-            {gruposOpcoes.map((grupo) => (
-              <div key={grupo.id}>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-primary uppercase">{grupo.titulo}</span>
-                  {grupo.obrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
-                </div>
-                <div className="text-xs text-muted-foreground">{grupo.tipo_selecao === "multipla" ? "Escolha 1 ou mais opções." : "Escolha 1 opção."}</div>
-                <div className="mt-2 space-y-1.5">
-                  {grupo.itens.map((it) => {
-                    const ativo = selecoesGrupos[grupo.id]?.includes(it.id) ?? false;
-                    return (
-                      <div key={it.id} className="flex items-center justify-between border-b p-2.5 text-sm">
-                        <div>
-                          <div>{it.nome}</div>
-                          <div className="text-xs text-muted-foreground">{formatBRL(it.preco)}</div>
+            {gruposOpcoes.map((grupo) => {
+              const selecionados = selecoesGrupos[grupo.id] ?? [];
+              const atingiuMax = grupo.tipo_selecao === "multipla" && grupo.max_selecao > 0 && selecionados.length >= grupo.max_selecao;
+              return (
+                <div key={grupo.id} ref={(el) => { secaoRefs.current[`grupo-${grupo.id}`] = el; }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-primary uppercase">{grupo.titulo}</span>
+                    {grupo.obrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {grupo.tipo_selecao === "multipla"
+                      ? grupo.max_selecao > 0
+                        ? `Escolha até ${grupo.max_selecao} opç${grupo.max_selecao > 1 ? "ões" : "ão"}.`
+                        : "Escolha 1 ou mais opções."
+                      : "Escolha 1 opção."}
+                  </div>
+                  <div className="mt-2 space-y-1.5">
+                    {grupo.itens.map((it) => {
+                      const ativo = selecionados.includes(it.id);
+                      const desabilitado = atingiuMax && !ativo;
+                      return (
+                        <div key={it.id} className={`flex items-center justify-between border-b p-2.5 text-sm ${desabilitado ? "opacity-40" : ""}`}>
+                          <div>
+                            <div>{it.nome}</div>
+                            <div className="text-xs text-muted-foreground">{formatBRL(it.preco)}</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao, grupo.max_selecao)}
+                            disabled={desabilitado}
+                            className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed ${
+                              ativo ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
+                            }`}
+                          >
+                            {ativo ? <Check className="size-4" /> : <Plus className="size-4" />}
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao)}
-                          className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-colors ${
-                            ativo ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
-                          }`}
-                        >
-                          {ativo ? <Check className="size-4" /> : <Plus className="size-4" />}
-                        </button>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <textarea
               value={observacoes}

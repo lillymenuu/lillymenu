@@ -57,6 +57,13 @@
       "when": 1791245029750,
       "tag": "0007_burly_mimic",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791246947094,
+      "tag": "0008_perfect_blacklash",
+      "breakpoints": true
     }
   ]
 }
