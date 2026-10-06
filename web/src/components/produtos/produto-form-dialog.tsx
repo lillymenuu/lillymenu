@@ -16,6 +16,8 @@ import {
   ChevronRight,
   Copy,
   ArrowRightLeft,
+  Plus,
+  Pencil,
 } from "lucide-react";
 import {
   Dialog,
@@ -41,9 +43,9 @@ import { ConfigurarDiasDialog } from "./configurar-dias-dialog";
 import { MoneyInput } from "./money-input";
 import { EstoqueDialog } from "./estoque-dialog";
 import { ProdutoVariacoesManageDialog } from "./produto-variacoes-manage-dialog";
-import { ProdutoItensManageDialog } from "./produto-itens-manage-dialog";
+import { ProdutoGrupoOpcoesDialog } from "./produto-grupo-opcoes-dialog";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
-import type { Categoria, Produto, ProdutoVariacaoItem, ProdutoItemExtra, ProdutoVariacoesDetalheResposta } from "@/lib/produtos";
+import type { Categoria, Produto, ProdutoVariacaoItem, ProdutoGrupoOpcoes, ProdutoVariacoesDetalheResposta } from "@/lib/produtos";
 
 const DIAS_LABEL: Record<string, string> = {
   dom: "Dom",
@@ -88,11 +90,12 @@ export function ProdutoFormDialog({
 
   const [temVariacoes, setTemVariacoes] = useState(false);
   const [variacoes, setVariacoes] = useState<ProdutoVariacaoItem[]>([]);
-  const [extras, setExtras] = useState<ProdutoItemExtra[]>([]);
-  const [complementosItens, setComplementosItens] = useState<ProdutoItemExtra[]>([]);
+  const [variacoesTitulo, setVariacoesTitulo] = useState("Variações do produto");
+  const [variacoesObrigatorio, setVariacoesObrigatorio] = useState(true);
+  const [gruposOpcoes, setGruposOpcoes] = useState<ProdutoGrupoOpcoes[]>([]);
   const [variacoesDialogOpen, setVariacoesDialogOpen] = useState(false);
-  const [extrasDialogOpen, setExtrasDialogOpen] = useState(false);
-  const [complementosDialogOpen, setComplementosDialogOpen] = useState(false);
+  /** Indice do grupo em edicao em `gruposOpcoes`, ou -1 pra criar um grupo novo. */
+  const [grupoDialogIndex, setGrupoDialogIndex] = useState<number | null>(null);
 
   const [ativo, setAtivo] = useState(true);
   const [disponivelCatalogo, setDisponivelCatalogo] = useState(true);
@@ -160,16 +163,24 @@ export function ProdutoFormDialog({
       setDataValidade(produto.data_validade ?? "");
       setTemVariacoes(produto.tem_variacoes === 1);
       setVariacoes([]);
-      setExtras([]);
-      setComplementosItens([]);
+      setVariacoesTitulo("Variações do produto");
+      setVariacoesObrigatorio(true);
+      setGruposOpcoes([]);
       fetch(`/api/produtos/variacoes-detalhe?id=${produto.id}`)
         .then((r) => r.json())
         .then((data: ProdutoVariacoesDetalheResposta | { ok: false }) => {
           if (!data.ok) return;
           setVariacoes(data.variacoes.map((v) => ({ id: v.id, tamanho: v.tamanho, cor: v.cor, preco: v.preco })));
-          setExtras(data.extras.map((e) => ({ id: e.id, nome: e.nome, preco: e.preco, obrigatorio: e.obrigatorio === 1 })));
-          setComplementosItens(
-            data.complementos_itens.map((c) => ({ id: c.id, nome: c.nome, preco: c.preco, obrigatorio: c.obrigatorio === 1 }))
+          setVariacoesTitulo(data.variacoes_titulo?.trim() || "Variações do produto");
+          setVariacoesObrigatorio(data.variacoes_obrigatorio === 1);
+          setGruposOpcoes(
+            data.grupos_opcoes.map((g) => ({
+              id: g.id,
+              titulo: g.titulo,
+              tipoSelecao: g.tipo_selecao,
+              obrigatorio: g.obrigatorio === 1,
+              itens: g.itens.map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
+            }))
           );
         })
         .catch(() => {});
@@ -207,8 +218,9 @@ export function ProdutoFormDialog({
       setDataValidade("");
       setTemVariacoes(false);
       setVariacoes([]);
-      setExtras([]);
-      setComplementosItens([]);
+      setVariacoesTitulo("Variações do produto");
+      setVariacoesObrigatorio(true);
+      setGruposOpcoes([]);
       setImagemPreview(null);
     }
   }, [open, produto, categoriaPadrao, phpAdminUrl]);
@@ -276,14 +288,16 @@ export function ProdutoFormDialog({
         data_fabricacao: dataFabricacao,
         data_validade: dataValidade,
         tem_variacoes: temVariacoes,
+        variacoes_titulo: variacoesTitulo.trim(),
+        variacoes_obrigatorio: variacoesObrigatorio,
         variacoes: temVariacoes
           ? variacoes.map((v) => ({ tamanho: v.tamanho, cor: v.cor, preco: Number(String(v.preco).replace(",", ".")) || 0 }))
           : [],
-        extras: extras.map((e) => ({ nome: e.nome, preco: Number(String(e.preco).replace(",", ".")) || 0, obrigatorio: e.obrigatorio })),
-        complementos_itens: complementosItens.map((c) => ({
-          nome: c.nome,
-          preco: Number(String(c.preco).replace(",", ".")) || 0,
-          obrigatorio: c.obrigatorio,
+        grupos_opcoes: gruposOpcoes.map((g) => ({
+          titulo: g.titulo,
+          tipo_selecao: g.tipoSelecao,
+          obrigatorio: g.obrigatorio,
+          itens: g.itens.map((it) => ({ nome: it.nome, preco: Number(String(it.preco).replace(",", ".")) || 0 })),
         })),
         imagem_base64: imagemBase64 ?? "",
         imagem_remover: imagemRemover,
@@ -553,12 +567,13 @@ export function ProdutoFormDialog({
               {temVariacoes && (
                 <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
                   <div>
-                    <div className="text-sm font-medium">Preços e variações</div>
+                    <div className="text-sm font-medium">{variacoesTitulo}</div>
                     <div className="text-xs text-muted-foreground">Adicione tamanhos, cores ou preços diferentes para este produto.</div>
-                    <div className="mt-1 text-xs font-medium text-primary">
+                    <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-primary">
                       {variacoes.length === 0
                         ? "Nenhuma variação cadastrada."
                         : `${variacoes.length} variação${variacoes.length > 1 ? "ões" : ""} cadastrada${variacoes.length > 1 ? "s" : ""}.`}
+                      <span className="text-muted-foreground">· {variacoesObrigatorio ? "Obrigatório" : "Opcional"}</span>
                     </div>
                   </div>
                   <Button type="button" size="sm" variant="outline" onClick={() => setVariacoesDialogOpen(true)} className="shrink-0">
@@ -567,39 +582,40 @@ export function ProdutoFormDialog({
                 </div>
               )}
 
-              {(temVariacoes || extras.length > 0) && (
-                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+              {gruposOpcoes.map((grupo, idx) => (
+                <div key={grupo.id ?? `novo-${idx}`} className="flex items-center justify-between gap-3 rounded-lg border p-3">
                   <div>
-                    <div className="text-sm font-medium">Escolha seu extra</div>
-                    <div className="text-xs text-muted-foreground">Cadastre extras opcionais ou obrigatórios para este produto.</div>
-                    <div className="mt-1 text-xs font-medium text-primary">
-                      {extras.length === 0 ? "Nenhum extra cadastrado." : `${extras.length} extra${extras.length > 1 ? "s" : ""} cadastrado${extras.length > 1 ? "s" : ""}.`}
+                    <div className="text-sm font-medium">{grupo.titulo}</div>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-primary">
+                      {grupo.itens.length} opç{grupo.itens.length === 1 ? "ão" : "ões"} cadastrada{grupo.itens.length === 1 ? "" : "s"}.
+                      <span className="text-muted-foreground">
+                        · {grupo.obrigatorio ? "Obrigatório" : "Opcional"} · {grupo.tipoSelecao === "multipla" ? "Seleção múltipla" : "Seleção única"}
+                      </span>
                     </div>
                   </div>
-                  <Button type="button" size="sm" variant="outline" onClick={() => setExtrasDialogOpen(true)} className="shrink-0">
-                    Gerenciar
-                  </Button>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Button type="button" size="sm" variant="outline" onClick={() => setGrupoDialogIndex(idx)}>
+                      <Pencil size={14} /> Editar
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setGruposOpcoes((prev) => prev.filter((_, i) => i !== idx))}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="Excluir grupo"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
-              )}
+              ))}
 
-              {(temVariacoes || complementosItens.length > 0) && (
-                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-                  <div>
-                    <div className="text-sm font-medium">Escolha o tipo</div>
-                    <div className="text-xs text-muted-foreground">
-                      Cadastre os tipos disponíveis para este produto (ex.: massa amanteigada, massa chocolate).
-                    </div>
-                    <div className="mt-1 text-xs font-medium text-primary">
-                      {complementosItens.length === 0
-                        ? "Nenhum tipo cadastrado."
-                        : `${complementosItens.length} tipo${complementosItens.length > 1 ? "s" : ""} cadastrado${complementosItens.length > 1 ? "s" : ""}.`}
-                    </div>
-                  </div>
-                  <Button type="button" size="sm" variant="outline" onClick={() => setComplementosDialogOpen(true)} className="shrink-0">
-                    Gerenciar
-                  </Button>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => setGrupoDialogIndex(-1)}
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed p-3 text-sm font-medium text-muted-foreground hover:bg-muted/50"
+              >
+                <Plus size={15} /> Adicionar grupo de opções
+              </button>
             </div>
           </TabsContent>
 
@@ -890,26 +906,27 @@ export function ProdutoFormDialog({
     <ProdutoVariacoesManageDialog
       open={variacoesDialogOpen}
       onOpenChange={setVariacoesDialogOpen}
+      titulo={variacoesTitulo}
+      obrigatorio={variacoesObrigatorio}
       variacoes={variacoes}
-      onSalvar={setVariacoes}
+      onSalvar={(dados) => {
+        setVariacoesTitulo(dados.titulo);
+        setVariacoesObrigatorio(dados.obrigatorio);
+        setVariacoes(dados.variacoes);
+      }}
     />
-    <ProdutoItensManageDialog
-      open={extrasDialogOpen}
-      onOpenChange={setExtrasDialogOpen}
-      titulo="Extras do produto"
-      descricao="Cadastre extras e marque quando forem obrigatórios."
-      labelNome="Extra"
-      itens={extras}
-      onSalvar={setExtras}
-    />
-    <ProdutoItensManageDialog
-      open={complementosDialogOpen}
-      onOpenChange={setComplementosDialogOpen}
-      titulo="Tipos do produto"
-      descricao="Cadastre os tipos e marque quando forem obrigatórios."
-      labelNome="Tipo"
-      itens={complementosItens}
-      onSalvar={setComplementosItens}
+    <ProdutoGrupoOpcoesDialog
+      open={grupoDialogIndex !== null}
+      onOpenChange={(v) => !v && setGrupoDialogIndex(null)}
+      grupo={grupoDialogIndex !== null && grupoDialogIndex >= 0 ? gruposOpcoes[grupoDialogIndex] : null}
+      onSalvar={(grupo) => {
+        setGruposOpcoes((prev) => {
+          if (grupoDialogIndex !== null && grupoDialogIndex >= 0) {
+            return prev.map((g, i) => (i === grupoDialogIndex ? grupo : g));
+          }
+          return [...prev, grupo];
+        });
+      }}
     />
     </>
   );

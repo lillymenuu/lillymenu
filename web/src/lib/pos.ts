@@ -40,16 +40,16 @@ export type PosVariacao = {
   preco: number;
 };
 
-export type PosExtra = { id: number; nome: string; preco: number; obrigatorio: number };
+export type PosOpcaoItem = { id: number; nome: string; preco: number };
+export type PosGrupoOpcoes = { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: number; itens: PosOpcaoItem[] };
 
 export type PosVariacoesResposta = {
   ok: boolean;
   msg?: string;
   variacoes: PosVariacao[];
-  extras: PosExtra[];
-  extras_obrigatorio: number;
-  complementos_itens: PosExtra[];
-  complementos_itens_obrigatorio: number;
+  variacao_titulo: string | null;
+  variacao_obrigatorio: number;
+  grupos_opcoes: PosGrupoOpcoes[];
 };
 
 export type PosComboOpcao = {
@@ -94,8 +94,8 @@ export type PosCartItem = {
   imagem?: string | null;
   estoque?: number;
   variacaoId?: number | null;
-  extrasIds?: number[];
-  complementoId?: number | null;
+  /** Ids selecionados por grupo de opcoes (chave = grupo.id), no maximo 1 item quando o grupo e de selecao unica. */
+  selecoesGrupos?: Record<number, number[]>;
 };
 
 export type PosClienteBusca = { id: number; nome: string; telefone: string };

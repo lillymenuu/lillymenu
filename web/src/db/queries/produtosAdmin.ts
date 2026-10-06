@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { produtos, categorias, estoque, estoqueGrupoMembros, produtoVariacoes, produtoExtras, produtoComplementosItens, configuracoes } from "@/db/schema";
+import { produtos, categorias, estoque, estoqueGrupoMembros, produtoVariacoes, produtoOpcoesGrupos, produtoOpcoesItens, configuracoes } from "@/db/schema";
 import { storageSaveBase64, storageDelete } from "@/db/queries/storage";
 
 /*
@@ -126,8 +126,8 @@ export async function excluirProduto(lojaId: number, id: number): Promise<{ ok: 
 }
 
 export type VariacaoInput = { tamanho?: string; cor?: string; preco?: number };
-export type ExtraInput = { nome?: string; preco?: number; obrigatorio?: boolean };
-export type ComplementoItemInput = { nome?: string; preco?: number; obrigatorio?: boolean };
+export type OpcaoItemInput = { nome?: string; preco?: number };
+export type GrupoOpcoesInput = { titulo?: string; tipoSelecao?: "unica" | "multipla"; obrigatorio?: boolean; itens?: OpcaoItemInput[] };
 
 async function salvarVariacoes(produtoId: number, lojaId: number, variacoes: VariacaoInput[]): Promise<void> {
   await db.delete(produtoVariacoes).where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.loja_id, lojaId)));
@@ -142,27 +142,40 @@ async function salvarVariacoes(produtoId: number, lojaId: number, variacoes: Var
   }
 }
 
-async function salvarExtras(produtoId: number, lojaId: number, extras: ExtraInput[]): Promise<void> {
-  await db.delete(produtoExtras).where(and(eq(produtoExtras.produto_id, produtoId), eq(produtoExtras.loja_id, lojaId)));
-  let ordem = 1;
-  for (const e of extras) {
-    const nome = (e.nome ?? "").trim();
-    const preco = Number(e.preco ?? 0);
-    if (nome === "" && preco <= 0) continue;
-    await db.insert(produtoExtras).values({ produto_id: produtoId, nome, preco, obrigatorio: Boolean(e.obrigatorio), ordem, loja_id: lojaId });
-    ordem++;
-  }
-}
+/* Grupos de opcoes configuraveis (ex.: "Escolha seu extra", "Coberturas") — substitui os antigos
+   produto_extras/produto_complementos_itens por uma lista de N grupos com titulo/selecao/obrigatorio proprios. */
+async function salvarGruposOpcoes(produtoId: number, lojaId: number, grupos: GrupoOpcoesInput[]): Promise<void> {
+  await db.delete(produtoOpcoesGrupos).where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)));
+  let ordemGrupo = 1;
+  for (const g of grupos) {
+    const titulo = (g.titulo ?? "").trim();
+    const itensValidos = (g.itens ?? []).filter((it) => (it.nome ?? "").trim() !== "" || Number(it.preco ?? 0) > 0);
+    if (titulo === "" || itensValidos.length === 0) continue;
 
-async function salvarComplementosItens(produtoId: number, lojaId: number, itens: ComplementoItemInput[]): Promise<void> {
-  await db.delete(produtoComplementosItens).where(and(eq(produtoComplementosItens.produto_id, produtoId), eq(produtoComplementosItens.loja_id, lojaId)));
-  let ordem = 1;
-  for (const it of itens) {
-    const nome = (it.nome ?? "").trim();
-    const preco = Number(it.preco ?? 0);
-    if (nome === "" && preco <= 0) continue;
-    await db.insert(produtoComplementosItens).values({ produto_id: produtoId, nome, preco, obrigatorio: Boolean(it.obrigatorio), ordem, loja_id: lojaId });
-    ordem++;
+    const [grupoInserido] = await db
+      .insert(produtoOpcoesGrupos)
+      .values({
+        produto_id: produtoId,
+        titulo,
+        tipo_selecao: g.tipoSelecao === "multipla" ? "multipla" : "unica",
+        obrigatorio: Boolean(g.obrigatorio),
+        ordem: ordemGrupo,
+        loja_id: lojaId,
+      })
+      .returning({ id: produtoOpcoesGrupos.id });
+
+    let ordemItem = 1;
+    for (const it of itensValidos) {
+      await db.insert(produtoOpcoesItens).values({
+        grupo_id: grupoInserido.id,
+        nome: (it.nome ?? "").trim(),
+        preco: Number(it.preco ?? 0),
+        ordem: ordemItem,
+        loja_id: lojaId,
+      });
+      ordemItem++;
+    }
+    ordemGrupo++;
   }
 }
 
@@ -190,9 +203,10 @@ export type SalvarProdutoInput = {
   dataFabricacao?: string;
   dataValidade?: string;
   temVariacoes?: boolean;
+  variacoesTitulo?: string;
+  variacoesObrigatorio?: boolean;
   variacoes?: VariacaoInput[];
-  extras?: ExtraInput[];
-  complementosItens?: ComplementoItemInput[];
+  gruposOpcoes?: GrupoOpcoesInput[];
 };
 
 export type SalvarProdutoResultado = { ok: true; action: "insert" | "update"; id: number; imagem: string | null } | { ok: false; msg: string };
@@ -210,8 +224,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
   const diasSemanaJson = input.diasSemana && input.diasSemana.length > 0 ? JSON.stringify(input.diasSemana) : null;
   const temVariacoes = Boolean(input.temVariacoes);
   const variacoesArr = input.variacoes ?? [];
-  const extrasArr = input.extras ?? [];
-  const complementosArr = input.complementosItens ?? [];
+  const gruposOpcoesArr = input.gruposOpcoes ?? [];
 
   const campos = {
     nome,
@@ -239,6 +252,8 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     data_fabricacao: input.dataFabricacao?.trim() || null,
     data_validade: input.dataValidade?.trim() || null,
     tem_variacoes: temVariacoes,
+    variacoes_titulo: input.variacoesTitulo?.trim() || null,
+    variacoes_obrigatorio: input.variacoesObrigatorio !== undefined ? Boolean(input.variacoesObrigatorio) : true,
   };
 
   if (input.id && input.id > 0) {
@@ -262,8 +277,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     await db.update(produtos).set(set).where(and(eq(produtos.id, idInt), eq(produtos.loja_id, lojaId)));
 
     await salvarVariacoes(idInt, lojaId, temVariacoes ? variacoesArr : []);
-    await salvarExtras(idInt, lojaId, extrasArr);
-    await salvarComplementosItens(idInt, lojaId, complementosArr);
+    await salvarGruposOpcoes(idInt, lojaId, gruposOpcoesArr);
 
     await bumpCatalogoVersao(lojaId);
     return { ok: true, action: "update", id: idInt, imagem: imagemAtual };
@@ -285,15 +299,14 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     .returning({ id: produtos.id });
 
   await salvarVariacoes(inserido.id, lojaId, temVariacoes ? variacoesArr : []);
-  await salvarExtras(inserido.id, lojaId, extrasArr);
-  await salvarComplementosItens(inserido.id, lojaId, complementosArr);
+  await salvarGruposOpcoes(inserido.id, lojaId, gruposOpcoesArr);
 
   await bumpCatalogoVersao(lojaId);
   return { ok: true, action: "insert", id: inserido.id, imagem: imagemSalva };
 }
 
-/* Equivalente de admin/api/v1/produto_duplicar.php: clona produto + variacoes + extras
-   (nao duplica complementos_itens — mesma omissao do legado) com "(Copia)" no nome. */
+/* Equivalente de admin/api/v1/produto_duplicar.php: clona produto + variacoes + grupos de opcoes
+   (com itens) com "(Copia)" no nome. */
 export async function duplicarProduto(lojaId: number, produtoId: number): Promise<{ ok: true; id: number } | { ok: false; msg: string }> {
   if (produtoId <= 0) return { ok: false, msg: "ID invalido." };
 
@@ -313,11 +326,17 @@ export async function duplicarProduto(lojaId: number, produtoId: number): Promis
     await db.insert(produtoVariacoes).values({ ...vResto, produto_id: copia.id });
   }
 
-  const extrasOriginais = await db.select().from(produtoExtras).where(and(eq(produtoExtras.produto_id, produtoId), eq(produtoExtras.loja_id, lojaId)));
-  for (const e of extrasOriginais) {
-    const eResto = { ...e };
-    delete (eResto as { id?: number }).id;
-    await db.insert(produtoExtras).values({ ...eResto, produto_id: copia.id });
+  const gruposOriginais = await db.select().from(produtoOpcoesGrupos).where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)));
+  for (const g of gruposOriginais) {
+    const itensOriginais = await db.select().from(produtoOpcoesItens).where(and(eq(produtoOpcoesItens.grupo_id, g.id), eq(produtoOpcoesItens.loja_id, lojaId)));
+    const gResto = { ...g };
+    delete (gResto as { id?: number }).id;
+    const [grupoCopia] = await db.insert(produtoOpcoesGrupos).values({ ...gResto, produto_id: copia.id }).returning({ id: produtoOpcoesGrupos.id });
+    for (const it of itensOriginais) {
+      const itResto = { ...it };
+      delete (itResto as { id?: number }).id;
+      await db.insert(produtoOpcoesItens).values({ ...itResto, grupo_id: grupoCopia.id });
+    }
   }
 
   await bumpCatalogoVersao(lojaId);
@@ -325,16 +344,23 @@ export async function duplicarProduto(lojaId: number, produtoId: number): Promis
 }
 
 export type VariacaoDetalhe = { id: number; tamanho: string | null; cor: string | null; preco: number };
-export type ExtraDetalhe = { id: number; nome: string; preco: number; obrigatorio: boolean };
-export type ComplementoItemDetalhe = { id: number; nome: string; preco: number; obrigatorio: boolean };
+export type OpcaoItemDetalhe = { id: number; nome: string; preco: number };
+export type GrupoOpcoesDetalhe = { id: number; titulo: string; tipoSelecao: "unica" | "multipla"; obrigatorio: boolean; itens: OpcaoItemDetalhe[] };
 
 /* Equivalente de admin/api/v1/produto_variacoes_detalhe.php. */
 export async function detalheVariacoesProduto(
   lojaId: number,
   produtoId: number
-): Promise<{ ok: false; msg: string } | { ok: true; variacoes: VariacaoDetalhe[]; extras: ExtraDetalhe[]; complementosItens: ComplementoItemDetalhe[] }> {
+): Promise<
+  | { ok: false; msg: string }
+  | { ok: true; variacoes: VariacaoDetalhe[]; variacoesTitulo: string | null; variacoesObrigatorio: boolean; gruposOpcoes: GrupoOpcoesDetalhe[] }
+> {
   if (produtoId <= 0) return { ok: false, msg: "Produto invalido." };
-  const existe = await db.select({ id: produtos.id }).from(produtos).where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId))).limit(1);
+  const existe = await db
+    .select({ id: produtos.id, variacoesTitulo: produtos.variacoes_titulo, variacoesObrigatorio: produtos.variacoes_obrigatorio })
+    .from(produtos)
+    .where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId)))
+    .limit(1);
   if (existe.length === 0) return { ok: false, msg: "Produto nao encontrado." };
 
   const variacoes = await db
@@ -343,19 +369,29 @@ export async function detalheVariacoesProduto(
     .where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.loja_id, lojaId)))
     .orderBy(produtoVariacoes.ordem, produtoVariacoes.id);
 
-  const extras = await db
-    .select({ id: produtoExtras.id, nome: produtoExtras.nome, preco: produtoExtras.preco, obrigatorio: produtoExtras.obrigatorio })
-    .from(produtoExtras)
-    .where(and(eq(produtoExtras.produto_id, produtoId), eq(produtoExtras.ativo, true), eq(produtoExtras.loja_id, lojaId)))
-    .orderBy(produtoExtras.ordem, produtoExtras.id);
+  const grupos = await db
+    .select({ id: produtoOpcoesGrupos.id, titulo: produtoOpcoesGrupos.titulo, tipoSelecao: produtoOpcoesGrupos.tipo_selecao, obrigatorio: produtoOpcoesGrupos.obrigatorio })
+    .from(produtoOpcoesGrupos)
+    .where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)))
+    .orderBy(produtoOpcoesGrupos.ordem, produtoOpcoesGrupos.id);
 
-  const complementosItens = await db
-    .select({ id: produtoComplementosItens.id, nome: produtoComplementosItens.nome, preco: produtoComplementosItens.preco, obrigatorio: produtoComplementosItens.obrigatorio })
-    .from(produtoComplementosItens)
-    .where(and(eq(produtoComplementosItens.produto_id, produtoId), eq(produtoComplementosItens.ativo, true), eq(produtoComplementosItens.loja_id, lojaId)))
-    .orderBy(produtoComplementosItens.ordem, produtoComplementosItens.id);
+  const itens = grupos.length
+    ? await db
+        .select({ id: produtoOpcoesItens.id, grupoId: produtoOpcoesItens.grupo_id, nome: produtoOpcoesItens.nome, preco: produtoOpcoesItens.preco })
+        .from(produtoOpcoesItens)
+        .where(and(inArray(produtoOpcoesItens.grupo_id, grupos.map((g) => g.id)), eq(produtoOpcoesItens.loja_id, lojaId)))
+        .orderBy(produtoOpcoesItens.ordem, produtoOpcoesItens.id)
+    : [];
 
-  return { ok: true, variacoes, extras, complementosItens };
+  const gruposOpcoes: GrupoOpcoesDetalhe[] = grupos.map((g) => ({
+    id: g.id,
+    titulo: g.titulo,
+    tipoSelecao: g.tipoSelecao,
+    obrigatorio: g.obrigatorio,
+    itens: itens.filter((it) => it.grupoId === g.id).map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
+  }));
+
+  return { ok: true, variacoes, variacoesTitulo: existe[0].variacoesTitulo, variacoesObrigatorio: existe[0].variacoesObrigatorio, gruposOpcoes };
 }
 
 export type ProdutoValidadeAviso = { id: number; nome: string | null; dataValidade: string; diasRestantes: number; vencido: boolean };

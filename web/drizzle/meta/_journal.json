@@ -43,6 +43,20 @@
       "when": 1790719308160,
       "tag": "0005_opposite_magdalene",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791244985737,
+      "tag": "0006_abandoned_silver_fox",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791245029750,
+      "tag": "0007_burly_mimic",
+      "breakpoints": true
     }
   ]
 }

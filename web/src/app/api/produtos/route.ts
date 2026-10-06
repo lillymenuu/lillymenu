@@ -98,9 +98,17 @@ export async function POST(request: Request) {
     dataFabricacao: typeof body.data_fabricacao === "string" ? body.data_fabricacao : undefined,
     dataValidade: typeof body.data_validade === "string" ? body.data_validade : undefined,
     temVariacoes: Boolean(body.tem_variacoes),
+    variacoesTitulo: typeof body.variacoes_titulo === "string" ? body.variacoes_titulo : undefined,
+    variacoesObrigatorio: body.variacoes_obrigatorio === undefined ? undefined : Boolean(body.variacoes_obrigatorio),
     variacoes: Array.isArray(body.variacoes) ? body.variacoes : [],
-    extras: Array.isArray(body.extras) ? body.extras : [],
-    complementosItens: Array.isArray(body.complementos_itens) ? body.complementos_itens : [],
+    gruposOpcoes: Array.isArray(body.grupos_opcoes)
+      ? body.grupos_opcoes.map((g: { titulo?: string; tipo_selecao?: string; obrigatorio?: boolean; itens?: { nome?: string; preco?: number }[] }) => ({
+          titulo: g.titulo,
+          tipoSelecao: g.tipo_selecao === "multipla" ? "multipla" : "unica",
+          obrigatorio: Boolean(g.obrigatorio),
+          itens: Array.isArray(g.itens) ? g.itens.map((it) => ({ nome: it.nome, preco: it.preco })) : [],
+        }))
+      : [],
   });
 
   return NextResponse.json(resultado);

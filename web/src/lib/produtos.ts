@@ -61,18 +61,26 @@ export type ProdutoVariacaoItem = {
   preco: number | string;
 };
 
-export type ProdutoItemExtra = {
+export type ProdutoOpcaoItem = {
   id?: number;
   nome: string;
   preco: number | string;
+};
+
+export type ProdutoGrupoOpcoes = {
+  id?: number;
+  titulo: string;
+  tipoSelecao: "unica" | "multipla";
   obrigatorio: boolean;
+  itens: ProdutoOpcaoItem[];
 };
 
 export type ProdutoVariacoesDetalheResposta = {
   ok: true;
   variacoes: { id: number; tamanho: string; cor: string; preco: number }[];
-  extras: { id: number; nome: string; preco: number; obrigatorio: number }[];
-  complementos_itens: { id: number; nome: string; preco: number; obrigatorio: number }[];
+  variacoes_titulo: string | null;
+  variacoes_obrigatorio: number;
+  grupos_opcoes: { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: number; itens: { id: number; nome: string; preco: number }[] }[];
 };
 
 export async function getCategorias(lojaId: number): Promise<{ ok: true; categorias: Categoria[] }> {

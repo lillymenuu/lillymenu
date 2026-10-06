@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { MoneyInput } from "./money-input";
 import type { ProdutoVariacaoItem } from "@/lib/produtos";
 
@@ -16,19 +17,30 @@ import type { ProdutoVariacaoItem } from "@/lib/produtos";
 export function ProdutoVariacoesManageDialog({
   open,
   onOpenChange,
+  titulo,
+  obrigatorio,
   variacoes,
   onSalvar,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  titulo: string;
+  obrigatorio: boolean;
   variacoes: ProdutoVariacaoItem[];
-  onSalvar: (variacoes: ProdutoVariacaoItem[]) => void;
+  onSalvar: (dados: { titulo: string; obrigatorio: boolean; variacoes: ProdutoVariacaoItem[] }) => void;
 }) {
+  const [tituloEditado, setTituloEditado] = useState("Variações do produto");
+  const [obrigatorioEditado, setObrigatorioEditado] = useState(true);
   const [linhas, setLinhas] = useState<ProdutoVariacaoItem[]>([]);
 
   useEffect(() => {
-    if (open) setLinhas(variacoes.length ? variacoes : [{ tamanho: "", cor: "", preco: "" }]);
-  }, [open, variacoes]);
+    if (open) {
+      setTituloEditado(titulo.trim() || "Variações do produto");
+      setObrigatorioEditado(obrigatorio);
+      setLinhas(variacoes.length ? variacoes : [{ tamanho: "", cor: "", preco: "" }]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, variacoes, titulo, obrigatorio]);
 
   function adicionarLinha() {
     setLinhas((prev) => [...prev, { tamanho: "", cor: "", preco: "" }]);
@@ -44,17 +56,27 @@ export function ProdutoVariacoesManageDialog({
 
   function salvar() {
     const validas = linhas.filter((l) => l.tamanho.trim() !== "" || l.cor.trim() !== "" || Number(l.preco) > 0);
-    onSalvar(validas);
+    onSalvar({ titulo: tituloEditado.trim() || "Variações do produto", obrigatorio: obrigatorioEditado, variacoes: validas });
     onOpenChange(false);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[80vh] w-[520px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[520px]">
-        <DialogHeader className="flex-row items-start justify-between pr-8">
-          <div>
-            <DialogTitle>Variações do produto</DialogTitle>
-            <p className="mt-1 text-xs text-muted-foreground">Cadastre tamanhos, cores e preços para usar no pedido.</p>
+        <DialogHeader className="flex-row items-start justify-between gap-2 pr-8">
+          <DialogTitle className="sr-only">Variações do produto</DialogTitle>
+          <div className="flex-1 space-y-2.5">
+            <Input
+              value={tituloEditado}
+              onChange={(e) => setTituloEditado(e.target.value)}
+              placeholder="Ex.: Escolha o tamanho"
+              className="text-sm font-medium"
+            />
+            <p className="text-xs text-muted-foreground">Cadastre tamanhos, cores e preços para usar no pedido.</p>
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Switch checked={obrigatorioEditado} onCheckedChange={(v) => setObrigatorioEditado(v === true)} />
+              Obrigatório escolher uma opção
+            </label>
           </div>
           <button
             type="button"

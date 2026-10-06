@@ -36,8 +36,7 @@ export function StoreProdutoDialog({
   const [detalhe, setDetalhe] = useState<StoreProdutoVariacoes | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
-  const [extrasIds, setExtrasIds] = useState<number[]>([]);
-  const [complementoId, setComplementoId] = useState<number | null>(null);
+  const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
   const [imagemAmpliada, setImagemAmpliada] = useState(false);
   const [erroCarregar, setErroCarregar] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
@@ -52,8 +51,7 @@ export function StoreProdutoDialog({
     setImagemAmpliada(false);
     setAspectRatio(null);
     setVariacaoId(null);
-    setExtrasIds([]);
-    setComplementoId(null);
+    setSelecoesGrupos({});
     setDetalhe(null);
     setErroCarregar(false);
 
@@ -74,32 +72,41 @@ export function StoreProdutoDialog({
   if (!produto) return null;
 
   const variacaoSelecionada = detalhe?.variacoes.find((v) => v.id === variacaoId) ?? null;
-  const extrasSelecionados = detalhe?.extras.filter((e) => extrasIds.includes(e.id)) ?? [];
-  const complementoSelecionado = detalhe?.complementos_itens.find((c) => c.id === complementoId) ?? null;
+  const variacaoObrigatoria = temVariacoes && detalhe?.variacao_obrigatorio === 1;
+
+  const gruposSelecionados = (detalhe?.grupos_opcoes ?? []).map((g) => ({
+    grupo: g,
+    itens: g.itens.filter((it) => selecoesGrupos[g.id]?.includes(it.id)),
+  }));
 
   const precoBase = temVariacoes
     ? variacaoSelecionada
       ? variacaoSelecionada.preco > 0
         ? variacaoSelecionada.preco
         : produto.preco_produto
-      : 0
+      : variacaoObrigatoria
+        ? 0
+        : produto.preco_produto
     : produto.preco_final;
-  const precoExtras = extrasSelecionados.reduce((s, e) => s + e.preco, 0);
-  const precoComplemento = complementoSelecionado?.preco ?? 0;
-  const precoUnitario = precoBase + precoExtras + precoComplemento;
+  const precoGrupos = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
+  const precoUnitario = precoBase + precoGrupos;
   const total = precoUnitario * qtd;
 
-  const faltaVariacao = temVariacoes && !variacaoSelecionada;
-  const faltaExtraObrigatorio = temVariacoes && detalhe?.extras_obrigatorio === 1 && extrasIds.length === 0;
-  const faltaComplementoObrigatorio =
-    temVariacoes && detalhe?.complementos_itens_obrigatorio === 1 && !complementoId;
+  const faltaVariacao = variacaoObrigatoria && !variacaoSelecionada;
+  const faltaGrupoObrigatorio = temVariacoes && (detalhe?.grupos_opcoes ?? []).some((g) => g.obrigatorio === 1 && (selecoesGrupos[g.id]?.length ?? 0) === 0);
   /* Estoque que ainda cabe: o do produto menos o que ja esta no carrinho. */
   const estoqueRestante = Math.max(0, produto.estoque - jaNoCarrinho);
   const podeAdicionar =
-    !produto.esgotado && estoqueRestante > 0 && qtd <= estoqueRestante && !carregando && !faltaVariacao && !faltaExtraObrigatorio && !faltaComplementoObrigatorio;
+    !produto.esgotado && estoqueRestante > 0 && qtd <= estoqueRestante && !carregando && !faltaVariacao && !faltaGrupoObrigatorio;
 
-  function alternarExtra(id: number) {
-    setExtrasIds((atual) => (atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id]));
+  function alternarOpcao(grupoId: number, itemId: number, tipoSelecao: "unica" | "multipla") {
+    setSelecoesGrupos((atual) => {
+      const selecionados = atual[grupoId] ?? [];
+      if (tipoSelecao === "unica") {
+        return { ...atual, [grupoId]: selecionados.includes(itemId) ? [] : [itemId] };
+      }
+      return { ...atual, [grupoId]: selecionados.includes(itemId) ? selecionados.filter((x) => x !== itemId) : [...selecionados, itemId] };
+    });
   }
 
   function adicionar() {
@@ -117,14 +124,15 @@ export function StoreProdutoDialog({
         estoqueMax: produto.estoque,
         pontosGanho: produto.pontos_ganho,
       });
-    } else if (variacaoSelecionada) {
-      const nomeVariacao = [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ");
-      const extraLabel = extrasSelecionados.map((e) => ` + ${e.nome}`).join("");
-      const complementoLabel = complementoSelecionado ? ` + ${complementoSelecionado.nome}` : "";
+    } else {
+      const nomeVariacao = variacaoSelecionada ? [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ") : "";
+      const gruposLabel = gruposSelecionados
+        .flatMap((g) => g.itens.map((it) => ` + ${it.nome}`))
+        .join("");
       onAdicionar({
         id: produto.id,
         tipo: "produto",
-        nome: `${produto.nome} - ${nomeVariacao}${extraLabel}${complementoLabel}`,
+        nome: `${produto.nome}${nomeVariacao ? ` - ${nomeVariacao}` : ""}${gruposLabel}`,
         precoUnit: precoUnitario,
         qtd,
         obs: obs.trim(),
@@ -172,8 +180,8 @@ export function StoreProdutoDialog({
     <>
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <h3 className="text-[.86rem] font-bold text-neutral-900">Escolha uma das opções</h3>
-          {(detalhe?.variacoes.length ?? 0) > 0 && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
+          <h3 className="text-[.86rem] font-bold text-neutral-900">{detalhe?.variacao_titulo ?? "Escolha uma das opções"}</h3>
+          {variacaoObrigatoria && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
         </div>
         <div>
           {(detalhe?.variacoes ?? []).map((v) => {
@@ -202,47 +210,25 @@ export function StoreProdutoDialog({
         </div>
       </div>
 
-      {(detalhe?.extras.length ?? 0) > 0 && (
-        <div className="mt-4 border-t border-neutral-100 pt-3">
+      {(detalhe?.grupos_opcoes ?? []).map((grupo) => (
+        <div key={grupo.id} className="mt-4 border-t border-neutral-100 pt-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">Escolha seu extra</h3>
-            {detalhe?.extras_obrigatorio === 1 && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
+            <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">{grupo.titulo}</h3>
+            {grupo.obrigatorio === 1 && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
           </div>
-          <p className="mb-1.5 text-[.74rem] text-neutral-500">Escolha 1 opção.</p>
-          {detalhe?.extras.map((e) => (
+          <p className="mb-1.5 text-[.74rem] text-neutral-500">{grupo.tipo_selecao === "multipla" ? "Escolha 1 ou mais opções." : "Escolha 1 opção."}</p>
+          {grupo.itens.map((it) => (
             <OpcaoExtra
-              key={e.id}
-              nome={e.nome}
-              preco={e.preco}
-              ativo={extrasIds.includes(e.id)}
+              key={it.id}
+              nome={it.nome}
+              preco={it.preco}
+              ativo={selecoesGrupos[grupo.id]?.includes(it.id) ?? false}
               cor={brown}
-              onClick={() => alternarExtra(e.id)}
+              onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao)}
             />
           ))}
         </div>
-      )}
-
-      {(detalhe?.complementos_itens.length ?? 0) > 0 && (
-        <div className="mt-4 border-t border-neutral-100 pt-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">Escolha o tipo</h3>
-            {detalhe?.complementos_itens_obrigatorio === 1 && (
-              <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>
-            )}
-          </div>
-          <p className="mb-1.5 text-[.74rem] text-neutral-500">Escolha 1 opção.</p>
-          {detalhe?.complementos_itens.map((c) => (
-            <OpcaoExtra
-              key={c.id}
-              nome={c.nome}
-              preco={c.preco}
-              ativo={complementoId === c.id}
-              cor={brown}
-              onClick={() => setComplementoId(c.id)}
-            />
-          ))}
-        </div>
-      )}
+      ))}
     </>
   );
 

@@ -1187,6 +1187,8 @@ export const produtos = pgTable(
     preco_promocional: numeric("preco_promocional", { precision: 10, scale: 2, mode: "number" }),
     promo_desativado: boolean("promo_desativado").notNull().default(true),
     tem_variacoes: boolean("tem_variacoes").notNull().default(false),
+    variacoes_titulo: varchar("variacoes_titulo", { length: 120 }),
+    variacoes_obrigatorio: boolean("variacoes_obrigatorio").notNull().default(true),
     disponivel_catalogo: boolean("disponivel_catalogo").notNull().default(true),
     disponivel_mesa: boolean("disponivel_mesa").notNull().default(true),
     loja_id: integer("loja_id").notNull().default(1),
@@ -1211,44 +1213,44 @@ export const produtos = pgTable(
   ]
 );
 
-export const produtoComplementosItens = pgTable(
-  "produto_complementos_itens",
+/*
+ * Grupo de opcoes configuravel por produto (ex.: "Escolha o tamanho do acai",
+ * "Coberturas") — substitui os blocos fixos "Escolha seu extra"/"Escolha o
+ * tipo" (antigas produto_extras/produto_complementos_itens) por uma lista
+ * de N grupos com titulo, tipo de selecao e obrigatoriedade proprios.
+ */
+export const produtoOpcoesGrupos = pgTable(
+  "produto_opcoes_grupos",
   {
     id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
     produto_id: integer("produto_id").notNull(),
-    nome: varchar("nome", { length: 120 }).notNull(),
-    preco: numeric("preco", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
+    titulo: varchar("titulo", { length: 120 }).notNull(),
+    tipo_selecao: text("tipo_selecao").$type<"unica" | "multipla">().notNull().default("unica"),
     obrigatorio: boolean("obrigatorio").notNull().default(false),
-    ativo: boolean("ativo").notNull().default(true),
     ordem: integer("ordem").notNull().default(0),
     loja_id: integer("loja_id").notNull(),
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
-    atualizado_em: timestamp("atualizado_em", { mode: "string" }),
   },
   (t) => [
-    index("produto_complementos_itens_idx_produto_complementos_itens_produ").on(t.produto_id),
-    index("produto_complementos_itens_idx_produto_complementos_itens_loja").on(t.loja_id),
-    foreignKey({ columns: [t.produto_id], foreignColumns: [produtos.id], name: "produto_complementos_itens_fk_produto_complementos_itens_produt" }).onDelete("cascade"),
+    index("produto_opcoes_grupos_idx_produto_opcoes_grupos_produto").on(t.produto_id),
+    index("produto_opcoes_grupos_idx_produto_opcoes_grupos_loja").on(t.loja_id),
+    foreignKey({ columns: [t.produto_id], foreignColumns: [produtos.id], name: "produto_opcoes_grupos_fk_produto_opcoes_grupos_produto" }).onDelete("cascade"),
   ]
 );
 
-export const produtoExtras = pgTable(
-  "produto_extras",
+export const produtoOpcoesItens = pgTable(
+  "produto_opcoes_itens",
   {
     id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
-    produto_id: integer("produto_id").notNull(),
+    grupo_id: integer("grupo_id").notNull(),
     nome: varchar("nome", { length: 120 }).notNull(),
     preco: numeric("preco", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
-    obrigatorio: boolean("obrigatorio").notNull().default(false),
-    ativo: boolean("ativo").notNull().default(true),
     ordem: integer("ordem").notNull().default(0),
-    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
-    atualizado_em: timestamp("atualizado_em", { mode: "string" }),
-    loja_id: integer("loja_id").notNull().default(1),
+    loja_id: integer("loja_id").notNull(),
   },
   (t) => [
-    index("produto_extras_idx_produto_extras_produto").on(t.produto_id),
-    foreignKey({ columns: [t.produto_id], foreignColumns: [produtos.id], name: "produto_extras_fk_produto_extras_produto" }).onDelete("cascade"),
+    index("produto_opcoes_itens_idx_produto_opcoes_itens_grupo").on(t.grupo_id),
+    foreignKey({ columns: [t.grupo_id], foreignColumns: [produtoOpcoesGrupos.id], name: "produto_opcoes_itens_fk_produto_opcoes_itens_grupo" }).onDelete("cascade"),
   ]
 );
 

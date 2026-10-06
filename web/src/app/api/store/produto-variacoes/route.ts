@@ -15,9 +15,14 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: resultado.ok,
     variacoes: resultado.variacoes,
-    extras: resultado.extras.map((e) => ({ id: e.id, nome: e.nome, preco: e.preco, obrigatorio: e.obrigatorio ? 1 : 0 })),
-    extras_obrigatorio: resultado.extrasObrigatorio ? 1 : 0,
-    complementos_itens: resultado.complementosItens.map((c) => ({ id: c.id, nome: c.nome, preco: c.preco, obrigatorio: c.obrigatorio ? 1 : 0 })),
-    complementos_itens_obrigatorio: resultado.complementosItensObrigatorio ? 1 : 0,
+    variacao_titulo: resultado.variacaoTitulo,
+    variacao_obrigatorio: resultado.variacaoObrigatorio ? 1 : 0,
+    grupos_opcoes: resultado.gruposOpcoes.map((g) => ({
+      id: g.id,
+      titulo: g.titulo,
+      tipo_selecao: g.tipoSelecao,
+      obrigatorio: g.obrigatorio ? 1 : 0,
+      itens: g.itens.map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
+    })),
   });
 }

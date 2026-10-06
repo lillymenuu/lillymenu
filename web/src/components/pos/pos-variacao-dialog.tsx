@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { formatBRL } from "@/components/ordermanager/constants";
-import type { PosCartItem, PosExtra, PosProduto, PosVariacao, PosVariacoesResposta } from "@/lib/pos";
+import type { PosCartItem, PosGrupoOpcoes, PosProduto, PosVariacao, PosVariacoesResposta } from "@/lib/pos";
 
 export function PosVariacaoDialog({
   produto,
@@ -24,14 +24,12 @@ export function PosVariacaoDialog({
 }) {
   const [carregando, setCarregando] = useState(false);
   const [variacoes, setVariacoes] = useState<PosVariacao[]>([]);
-  const [extras, setExtras] = useState<PosExtra[]>([]);
-  const [extrasObrigatorio, setExtrasObrigatorio] = useState(false);
-  const [complementosItens, setComplementosItens] = useState<PosExtra[]>([]);
-  const [complementosObrigatorio, setComplementosObrigatorio] = useState(false);
+  const [variacaoTitulo, setVariacaoTitulo] = useState<string | null>(null);
+  const [variacaoObrigatorio, setVariacaoObrigatorio] = useState(true);
+  const [gruposOpcoes, setGruposOpcoes] = useState<PosGrupoOpcoes[]>([]);
 
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
-  const [extrasIds, setExtrasIds] = useState<number[]>([]);
-  const [complementoId, setComplementoId] = useState<number | null>(null);
+  const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
   const [qtd, setQtd] = useState(1);
   const [observacoes, setObservacoes] = useState("");
 
@@ -39,13 +37,11 @@ export function PosVariacaoDialog({
     if (!produto) return;
     setCarregando(true);
     setVariacoes([]);
-    setExtras([]);
-    setExtrasObrigatorio(false);
-    setComplementosItens([]);
-    setComplementosObrigatorio(false);
+    setVariacaoTitulo(null);
+    setVariacaoObrigatorio(true);
+    setGruposOpcoes([]);
     setVariacaoId(itemEditando?.variacaoId ?? null);
-    setExtrasIds(itemEditando?.extrasIds ?? []);
-    setComplementoId(itemEditando?.complementoId ?? null);
+    setSelecoesGrupos(itemEditando?.selecoesGrupos ?? {});
     setQtd(itemEditando?.qtd ?? 1);
     setObservacoes(itemEditando?.observacoes ?? "");
     fetch(`/api/pos/produto-variacoes?id=${produto.id}`)
@@ -54,10 +50,9 @@ export function PosVariacaoDialog({
         if (data.ok) {
           const lista = data.variacoes ?? [];
           setVariacoes(lista);
-          setExtras(data.extras ?? []);
-          setExtrasObrigatorio(!!data.extras_obrigatorio);
-          setComplementosItens(data.complementos_itens ?? []);
-          setComplementosObrigatorio(!!data.complementos_itens_obrigatorio);
+          setVariacaoTitulo(data.variacao_titulo ?? null);
+          setVariacaoObrigatorio(!!data.variacao_obrigatorio);
+          setGruposOpcoes(data.grupos_opcoes ?? []);
           if (!itemEditando && lista.length > 0) setVariacaoId(lista[0].id);
         }
       })
@@ -70,28 +65,33 @@ export function PosVariacaoDialog({
 
   const variacaoSelecionada = variacoes.find((v) => v.id === variacaoId) ?? null;
   const precoBase = variacaoSelecionada ? (variacaoSelecionada.preco > 0 ? variacaoSelecionada.preco : produto.preco) : produto.preco;
-  const extrasSelecionados = extras.filter((e) => extrasIds.includes(e.id));
-  const extrasTotal = extrasSelecionados.reduce((s, e) => s + e.preco, 0);
-  const complementoSelecionado = complementosItens.find((c) => c.id === complementoId) ?? null;
-  const precoUnitario = precoBase + extrasTotal + (complementoSelecionado?.preco ?? 0);
+  const gruposSelecionados = gruposOpcoes.map((g) => ({ grupo: g, itens: g.itens.filter((it) => selecoesGrupos[g.id]?.includes(it.id)) }));
+  const gruposTotal = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
+  const precoUnitario = precoBase + gruposTotal;
 
-  function toggleExtra(id: number) {
-    setExtrasIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  function alternarOpcao(grupoId: number, itemId: number, tipoSelecao: "unica" | "multipla") {
+    setSelecoesGrupos((atual) => {
+      const selecionados = atual[grupoId] ?? [];
+      if (tipoSelecao === "unica") {
+        return { ...atual, [grupoId]: selecionados.includes(itemId) ? [] : [itemId] };
+      }
+      return { ...atual, [grupoId]: selecionados.includes(itemId) ? selecionados.filter((x) => x !== itemId) : [...selecionados, itemId] };
+    });
   }
 
   const podeAdicionar =
     !carregando &&
     qtd <= estoqueDisponivel &&
-    variacaoId !== null &&
-    (!extrasObrigatorio || extrasIds.length > 0) &&
-    (!complementosObrigatorio || complementoId !== null);
+    (!variacaoObrigatorio || variacaoId !== null) &&
+    gruposOpcoes.every((g) => !g.obrigatorio || (selecoesGrupos[g.id]?.length ?? 0) > 0);
 
   function confirmar() {
-    if (!produto || !variacaoSelecionada || !podeAdicionar) return;
-    const nomeVariacao = [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ");
+    if (!produto || !podeAdicionar) return;
+    const nomeVariacao = variacaoSelecionada ? [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ") : "";
     let nome = nomeVariacao ? `${produto.nome} - ${nomeVariacao}` : produto.nome;
-    if (extrasSelecionados.length > 0) nome += ` + ${extrasSelecionados.map((e) => e.nome).join(", ")}`;
-    if (complementoSelecionado) nome += ` + ${complementoSelecionado.nome}`;
+    for (const g of gruposSelecionados) {
+      if (g.itens.length > 0) nome += ` + ${g.itens.map((it) => it.nome).join(", ")}`;
+    }
 
     const dadosItem: Omit<PosCartItem, "rowKey"> = {
       produtoId: produto.id,
@@ -102,8 +102,7 @@ export function PosVariacaoDialog({
       usarPontos: false,
       imagem: produto.imagem,
       variacaoId,
-      extrasIds,
-      complementoId,
+      selecoesGrupos,
     };
 
     if (itemEditando && onSalvar) {
@@ -152,8 +151,8 @@ export function PosVariacaoDialog({
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-primary">Escolha uma das opções</span>
-                <span className="text-xs font-semibold text-destructive">Obrigatório</span>
+                <span className="text-sm font-semibold text-primary">{variacaoTitulo ?? "Escolha uma das opções"}</span>
+                {variacaoObrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
               </div>
               <div className="mt-2 space-y-1.5">
                 {variacoes.map((v) => {
@@ -182,25 +181,25 @@ export function PosVariacaoDialog({
               </div>
             </div>
 
-            {extras.length > 0 ? (
-              <div>
+            {gruposOpcoes.map((grupo) => (
+              <div key={grupo.id}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-primary uppercase">Escolha seu extra</span>
-                  {extrasObrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
+                  <span className="text-sm font-semibold text-primary uppercase">{grupo.titulo}</span>
+                  {grupo.obrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
                 </div>
-                <div className="text-xs text-muted-foreground">Escolha 1 ou mais opções.</div>
+                <div className="text-xs text-muted-foreground">{grupo.tipo_selecao === "multipla" ? "Escolha 1 ou mais opções." : "Escolha 1 opção."}</div>
                 <div className="mt-2 space-y-1.5">
-                  {extras.map((e) => {
-                    const ativo = extrasIds.includes(e.id);
+                  {grupo.itens.map((it) => {
+                    const ativo = selecoesGrupos[grupo.id]?.includes(it.id) ?? false;
                     return (
-                      <div key={e.id} className="flex items-center justify-between border-b p-2.5 text-sm">
+                      <div key={it.id} className="flex items-center justify-between border-b p-2.5 text-sm">
                         <div>
-                          <div>{e.nome}</div>
-                          <div className="text-xs text-muted-foreground">{formatBRL(e.preco)}</div>
+                          <div>{it.nome}</div>
+                          <div className="text-xs text-muted-foreground">{formatBRL(it.preco)}</div>
                         </div>
                         <button
                           type="button"
-                          onClick={() => toggleExtra(e.id)}
+                          onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao)}
                           className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-colors ${
                             ativo ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
                           }`}
@@ -212,39 +211,7 @@ export function PosVariacaoDialog({
                   })}
                 </div>
               </div>
-            ) : null}
-
-            {complementosItens.length > 0 ? (
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-primary uppercase">Escolha o tipo</span>
-                  {complementosObrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
-                </div>
-                <div className="text-xs text-muted-foreground">Escolha 1 opção.</div>
-                <div className="mt-2 space-y-1.5">
-                  {complementosItens.map((c) => {
-                    const ativo = complementoId === c.id;
-                    return (
-                      <div key={c.id} className="flex items-center justify-between border-b p-2.5 text-sm">
-                        <div>
-                          <div>{c.nome}</div>
-                          <div className="text-xs text-muted-foreground">{formatBRL(c.preco)}</div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setComplementoId(ativo ? null : c.id)}
-                          className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-colors ${
-                            ativo ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
-                          }`}
-                        >
-                          {ativo ? <Check className="size-4" /> : <Plus className="size-4" />}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
+            ))}
 
             <textarea
               value={observacoes}
@@ -282,7 +249,7 @@ export function PosVariacaoDialog({
             disabled={!podeAdicionar}
             className="h-11 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {variacaoId === null
+            {variacaoObrigatorio && variacaoId === null
               ? "Selecionar variação"
               : `${itemEditando ? "Salvar" : "Adicionar"} · ${formatBRL(precoUnitario * qtd)}`}
           </button>

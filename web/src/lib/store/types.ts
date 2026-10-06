@@ -138,14 +138,14 @@ export type StoreCatalogo = {
 };
 
 export type StoreVariacao = { id: number; tamanho: string; cor: string; preco: number };
-export type StoreExtraItem = { id: number; nome: string; preco: number; obrigatorio: number };
+export type StoreOpcaoItem = { id: number; nome: string; preco: number };
+export type StoreGrupoOpcoes = { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: 0 | 1; itens: StoreOpcaoItem[] };
 
 export type StoreProdutoVariacoes = {
   variacoes: StoreVariacao[];
-  extras: StoreExtraItem[];
-  extras_obrigatorio: 0 | 1;
-  complementos_itens: StoreExtraItem[];
-  complementos_itens_obrigatorio: 0 | 1;
+  variacao_titulo: string | null;
+  variacao_obrigatorio: 0 | 1;
+  grupos_opcoes: StoreGrupoOpcoes[];
 };
 
 export type StoreComboPassoOpcao = {
