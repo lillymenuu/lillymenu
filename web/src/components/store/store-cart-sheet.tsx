@@ -11,6 +11,28 @@ import { consumoDoCarrinho } from "@/components/store/estoque-carrinho";
 import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem, StoreCrossSellProduto, StoreCupomResultado, StorePerfil } from "@/lib/store/types";
 
+/* Nome base do produto, sem a variacao/opcoes concatenadas no final (ex.: "Açaí - Tradicional + Creme de
+   Morango" vira so "Açaí") — usado quando `opcoesSelecionadas` ja tem a composicao estruturada pra listar. */
+function nomeBaseItem(nome: string): string {
+  const idx = nome.search(/ - | \+ /);
+  return idx === -1 ? nome : nome.slice(0, idx);
+}
+
+/* Agrupa `opcoesSelecionadas` por titulo (Sabores, Cremes, Mix...), preservando a ordem em que cada
+   grupo apareceu pela primeira vez — mesma logica do resumo do pedido no admin. */
+function agruparOpcoes(opcoes: { titulo: string; nome: string }[]): { titulo: string; nomes: string[] }[] {
+  const grupos: { titulo: string; nomes: string[] }[] = [];
+  for (const o of opcoes) {
+    let grupo = grupos.find((g) => g.titulo === o.titulo);
+    if (!grupo) {
+      grupo = { titulo: o.titulo, nomes: [] };
+      grupos.push(grupo);
+    }
+    grupo.nomes.push(o.nome);
+  }
+  return grupos;
+}
+
 export function StoreCartSheet({
   open,
   onOpenChange,
@@ -301,7 +323,9 @@ export function StoreCartSheet({
                       return acc;
                     }, {})
                   : null;
+                const gruposOpcoes = !grupos && item.opcoesSelecionadas?.length ? agruparOpcoes(item.opcoesSelecionadas) : null;
                 const obsLivre = grupos ? (item.obsUsuario ?? "") : item.obs;
+                const nomeExibido = gruposOpcoes ? nomeBaseItem(item.nome) : item.nome;
 
                 return (
                   <div key={item.key} className="border-b border-neutral-100 py-3 last:border-0">
@@ -318,7 +342,7 @@ export function StoreCartSheet({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-[.82rem] font-semibold text-neutral-900">{item.nome}</p>
+                          <p className="text-[.82rem] font-semibold text-neutral-900">{nomeExibido}</p>
                           <button
                             type="button"
                             onClick={() => onRemover(item.key)}
@@ -356,6 +380,17 @@ export function StoreCartSheet({
                             <p key={s.id} className="text-[.76rem] text-neutral-600">
                               <span className="mr-1 text-neutral-400">{s.qtd}</span>
                               {s.nome}
+                            </p>
+                          ))}
+                        </div>
+                      ))}
+                    {gruposOpcoes &&
+                      gruposOpcoes.map((g) => (
+                        <div key={g.titulo} className="mt-2 pl-[60px]">
+                          <p className="text-[.7rem] font-semibold text-neutral-500">{g.titulo}</p>
+                          {g.nomes.map((nome, ni) => (
+                            <p key={ni} className="text-[.76rem] text-neutral-600">
+                              - {nome}
                             </p>
                           ))}
                         </div>

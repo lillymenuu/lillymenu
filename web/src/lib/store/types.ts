@@ -204,6 +204,8 @@ export type StoreCartItem = {
   /** Variacao e grupos de opcoes escolhidos (produtos com `tem_variacoes`) — persistidos em pedido_item_opcoes pra reabrir o pedido com as opcoes ja marcadas. */
   variacaoId?: number | null;
   selecoesGrupos?: Record<number, number[]>;
+  /** Mesma selecao de variacaoId/selecoesGrupos, ja resolvida em titulo+nome pra exibir no carrinho (igual ao `combosels` com `passoNome`, so que pra produtos com grupos de opcoes em vez de combo). */
+  opcoesSelecionadas?: { titulo: string; nome: string }[];
 };
 
 export type StoreCrossSellProduto = {

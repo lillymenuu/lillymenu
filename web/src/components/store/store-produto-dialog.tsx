@@ -152,6 +152,13 @@ export function StoreProdutoDialog({
       const gruposLabel = gruposSelecionados
         .flatMap((g) => g.itens.map((it) => ` + ${it.nome}`))
         .join("");
+      const opcoesSelecionadas: { titulo: string; nome: string }[] = [];
+      if (variacaoSelecionada) {
+        opcoesSelecionadas.push({ titulo: detalhe?.variacao_titulo ?? "Variações do produto", nome: nomeVariacao || "Opção" });
+      }
+      for (const g of gruposSelecionados) {
+        for (const it of g.itens) opcoesSelecionadas.push({ titulo: g.grupo.titulo, nome: it.nome });
+      }
       onAdicionar({
         id: produto.id,
         tipo: "produto",
@@ -164,6 +171,7 @@ export function StoreProdutoDialog({
         pontosGanho: produto.pontos_ganho,
         variacaoId,
         selecoesGrupos,
+        opcoesSelecionadas,
       });
     }
 
