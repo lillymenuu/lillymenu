@@ -127,7 +127,7 @@ function ContaMenu({ admin, sair, trigger }: { admin: { nome: string; email: str
 
         <DropdownMenuItem
           onClick={sair}
-          className="justify-center gap-2 rounded-full bg-foreground px-3 py-2.5 text-sm font-semibold text-background hover:bg-foreground focus:bg-foreground/90 focus:text-background"
+          className="justify-center gap-2 rounded-lg bg-foreground px-3 py-1.5 text-sm font-semibold text-background hover:bg-foreground focus:bg-foreground/90 focus:text-background"
         >
           <LogOut size={16} /> Sair
         </DropdownMenuItem>
