@@ -35,6 +35,9 @@ import {
   Settings,
   Download,
   DollarSign,
+  CirclePlus,
+  CircleCheck,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -88,14 +91,13 @@ function ContaMenuLinhaInerte({ icon: Icon, children }: { icon: LucideIcon; chil
   );
 }
 
-/** Menu de conta — reaproveitado no topbar e no rodapé da sidebar, cada um com seu próprio gatilho.
- * Estrutura/ícones/agrupamento iguais à referência: card cinza com avatar+nome+cargo, lista
- * Profile/Settings/Dashboard, divisor, Downloads/Earnings, divisor, botão preto de Logout.
- * Só "Dashboard" e "Sair" têm página real aqui — os demais ficam inertes (mesmo critério do
- * roadmap da sidebar: sem fingir link funcional pra página que ainda não existe). Cargo mostrado
- * é "Superadmin" (não a referência "Manager" nem o email): é o dado real equivalente que temos —
- * só existe um papel possível pra quem acessa este painel. */
-function ContaMenu({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
+/** Menu de conta do avatar no topbar. Estrutura/ícones/agrupamento iguais à referência: card cinza
+ * com avatar+nome+cargo, lista Profile/Settings/Dashboard, divisor, Downloads/Earnings, divisor,
+ * botão preto de Logout. Só "Dashboard" e "Sair" têm página real aqui — os demais ficam inertes
+ * (mesmo critério do roadmap da sidebar: sem fingir link funcional pra página que ainda não
+ * existe). Cargo mostrado é "Superadmin" (não a referência "Manager" nem o email): é o dado real
+ * equivalente que temos — só existe um papel possível pra quem acessa este painel. */
+function ContaMenuTopbar({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
@@ -130,6 +132,49 @@ function ContaMenu({ admin, sair, trigger }: { admin: { nome: string; email: str
           className="justify-center gap-2 rounded-lg bg-foreground px-3 py-1.5 text-sm font-semibold text-background hover:bg-foreground focus:bg-foreground/90 focus:text-background"
         >
           <LogOut size={16} /> Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Menu de conta do rodapé da sidebar — referência própria, diferente do topbar (o print mostrado
+ * pra essa posição é outro, com avatar+nome+email, "Upgrade to Pro", divisor, grupo "Account"/
+ * "Billing"/"Notifications", divisor, "Sair"). Abre "de lado" (`side="right"`), flutuando à
+ * direita do rodapé em vez de cair por baixo como um dropdown comum — assim como no print.
+ * "Upgrade to Pro"/"Account"/"Billing" ficam inertes (sem página real); "Notifications" é real
+ * (mesmo link de suporte do sino do topbar); "Sair" desloga de verdade. */
+function ContaMenuSidebar({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={trigger} />
+      <DropdownMenuContent side="right" align="end" sideOffset={8} className="w-64 p-2">
+        <div className="flex items-center gap-3 rounded-xl bg-muted px-3 py-2.5">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-sm font-semibold text-foreground">{admin.nome}</p>
+            <p className="truncate text-xs text-muted-foreground">{admin.email}</p>
+          </div>
+        </div>
+
+        <div className="pt-1">
+          <ContaMenuLinhaInerte icon={CirclePlus}>Upgrade to Pro</ContaMenuLinhaInerte>
+        </div>
+
+        <DropdownMenuSeparator className="my-2" />
+
+        <div>
+          <ContaMenuLinhaInerte icon={CircleCheck}>Account</ContaMenuLinhaInerte>
+          <ContaMenuLinhaInerte icon={CreditCard}>Billing</ContaMenuLinhaInerte>
+          <DropdownMenuItem render={<Link href="/superadmin/suporte" />} className="gap-3 rounded-md px-3 py-2.5 text-sm">
+            <Bell size={17} /> Notifications
+          </DropdownMenuItem>
+        </div>
+
+        <DropdownMenuSeparator className="my-2" />
+
+        <DropdownMenuItem onClick={sair} className="gap-3 rounded-md px-3 py-2.5 text-sm">
+          <LogOut size={17} /> Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -241,7 +286,7 @@ export function SuperadminShell({
           ))}
         </nav>
 
-        <ContaMenu
+        <ContaMenuSidebar
           admin={admin}
           sair={sair}
           trigger={
@@ -277,7 +322,7 @@ export function SuperadminShell({
             {naoLidas > 0 && <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-rose-500 ring-2 ring-background" />}
           </Link>
 
-          <ContaMenu
+          <ContaMenuTopbar
             admin={admin}
             sair={sair}
             trigger={
