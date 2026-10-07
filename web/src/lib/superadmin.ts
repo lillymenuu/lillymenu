@@ -13,6 +13,8 @@ export type SaCobranca = {
 export type SaLoja = {
   id: number;
   nome: string;
+  logo: string | null;
+  segmento: string;
   ativo: boolean;
   criado_em: string | null;
   status: string;

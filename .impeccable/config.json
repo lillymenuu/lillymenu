@@ -893,6 +893,15 @@
         "value": "52px",
         "createdAt": "2026-09-28T14:38:13.641Z",
         "reason": "pre-existing hero H1 size moved unchanged from landing-hero.tsx into hero-typed-title.tsx"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "web/src/components/superadmin/sa-loja-card.tsx"
+        ],
+        "createdAt": "2026-10-07T21:41:04.247Z",
+        "reason": "false positive: text-slate-500 pairs with its own hover:text-rose-600 alongside hover:bg-rose-50, so text is never gray on the colored background in any rendered state"
       }
     ]
   }

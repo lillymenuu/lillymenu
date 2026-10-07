@@ -16,6 +16,8 @@ export async function getListagemLojasSuperadmin(): Promise<SaLojasResposta> {
     lojas: d.lojas.map((l) => ({
       id: l.id,
       nome: l.nome,
+      logo: l.logo,
+      segmento: l.segmento,
       ativo: l.ativo,
       criado_em: l.criadoEm,
       status: l.status,

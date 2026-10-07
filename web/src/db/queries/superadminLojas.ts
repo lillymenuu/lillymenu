@@ -21,6 +21,8 @@ export type PlanoSaas = { id: number; nome: string; valor: number; recursos: str
 export type LojaListagem = {
   id: number;
   nome: string;
+  logo: string | null;
+  segmento: string;
   ativo: boolean;
   criadoEm: string | null;
   status: string;
@@ -80,6 +82,21 @@ export async function listagemLojasSuperadmin(): Promise<ListagemLojasSuperadmin
 
   const hoje = new Date();
   const lojasDetalhadas = await buscarLojasComDetalhes();
+
+  const idsLojas = lojasDetalhadas.map((l) => l.id);
+  const extrasLinhas = idsLojas.length
+    ? await db
+        .select({ lojaId: configuracoes.loja_id, chave: configuracoes.chave, valor: configuracoes.valor })
+        .from(configuracoes)
+        .where(and(inArray(configuracoes.loja_id, idsLojas), inArray(configuracoes.chave, ["loja_perfil", "loja_segmento"])))
+    : [];
+  const logoPorLoja = new Map<number, string>();
+  const segmentoPorLoja = new Map<number, string>();
+  for (const row of extrasLinhas) {
+    if (row.chave === "loja_perfil") logoPorLoja.set(row.lojaId, row.valor);
+    if (row.chave === "loja_segmento") segmentoPorLoja.set(row.lojaId, row.valor);
+  }
+
   const lojasListagem: LojaListagem[] = lojasDetalhadas.map((l) => {
     const r = resolverStatusLoja(l, hoje);
     const temComprovante = Boolean(r.comprovanteArquivo);
@@ -87,6 +104,8 @@ export async function listagemLojasSuperadmin(): Promise<ListagemLojasSuperadmin
     return {
       id: r.id,
       nome: r.nome ?? "",
+      logo: logoPorLoja.get(r.id) ?? null,
+      segmento: segmentoPorLoja.get(r.id) ?? "",
       ativo: Boolean(r.ativo),
       criadoEm: r.criadoEm,
       status: r.statusResolvido,

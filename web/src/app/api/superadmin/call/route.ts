@@ -7,6 +7,7 @@ import { salvarConfigPix, salvarConfigNominatim, salvarRecursosPlano } from "@/d
 import { mensagensSuporte, enviarMensagemSuporte, digitandoSuporteSet, digitandoLojaGet, unreadSuporte, type MensagemSuporte } from "@/db/queries/suporteChat";
 import { atualizarPerfilSuperadmin } from "@/db/queries/superadminPerfil";
 import { getLinkLojaCanonico } from "@/db/queries/lojaPerfil";
+import { faturamentoLoja } from "@/db/queries/superadminFaturamento";
 
 /*
  * Substitui o proxy unico pra admin/api/v1/superadmin_*.php: cada "alvo"
@@ -105,6 +106,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, link });
   }
 
+  if (alvo === "superadmin_loja_faturamento") {
+    const lojaId = Number(request.nextUrl.searchParams.get("loja_id") ?? "0");
+    const faturamento = await faturamentoLoja(lojaId);
+    return NextResponse.json({ ok: true, faturamento });
+  }
+
   return NextResponse.json({ ok: false, msg: "Não encontrado." }, { status: 404 });
 }
 
@@ -123,6 +130,7 @@ export async function POST(request: NextRequest) {
       email: String(body.email ?? ""),
       usuario: String(body.usuario ?? ""),
       contato: body.contato ? String(body.contato) : undefined,
+      segmento: body.segmento !== undefined ? String(body.segmento) : undefined,
       senha: body.senha ? String(body.senha) : undefined,
       senha2: body.senha2 ? String(body.senha2) : undefined,
       trialInicio: body.trial_inicio ? String(body.trial_inicio) : undefined,

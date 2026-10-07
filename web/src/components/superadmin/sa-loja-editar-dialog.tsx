@@ -45,6 +45,7 @@ function Formulario({
   const [email, setEmail] = useState(loja.admin.email);
   const [usuario, setUsuario] = useState(loja.admin.usuario);
   const [contato, setContato] = useState(loja.contato);
+  const [segmento, setSegmento] = useState(loja.segmento);
   const [senha, setSenha] = useState("");
   const [senha2, setSenha2] = useState("");
   const [trialInicio, setTrialInicio] = useState(loja.trial_inicio?.slice(0, 10) ?? "");
@@ -87,6 +88,7 @@ function Formulario({
         email,
         usuario,
         contato,
+        segmento,
         senha,
         senha2,
         trial_inicio: trialInicio,
@@ -149,6 +151,10 @@ function Formulario({
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="sa-contato">WhatsApp / contato</Label>
           <Input id="sa-contato" value={contato} onChange={(e) => setContato(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="sa-segmento">Segmento</Label>
+          <Input id="sa-segmento" placeholder="Ex: Açaiteria, Pizzaria..." value={segmento} onChange={(e) => setSegmento(e.target.value)} />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Plano</Label>

@@ -17,6 +17,7 @@ export type SalvarLojaSuperadminInput = {
   email: string;
   usuario: string;
   contato?: string;
+  segmento?: string;
   senha?: string;
   senha2?: string;
   trialInicio?: string;
@@ -30,6 +31,7 @@ export async function salvarLojaSuperadmin(input: SalvarLojaSuperadminInput): Pr
   const email = input.email.trim();
   const usuario = input.usuario.trim();
   const contato = (input.contato ?? "").trim();
+  const segmento = (input.segmento ?? "").trim();
   const senha = input.senha ?? "";
   const senha2 = input.senha2 ?? "";
   const trialInicio = (input.trialInicio ?? "").trim();
@@ -67,7 +69,7 @@ export async function salvarLojaSuperadmin(input: SalvarLojaSuperadminInput): Pr
         }
       }
 
-      const configs: Record<string, string> = { nome_loja: nome, loja_email: email };
+      const configs: Record<string, string> = { nome_loja: nome, loja_email: email, loja_segmento: segmento };
       if (contato !== "") {
         configs.loja_contato = contato;
         configs.whatsapp_numero = contato;
