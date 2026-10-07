@@ -45,14 +45,14 @@ export function SaLojaCard({
     <button
       type="button"
       onClick={onAbrirFaturamento}
-      className="group flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+      className="group flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md dark:border-white/10 dark:bg-neutral-900 dark:hover:border-white/20"
     >
       <div className="flex items-start justify-between gap-2">
         {loja.logo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={urlArquivo(loja.logo, phpAdminUrl)} alt="" className="size-11 shrink-0 rounded-xl border border-slate-200 bg-white object-cover" />
+          <img src={urlArquivo(loja.logo, phpAdminUrl)} alt="" className="size-11 shrink-0 rounded-xl border border-slate-200 bg-white object-cover dark:border-white/10" />
         ) : (
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-bold text-slate-700">{iniciais(loja.nome)}</span>
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-bold text-slate-700 dark:bg-white/10 dark:text-neutral-300">{iniciais(loja.nome)}</span>
         )}
         <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize", STATUS_ESTILO[loja.status] ?? "bg-slate-100 text-slate-600")}>
           {loja.status}
@@ -60,8 +60,8 @@ export function SaLojaCard({
       </div>
 
       <div className="min-w-0">
-        <h3 className="truncate text-base font-semibold text-slate-900">{loja.nome}</h3>
-        <p className="truncate text-sm text-slate-500">{loja.segmento || "Segmento não definido"}</p>
+        <h3 className="truncate text-base font-semibold text-slate-900 dark:text-neutral-100">{loja.nome}</h3>
+        <p className="truncate text-sm text-slate-500 dark:text-neutral-400">{loja.segmento || "Segmento não definido"}</p>
       </div>
 
       {loja.cobranca.aguardando_revisao && (
@@ -84,7 +84,7 @@ export function SaLojaCard({
         </span>
       )}
 
-      <div className="mt-1 flex items-center gap-1 border-t border-slate-100 pt-3">
+      <div className="mt-1 flex items-center gap-1 border-t border-slate-100 pt-3 dark:border-white/10">
         <span
           role="button"
           tabIndex={0}
@@ -95,7 +95,7 @@ export function SaLojaCard({
           onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), onEditar())}
           aria-label="Editar"
           title="Editar"
-          className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-neutral-100"
         >
           <Pencil size={15} />
         </span>
@@ -110,7 +110,7 @@ export function SaLojaCard({
             onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), onSuspender())}
             aria-label="Suspender"
             title="Suspender"
-            className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-neutral-100"
           >
             <PowerOff size={15} />
           </span>
@@ -140,7 +140,7 @@ export function SaLojaCard({
           onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), onExcluir())}
           aria-label="Excluir"
           title="Excluir"
-          className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
+          className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-neutral-400 dark:hover:bg-rose-500/15 dark:hover:text-rose-400"
         >
           <Trash2 size={15} />
         </span>

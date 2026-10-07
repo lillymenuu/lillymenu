@@ -13,8 +13,12 @@ import { saCall, type SaLoja } from "@/lib/superadmin";
 
 type Faturamento = { mensal: { label: string; valor: number }[]; anual: { label: string; valor: number }[] };
 
-const CINZA = "#27272a";
-const chartConfig: ChartConfig = { valor: { label: "Faturamento", color: CINZA } };
+/* Tons mono via CSS vars (definidas em globals.css, com par claro/escuro) em vez de hex fixo —
+   senão as barras cinza-escuro ficariam quase invisíveis num card de tema escuro. */
+const MONO = "var(--sa-chart-mono)";
+const GRID = "var(--sa-chart-grid)";
+const EIXO = "var(--sa-chart-axis)";
+const chartConfig: ChartConfig = { valor: { label: "Faturamento", color: MONO } };
 
 export function SaLojaFaturamentoDialog({ loja, onOpenChange }: { loja: SaLoja | null; onOpenChange: (v: boolean) => void }) {
   return (
@@ -52,30 +56,30 @@ function Conteudo({ loja }: { loja: SaLoja }) {
         <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Faturamento mensal</h3>
-            <p className="text-xs text-slate-500">Últimos 12 meses · total {formatBRLMilhar(totalMensal)}</p>
+          <div className="rounded-2xl border border-slate-200 p-4 dark:border-white/10">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-neutral-100">Faturamento mensal</h3>
+            <p className="text-xs text-slate-500 dark:text-neutral-400">Últimos 12 meses · total {formatBRLMilhar(totalMensal)}</p>
             <ChartContainer config={chartConfig} className="mt-3 aspect-auto h-56 w-full">
               <BarChart data={dados.mensal} margin={{ top: 8, left: -24, right: 4 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={10} stroke="#64748b" />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={10} stroke="#64748b" />
-                <Tooltip cursor={{ fill: "rgba(39,39,42,.06)" }} formatter={(v) => [formatBRLMilhar(Number(v)), "Faturamento"]} />
-                <Bar dataKey="valor" fill={CINZA} radius={[4, 4, 0, 0]} maxBarSize={28} animationDuration={700} />
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={GRID} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={10} stroke={EIXO} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={10} stroke={EIXO} />
+                <Tooltip cursor={{ fill: "rgba(128,128,128,.12)" }} formatter={(v) => [formatBRLMilhar(Number(v)), "Faturamento"]} />
+                <Bar dataKey="valor" fill={MONO} radius={[4, 4, 0, 0]} maxBarSize={28} animationDuration={700} />
               </BarChart>
             </ChartContainer>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Faturamento anual</h3>
-            <p className="text-xs text-slate-500">Por ano · total {formatBRLMilhar(totalAnual)}</p>
+          <div className="rounded-2xl border border-slate-200 p-4 dark:border-white/10">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-neutral-100">Faturamento anual</h3>
+            <p className="text-xs text-slate-500 dark:text-neutral-400">Por ano · total {formatBRLMilhar(totalAnual)}</p>
             <ChartContainer config={chartConfig} className="mt-3 aspect-auto h-56 w-full">
               <BarChart data={dados.anual} margin={{ top: 8, left: -24, right: 4 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} stroke="#64748b" />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={10} stroke="#64748b" />
-                <Tooltip cursor={{ fill: "rgba(39,39,42,.06)" }} formatter={(v) => [formatBRLMilhar(Number(v)), "Faturamento"]} />
-                <Bar dataKey="valor" fill={CINZA} radius={[4, 4, 0, 0]} maxBarSize={44} animationDuration={700} />
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={GRID} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} stroke={EIXO} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={10} stroke={EIXO} />
+                <Tooltip cursor={{ fill: "rgba(128,128,128,.12)" }} formatter={(v) => [formatBRLMilhar(Number(v)), "Faturamento"]} />
+                <Bar dataKey="valor" fill={MONO} radius={[4, 4, 0, 0]} maxBarSize={44} animationDuration={700} />
               </BarChart>
             </ChartContainer>
           </div>

@@ -395,7 +395,7 @@ export function SaDashboardView({ dados }: { dados: SaDashboard }) {
                   <li key={l.id}>
                     {i > 0 && <Separator />}
                     <div className="flex items-center gap-3 py-2.5">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">{iniciais(l.nome)}</div>
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 dark:bg-white/10 dark:text-neutral-300">{iniciais(l.nome)}</div>
                       <div className="min-w-0 flex-1 leading-tight">
                         <p className="truncate text-sm font-medium">{l.nome}</p>
                         <p className="truncate text-xs text-muted-foreground">{l.contato}</p>

@@ -39,6 +39,8 @@ import {
   CircleCheck,
   CreditCard,
   PanelLeft,
+  Sun,
+  Moon,
   type LucideIcon,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -220,14 +222,28 @@ export function SuperadminShell({
   const [naoLidas, setNaoLidas] = useState(naoLidasInicial);
   const [recolhido, setRecolhido] = useState(false);
   const [rolou, setRolou] = useState(false);
+  const [tema, setTema] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     try {
       setRecolhido(localStorage.getItem("sa-sidebar-recolhida") === "1");
+      if (localStorage.getItem("sa-tema") === "dark") setTema("dark");
     } catch {
-      // sem localStorage (ex. navegação privada): mantém expandida
+      // sem localStorage (ex. navegação privada): mantém expandida/claro
     }
   }, []);
+
+  function alternarTema() {
+    setTema((atual) => {
+      const novo = atual === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem("sa-tema", novo);
+      } catch {
+        // sem localStorage: a preferência só dura a sessão
+      }
+      return novo;
+    });
+  }
 
   useEffect(() => {
     function aoRolar() {
@@ -277,12 +293,12 @@ export function SuperadminShell({
   const atual = NAV.find((n) => pathname.startsWith(n.href));
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className={cn("flex min-h-screen bg-white dark:bg-neutral-950", tema === "dark" && "dark")}>
       {aberto && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setAberto(false)} />}
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-[width,transform] duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-[width,transform] duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 dark:border-white/10 dark:bg-neutral-950",
           aberto ? "translate-x-0" : "-translate-x-full",
           recolhido ? "lg:w-[76px]" : "lg:w-[207px]"
         )}
@@ -316,7 +332,7 @@ export function SuperadminShell({
                 className={cn(
                   "group flex items-center gap-2 rounded-lg px-2.5 py-2.5 text-xs font-medium whitespace-nowrap transition-colors",
                   recolhido && "lg:justify-center lg:px-0",
-                  ativo ? "bg-indigo-50 text-foreground" : "text-foreground hover:bg-slate-100"
+                  ativo ? "bg-indigo-50 text-foreground dark:bg-indigo-500/15" : "text-foreground hover:bg-slate-100 dark:hover:bg-white/10"
                 )}
               >
                 <Icon size={16} className="shrink-0 text-foreground" />
@@ -332,7 +348,7 @@ export function SuperadminShell({
             );
           })}
 
-          <Separator className="my-3 bg-slate-200" />
+          <Separator className="my-3 bg-slate-200 dark:bg-white/10" />
 
           {EM_CONSTRUCAO.map(({ label, icon: Icon, chevron }) => (
             <div
@@ -345,7 +361,7 @@ export function SuperadminShell({
             >
               <Icon size={16} className="shrink-0 text-foreground" />
               <span className={cn("flex-1", recolhido && "lg:hidden")}>{label}</span>
-              {chevron && <ChevronRight size={13} className={cn("shrink-0 text-slate-400", recolhido && "lg:hidden")} />}
+              {chevron && <ChevronRight size={13} className={cn("shrink-0 text-slate-400 dark:text-neutral-600", recolhido && "lg:hidden")} />}
             </div>
           ))}
         </nav>
@@ -357,7 +373,10 @@ export function SuperadminShell({
             <button
               type="button"
               title={recolhido ? admin.nome : undefined}
-              className={cn("flex w-full items-center gap-3 border-t border-slate-200 p-4 text-left transition-colors hover:bg-slate-100", recolhido && "lg:justify-center lg:px-0")}
+              className={cn(
+                "flex w-full items-center gap-3 border-t border-slate-200 p-4 text-left transition-colors hover:bg-slate-100 dark:border-white/10 dark:hover:bg-white/10",
+                recolhido && "lg:justify-center lg:px-0"
+              )}
             >
               <AvatarAdmin nome={admin.nome} foto={admin.foto} className="size-9 text-xs" />
               <span className={cn("min-w-0 flex-1 leading-tight", recolhido && "lg:hidden")}>
@@ -394,6 +413,16 @@ export function SuperadminShell({
           <div className="flex flex-1 justify-end sm:justify-center">
             <SaTopbarSearch />
           </div>
+
+          <button
+            type="button"
+            onClick={alternarTema}
+            className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={tema === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro"}
+            title={tema === "dark" ? "Tema claro" : "Tema escuro"}
+          >
+            {tema === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
 
           <SaNotificacoesMenu naoLidasSuporteInicial={naoLidas} />
 
