@@ -110,7 +110,7 @@ export function SaNotificacoesMenu({ naoLidasSuporteInicial }: { naoLidasSuporte
         </div>
         <DropdownMenuSeparator className="mx-0 my-0" />
 
-        <div className="max-h-96 overflow-y-auto">
+        <div className="scrollbar-thin max-h-96 overflow-y-auto">
           {carregando && <div className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando…</div>}
           {!carregando && itens?.length === 0 && <div className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhuma notificação por enquanto.</div>}
           {itens?.map((n, i) => (
@@ -118,7 +118,7 @@ export function SaNotificacoesMenu({ naoLidasSuporteInicial }: { naoLidasSuporte
               key={`${n.tipo}-${n.loja_id}-${i}`}
               type="button"
               onClick={() => router.push(`/superadmin/suporte?loja=${n.loja_id}`)}
-              className={cn("flex w-full items-start gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-muted/60", naoVista(n) && "bg-muted/40")}
+              className={cn("flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/60", naoVista(n) && "bg-muted/40")}
             >
               {n.logo ? (
                 // eslint-disable-next-line @next/next/no-img-element
