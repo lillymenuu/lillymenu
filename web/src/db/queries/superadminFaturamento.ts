@@ -1,12 +1,15 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { cobrancas, assinaturas } from "@/db/schema";
+import { pedidos } from "@/db/schema";
 
 /*
- * Faturamento real de uma loja pra superadmin (modal "Editar loja" > grafico): soma das cobrancas
- * pagas (cobrancas.status='pago'), agrupadas por mes (ultimos 12) e por ano — nada fabricado, e
- * a mesma tabela que ja alimenta a revisao de comprovante/aprovacao de pagamento.
+ * Faturamento real de uma loja pra superadmin (card "Lojas" > grafico): soma do total dos pedidos
+ * finalizados (pedidos.status='finalizado'), agrupada por mes (ultimos 12) e por ano — mesma
+ * definicao de "faturamento" ja usada no dashboard da propria loja (db/queries/dashboard.ts,
+ * sum(pedidos.total) where status='finalizado'). E o faturamento DA LOJA com os proprios clientes,
+ * nao a cobranca da assinatura SaaS que ela paga pra plataforma (essa fica em cobrancas/
+ * assinaturas, usada em outro lugar do superadmin — ver sa-lojas-manager.tsx).
  */
 
 export type FaturamentoLoja = {
@@ -20,21 +23,20 @@ export async function faturamentoLoja(lojaId: number): Promise<FaturamentoLoja> 
   if (lojaId <= 0) return { mensal: [], anual: [] };
 
   const linhas = await db
-    .select({ pagoEm: cobrancas.pago_em, valor: cobrancas.valor })
-    .from(cobrancas)
-    .innerJoin(assinaturas, eq(cobrancas.assinatura_id, assinaturas.id))
-    .where(and(eq(assinaturas.loja_id, lojaId), eq(cobrancas.status, "pago")));
+    .select({ criadoEm: pedidos.criado_em, total: pedidos.total })
+    .from(pedidos)
+    .where(and(eq(pedidos.loja_id, lojaId), eq(pedidos.status, "finalizado")));
 
   const porMes = new Map<string, number>();
   const porAno = new Map<string, number>();
   for (const l of linhas) {
-    if (!l.pagoEm) continue;
-    const d = new Date(l.pagoEm.replace(" ", "T"));
+    if (!l.criadoEm || l.total === null) continue;
+    const d = new Date(l.criadoEm.replace(" ", "T"));
     if (isNaN(d.getTime())) continue;
     const chaveMes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const chaveAno = String(d.getFullYear());
-    porMes.set(chaveMes, (porMes.get(chaveMes) ?? 0) + l.valor);
-    porAno.set(chaveAno, (porAno.get(chaveAno) ?? 0) + l.valor);
+    porMes.set(chaveMes, (porMes.get(chaveMes) ?? 0) + l.total);
+    porAno.set(chaveAno, (porAno.get(chaveAno) ?? 0) + l.total);
   }
 
   const agora = new Date();
