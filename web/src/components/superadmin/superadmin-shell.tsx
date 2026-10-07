@@ -31,9 +31,12 @@ import {
   AlertTriangle,
   LifeBuoy,
   Send,
+  CirclePlus,
+  CircleCheck,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SaTopbarSearch } from "@/components/superadmin/sa-topbar-search";
 import { cn } from "cn";
@@ -72,16 +75,36 @@ function iniciais(nome: string) {
   return (partes[0]?.[0] ?? "S").toUpperCase() + (partes[1]?.[0] ?? "").toUpperCase();
 }
 
-/** Menu de conta (nome/email + Sair) — reaproveitado no topbar e no rodapé da sidebar, cada um com seu próprio gatilho. */
+/** Menu de conta — reaproveitado no topbar e no rodapé da sidebar, cada um com seu próprio gatilho.
+ * Estrutura e ícones iguais à referência; "Upgrade to Pro"/"Account"/"Billing" ficam desabilitados
+ * (sem pagina real por trás ainda — ver roadmap da sidebar). "Notifications" e "Sair" são ações
+ * reais: a primeira leva pro mesmo suporte não lido do sino do topbar, a segunda desloga de verdade. */
 function ContaMenu({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="font-normal">
-          <p className="truncate text-sm font-medium text-foreground">{admin.nome}</p>
-          <p className="truncate text-xs">{admin.email}</p>
-        </DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-64">
+        <div className="flex items-center gap-3 px-2 py-2">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-sm font-medium text-foreground">{admin.nome}</p>
+            <p className="truncate text-xs text-muted-foreground">{admin.email}</p>
+          </div>
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled>
+          <CirclePlus size={14} /> Upgrade to Pro
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled>
+          <CircleCheck size={14} /> Account
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled>
+          <CreditCard size={14} /> Billing
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/superadmin/suporte" />}>
+          <Bell size={14} /> Notifications
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={sair}>
           <LogOut size={14} /> Sair
@@ -133,16 +156,16 @@ export function SuperadminShell({
   const atual = NAV.find((n) => pathname.startsWith(n.href));
 
   return (
-    <div className="flex min-h-screen bg-muted/30">
+    <div className="flex min-h-screen bg-slate-100">
       {aberto && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setAberto(false)} />}
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-slate-100 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
           aberto ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center justify-between gap-2 border-b px-5 py-5">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-5 py-5">
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/favicon_store.png" alt="" className="size-8 rounded-lg" />
@@ -169,10 +192,10 @@ export function SuperadminShell({
                 onClick={() => setAberto(false)}
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  ativo ? "bg-indigo-50 text-indigo-700" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ativo ? "bg-white text-indigo-700 shadow-sm" : "text-slate-700 hover:bg-white/70"
                 )}
               >
-                <Icon size={18} className={ativo ? "text-indigo-600" : "text-muted-foreground"} />
+                <Icon size={18} className={ativo ? "text-indigo-600" : "text-slate-500"} />
                 <span className="flex-1">{label}</span>
                 {href === "/superadmin/suporte" && naoLidas > 0 ? (
                   <span className="flex size-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white">
@@ -185,13 +208,13 @@ export function SuperadminShell({
             );
           })}
 
-          <Separator className="my-3" />
+          <Separator className="my-3 bg-slate-200" />
 
           {EM_CONSTRUCAO.map(({ label, icon: Icon, chevron }) => (
-            <div key={label} className="flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/60" title="Em construção">
-              <Icon size={18} className="text-muted-foreground/60" />
+            <div key={label} className="flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700" title="Em construção — página ainda não existe">
+              <Icon size={18} className="text-slate-500" />
               <span className="flex-1">{label}</span>
-              {chevron && <ChevronRight size={14} className="text-muted-foreground/30" />}
+              {chevron && <ChevronRight size={14} className="text-slate-400" />}
             </div>
           ))}
         </nav>
@@ -200,7 +223,7 @@ export function SuperadminShell({
           admin={admin}
           sair={sair}
           trigger={
-            <button type="button" className="flex w-full items-center gap-3 border-t p-4 text-left transition-colors hover:bg-muted/60">
+            <button type="button" className="flex w-full items-center gap-3 border-t border-slate-200 p-4 text-left transition-colors hover:bg-white/70">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
               <span className="min-w-0 flex-1 leading-tight">
                 <span className="block truncate text-sm font-medium">{admin.nome}</span>
