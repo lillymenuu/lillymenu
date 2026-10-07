@@ -33,6 +33,36 @@ export async function resolverLojaIdPorSlug(slugInput: string): Promise<number |
   return porNome?.id ?? null;
 }
 
+/** Mesma derivação de slug usada por montarPerfilLoja — extraída pra ser reaproveitada fora dela
+ * (ex. o superadmin mostrar o link público da loja sem montar o perfil inteiro). */
+export function derivarSlugLoja(nomeLoja: string, linkLoja: string): string {
+  let slug = "";
+  if (linkLoja) {
+    const mParam = linkLoja.match(/[?&]loja=([^&]+)/);
+    const mPath = linkLoja.match(/\/([^/?]+)\/?$/);
+    if (mParam) slug = decodeURIComponent(mParam[1]);
+    else if (mPath) slug = mPath[1];
+    else slug = linkLoja.replace(/^\/+|\/+$/g, "");
+    slug = slug.replace(/\.php$/i, "");
+  }
+  if (slug === "") {
+    slug = nomeLoja
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+  return slug;
+}
+
+/** Link público canônico da loja (https://dominio/slug), dado o lojaId e a base da requisição
+ * atual. Usado pelo superadmin (modal "Editar loja") pra mostrar/copiar o link sem duplicar a
+ * lógica de slug. */
+export async function getLinkLojaCanonico(lojaId: number, baseUrl: string): Promise<string> {
+  const cfg = await getConfigs(lojaId, ["nome_loja", "link_loja"]);
+  const slug = derivarSlugLoja(cfg.nome_loja || "Minha Loja", cfg.link_loja || "");
+  return slug ? `${baseUrl.replace(/\/+$/, "")}/${encodeURIComponent(slug)}` : "";
+}
+
 /*
  * Equivalente de helpers/loja_perfil.php (montarPerfilLoja): perfil/config/
  * contexto completo da loja publica (/store/[slug]). Usado so pela pagina
@@ -265,23 +295,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; 
   const [lojaRow] = await db.select({ ativo: lojas.ativo }).from(lojas).where(eq(lojas.id, lojaId)).limit(1);
   const lojaAtiva = lojaRow?.ativo !== false;
 
-  const linkLoja = cfg.link_loja || "";
-  let lojaLinkSlugCurto = "";
-  if (linkLoja) {
-    const mParam = linkLoja.match(/[?&]loja=([^&]+)/);
-    const mPath = linkLoja.match(/\/([^/?]+)\/?$/);
-    if (mParam) lojaLinkSlugCurto = decodeURIComponent(mParam[1]);
-    else if (mPath) lojaLinkSlugCurto = mPath[1];
-    else lojaLinkSlugCurto = linkLoja.replace(/^\/+|\/+$/g, "");
-    lojaLinkSlugCurto = lojaLinkSlugCurto.replace(/\.php$/i, "");
-  }
-  if (lojaLinkSlugCurto === "") {
-    lojaLinkSlugCurto = nomeLoja
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  }
-  const slug = lojaLinkSlugCurto;
+  const slug = derivarSlugLoja(nomeLoja, cfg.link_loja || "");
   const lojaCanonicalUrl = slug ? `${baseUrl.replace(/\/+$/, "")}/${encodeURIComponent(slug)}` : "";
 
   const descLoja = cfg.loja_descricao || "";

@@ -6,6 +6,7 @@ import { excluirLojaSuperadmin, aprovarComprovante, rejeitarComprovante, trocarP
 import { salvarConfigPix, salvarConfigNominatim, salvarRecursosPlano } from "@/db/queries/superadminConfigGlobal";
 import { mensagensSuporte, enviarMensagemSuporte, digitandoSuporteSet, digitandoLojaGet, unreadSuporte, type MensagemSuporte } from "@/db/queries/suporteChat";
 import { atualizarPerfilSuperadmin } from "@/db/queries/superadminPerfil";
+import { getLinkLojaCanonico } from "@/db/queries/lojaPerfil";
 
 /*
  * Substitui o proxy unico pra admin/api/v1/superadmin_*.php: cada "alvo"
@@ -97,6 +98,12 @@ export async function GET(request: NextRequest) {
   if (alvo === "superadmin_lojas") return NextResponse.json(await getListagemLojasSuperadmin());
   if (alvo === "superadmin_suporte") return NextResponse.json(await handleSuporteGet(request.nextUrl.searchParams));
   if (alvo === "superadmin_notificacoes") return NextResponse.json({ ok: true, notificacoes: await getNotificacoesSuperadmin() });
+
+  if (alvo === "superadmin_loja_link") {
+    const lojaId = Number(request.nextUrl.searchParams.get("loja_id") ?? "0");
+    const link = await getLinkLojaCanonico(lojaId, request.nextUrl.origin);
+    return NextResponse.json({ ok: true, link });
+  }
 
   return NextResponse.json({ ok: false, msg: "Não encontrado." }, { status: 404 });
 }

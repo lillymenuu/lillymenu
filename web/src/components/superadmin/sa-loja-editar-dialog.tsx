@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Copy, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,29 @@ function Formulario({
   const [trialFim, setTrialFim] = useState(loja.trial_fim?.slice(0, 10) ?? "");
   const [planoId, setPlanoId] = useState(loja.plano_id > 0 ? String(loja.plano_id) : "");
   const [salvando, setSalvando] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  useEffect(() => {
+    let ativo = true;
+    void saCall<{ ok: boolean; link?: string }>("superadmin_loja_link", undefined, { loja_id: String(loja.id) }).then((r) => {
+      if (ativo && r.ok) setLink(r.link ?? "");
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [loja.id]);
+
+  async function copiarLink() {
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1500);
+    } catch {
+      toast.error("Não foi possível copiar o link.");
+    }
+  }
 
   const planosItens: Record<string, string> = Object.fromEntries(planos.map((p) => [String(p.id), p.nome]));
 
@@ -98,6 +122,21 @@ function Formulario({
         <div className="flex flex-col gap-1.5 sm:col-span-2">
           <Label htmlFor="sa-nome">Nome da loja</Label>
           <Input id="sa-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1.5 sm:col-span-2">
+          <Label>Link da sua loja</Label>
+          <div className="flex h-8 items-center gap-2 rounded-lg border border-input bg-muted/30 px-2.5 text-sm">
+            <span className="min-w-0 flex-1 truncate text-muted-foreground">{link === null ? "Carregando..." : link || "Sem link definido ainda."}</span>
+            <button
+              type="button"
+              onClick={copiarLink}
+              disabled={!link}
+              className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+              aria-label="Copiar link da loja"
+            >
+              {copiado ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+            </button>
+          </div>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="sa-email">Email do administrador</Label>
