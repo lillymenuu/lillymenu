@@ -81,18 +81,31 @@ export async function salvarLojaSuperadmin(input: SalvarLojaSuperadminInput): Pr
       const trialInicioDb = trialInicio !== "" ? trialInicio : null;
       const trialFimDb = trialFim !== "" ? trialFim : null;
 
-      const [assinatura] = await tx.select({ id: assinaturas.id, status: assinaturas.status }).from(assinaturas).where(eq(assinaturas.loja_id, lojaId)).orderBy(assinaturas.id).limit(1);
+      const [assinatura] = await tx
+        .select({ id: assinaturas.id, status: assinaturas.status, trialInicio: assinaturas.trial_inicio, trialFim: assinaturas.trial_fim })
+        .from(assinaturas)
+        .where(eq(assinaturas.loja_id, lojaId))
+        .orderBy(assinaturas.id)
+        .limit(1);
 
       if (assinatura) {
-        const statusAtual = (assinatura.status ?? "").trim().toLowerCase();
-        const set: Partial<typeof assinaturas.$inferInsert> = { trial_inicio: trialInicioDb, trial_fim: trialFimDb };
-        if ((trialInicioDb || trialFimDb) && statusAtual !== "trial") {
-          set.status = "trial";
-          set.ciclo_inicio = null;
-          set.ciclo_fim = null;
-          set.bloqueada_em = null;
+        /* So mexe no trial/status se o superadmin REALMENTE mudou as datas no formulario — o
+           dialog pre-preenche esses campos com o trial salvo (que pode ser antigo/vazio pra uma
+           loja ja paga), e reenviar o formulario sem tocar neles nao pode forcar uma assinatura
+           ativa de volta pra "trial" com uma data de fim ja vencida (isso suspende a loja de
+           verdade na proxima checagem de acesso — bug real que ja aconteceu em producao). */
+        const trialMudou = trialInicioDb !== (assinatura.trialInicio ?? null) || trialFimDb !== (assinatura.trialFim ?? null);
+        if (trialMudou) {
+          const statusAtual = (assinatura.status ?? "").trim().toLowerCase();
+          const set: Partial<typeof assinaturas.$inferInsert> = { trial_inicio: trialInicioDb, trial_fim: trialFimDb };
+          if ((trialInicioDb || trialFimDb) && statusAtual !== "trial") {
+            set.status = "trial";
+            set.ciclo_inicio = null;
+            set.ciclo_fim = null;
+            set.bloqueada_em = null;
+          }
+          await tx.update(assinaturas).set(set).where(eq(assinaturas.id, assinatura.id));
         }
-        await tx.update(assinaturas).set(set).where(eq(assinaturas.id, assinatura.id));
       } else if (trialInicioDb || trialFimDb) {
         const [primeiroPlano] = await tx.select({ id: planos.id }).from(planos).where(eq(planos.ativo, true)).orderBy(planos.id).limit(1);
         if (!primeiroPlano) throw new Error("Plano nao encontrado");
