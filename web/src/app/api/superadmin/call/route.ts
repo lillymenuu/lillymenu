@@ -5,6 +5,7 @@ import { salvarLojaSuperadmin } from "@/db/queries/superadminLojaSalvar";
 import { excluirLojaSuperadmin, aprovarComprovante, rejeitarComprovante, trocarPlanoSuperadmin, ativarLoja, suspenderLoja } from "@/db/queries/superadminLojaAcao";
 import { salvarConfigPix, salvarConfigNominatim, salvarRecursosPlano } from "@/db/queries/superadminConfigGlobal";
 import { mensagensSuporte, enviarMensagemSuporte, digitandoSuporteSet, digitandoLojaGet, unreadSuporte, type MensagemSuporte } from "@/db/queries/suporteChat";
+import { atualizarPerfilSuperadmin } from "@/db/queries/superadminPerfil";
 
 /*
  * Substitui o proxy unico pra admin/api/v1/superadmin_*.php: cada "alvo"
@@ -126,6 +127,11 @@ export async function POST(request: NextRequest) {
   if (alvo === "superadmin_loja_acao") return NextResponse.json(await handleLojaAcao(body));
   if (alvo === "superadmin_config_salvar") return NextResponse.json(await handleConfigSalvar(body));
   if (alvo === "superadmin_suporte") return NextResponse.json(await handleSuportePost(body));
+
+  if (alvo === "superadmin_perfil_salvar") {
+    const resultado = await atualizarPerfilSuperadmin(sessao.id, String(body.nome ?? ""), String(body.email ?? ""), String(body.nova_senha ?? ""));
+    return NextResponse.json(resultado);
+  }
 
   return NextResponse.json({ ok: false, msg: "Não encontrado." }, { status: 404 });
 }

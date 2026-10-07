@@ -95,10 +95,11 @@ function ContaMenuLinhaInerte({ icon: Icon, children }: { icon: LucideIcon; chil
 
 /** Menu de conta do avatar no topbar. Estrutura/ícones/agrupamento iguais à referência: card cinza
  * com avatar+nome+cargo, lista Profile/Settings/Dashboard, divisor, Downloads/Earnings, divisor,
- * botão preto de Logout. Só "Dashboard" e "Sair" têm página real aqui — os demais ficam inertes
- * (mesmo critério do roadmap da sidebar: sem fingir link funcional pra página que ainda não
- * existe). Cargo mostrado é "Superadmin" (não a referência "Manager" nem o email): é o dado real
- * equivalente que temos — só existe um papel possível pra quem acessa este painel. */
+ * botão preto de Logout. "Profile" leva pra /superadmin/perfil (página real); "Dashboard" e "Sair"
+ * também são reais. "Settings"/"Downloads"/"Earnings" ficam inertes (sem página própria ainda —
+ * mesmo critério do roadmap da sidebar). Cargo mostrado é "Superadmin" (não a referência "Manager"
+ * nem o email): é o dado real equivalente que temos — só existe um papel possível pra quem acessa
+ * este painel. */
 function ContaMenuTopbar({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
   return (
     <DropdownMenu>
@@ -113,7 +114,9 @@ function ContaMenuTopbar({ admin, sair, trigger }: { admin: { nome: string; emai
         </div>
 
         <div className="pt-1">
-          <ContaMenuLinhaInerte icon={User}>Profile</ContaMenuLinhaInerte>
+          <DropdownMenuItem render={<Link href="/superadmin/perfil" />} className="gap-3 rounded-md px-3 py-2.5 text-sm">
+            <User size={17} /> Profile
+          </DropdownMenuItem>
           <ContaMenuLinhaInerte icon={Settings}>Settings</ContaMenuLinhaInerte>
           <DropdownMenuItem render={<Link href="/superadmin/dashboard" />} className="gap-3 rounded-md px-3 py-2.5 text-sm">
             <LayoutDashboard size={17} /> Dashboard
@@ -144,8 +147,9 @@ function ContaMenuTopbar({ admin, sair, trigger }: { admin: { nome: string; emai
  * pra essa posição é outro, com avatar+nome+email, "Upgrade to Pro", divisor, grupo "Account"/
  * "Billing"/"Notifications", divisor, "Sair"). Abre "de lado" (`side="right"`), flutuando à
  * direita do rodapé em vez de cair por baixo como um dropdown comum — assim como no print.
- * "Upgrade to Pro"/"Account"/"Billing" ficam inertes (sem página real); "Notifications" é real
- * (mesmo link de suporte do sino do topbar); "Sair" desloga de verdade. */
+ * "Account" leva pra /superadmin/perfil (mesma página real de "Profile" no topbar — ambos os
+ * menus de referência convergem pro mesmo conceito); "Notifications" e "Sair" também são reais.
+ * "Upgrade to Pro"/"Billing" ficam inertes (sem página própria ainda). */
 function ContaMenuSidebar({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
   return (
     <DropdownMenu>
@@ -166,7 +170,9 @@ function ContaMenuSidebar({ admin, sair, trigger }: { admin: { nome: string; ema
         <DropdownMenuSeparator className="my-2" />
 
         <div>
-          <ContaMenuLinhaInerte icon={CircleCheck}>Account</ContaMenuLinhaInerte>
+          <DropdownMenuItem render={<Link href="/superadmin/perfil" />} className="gap-3 rounded-md px-3 py-2.5 text-sm">
+            <CircleCheck size={17} /> Account
+          </DropdownMenuItem>
           <ContaMenuLinhaInerte icon={CreditCard}>Billing</ContaMenuLinhaInerte>
           <DropdownMenuItem render={<Link href="/superadmin/suporte" />} className="gap-3 rounded-md px-3 py-2.5 text-sm">
             <Bell size={17} /> Notifications

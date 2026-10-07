@@ -2,7 +2,7 @@
 version: 1
 slug: "web-src-app-superadmin-panel-dashboard-page-tsx"
 primary_target: "web/src/app/superadmin/(panel)/dashboard/page.tsx"
-related_targets: ["web/src/components/superadmin/sa-dashboard.tsx","web/src/components/superadmin/superadmin-shell.tsx","web/src/components/superadmin/sa-topbar-search.tsx","web/src/components/superadmin/sa-lojas-manager.tsx","web/src/components/superadmin/sa-notificacoes-menu.tsx","web/src/components/superadmin/sa-suporte.tsx"]
+related_targets: ["web/src/components/superadmin/sa-dashboard.tsx","web/src/components/superadmin/superadmin-shell.tsx","web/src/components/superadmin/sa-topbar-search.tsx","web/src/components/superadmin/sa-lojas-manager.tsx","web/src/components/superadmin/sa-notificacoes-menu.tsx","web/src/components/superadmin/sa-suporte.tsx","web/src/components/superadmin/sa-perfil.tsx"]
 ---
 
 ## Scope and visitor mode
@@ -52,6 +52,15 @@ Nova função de backend: `getNotificacoesSuperadmin()` em `superadminServer.ts`
 **Busca ⌘K vira modal de comando + header com efeito de transparência no scroll** (rodada 13, print do command-palette Dashtrans): a busca da topbar era um input com resultados caindo embaixo dele (dropdown ancorado); virou um modal central de verdade (`Dialog`/`DialogContent`, igual ao print — input+X no topo, grupos "Páginas"/"Lojas" com ícone+label+chevron). Grupo "Páginas" é navegação real (os mesmos 4 itens do `NAV` da sidebar), sempre visível mesmo sem digitar nada; grupo "Lojas" só aparece ao digitar, reaproveitando a mesma busca real que já existia (carrega a listagem sob demanda, filtra pelo nome, navega pra `/superadmin/lojas?loja=<id>`). Ainda aberto por ⌘K/Ctrl+K ou clicando na barra (agora um botão, não mais um input — o input de verdade vive dentro do modal).
 
 Header do topbar ganhou efeito de transparência disparado por scroll (pedido explícito do usuário): no topo da página (`scrollY <= 4`) fica `bg-background` sólido (= branco, mesmo tom do conteúdo, sem linha visível) — no padrão comum de "header funde com a página até rolar". Ao rolar, vira `bg-background/80 backdrop-blur` com borda inferior visível, mesmo efeito "vidro" que já existia, só que agora condicional em vez de sempre ligado.
+
+**Nova página: Perfil do superadmin** (rodada 14, print do Dashtrans `/account/profile/` + fetch da página real pra pegar o que ficava fora do corte da tela): `/superadmin/perfil`, acessada pelos itens "Profile" (topbar) e "Account" (sidebar) dos menus de conta — que agora são links reais em vez de inertes. Mesma regra de sempre: a referência dá a estrutura (card hero com avatar+nome+stats, card "About", card de atividade/timeline, seção de equipe), mas nenhum número ou item é inventado:
+
+- **Hero**: avatar (iniciais — mesma decisão já tomada antes contra foto de stock), nome, "Superadmin" (cargo real, não "UX Designer"), "Entrou em `<mês/ano>`" (de `admins.criado_em`). 3 stats reais no lugar de "13.5k Tasks/146 Projects/897 Connections": lojas ativas, mensagens de suporte respondidas, tempo na plataforma — todos contagens de verdade (`superadminPerfil.ts`). Sem botões "Get in touch"/"Message" (não faz sentido entrar em contato com o próprio perfil) — no lugar, um botão real "Editar perfil" que abre um dialog (nome/e-mail/nova senha opcional, salva via `alvo=superadmin_perfil_salvar`, hash com bcrypt igual ao resto do app, `router.refresh()` depois pra sidebar/topbar refletirem o nome novo).
+- **Sobre**: perfil, e-mail, data de criação da conta, status (badge ativo/inativo) — tudo campo real de `admins`.
+- **Outros administradores** (equivalente a "Teams" da referência, mas sem inventar equipes que não existem): lista de verdade quem mais tem `perfil='superadmin'` na mesma tabela `admins` que os admins de loja; estado vazio honesto ("Você é o único administrador da plataforma") quando só há um.
+- **Atividade recente** (equivalente a "Activity Timeline"): reaproveita o MESMO feed real do sininho de notificações (`getNotificacoesSuperadmin`, já existente) — não é um feed novo nem fabricado.
+
+Backend novo: `db/queries/superadminPerfil.ts` (`getPerfilSuperadmin`, `atualizarPerfilSuperadmin`), rota `alvo=superadmin_perfil_salvar` no dispatcher existente. O update sempre usa o id da própria sessão (nunca um id vindo do client) — é edição do PRÓPRIO perfil, não de outro admin.
 
 ## Unresolved decisions
 
