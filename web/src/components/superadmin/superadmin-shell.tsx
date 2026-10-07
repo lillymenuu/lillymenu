@@ -45,7 +45,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Separator } from "@/components/ui/separator";
 import { SaTopbarSearch } from "@/components/superadmin/sa-topbar-search";
 import { SaNotificacoesMenu } from "@/components/superadmin/sa-notificacoes-menu";
+import { urlArquivo } from "@/lib/superadmin";
 import { cn } from "cn";
+
+const PHP_ADMIN_URL = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
 
 const NAV = [
   { href: "/superadmin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -81,6 +84,19 @@ function iniciais(nome: string) {
   return (partes[0]?.[0] ?? "S").toUpperCase() + (partes[1]?.[0] ?? "").toUpperCase();
 }
 
+/** Avatar do admin: foto de verdade (enviada em /superadmin/perfil) ou iniciais como fallback —
+ * reaproveitado em todo canto que mostra a identidade do superadmin logado (rodapé da sidebar,
+ * topbar, os dois menus de conta). */
+function AvatarAdmin({ nome, foto, className }: { nome: string; foto: string | null; className?: string }) {
+  if (foto) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={urlArquivo(foto, PHP_ADMIN_URL)} alt="" className={cn("shrink-0 rounded-full border bg-white object-cover", className)} />
+    );
+  }
+  return <span className={cn("flex shrink-0 items-center justify-center rounded-full bg-indigo-600 font-bold text-white", className)}>{iniciais(nome)}</span>;
+}
+
 /** Linha "morta" do menu de conta: mesmo peso visual de um item real (texto/ícone escuros, sem
  * esmaecer), só sem onClick/href — pra bater com o print, onde esses itens aparecem legíveis
  * normalmente (não acinzentados como um `disabled` de verdade deixaria). */
@@ -100,13 +116,13 @@ function ContaMenuLinhaInerte({ icon: Icon, children }: { icon: LucideIcon; chil
  * mesmo critério do roadmap da sidebar). Cargo mostrado é "Superadmin" (não a referência "Manager"
  * nem o email): é o dado real equivalente que temos — só existe um papel possível pra quem acessa
  * este painel. */
-function ContaMenuTopbar({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
+function ContaMenuTopbar({ admin, sair, trigger }: { admin: { nome: string; email: string; foto: string | null }; sair: () => void; trigger: React.ReactElement }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
       <DropdownMenuContent align="end" className="w-60 p-2">
         <div className="flex items-center gap-3 rounded-xl bg-muted px-3 py-2.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
+          <AvatarAdmin nome={admin.nome} foto={admin.foto} className="size-9 text-xs" />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-semibold text-foreground">{admin.nome}</p>
             <p className="truncate text-xs text-muted-foreground">Superadmin</p>
@@ -150,13 +166,13 @@ function ContaMenuTopbar({ admin, sair, trigger }: { admin: { nome: string; emai
  * "Account" leva pra /superadmin/perfil (mesma página real de "Profile" no topbar — ambos os
  * menus de referência convergem pro mesmo conceito); "Notifications" e "Sair" também são reais.
  * "Upgrade to Pro"/"Billing" ficam inertes (sem página própria ainda). */
-function ContaMenuSidebar({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
+function ContaMenuSidebar({ admin, sair, trigger }: { admin: { nome: string; email: string; foto: string | null }; sair: () => void; trigger: React.ReactElement }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
       <DropdownMenuContent side="right" align="end" sideOffset={8} className="w-64 p-2">
         <div className="flex items-center gap-3 rounded-xl bg-muted px-3 py-2.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
+          <AvatarAdmin nome={admin.nome} foto={admin.foto} className="size-9 text-xs" />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-semibold text-foreground">{admin.nome}</p>
             <p className="truncate text-xs text-muted-foreground">{admin.email}</p>
@@ -194,7 +210,7 @@ export function SuperadminShell({
   suporteNaoLidas: naoLidasInicial,
   children,
 }: {
-  admin: { nome: string; email: string };
+  admin: { nome: string; email: string; foto: string | null };
   suporteNaoLidas: number;
   children: React.ReactNode;
 }) {
@@ -343,7 +359,7 @@ export function SuperadminShell({
               title={recolhido ? admin.nome : undefined}
               className={cn("flex w-full items-center gap-3 border-t border-slate-200 p-4 text-left transition-colors hover:bg-slate-100", recolhido && "lg:justify-center lg:px-0")}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
+              <AvatarAdmin nome={admin.nome} foto={admin.foto} className="size-9 text-xs" />
               <span className={cn("min-w-0 flex-1 leading-tight", recolhido && "lg:hidden")}>
                 <span className="block truncate text-sm font-medium">{admin.nome}</span>
                 <span className="block truncate text-xs text-muted-foreground">{admin.email}</span>
@@ -386,7 +402,7 @@ export function SuperadminShell({
             sair={sair}
             trigger={
               <button type="button" className="flex shrink-0 items-center gap-1.5 rounded-full p-1 pr-1.5 transition-colors hover:bg-muted" aria-label="Conta">
-                <span className="flex size-7 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-bold text-white">{iniciais(admin.nome)}</span>
+                <AvatarAdmin nome={admin.nome} foto={admin.foto} className="size-7 text-[11px]" />
                 <ChevronDown size={14} className="hidden text-muted-foreground sm:block" />
               </button>
             }

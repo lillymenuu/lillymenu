@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Mail, Pencil, ShieldCheck, Store, MessageSquareText, Users, CalendarDays } from "lucide-react";
+import { Mail, Pencil, ShieldCheck, Store, MessageSquareText, Users, CalendarDays, Camera, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "cn";
 import { saCall, urlArquivo } from "@/lib/superadmin";
 import type { PerfilSuperadmin } from "@/db/queries/superadminPerfil";
 import type { SaNotificacao } from "@/lib/superadminServer";
@@ -28,6 +29,25 @@ const PHP_ADMIN_URL = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
 function iniciais(nome: string) {
   const p = nome.trim().split(/\s+/).filter(Boolean);
   return ((p[0]?.[0] ?? "?") + (p[1]?.[0] ?? "")).toUpperCase();
+}
+
+function AvatarPerfil({ nome, foto, className }: { nome: string; foto: string | null; className?: string }) {
+  if (foto) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={urlArquivo(foto, PHP_ADMIN_URL)} alt="" className={cn("shrink-0 rounded-full border bg-white object-cover", className)} />
+    );
+  }
+  return <span className={cn("flex shrink-0 items-center justify-center rounded-full bg-indigo-600 font-bold text-white", className)}>{iniciais(nome)}</span>;
+}
+
+function lerBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
+    r.onerror = () => reject(new Error("leitura"));
+    r.readAsDataURL(file);
+  });
 }
 
 function mesAno(iso: string | null) {
@@ -75,7 +95,7 @@ export function SaPerfil({ perfil, notificacoes }: { perfil: PerfilSuperadmin; n
       <Card>
         <CardContent className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <span className="flex size-20 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-2xl font-bold text-white">{iniciais(perfil.nome)}</span>
+            <AvatarPerfil nome={perfil.nome} foto={perfil.foto} className="size-20 text-2xl" />
             <div className="min-w-0">
               <h1 className="text-xl font-semibold text-foreground">{perfil.nome}</h1>
               <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
@@ -207,27 +227,60 @@ export function SaPerfil({ perfil, notificacoes }: { perfil: PerfilSuperadmin; n
 
 function SaPerfilEditarDialog({ perfil, open, onOpenChange }: { perfil: PerfilSuperadmin; open: boolean; onOpenChange: (v: boolean) => void }) {
   const router = useRouter();
+  const inputFotoRef = useRef<HTMLInputElement>(null);
   const [nome, setNome] = useState(perfil.nome);
   const [email, setEmail] = useState(perfil.email);
   const [novaSenha, setNovaSenha] = useState("");
+  const [fotoArquivo, setFotoArquivo] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [removerFoto, setRemoverFoto] = useState(false);
   const [salvando, setSalvando] = useState(false);
+
+  function escolherFoto(file: File | undefined) {
+    if (!file) return;
+    if (!/\.(jpe?g|png|webp)$/i.test(file.name)) return void toast.error("Envie uma imagem JPG, PNG ou WebP.");
+    if (file.size > 5 * 1024 * 1024) return void toast.error("Imagem muito grande (máximo 5MB).");
+    if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    setFotoArquivo(file);
+    setFotoPreview(URL.createObjectURL(file));
+    setRemoverFoto(false);
+  }
+
+  function removerFotoAtual() {
+    if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    setFotoArquivo(null);
+    setFotoPreview(null);
+    setRemoverFoto(true);
+    if (inputFotoRef.current) inputFotoRef.current.value = "";
+  }
 
   async function salvar() {
     setSalvando(true);
     try {
-      const r = await saCall("superadmin_perfil_salvar", { nome, email, nova_senha: novaSenha });
+      const corpo: Record<string, unknown> = { nome, email, nova_senha: novaSenha };
+      if (fotoArquivo) {
+        corpo.foto_base64 = await lerBase64(fotoArquivo);
+        corpo.foto_ext = fotoArquivo.name.split(".").pop()?.toLowerCase() ?? "";
+      } else if (removerFoto) {
+        corpo.remover_foto = true;
+      }
+      const r = await saCall("superadmin_perfil_salvar", corpo);
       if (!r.ok) {
         toast.error(r.msg ?? "Erro ao salvar o perfil.");
         return;
       }
       toast.success("Perfil atualizado");
       setNovaSenha("");
+      setFotoArquivo(null);
+      setRemoverFoto(false);
       onOpenChange(false);
       router.refresh();
     } finally {
       setSalvando(false);
     }
   }
+
+  const fotoAtual = removerFoto ? null : (fotoPreview ?? perfil.foto);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -236,6 +289,25 @@ function SaPerfilEditarDialog({ perfil, open, onOpenChange }: { perfil: PerfilSu
           <DialogTitle>Editar perfil</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            {fotoAtual ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={fotoPreview ?? urlArquivo(perfil.foto ?? "", PHP_ADMIN_URL)} alt="" className="size-14 shrink-0 rounded-full border bg-white object-cover" />
+            ) : (
+              <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-lg font-bold text-white">{iniciais(nome || perfil.nome)}</span>
+            )}
+            <div className="flex flex-col gap-1">
+              <Button type="button" variant="outline" size="sm" onClick={() => inputFotoRef.current?.click()}>
+                <Camera size={14} /> Trocar foto
+              </Button>
+              {fotoAtual && (
+                <button type="button" onClick={removerFotoAtual} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive">
+                  <X size={12} /> Remover foto
+                </button>
+              )}
+            </div>
+            <input ref={inputFotoRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => escolherFoto(e.target.files?.[0])} />
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="sa-perfil-nome">Nome</Label>
             <Input id="sa-perfil-nome" value={nome} onChange={(e) => setNome(e.target.value)} />

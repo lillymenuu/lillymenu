@@ -62,6 +62,8 @@ Header do topbar ganhou efeito de transparência disparado por scroll (pedido ex
 
 Backend novo: `db/queries/superadminPerfil.ts` (`getPerfilSuperadmin`, `atualizarPerfilSuperadmin`), rota `alvo=superadmin_perfil_salvar` no dispatcher existente. O update sempre usa o id da própria sessão (nunca um id vindo do client) — é edição do PRÓPRIO perfil, não de outro admin.
 
+**Foto de perfil** (rodada 15, pedido explícito do usuário): a coluna `admins.foto` já existia no schema mas não era usada em lugar nenhum do app Next.js — agora é. Upload real no dialog "Editar perfil" (mesmo padrão de anexo do chat de suporte: `storageSaveArquivoBase64`/R2, JPG/PNG/WebP, 5MB), com preview, botão "Remover foto" (limpa `admins.foto` e apaga o arquivo antigo do R2) e fallback pras iniciais quando não há foto — nunca uma foto de stock fake. Como a foto agora é um dado real do admin, `superadminMe()` passou a trazê-la, e TODOS os avatares do admin logado na casca (rodapé da sidebar, avatar do topbar, header dos dois menus de conta, hero da página de perfil) foram unificados num único componente `AvatarAdmin`/`AvatarPerfil` (foto-ou-iniciais) em vez de só iniciais hardcoded — então a foto aparece em todo canto, não só na página de perfil.
+
 ## Unresolved decisions
 
 - Os 16 itens de Roadmap vão precisar de páginas reais (ou serem removidos) conforme o produto evolui — hoje são deliberadamente não-clicáveis.

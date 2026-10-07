@@ -129,7 +129,15 @@ export async function POST(request: NextRequest) {
   if (alvo === "superadmin_suporte") return NextResponse.json(await handleSuportePost(body));
 
   if (alvo === "superadmin_perfil_salvar") {
-    const resultado = await atualizarPerfilSuperadmin(sessao.id, String(body.nome ?? ""), String(body.email ?? ""), String(body.nova_senha ?? ""));
+    const resultado = await atualizarPerfilSuperadmin(
+      sessao.id,
+      String(body.nome ?? ""),
+      String(body.email ?? ""),
+      String(body.nova_senha ?? ""),
+      String(body.foto_base64 ?? ""),
+      String(body.foto_ext ?? ""),
+      Boolean(body.remover_foto)
+    );
     return NextResponse.json(resultado);
   }
 
