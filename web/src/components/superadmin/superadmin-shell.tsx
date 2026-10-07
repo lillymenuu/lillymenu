@@ -44,6 +44,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SaTopbarSearch } from "@/components/superadmin/sa-topbar-search";
+import { SaNotificacoesMenu } from "@/components/superadmin/sa-notificacoes-menu";
 import { cn } from "cn";
 
 const NAV = [
@@ -358,14 +359,7 @@ export function SuperadminShell({
             <SaTopbarSearch />
           </div>
 
-          <Link
-            href="/superadmin/suporte"
-            className="relative flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label={naoLidas > 0 ? `Suporte — ${naoLidas} não lidas` : "Suporte"}
-          >
-            <Bell size={18} />
-            {naoLidas > 0 && <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-rose-500 ring-2 ring-background" />}
-          </Link>
+          <SaNotificacoesMenu naoLidasSuporteInicial={naoLidas} />
 
           <ContaMenuTopbar
             admin={admin}

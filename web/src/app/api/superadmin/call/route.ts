@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessaoSuperadmin } from "@/lib/session";
-import { getListagemLojasSuperadmin, getConversasSuporteSuperadmin } from "@/lib/superadminServer";
+import { getListagemLojasSuperadmin, getConversasSuporteSuperadmin, getNotificacoesSuperadmin } from "@/lib/superadminServer";
 import { salvarLojaSuperadmin } from "@/db/queries/superadminLojaSalvar";
 import { excluirLojaSuperadmin, aprovarComprovante, rejeitarComprovante, trocarPlanoSuperadmin, ativarLoja, suspenderLoja } from "@/db/queries/superadminLojaAcao";
 import { salvarConfigPix, salvarConfigNominatim, salvarRecursosPlano } from "@/db/queries/superadminConfigGlobal";
@@ -95,6 +95,7 @@ export async function GET(request: NextRequest) {
 
   if (alvo === "superadmin_lojas") return NextResponse.json(await getListagemLojasSuperadmin());
   if (alvo === "superadmin_suporte") return NextResponse.json(await handleSuporteGet(request.nextUrl.searchParams));
+  if (alvo === "superadmin_notificacoes") return NextResponse.json({ ok: true, notificacoes: await getNotificacoesSuperadmin() });
 
   return NextResponse.json({ ok: false, msg: "Não encontrado." }, { status: 404 });
 }

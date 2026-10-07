@@ -2,7 +2,7 @@
 version: 1
 slug: "web-src-app-superadmin-panel-dashboard-page-tsx"
 primary_target: "web/src/app/superadmin/(panel)/dashboard/page.tsx"
-related_targets: ["web/src/components/superadmin/sa-dashboard.tsx","web/src/components/superadmin/superadmin-shell.tsx","web/src/components/superadmin/sa-topbar-search.tsx","web/src/components/superadmin/sa-lojas-manager.tsx"]
+related_targets: ["web/src/components/superadmin/sa-dashboard.tsx","web/src/components/superadmin/superadmin-shell.tsx","web/src/components/superadmin/sa-topbar-search.tsx","web/src/components/superadmin/sa-lojas-manager.tsx","web/src/components/superadmin/sa-notificacoes-menu.tsx","web/src/components/superadmin/sa-suporte.tsx"]
 ---
 
 ## Scope and visitor mode
@@ -39,6 +39,13 @@ Em ambos: itens sem página real usam o padrão "inerte" (`ContaMenuLinhaInerte`
 **Omitido de propósito** (presente na referência, sem equivalente real no produto, não fabricado): toggle de tema claro/escuro (app não tem modo escuro implementado — `next-themes` está instalado mas sem `ThemeProvider` configurado em lugar nenhum), seletor de idioma/bandeira (produto é só português, ver PRODUCT.md), links de nav horizontal tipo "Pricing/Docs/Analytics/Profile" (demo content do template, sem página real correspondente aqui), foto de avatar de stock (trocada por iniciais reais).
 
 **Sidebar recolhível** (rodada 8, pedido explícito do usuário com print do topbar Dashtrans): botão `PanelLeft` no topbar (visível só em desktop, `lg:flex`) alterna a sidebar entre expandida (`lg:w-64`) e uma barra de ícones (`lg:w-[76px]`) — mesmo ícone/posição do print. Preferência persistida em `localStorage` (`sa-sidebar-recolhida`), lida num `useEffect` no mount — mesmo padrão já usado no shell do app principal (`app-shell.tsx`, chave `COLLAPSE_KEY`), inclusive reproduzindo o mesmo "erro" de lint (`react-hooks/set-state-in-effect`) que já existe lá e é aceito como convenção da base. Quando recolhida: textos/labels/badges/chevrons somem (`lg:hidden`), ícones centralizam, cada item ganha `title` com o label (tooltip nativo substitui o texto visível). Não implementado: os outros ícones decorativos do topbar do print (tema claro/escuro, bandeira, monitor/kanban) — sem equivalente real no produto, mesmo critério de omissão já documentado abaixo; só o toggle de recolher (que tem comportamento real) e a busca/sino/avatar (que já existiam) ficam no topbar.
+
+**Sino de notificações real** (rodada 9, print do painel Dashtrans de notificações — avatar+título+descrição+"Xmin atrás", item não-lido destacado, botão "Ver todas" no rodapé): substituí o sino decorativo (só linkava pra Suporte) por `SaNotificacoesMenu`, que carrega sob demanda (primeiro clique, mesmo padrão de `sa-topbar-search.tsx`) um feed real combinando dois eventos genuínos — não inventados:
+
+- **"Nova loja cadastrada"**: as lojas mais recentes (`buscarLojasComDetalhes`, já usado no dashboard/lojas), com o logo da loja resolvido do mesmo jeito que o chat de suporte já faz (`configuracoes` / chave `loja_perfil`). Não existe "lido" de verdade pra um cadastro — o "visto" é controlado no cliente comparando a data do evento com um timestamp salvo em `localStorage` (`sa-notificacoes-vistas-em`), atualizado toda vez que o menu é aberto.
+- **"Nova mensagem de suporte"**: reaproveita `conversasSuporte` (mesma query do `/superadmin/suporte`) — "lida" aqui é real (contador de não lidas por loja que já existia).
+
+Nova função de backend: `getNotificacoesSuperadmin()` em `superadminServer.ts`, exposta via `/api/superadmin/call?alvo=superadmin_notificacoes`. Clicar numa notificação navega pra `/superadmin/suporte?loja=<id>` — exigiu ensinar `sa-suporte.tsx` a entender esse deep-link (lia só `?loja=` em `sa-lojas-manager.tsx` antes; agora também aqui), buscando a lista completa de lojas (não só as que já têm mensagem) pra conseguir abrir a conversa mesmo com uma loja que acabou de se cadastrar e ainda não mandou nada — pra já poder "entrar em contato" como o usuário pediu.
 
 ## Unresolved decisions
 

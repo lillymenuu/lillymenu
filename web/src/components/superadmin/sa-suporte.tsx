@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Headset, ImagePlus, MessageSquare, Search, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { saCall, urlArquivo } from "@/lib/superadmin";
@@ -94,6 +95,7 @@ function Pontinhos({ className }: { className?: string }) {
 }
 
 export function SaSuporte({ conversasIniciais, phpAdminUrl }: { conversasIniciais: SaConversa[]; phpAdminUrl: string }) {
+  const lojaParam = useSearchParams().get("loja");
   const [conversas, setConversas] = useState(conversasIniciais);
   const [aba, setAba] = useState<"chat" | "todas">("chat");
   const [busca, setBusca] = useState("");
@@ -195,6 +197,24 @@ export function SaSuporte({ conversasIniciais, phpAdminUrl }: { conversasIniciai
     /* zera o contador localmente; o servidor marca como lida ao carregar as mensagens */
     setConversas((atual) => atual.map((x) => (x.loja_id === c.loja_id ? { ...x, nao_lidas: 0 } : x)));
   }
+
+  /* Deep-link vindo do sino de notificações (?loja=<id>): abre a conversa dessa loja direto,
+   * mesmo se ela ainda não tiver mensagem nenhuma (busca a lista completa, não só as com chat). */
+  useEffect(() => {
+    if (!lojaParam) return;
+    let ativo = true;
+    (async () => {
+      setAba("todas");
+      const r = await saCall<{ ok: boolean; conversas: SaConversa[] }>("superadmin_suporte", undefined, { acao: "conversas" });
+      if (!ativo || !r.ok) return;
+      setConversas(r.conversas);
+      const alvo = r.conversas.find((c) => String(c.loja_id) === lojaParam);
+      if (alvo) abrir(alvo);
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, [lojaParam]);
 
   function avisarDigitando(ativo: boolean) {
     if (!lojaIdSel) return;
