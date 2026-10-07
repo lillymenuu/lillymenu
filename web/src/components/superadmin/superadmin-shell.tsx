@@ -197,6 +197,7 @@ export function SuperadminShell({
   const [aberto, setAberto] = useState(false);
   const [naoLidas, setNaoLidas] = useState(naoLidasInicial);
   const [recolhido, setRecolhido] = useState(false);
+  const [rolou, setRolou] = useState(false);
 
   useEffect(() => {
     try {
@@ -204,6 +205,14 @@ export function SuperadminShell({
     } catch {
       // sem localStorage (ex. navegação privada): mantém expandida
     }
+  }, []);
+
+  useEffect(() => {
+    function aoRolar() {
+      setRolou(window.scrollY > 4);
+    }
+    window.addEventListener("scroll", aoRolar, { passive: true });
+    return () => window.removeEventListener("scroll", aoRolar);
   }, []);
 
   function alternarRecolhido() {
@@ -340,7 +349,12 @@ export function SuperadminShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur lg:px-8">
+        <header
+          className={cn(
+            "sticky top-0 z-30 flex items-center gap-3 px-4 py-3 transition-colors duration-200 lg:px-8",
+            rolou ? "border-b bg-background/80 backdrop-blur" : "border-b border-transparent bg-background"
+          )}
+        >
           <button className="shrink-0 rounded-md p-1.5 hover:bg-muted lg:hidden" onClick={() => setAberto(true)} aria-label="Abrir menu">
             <Menu size={20} />
           </button>
