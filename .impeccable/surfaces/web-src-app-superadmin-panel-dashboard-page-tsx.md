@@ -47,6 +47,8 @@ Em ambos: itens sem página real usam o padrão "inerte" (`ContaMenuLinhaInerte`
 
 Nova função de backend: `getNotificacoesSuperadmin()` em `superadminServer.ts`, exposta via `/api/superadmin/call?alvo=superadmin_notificacoes`. Clicar numa notificação navega pra `/superadmin/suporte?loja=<id>` — exigiu ensinar `sa-suporte.tsx` a entender esse deep-link (lia só `?loja=` em `sa-lojas-manager.tsx` antes; agora também aqui), buscando a lista completa de lojas (não só as que já têm mensagem) pra conseguir abrir a conversa mesmo com uma loja que acabou de se cadastrar e ainda não mandou nada — pra já poder "entrar em contato" como o usuário pediu.
 
+**Sidebar: fundo branco + preto puro** (rodada 10, usuário mandou screenshot do nosso próprio estado atual, não uma nova referência externa): pediu pra inverter o canvas da sidebar de `bg-slate-100` pra `bg-white` e trocar o texto/ícone dos itens (reais e roadmap) de `text-slate-700`/`text-slate-500` (cinza levemente azulado) pra `text-foreground` (preto, mesmo token usado no resto do produto) nos dois. A área de CONTEÚDO (à direita da sidebar) continua `bg-slate-100` — só a coluna da sidebar virou branca, criando contraste entre as duas. Isso quebrava o item ativo (antes `bg-white` destacava contra o fundo cinza da sidebar; virando tudo branco, branco-sobre-branco some) — trocado pra `bg-indigo-50 text-indigo-700` (tingido, sem a sombra que não fazia mais sentido). Mesmo motivo quebrava os estados de hover (`hover:bg-white/70` também dependia do contraste contra cinza) — trocados pra `hover:bg-slate-100` nos itens de nav e no rodapé.
+
 ## Unresolved decisions
 
 - Os 16 itens de Roadmap vão precisar de páginas reais (ou serem removidos) conforme o produto evolui — hoje são deliberadamente não-clicáveis.

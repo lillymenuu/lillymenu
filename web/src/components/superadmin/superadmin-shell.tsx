@@ -251,7 +251,7 @@ export function SuperadminShell({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-slate-100 transition-[width,transform] duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-[width,transform] duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
           aberto ? "translate-x-0" : "-translate-x-full",
           recolhido ? "lg:w-[76px]" : "lg:w-64"
         )}
@@ -285,10 +285,10 @@ export function SuperadminShell({
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   recolhido && "lg:justify-center lg:px-0",
-                  ativo ? "bg-white text-indigo-700 shadow-sm" : "text-slate-700 hover:bg-white/70"
+                  ativo ? "bg-indigo-50 text-indigo-700" : "text-foreground hover:bg-slate-100"
                 )}
               >
-                <Icon size={18} className={cn("shrink-0", ativo ? "text-indigo-600" : "text-slate-500")} />
+                <Icon size={18} className={cn("shrink-0", ativo ? "text-indigo-600" : "text-foreground")} />
                 <span className={cn("flex-1", recolhido && "lg:hidden")}>{label}</span>
                 {href === "/superadmin/suporte" && naoLidas > 0 ? (
                   <span className={cn("flex size-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white", recolhido && "lg:hidden")}>
@@ -308,11 +308,11 @@ export function SuperadminShell({
               key={label}
               title={recolhido ? label : "Em construção — página ainda não existe"}
               className={cn(
-                "flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700",
+                "flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground",
                 recolhido && "lg:justify-center lg:px-0"
               )}
             >
-              <Icon size={18} className="shrink-0 text-slate-500" />
+              <Icon size={18} className="shrink-0 text-foreground" />
               <span className={cn("flex-1", recolhido && "lg:hidden")}>{label}</span>
               {chevron && <ChevronRight size={14} className={cn("text-slate-400", recolhido && "lg:hidden")} />}
             </div>
@@ -326,7 +326,7 @@ export function SuperadminShell({
             <button
               type="button"
               title={recolhido ? admin.nome : undefined}
-              className={cn("flex w-full items-center gap-3 border-t border-slate-200 p-4 text-left transition-colors hover:bg-white/70", recolhido && "lg:justify-center lg:px-0")}
+              className={cn("flex w-full items-center gap-3 border-t border-slate-200 p-4 text-left transition-colors hover:bg-slate-100", recolhido && "lg:justify-center lg:px-0")}
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
               <span className={cn("min-w-0 flex-1 leading-tight", recolhido && "lg:hidden")}>
