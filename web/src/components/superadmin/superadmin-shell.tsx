@@ -31,9 +31,10 @@ import {
   AlertTriangle,
   LifeBuoy,
   Send,
-  ShieldPlus,
-  CircleCheck,
-  CreditCard,
+  User,
+  Settings,
+  Download,
+  DollarSign,
   type LucideIcon,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -81,40 +82,54 @@ function iniciais(nome: string) {
 function ContaMenuLinhaInerte({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
   return (
     <div className="flex cursor-default items-center gap-3 rounded-md px-3 py-2.5 text-sm text-foreground select-none">
-      <Icon size={17} className="shrink-0 text-muted-foreground" />
+      <Icon size={17} className="shrink-0 text-foreground" />
       {children}
     </div>
   );
 }
 
 /** Menu de conta — reaproveitado no topbar e no rodapé da sidebar, cada um com seu próprio gatilho.
- * Estrutura e ícones iguais à referência; "Upgrade to Pro"/"Account"/"Billing" ficam inertes
- * (sem pagina real por trás ainda — ver roadmap da sidebar), mas em peso visual total pra bater
- * com o print. "Notifications" e "Sair" são ações reais: a primeira leva pro mesmo suporte não
- * lido do sino do topbar, a segunda desloga de verdade. */
+ * Estrutura/ícones/agrupamento iguais à referência: card cinza com avatar+nome+cargo, lista
+ * Profile/Settings/Dashboard, divisor, Downloads/Earnings, divisor, botão preto de Logout.
+ * Só "Dashboard" e "Sair" têm página real aqui — os demais ficam inertes (mesmo critério do
+ * roadmap da sidebar: sem fingir link funcional pra página que ainda não existe). Cargo mostrado
+ * é "Superadmin" (não a referência "Manager" nem o email): é o dado real equivalente que temos —
+ * só existe um papel possível pra quem acessa este painel. */
 function ContaMenu({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
       <DropdownMenuContent align="end" className="w-60 p-2">
-        <div className="flex items-center gap-3 px-1 py-1.5">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">{iniciais(admin.nome)}</span>
+        <div className="flex items-center gap-3 rounded-xl bg-muted px-3 py-2.5">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-semibold text-foreground">{admin.nome}</p>
-            <p className="truncate text-xs text-muted-foreground">{admin.email}</p>
+            <p className="truncate text-xs text-muted-foreground">Superadmin</p>
           </div>
         </div>
+
+        <div className="pt-1">
+          <ContaMenuLinhaInerte icon={User}>Profile</ContaMenuLinhaInerte>
+          <ContaMenuLinhaInerte icon={Settings}>Settings</ContaMenuLinhaInerte>
+          <DropdownMenuItem render={<Link href="/superadmin/dashboard" />} className="gap-3 rounded-md px-3 py-2.5 text-sm">
+            <LayoutDashboard size={17} /> Dashboard
+          </DropdownMenuItem>
+        </div>
+
         <DropdownMenuSeparator className="my-2" />
-        <ContaMenuLinhaInerte icon={ShieldPlus}>Upgrade to Pro</ContaMenuLinhaInerte>
+
+        <div>
+          <ContaMenuLinhaInerte icon={Download}>Downloads</ContaMenuLinhaInerte>
+          <ContaMenuLinhaInerte icon={DollarSign}>Earnings</ContaMenuLinhaInerte>
+        </div>
+
         <DropdownMenuSeparator className="my-2" />
-        <ContaMenuLinhaInerte icon={CircleCheck}>Account</ContaMenuLinhaInerte>
-        <ContaMenuLinhaInerte icon={CreditCard}>Billing</ContaMenuLinhaInerte>
-        <DropdownMenuItem render={<Link href="/superadmin/suporte" />} className="gap-3 rounded-md px-3 py-2.5 text-sm">
-          <Bell size={17} className="text-muted-foreground" /> Notifications
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="my-2" />
-        <DropdownMenuItem variant="destructive" onClick={sair} className="gap-3 rounded-md px-3 py-2.5 text-sm">
-          <LogOut size={17} /> Sair
+
+        <DropdownMenuItem
+          onClick={sair}
+          className="justify-center gap-2 rounded-full bg-foreground px-3 py-2.5 text-sm font-semibold text-background hover:bg-foreground focus:bg-foreground/90 focus:text-background"
+        >
+          <LogOut size={16} /> Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
