@@ -246,7 +246,7 @@ export function SuperadminShell({
   const atual = NAV.find((n) => pathname.startsWith(n.href));
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-white">
       {aberto && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setAberto(false)} />}
 
       <aside
