@@ -322,7 +322,7 @@ export function SuperadminShell({
                 <Icon size={16} className="shrink-0 text-foreground" />
                 <span className={cn("flex-1", recolhido && "lg:hidden")}>{label}</span>
                 {href === "/superadmin/suporte" && naoLidas > 0 ? (
-                  <span className={cn("flex size-4.5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[9px] font-semibold text-white", recolhido && "lg:hidden")}>
+                  <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white", recolhido && "lg:hidden")}>
                     {naoLidas > 99 ? "99+" : naoLidas}
                   </span>
                 ) : (
