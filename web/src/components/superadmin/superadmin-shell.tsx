@@ -31,7 +31,7 @@ import {
   AlertTriangle,
   LifeBuoy,
   Send,
-  CirclePlus,
+  ShieldPlus,
   CircleCheck,
   CreditCard,
   type LucideIcon,
@@ -75,39 +75,46 @@ function iniciais(nome: string) {
   return (partes[0]?.[0] ?? "S").toUpperCase() + (partes[1]?.[0] ?? "").toUpperCase();
 }
 
+/** Linha "morta" do menu de conta: mesmo peso visual de um item real (texto/ícone escuros, sem
+ * esmaecer), só sem onClick/href — pra bater com o print, onde esses itens aparecem legíveis
+ * normalmente (não acinzentados como um `disabled` de verdade deixaria). */
+function ContaMenuLinhaInerte({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <div className="flex cursor-default items-center gap-3 rounded-md px-3 py-2.5 text-sm text-foreground select-none">
+      <Icon size={17} className="shrink-0 text-muted-foreground" />
+      {children}
+    </div>
+  );
+}
+
 /** Menu de conta — reaproveitado no topbar e no rodapé da sidebar, cada um com seu próprio gatilho.
- * Estrutura e ícones iguais à referência; "Upgrade to Pro"/"Account"/"Billing" ficam desabilitados
- * (sem pagina real por trás ainda — ver roadmap da sidebar). "Notifications" e "Sair" são ações
- * reais: a primeira leva pro mesmo suporte não lido do sino do topbar, a segunda desloga de verdade. */
+ * Estrutura e ícones iguais à referência; "Upgrade to Pro"/"Account"/"Billing" ficam inertes
+ * (sem pagina real por trás ainda — ver roadmap da sidebar), mas em peso visual total pra bater
+ * com o print. "Notifications" e "Sair" são ações reais: a primeira leva pro mesmo suporte não
+ * lido do sino do topbar, a segunda desloga de verdade. */
 function ContaMenu({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
-      <DropdownMenuContent align="end" className="w-64">
-        <div className="flex items-center gap-3 px-2 py-2">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
+      <DropdownMenuContent align="end" className="w-60 p-2">
+        <div className="flex items-center gap-3 px-1 py-1.5">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">{iniciais(admin.nome)}</span>
           <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm font-medium text-foreground">{admin.nome}</p>
+            <p className="truncate text-sm font-semibold text-foreground">{admin.nome}</p>
             <p className="truncate text-xs text-muted-foreground">{admin.email}</p>
           </div>
         </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
-          <CirclePlus size={14} /> Upgrade to Pro
+        <DropdownMenuSeparator className="my-2" />
+        <ContaMenuLinhaInerte icon={ShieldPlus}>Upgrade to Pro</ContaMenuLinhaInerte>
+        <DropdownMenuSeparator className="my-2" />
+        <ContaMenuLinhaInerte icon={CircleCheck}>Account</ContaMenuLinhaInerte>
+        <ContaMenuLinhaInerte icon={CreditCard}>Billing</ContaMenuLinhaInerte>
+        <DropdownMenuItem render={<Link href="/superadmin/suporte" />} className="gap-3 rounded-md px-3 py-2.5 text-sm">
+          <Bell size={17} className="text-muted-foreground" /> Notifications
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
-          <CircleCheck size={14} /> Account
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <CreditCard size={14} /> Billing
-        </DropdownMenuItem>
-        <DropdownMenuItem render={<Link href="/superadmin/suporte" />}>
-          <Bell size={14} /> Notifications
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={sair}>
-          <LogOut size={14} /> Sair
+        <DropdownMenuSeparator className="my-2" />
+        <DropdownMenuItem variant="destructive" onClick={sair} className="gap-3 rounded-md px-3 py-2.5 text-sm">
+          <LogOut size={17} /> Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
