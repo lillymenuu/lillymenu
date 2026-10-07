@@ -256,7 +256,7 @@ export function SuperadminShell({
           recolhido ? "lg:w-[76px]" : "lg:w-64"
         )}
       >
-        <div className={cn("flex items-center gap-2.5 border-b border-slate-200 px-5 py-5", recolhido ? "lg:justify-center lg:px-0" : "justify-between")}>
+        <div className={cn("flex items-center gap-2.5 px-5 py-5", recolhido ? "lg:justify-center lg:px-0" : "justify-between")}>
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/favicon_store.png" alt="" className="size-8 shrink-0 rounded-lg" />
@@ -285,10 +285,10 @@ export function SuperadminShell({
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   recolhido && "lg:justify-center lg:px-0",
-                  ativo ? "bg-indigo-50 text-indigo-700" : "text-foreground hover:bg-slate-100"
+                  ativo ? "bg-indigo-50 text-foreground" : "text-foreground hover:bg-slate-100"
                 )}
               >
-                <Icon size={18} className={cn("shrink-0", ativo ? "text-indigo-600" : "text-foreground")} />
+                <Icon size={18} className="shrink-0 text-foreground" />
                 <span className={cn("flex-1", recolhido && "lg:hidden")}>{label}</span>
                 {href === "/superadmin/suporte" && naoLidas > 0 ? (
                   <span className={cn("flex size-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white", recolhido && "lg:hidden")}>
