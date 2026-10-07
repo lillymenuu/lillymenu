@@ -38,6 +38,7 @@ import {
   CirclePlus,
   CircleCheck,
   CreditCard,
+  PanelLeft,
   type LucideIcon,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -194,6 +195,27 @@ export function SuperadminShell({
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
   const [naoLidas, setNaoLidas] = useState(naoLidasInicial);
+  const [recolhido, setRecolhido] = useState(false);
+
+  useEffect(() => {
+    try {
+      setRecolhido(localStorage.getItem("sa-sidebar-recolhida") === "1");
+    } catch {
+      // sem localStorage (ex. navegação privada): mantém expandida
+    }
+  }, []);
+
+  function alternarRecolhido() {
+    setRecolhido((atual) => {
+      const novo = !atual;
+      try {
+        localStorage.setItem("sa-sidebar-recolhida", novo ? "1" : "0");
+      } catch {
+        // sem localStorage: a preferência só dura a sessão
+      }
+      return novo;
+    });
+  }
 
   useEffect(() => {
     let ativo = true;
@@ -228,15 +250,16 @@ export function SuperadminShell({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-slate-100 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
-          aberto ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-slate-100 transition-[width,transform] duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+          aberto ? "translate-x-0" : "-translate-x-full",
+          recolhido ? "lg:w-[76px]" : "lg:w-64"
         )}
       >
-        <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-5 py-5">
+        <div className={cn("flex items-center gap-2.5 border-b border-slate-200 px-5 py-5", recolhido ? "lg:justify-center lg:px-0" : "justify-between")}>
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/favicon_store.png" alt="" className="size-8 rounded-lg" />
-            <div className="leading-tight">
+            <img src="/favicon_store.png" alt="" className="size-8 shrink-0 rounded-lg" />
+            <div className={cn("leading-tight", recolhido && "lg:hidden")}>
               <div className="text-sm font-semibold">Lilly Menu</div>
               <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                 <ShieldCheck size={11} /> Superadmin
@@ -249,7 +272,7 @@ export function SuperadminShell({
         </div>
 
         <nav className="scrollbar-hidden min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          <p className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Gestão</p>
+          <p className={cn("px-3 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase", recolhido && "lg:hidden")}>Gestão</p>
           {NAV.map(({ href, label, icon: Icon }) => {
             const ativo = pathname.startsWith(href);
             return (
@@ -257,19 +280,21 @@ export function SuperadminShell({
                 key={href}
                 href={href}
                 onClick={() => setAberto(false)}
+                title={recolhido ? label : undefined}
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  recolhido && "lg:justify-center lg:px-0",
                   ativo ? "bg-white text-indigo-700 shadow-sm" : "text-slate-700 hover:bg-white/70"
                 )}
               >
-                <Icon size={18} className={ativo ? "text-indigo-600" : "text-slate-500"} />
-                <span className="flex-1">{label}</span>
+                <Icon size={18} className={cn("shrink-0", ativo ? "text-indigo-600" : "text-slate-500")} />
+                <span className={cn("flex-1", recolhido && "lg:hidden")}>{label}</span>
                 {href === "/superadmin/suporte" && naoLidas > 0 ? (
-                  <span className="flex size-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white">
+                  <span className={cn("flex size-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white", recolhido && "lg:hidden")}>
                     {naoLidas > 99 ? "99+" : naoLidas}
                   </span>
                 ) : (
-                  <ChevronRight size={14} className="text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <ChevronRight size={14} className={cn("text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100", recolhido && "lg:hidden")} />
                 )}
               </Link>
             );
@@ -278,10 +303,17 @@ export function SuperadminShell({
           <Separator className="my-3 bg-slate-200" />
 
           {EM_CONSTRUCAO.map(({ label, icon: Icon, chevron }) => (
-            <div key={label} className="flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700" title="Em construção — página ainda não existe">
-              <Icon size={18} className="text-slate-500" />
-              <span className="flex-1">{label}</span>
-              {chevron && <ChevronRight size={14} className="text-slate-400" />}
+            <div
+              key={label}
+              title={recolhido ? label : "Em construção — página ainda não existe"}
+              className={cn(
+                "flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700",
+                recolhido && "lg:justify-center lg:px-0"
+              )}
+            >
+              <Icon size={18} className="shrink-0 text-slate-500" />
+              <span className={cn("flex-1", recolhido && "lg:hidden")}>{label}</span>
+              {chevron && <ChevronRight size={14} className={cn("text-slate-400", recolhido && "lg:hidden")} />}
             </div>
           ))}
         </nav>
@@ -290,13 +322,17 @@ export function SuperadminShell({
           admin={admin}
           sair={sair}
           trigger={
-            <button type="button" className="flex w-full items-center gap-3 border-t border-slate-200 p-4 text-left transition-colors hover:bg-white/70">
+            <button
+              type="button"
+              title={recolhido ? admin.nome : undefined}
+              className={cn("flex w-full items-center gap-3 border-t border-slate-200 p-4 text-left transition-colors hover:bg-white/70", recolhido && "lg:justify-center lg:px-0")}
+            >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
-              <span className="min-w-0 flex-1 leading-tight">
+              <span className={cn("min-w-0 flex-1 leading-tight", recolhido && "lg:hidden")}>
                 <span className="block truncate text-sm font-medium">{admin.nome}</span>
                 <span className="block truncate text-xs text-muted-foreground">{admin.email}</span>
               </span>
-              <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
+              <ChevronDown size={14} className={cn("shrink-0 text-muted-foreground", recolhido && "lg:hidden")} />
             </button>
           }
         />
@@ -306,6 +342,15 @@ export function SuperadminShell({
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur lg:px-8">
           <button className="shrink-0 rounded-md p-1.5 hover:bg-muted lg:hidden" onClick={() => setAberto(true)} aria-label="Abrir menu">
             <Menu size={20} />
+          </button>
+          <button
+            type="button"
+            className="hidden shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex"
+            onClick={alternarRecolhido}
+            aria-label={recolhido ? "Expandir menu" : "Recolher menu"}
+            title={recolhido ? "Expandir menu" : "Recolher menu"}
+          >
+            <PanelLeft size={18} />
           </button>
           <h1 className="hidden shrink-0 text-base font-semibold sm:block">{atual?.label ?? "Superadmin"}</h1>
 
