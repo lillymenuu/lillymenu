@@ -7,30 +7,33 @@ related_targets: ["web/src/components/superadmin/sa-dashboard.tsx","web/src/comp
 
 ## Scope and visitor mode
 
-Painel Superadmin (Next.js, `web/src/app/superadmin/(panel)/`) — Operate. Dono do SaaS gerencia a plataforma como um todo (lojas, planos, suporte, landing), separado do papel de lojista. Rodada 1 cobriu o dashboard (`sa-dashboard.tsx`) e a casca do painel. Rodada 2 reconstruiu a casca (`superadmin-shell.tsx`: sidebar + topbar) seguindo de perto a referência visual Dashtrans (store.codervent.com/dashtrans-ui-next/dashboard/analytics/), adaptada ao conteúdo real do produto.
+Painel Superadmin (Next.js, `web/src/app/superadmin/(panel)/`) — Operate. Dono do SaaS gerencia a plataforma como um todo (lojas, planos, suporte, landing), separado do papel de lojista. Rodada 1 cobriu o dashboard (`sa-dashboard.tsx`). Rodadas 2-3 reconstruíram a casca (`superadmin-shell.tsx`: sidebar + topbar) seguindo de perto a referência visual Dashtrans (store.codervent.com/dashtrans-ui-next/dashboard/analytics/).
 
 ## Audience, job, action, proof, constraints
 
 Superadmin (um usuário interno da operação, não o lojista) checa a saúde do SaaS no dia a dia: quantas lojas ativas, receita prevista, quais lojas precisam de atenção (trial acabando, pagamento vencido, comprovante pra revisar), quem procurou suporte. Ação real por trás de cada métrica: ir revisar a loja ou responder o suporte — por isso KPIs continuam clicáveis quando levam a uma tela de ação.
 
-Fonte do pedido: usuário pediu para usar o template Dashtrans como referência; na rodada 2, pediu explicitamente pra sidebar e topbar ficarem "do mesmo jeito" da referência (screenshots fornecidos).
+Fonte do pedido: usuário pediu para usar o template Dashtrans como referência; nas rodadas 2-3, pediu explicitamente pra sidebar e topbar ficarem "do mesmo jeito" da referência (screenshots fornecidos, incluindo o menu completo de categorias).
 
 ## Chosen direction
 
 **Paleta**: indigo (`#4f46e5`) é o acento confirmado desta superfície — separado do cobre de marca do produto (token `--primary` global intocado, só classes `indigo-*` locais). Cores semânticas de status (ativa=emerald, trial=amber, expirada=rose) mantidas.
 
-**Regra geral desta superfície, confirmada nas duas rodadas**: a referência Dashtrans é fonte de estrutura/linguagem visual, nunca de conteúdo fabricado. Nenhum controle visualmente funcional pode ficar sem funcionar de verdade.
+**Regra geral desta superfície**: a referência Dashtrans é fonte de estrutura/linguagem visual. Controles que prometem uma ação real (busca, notificação, logout) funcionam de verdade — nunca decoração fingindo função. Itens de navegação para páginas que ainda não existem (ver "Roadmap" abaixo) são a exceção deliberada e explícita: o usuário pediu pra incluí-los como preview do que vem a seguir, então ficam visíveis mas não-clicáveis, nunca fingindo ser um link funcional.
 
 **Dashboard** (rodada 1): grid de 8 cards idênticos quebrado em 3 cards "hero" + 1 card "Precisa de atenção" com grid interno compacto. Badge de tendência ("+X% vs mês passado") só onde há série histórica real (12 meses de cadastros) — sem fabricar percentual nos KPIs que são só snapshot.
 
-**Sidebar** (rodada 2): trocada de escura (slate-950) pra clara (`bg-card`, branca), espelhando a referência. Mantém só os 4 itens reais de navegação (Dashboard/Lojas/Suporte/Landing page) — **não** replicou as ~12 categorias fake do menu Dashtrans (eCommerce, Widgets, Forms, Tables...), que são conteúdo de demonstração do template, não páginas reais deste produto. Item ativo = `bg-indigo-50`/`text-indigo-700`; chevron à direita em hover nos itens sem badge (afforda navegação, não implica submenu — nenhum item daqui expande). Rodapé = card de identidade (avatar + nome + email), sem chevron/dropdown ali (ação de conta mora só no topbar, pra não duplicar o mesmo controle em dois lugares).
+**Sidebar** (rodada 2, revisada na 3): clara (`bg-card`, branca), espelhando a referência. 4 itens reais de navegação no topo (Dashboard/Lojas/Suporte/Landing page), com active state `bg-indigo-50`/`text-indigo-700`. Abaixo, separador + **Roadmap** (rodada 3, pedido explícito do usuário): os mesmos 16 itens/ícones/chevrons do menu de referência (eCommerce, Widgets, Applications, UI Components, Forms, Tables, Icons, Pricing, Authentication, Accounts, Charts, Documentation, FAQ, Error Pages, Support, Feedback) — sem páginas reais ainda ("vamos criar essas páginas depois", nas palavras do usuário). Renderizados como `<div>` não clicável (não `<Link>`), texto/ícone a 60% de opacidade, `cursor-default` — visível e com o mesmo layout/ícones pedidos, mas nunca parece um link que funciona. Lista completa de ícones usados: ver `EM_CONSTRUCAO` em `superadmin-shell.tsx`. Nav agora rola internamente (`overflow-y-auto`) pra caber os ~20 itens sem estourar a tela.
 
-**Topbar** (rodada 2): busca central **real** (`sa-topbar-search.tsx`) — carrega a listagem de lojas (mesmo endpoint que `/superadmin/lojas` já usa) sob demanda no primeiro foco, filtra pelo nome no cliente, atalho ⌘K/Ctrl+K funcional (foca o campo de verdade), clicar num resultado navega pra `/superadmin/lojas?loja=<id>` que abre essa loja direto (deep-link novo em `sa-lojas-manager.tsx`). Sino de notificação = contagem real de suporte não lida (mesmo dado que já populava o badge da sidebar), leva pra `/superadmin/suporte`. Avatar vira dropdown (nome/email + Sair) via `DropdownMenu` do design system.
+Rodapé da sidebar: card de identidade (avatar com iniciais reais do admin — não foto de stock de pessoa fictícia tipo "Alex Martin" da referência, pra não parecer um usuário falso numa área de conta real) + nome + email + chevron, agora clicável: abre o mesmo menu de conta do topbar (componente `ContaMenu`, compartilhado entre os dois gatilhos).
 
-**Omitido de propósito** (presente na referência, sem equivalente real no produto, não fabricado): toggle de tema claro/escuro (app não tem modo escuro implementado — `next-themes` está instalado mas sem `ThemeProvider` configurado em lugar nenhum), seletor de idioma/bandeira (produto é só português, ver PRODUCT.md), links de nav horizontal tipo "Pricing/Docs/Analytics/Profile" (demo content do template, sem página real correspondente aqui).
+**Topbar** (rodada 2): busca central **real** (`sa-topbar-search.tsx`) — carrega a listagem de lojas (mesmo endpoint que `/superadmin/lojas` já usa) sob demanda no primeiro foco, filtra pelo nome no cliente, atalho ⌘K/Ctrl+K funcional, clicar num resultado navega pra `/superadmin/lojas?loja=<id>` que abre essa loja direto (deep-link em `sa-lojas-manager.tsx`). Sino de notificação = contagem real de suporte não lida. Avatar = `ContaMenu` (nome/email + Sair).
+
+**Omitido de propósito** (presente na referência, sem equivalente real no produto, não fabricado): toggle de tema claro/escuro (app não tem modo escuro implementado — `next-themes` está instalado mas sem `ThemeProvider` configurado em lugar nenhum), seletor de idioma/bandeira (produto é só português, ver PRODUCT.md), links de nav horizontal tipo "Pricing/Docs/Analytics/Profile" (demo content do template, sem página real correspondente aqui), foto de avatar de stock (trocada por iniciais reais).
 
 ## Unresolved decisions
 
+- Os 16 itens de Roadmap vão precisar de páginas reais (ou serem removidos) conforme o produto evolui — hoje são deliberadamente não-clicáveis.
 - Lojas (`/superadmin/lojas`) e Suporte (`/superadmin/suporte`) ainda não passaram por polish de conteúdo (só ganharam o deep-link `?loja=`) — próxima rodada, por pedido explícito do usuário (uma superfície de cada vez).
 - Landing pública nova (item 4 do pedido original) é Persuade, não Operate — tratar como projeto separado, não herda esta direção indigo.
 - Se o produto ganhar modo escuro real no futuro, o toggle da referência passa a ser implementável (hoje é omissão deliberada, não "ainda não pensamos nisso").

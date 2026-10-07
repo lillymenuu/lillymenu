@@ -3,8 +3,38 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Store, Headset, LogOut, Menu, X, ShieldCheck, Globe, Bell, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  LayoutDashboard,
+  Store,
+  Headset,
+  LogOut,
+  Menu,
+  X,
+  ShieldCheck,
+  Globe,
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  ShoppingBag,
+  Blocks,
+  Grid2x2,
+  SlidersHorizontal,
+  FileText,
+  Table2,
+  Droplets,
+  Landmark,
+  Lock,
+  CircleUserRound,
+  LineChart,
+  Code2,
+  BookOpen,
+  AlertTriangle,
+  LifeBuoy,
+  Send,
+  type LucideIcon,
+} from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { SaTopbarSearch } from "@/components/superadmin/sa-topbar-search";
 import { cn } from "cn";
 
@@ -15,9 +45,50 @@ const NAV = [
   { href: "/superadmin/landing", label: "Landing page", icon: Globe },
 ];
 
+/* Mesmas opcoes e icones do menu de referencia (Dashtrans) que ainda nao tem pagina real aqui —
+   lista pedida explicitamente pelo usuario como "roadmap" do menu, pra ganhar tela propria depois.
+   Sem href: linha nao clicavel (sem link morto fingindo que já funciona), so visual. */
+const EM_CONSTRUCAO: { label: string; icon: LucideIcon; chevron: boolean }[] = [
+  { label: "eCommerce", icon: ShoppingBag, chevron: true },
+  { label: "Widgets", icon: Blocks, chevron: true },
+  { label: "Applications", icon: Grid2x2, chevron: true },
+  { label: "UI Components", icon: SlidersHorizontal, chevron: true },
+  { label: "Forms", icon: FileText, chevron: true },
+  { label: "Tables", icon: Table2, chevron: true },
+  { label: "Icons", icon: Droplets, chevron: true },
+  { label: "Pricing", icon: Landmark, chevron: false },
+  { label: "Authentication", icon: Lock, chevron: true },
+  { label: "Accounts", icon: CircleUserRound, chevron: true },
+  { label: "Charts", icon: LineChart, chevron: true },
+  { label: "Documentation", icon: Code2, chevron: false },
+  { label: "FAQ", icon: BookOpen, chevron: false },
+  { label: "Error Pages", icon: AlertTriangle, chevron: true },
+  { label: "Support", icon: LifeBuoy, chevron: false },
+  { label: "Feedback", icon: Send, chevron: false },
+];
+
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/).filter(Boolean);
   return (partes[0]?.[0] ?? "S").toUpperCase() + (partes[1]?.[0] ?? "").toUpperCase();
+}
+
+/** Menu de conta (nome/email + Sair) — reaproveitado no topbar e no rodapé da sidebar, cada um com seu próprio gatilho. */
+function ContaMenu({ admin, sair, trigger }: { admin: { nome: string; email: string }; sair: () => void; trigger: React.ReactElement }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={trigger} />
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="font-normal">
+          <p className="truncate text-sm font-medium text-foreground">{admin.nome}</p>
+          <p className="truncate text-xs">{admin.email}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={sair}>
+          <LogOut size={14} /> Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 export function SuperadminShell({
@@ -87,7 +158,7 @@ export function SuperadminShell({
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
+        <nav className="scrollbar-hidden min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-4">
           <p className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Gestão</p>
           {NAV.map(({ href, label, icon: Icon }) => {
             const ativo = pathname.startsWith(href);
@@ -113,17 +184,32 @@ export function SuperadminShell({
               </Link>
             );
           })}
+
+          <Separator className="my-3" />
+
+          {EM_CONSTRUCAO.map(({ label, icon: Icon, chevron }) => (
+            <div key={label} className="flex cursor-default items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/60" title="Em construção">
+              <Icon size={18} className="text-muted-foreground/60" />
+              <span className="flex-1">{label}</span>
+              {chevron && <ChevronRight size={14} className="text-muted-foreground/30" />}
+            </div>
+          ))}
         </nav>
 
-        <div className="border-t p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</div>
-            <div className="min-w-0 flex-1 leading-tight">
-              <div className="truncate text-sm font-medium">{admin.nome}</div>
-              <div className="truncate text-xs text-muted-foreground">{admin.email}</div>
-            </div>
-          </div>
-        </div>
+        <ContaMenu
+          admin={admin}
+          sair={sair}
+          trigger={
+            <button type="button" className="flex w-full items-center gap-3 border-t p-4 text-left transition-colors hover:bg-muted/60">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{iniciais(admin.nome)}</span>
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate text-sm font-medium">{admin.nome}</span>
+                <span className="block truncate text-xs text-muted-foreground">{admin.email}</span>
+              </span>
+              <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
+            </button>
+          }
+        />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -146,26 +232,16 @@ export function SuperadminShell({
             {naoLidas > 0 && <span className="absolute top-1.5 right-1.5 flex size-2 rounded-full bg-rose-500 ring-2 ring-background" />}
           </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <button type="button" className="flex shrink-0 items-center gap-1.5 rounded-full p-1 pr-1.5 transition-colors hover:bg-muted" aria-label="Conta">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-bold text-white">{iniciais(admin.nome)}</span>
-                  <ChevronDown size={14} className="hidden text-muted-foreground sm:block" />
-                </button>
-              }
-            />
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <p className="truncate text-sm font-medium text-foreground">{admin.nome}</p>
-                <p className="truncate text-xs">{admin.email}</p>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={sair}>
-                <LogOut size={14} /> Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ContaMenu
+            admin={admin}
+            sair={sair}
+            trigger={
+              <button type="button" className="flex shrink-0 items-center gap-1.5 rounded-full p-1 pr-1.5 transition-colors hover:bg-muted" aria-label="Conta">
+                <span className="flex size-7 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-bold text-white">{iniciais(admin.nome)}</span>
+                <ChevronDown size={14} className="hidden text-muted-foreground sm:block" />
+              </button>
+            }
+          />
         </header>
         <main className="min-w-0 flex-1 px-4 py-6 lg:px-8">{children}</main>
         <footer className="border-t py-4 text-center text-sm text-muted-foreground">
