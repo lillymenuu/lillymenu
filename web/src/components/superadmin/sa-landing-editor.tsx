@@ -2,11 +2,18 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
+import { ExternalLink } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { GRUPOS_LANDING } from "@/lib/landingCmsCampos";
+
+/* Editor do CMS da landing publica (lillymenu.com) — layout no mesmo padrao das outras telas do
+   superadmin (cabecalho com titulo+subtitulo, conteudo em Card, abas como em sa-lojas-manager.tsx
+   pra organizar os ~60 campos em secoes em vez de uma rolagem unica). A cobertura de campos (todo
+   texto/imagem que a landing renderiza) ja existia em GRUPOS_LANDING — nao mudou, so o layout. */
 
 type ImagemPendente = { dataUri: string };
 
@@ -53,69 +60,88 @@ export function SaLandingEditor({ configInicial }: { configInicial: Record<strin
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-4 p-4 md:p-6">
-      <div className="sticky top-0 z-10 -mx-4 flex items-center justify-between border-b bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg font-semibold">Landing page</h1>
-          <p className="text-sm text-muted-foreground">Textos, imagens e planos exibidos em lillymenu.com</p>
+          <h2 className="text-2xl font-semibold">Landing page</h2>
+          <p className="text-sm text-muted-foreground">Textos, imagens e planos exibidos em lillymenu.com. Edite e salve para atualizar a página pública.</p>
         </div>
-        <Button onClick={salvar} disabled={salvando}>
-          {salvando ? "Salvando..." : "Salvar alterações"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" render={<a href="/" target="_blank" rel="noopener noreferrer" />}>
+            <ExternalLink size={14} /> Ver página
+          </Button>
+          <Button onClick={salvar} disabled={salvando}>
+            {salvando ? "Salvando..." : "Salvar alterações"}
+          </Button>
+        </div>
       </div>
 
-      {GRUPOS_LANDING.map((grupo) => (
-        <Card key={grupo.titulo}>
-          <CardContent className="flex flex-col gap-4">
-            <h2 className="text-sm font-semibold">{grupo.titulo}</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {grupo.campos.map((campo) => (
-                <div key={campo.chave} className={campo.tipo === "textarea" ? "sm:col-span-2 flex flex-col gap-1.5" : "flex flex-col gap-1.5"}>
-                  <Label htmlFor={`campo-${campo.chave}`}>{campo.label}</Label>
+      <Tabs defaultValue={GRUPOS_LANDING[0].titulo}>
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="w-max">
+            {GRUPOS_LANDING.map((grupo) => (
+              <TabsTrigger key={grupo.titulo} value={grupo.titulo}>
+                {grupo.titulo}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
-                  {campo.tipo === "texto" && (
-                    <Input id={`campo-${campo.chave}`} value={valores[campo.chave] ?? ""} onChange={(e) => setCampo(campo.chave, e.target.value)} />
-                  )}
+        {GRUPOS_LANDING.map((grupo) => (
+          <TabsContent key={grupo.titulo} value={grupo.titulo} className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>{grupo.titulo}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                {grupo.campos.map((campo) => (
+                  <div key={campo.chave} className={campo.tipo === "textarea" ? "flex flex-col gap-1.5 sm:col-span-2" : "flex flex-col gap-1.5"}>
+                    <Label htmlFor={`campo-${campo.chave}`}>{campo.label}</Label>
 
-                  {campo.tipo === "textarea" && (
-                    <textarea
-                      id={`campo-${campo.chave}`}
-                      value={valores[campo.chave] ?? ""}
-                      onChange={(e) => setCampo(campo.chave, e.target.value)}
-                      rows={campo.ajuda ? 4 : 2}
-                      className="w-full rounded-lg border border-input bg-transparent p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                    />
-                  )}
+                    {campo.tipo === "texto" && (
+                      <Input id={`campo-${campo.chave}`} value={valores[campo.chave] ?? ""} onChange={(e) => setCampo(campo.chave, e.target.value)} />
+                    )}
 
-                  {campo.tipo === "imagem" && (
-                    <div className="flex items-center gap-3">
-                      {(imagensPendentes[campo.chave]?.dataUri || valores[campo.chave]) && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={imagensPendentes[campo.chave]?.dataUri || valores[campo.chave]}
-                          alt=""
-                          className="size-14 shrink-0 rounded-lg border object-cover"
-                        />
-                      )}
-                      <Input
+                    {campo.tipo === "textarea" && (
+                      <textarea
                         id={`campo-${campo.chave}`}
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                        onChange={(e) => {
-                          const arquivo = e.target.files?.[0];
-                          if (arquivo) selecionarImagem(campo.chave, arquivo);
-                        }}
+                        value={valores[campo.chave] ?? ""}
+                        onChange={(e) => setCampo(campo.chave, e.target.value)}
+                        rows={campo.ajuda ? 4 : 2}
+                        className="w-full rounded-lg border border-input bg-transparent p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                       />
-                    </div>
-                  )}
+                    )}
 
-                  {campo.ajuda && <p className="text-xs text-muted-foreground">{campo.ajuda}</p>}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                    {campo.tipo === "imagem" && (
+                      <div className="flex items-center gap-3">
+                        {(imagensPendentes[campo.chave]?.dataUri || valores[campo.chave]) && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={imagensPendentes[campo.chave]?.dataUri || valores[campo.chave]}
+                            alt=""
+                            className="size-14 shrink-0 rounded-lg border object-cover"
+                          />
+                        )}
+                        <Input
+                          id={`campo-${campo.chave}`}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={(e) => {
+                            const arquivo = e.target.files?.[0];
+                            if (arquivo) selecionarImagem(campo.chave, arquivo);
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {campo.ajuda && <p className="text-xs text-muted-foreground">{campo.ajuda}</p>}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }
