@@ -79,7 +79,7 @@ export function SaLandingEditor({ configInicial }: { configInicial: Record<strin
       </div>
 
       <Tabs defaultValue={GRUPOS_LANDING[0].titulo}>
-        <div className="overflow-x-auto pb-1">
+        <div className="scrollbar-hover-thin overflow-x-auto pb-1">
           <TabsList className="w-max">
             {GRUPOS_LANDING.map((grupo) => (
               <TabsTrigger key={grupo.titulo} value={grupo.titulo}>

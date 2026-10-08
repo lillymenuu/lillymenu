@@ -163,6 +163,31 @@
     width: 0;
     height: 0;
   }
+  .scrollbar-hover-thin {
+    scrollbar-width: none;
+  }
+  .scrollbar-hover-thin::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+  .scrollbar-hover-thin:hover {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, currentColor 25%, transparent) transparent;
+  }
+  .scrollbar-hover-thin:hover::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-hover-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-hover-thin::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklch, currentColor 25%, transparent);
+    border-radius: 9999px;
+  }
+  .scrollbar-hover-thin::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklch, currentColor 45%, transparent);
+  }
 }
 /*
  * Landing page (superficie publica, modo Persuade). Direcao visual v2:
