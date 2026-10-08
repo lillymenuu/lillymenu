@@ -84,6 +84,11 @@ export function StoreCheckoutDialog({
   const [estado, setEstado] = useState("");
   const [enderecoConfirmado, setEnderecoConfirmado] = useState(false);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  /* null = ainda nao calculado pra esse CEP (so usado quando taxaEntregaTipo
+     === "area"); atendido=false = CEP geocodificado mas fora de todos os
+     poligonos cadastrados em Configuracoes > Taxa de entrega > Por area. */
+  const [areaTaxaInfo, setAreaTaxaInfo] = useState<{ atendido: boolean; taxa: number } | null>(null);
+  const [calculandoAreaTaxa, setCalculandoAreaTaxa] = useState(false);
   const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(false);
   const [geoDispensado, setGeoDispensado] = useState(false);
   const [geoErro, setGeoErro] = useState("");
@@ -122,6 +127,7 @@ export function StoreCheckoutDialog({
   }, [perfil.taxaEntregaTipo, perfil.taxasBairro, bairro]);
 
   const bairroNaoAtendido = perfil.taxaEntregaTipo === "bairro" && bairro.trim() !== "" && bairroChaveEncontrada === undefined;
+  const areaNaoAtendida = perfil.taxaEntregaTipo === "area" && areaTaxaInfo !== null && !areaTaxaInfo.atendido;
 
   const taxaEntrega = useMemo(() => {
     if (!isEntregaTipo) return 0;
@@ -129,8 +135,11 @@ export function StoreCheckoutDialog({
     if (perfil.taxaEntregaTipo === "bairro") {
       return bairroChaveEncontrada !== undefined ? perfil.taxasBairro[bairroChaveEncontrada] : 0;
     }
+    if (perfil.taxaEntregaTipo === "area") {
+      return areaTaxaInfo?.atendido ? areaTaxaInfo.taxa : 0;
+    }
     return perfil.taxaEntrega;
-  }, [isEntregaTipo, perfil, bairroChaveEncontrada]);
+  }, [isEntregaTipo, perfil, bairroChaveEncontrada, areaTaxaInfo]);
 
   /* Texto exibido pro cliente (resumo do endereco confirmado + dentro do modal
      enquanto digita), espelhando calcularTaxaEntrega() do loja.js legado. */
@@ -143,8 +152,17 @@ export function StoreCheckoutDialog({
         ? { texto: `Entrega gratis para ${bairro.trim()} 🎉`, gratis: true }
         : { texto: `Taxa de entrega para ${bairro.trim()}: ${formatarPreco(taxaEntrega)}`, gratis: false };
     }
+    if (perfil.taxaEntregaTipo === "area") {
+      if (cep.replace(/\D/g, "").length !== 8) return { texto: "Informe seu CEP para calcular a taxa.", gratis: false };
+      if (calculandoAreaTaxa) return { texto: "Calculando taxa de entrega...", gratis: false };
+      if (areaTaxaInfo === null) return { texto: "Informe seu CEP para calcular a taxa.", gratis: false };
+      if (!areaTaxaInfo.atendido) return null;
+      return areaTaxaInfo.taxa === 0
+        ? { texto: "Entrega gratis para este endereco 🎉", gratis: true }
+        : { texto: `Taxa de entrega: ${formatarPreco(areaTaxaInfo.taxa)}`, gratis: false };
+    }
     return taxaEntrega === 0 ? { texto: "Entrega gratis!", gratis: true } : { texto: `Taxa de entrega: ${formatarPreco(taxaEntrega)}`, gratis: false };
-  }, [perfil, bairro, bairroChaveEncontrada, taxaEntrega]);
+  }, [perfil, bairro, bairroChaveEncontrada, taxaEntrega, cep, areaTaxaInfo, calculandoAreaTaxa]);
 
   const { desconto, taxaFinal } = useMemo(() => {
     if (!cupomAplicado) return { desconto: 0, taxaFinal: taxaEntrega };
@@ -171,6 +189,25 @@ export function StoreCheckoutDialog({
           : 0;
   const abaixoDoMinimo = pedidoMinAtivo > 0 && subtotal < pedidoMinAtivo;
 
+  async function calcularTaxaArea(cepDigitos: string) {
+    if (perfil.taxaEntregaTipo !== "area" || cepDigitos.length !== 8) return;
+    setCalculandoAreaTaxa(true);
+    setAreaTaxaInfo(null);
+    try {
+      const res = await fetch("/api/store/taxa-area", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loja_id: perfil.loja_id, cep: cepDigitos }),
+      });
+      const data = await res.json();
+      if (data.ok) setAreaTaxaInfo({ atendido: data.atendido, taxa: data.taxa });
+    } catch {
+      // mantem areaTaxaInfo null -> tratado como "ainda nao calculado"
+    } finally {
+      setCalculandoAreaTaxa(false);
+    }
+  }
+
   async function buscarCep() {
     const digitos = cep.replace(/\D/g, "");
     if (digitos.length !== 8) return;
@@ -183,6 +220,7 @@ export function StoreCheckoutDialog({
         setCidade(end.cidade);
         setEstado(end.estado);
       }
+      calcularTaxaArea(digitos);
     } finally {
       setBuscandoCep(false);
     }
@@ -212,6 +250,7 @@ export function StoreCheckoutDialog({
             setEstado(data.estado ?? "");
             if (data.numero) setNumero(data.numero);
             setGeoDispensado(true);
+            calcularTaxaArea(String(data.cep ?? "").replace(/\D/g, ""));
           })
           .catch(() => setGeoErro("Erro ao buscar seu endereco."))
           .finally(() => setBuscandoLocalizacao(false));
@@ -227,6 +266,7 @@ export function StoreCheckoutDialog({
   function confirmarEndereco() {
     if (!rua.trim() || !numero.trim()) return;
     if (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) return;
+    if (perfil.taxaEntregaTipo === "area" && (calculandoAreaTaxa || areaTaxaInfo === null || !areaTaxaInfo.atendido)) return;
     setEnderecoConfirmado(true);
     setEnderecoModalAberto(false);
     /* Entrega agendada so pede o horario depois que o endereco ja foi
@@ -1060,8 +1100,18 @@ export function StoreCheckoutDialog({
               </div>
             )}
             <div className="flex items-center gap-2">
-              <input value={cep} onChange={(e) => setCep(formatarCep(e.target.value))} onBlur={buscarCep} placeholder="CEP" inputMode="numeric" className={fieldClass()} />
-              {buscandoCep && <Loader2 size={16} className="shrink-0 animate-spin text-neutral-400" />}
+              <input
+                value={cep}
+                onChange={(e) => {
+                  setCep(formatarCep(e.target.value));
+                  if (perfil.taxaEntregaTipo === "area") setAreaTaxaInfo(null);
+                }}
+                onBlur={buscarCep}
+                placeholder="CEP"
+                inputMode="numeric"
+                className={fieldClass()}
+              />
+              {(buscandoCep || calculandoAreaTaxa) && <Loader2 size={16} className="shrink-0 animate-spin text-neutral-400" />}
             </div>
             <input value={rua} onChange={(e) => setRua(e.target.value)} placeholder="Rua/Avenida" className={fieldClass()} />
             <div className="grid grid-cols-2 gap-2.5">
@@ -1094,6 +1144,8 @@ export function StoreCheckoutDialog({
 
             {bairroNaoAtendido ? (
               <p className="text-[.78rem] text-red-600">Bairro fora da area de entrega. Entre em contato conosco.</p>
+            ) : areaNaoAtendida ? (
+              <p className="text-[.78rem] text-red-600">Endereco fora da area de entrega. Entre em contato conosco.</p>
             ) : (
               taxaInfo && (
                 <div className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[.78rem] ${taxaInfo.gratis ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"}`}>
@@ -1104,7 +1156,7 @@ export function StoreCheckoutDialog({
             )}
           </div>
           <div className="border-t border-neutral-100 p-4">
-            {bairroNaoAtendido && wppNum ? (
+            {(bairroNaoAtendido || areaNaoAtendida) && wppNum ? (
               <a
                 href={`https://wa.me/55${wppNum}?text=${encodeURIComponent("Olá! Meu bairro não está na área de entrega cadastrada, gostaria de combinar a forma de entrega do meu pedido.")}`}
                 target="_blank"
@@ -1117,12 +1169,22 @@ export function StoreCheckoutDialog({
             ) : (
               <button
                 type="button"
-                disabled={!rua.trim() || !numero.trim() || (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido))}
+                disabled={
+                  !rua.trim() ||
+                  !numero.trim() ||
+                  (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) ||
+                  (perfil.taxaEntregaTipo === "area" && (calculandoAreaTaxa || areaTaxaInfo === null || !areaTaxaInfo.atendido))
+                }
                 onClick={confirmarEndereco}
                 className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
                 style={{
                   background:
-                    !rua.trim() || !numero.trim() || (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) ? "#c0a88a" : brown,
+                    !rua.trim() ||
+                    !numero.trim() ||
+                    (perfil.taxaEntregaTipo === "bairro" && (!bairro.trim() || bairroNaoAtendido)) ||
+                    (perfil.taxaEntregaTipo === "area" && (calculandoAreaTaxa || areaTaxaInfo === null || !areaTaxaInfo.atendido))
+                      ? "#c0a88a"
+                      : brown,
                 }}
               >
                 Proximo

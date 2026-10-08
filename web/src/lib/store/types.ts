@@ -32,7 +32,7 @@ export type StorePerfil = {
   entAtiva: boolean;
   retAtiva: boolean;
   taxasBairro: Record<string, number>;
-  taxaEntregaTipo: "fixa" | "bairro" | "dinamica";
+  taxaEntregaTipo: "sem" | "fixa" | "bairro" | "dinamica" | "area";
   taxaEntregaGratis: boolean;
   clubePontosAtivo: boolean;
   temaCorMenu: string;
