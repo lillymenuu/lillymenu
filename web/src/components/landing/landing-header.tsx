@@ -56,7 +56,7 @@ export function LandingHeader({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoImage} alt={brand} className="size-8 rounded-lg object-contain" />
           ) : (
-            <span className="flex size-8 items-center justify-center rounded-lg bg-[#2563eb] text-sm font-bold text-white">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-[var(--landing-accent)] text-sm font-bold text-white">
               {brand.charAt(0)}
             </span>
           )}
@@ -71,7 +71,7 @@ export function LandingHeader({
                 key={item.label}
                 href={href}
                 onClick={(e) => aoClicarAncora(e, href)}
-                className="rounded-full px-3.5 py-1.5 transition-all duration-200 hover:bg-[#eef2ff] hover:text-[#2563eb]"
+                className="rounded-full px-3.5 py-1.5 transition-all duration-200 hover:bg-[var(--landing-accent-soft)] hover:text-[var(--landing-accent)]"
               >
                 {aplicarBrand(item.label, brand)}
               </a>
@@ -87,7 +87,7 @@ export function LandingHeader({
             href="#cadastro"
             onClick={(e) => aoClicarAncora(e, "#cadastro")}
             className={cn(
-              "landing-pulse flex h-9 items-center gap-1.5 rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+              "landing-pulse flex h-9 items-center gap-1.5 rounded-lg bg-[var(--landing-accent)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--landing-accent-dark)]"
             )}
           >
             Começar grátis <ArrowRight className="size-3.5" />
@@ -112,7 +112,7 @@ export function LandingHeader({
                     aoClicarAncora(e, href);
                     setMenuAberto(false);
                   }}
-                  className="rounded-lg px-2 py-2.5 text-[#4b5563] hover:bg-[#eef2ff] hover:text-[#111827]"
+                  className="rounded-lg px-2 py-2.5 text-[#4b5563] hover:bg-[var(--landing-accent-soft)] hover:text-[#111827]"
                 >
                   {aplicarBrand(item.label, brand)}
                 </a>
@@ -132,7 +132,7 @@ export function LandingHeader({
                 aoClicarAncora(e, "#cadastro");
                 setMenuAberto(false);
               }}
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white"
+              className="flex items-center justify-center gap-1.5 rounded-lg bg-[var(--landing-accent)] px-4 py-2 text-sm font-semibold text-white"
             >
               Começar grátis <ArrowRight className="size-3.5" />
             </a>

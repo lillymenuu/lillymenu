@@ -45,7 +45,7 @@ export function LandingSegmentos({ titulo, itens, imagem }: { titulo: string; it
             <span
               key={item}
               className={cn(
-                "rounded-full border border-[#e5e7eb] bg-white px-3.5 py-1.5 text-sm font-medium text-[#111827] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#c7d2fe] hover:text-[#2563eb] hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)]",
+                "rounded-full border border-[#e5e7eb] bg-white px-3.5 py-1.5 text-sm font-medium text-[#111827] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[rgb(var(--landing-accent-rgb)/0.35)] hover:text-[var(--landing-accent)] hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)]",
                 visivel ? "landing-card-reveal" : "opacity-0 translate-y-4"
               )}
               style={visivel ? { animationDelay: `${i * 60}ms` } : undefined}

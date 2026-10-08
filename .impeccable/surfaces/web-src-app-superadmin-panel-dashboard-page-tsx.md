@@ -84,6 +84,15 @@ A maior parte dos componentes já usa tokens semânticos (`bg-card`, `text-foreg
 
 Redesenho: cabeçalho igual às outras telas (`h2` + subtítulo muted + ações à direita), os 9 grupos viraram abas (`Tabs`/`TabsList` com scroll horizontal — 9 é mais do que os 3 de Lojas, por isso o wrapper `overflow-x-auto`) em vez de uma pilha vertical infinita, cada grupo agora usa `CardHeader`/`CardTitle` (como `sa-perfil.tsx`) em vez de um `<h2>` solto dentro do `CardContent`. Adicionado um botão real "Ver página" (abre `/` em nova aba) — não existia antes; dá pro superadmin conferir o resultado sem sair do editor. Mantidos: a mesma lógica de estado/upload de imagem em base64/save (intocada), o botão "Salvar alterações" com `variant` default (copper, mesmo critério já estabelecido nesta sessão pra botões de ação de formulário, diferente do indigo reservado pra navegação/identidade).
 
+**Aba "Tema" — cor de destaque editável de verdade** (rodada 21): usuário pediu uma aba nova com "a cor padrão do sistema" e "a cor que já está ativo na landing page". Investigado antes de implementar: a cor ativa (Azul Kukie, `#2563eb`) estava hardcoded como hex literal em classes Tailwind arbitrárias (`bg-[#2563eb]`, `text-[#2563eb]` etc.) espalhada em ~17 arquivos de componente da landing — nunca foi dirigida por config, então um campo novo sozinho seria cosmético (salvaria mas não mudaria nada na página pública). Resolvido de verdade, não só a aba:
+
+- Novo tipo de campo "cor" em `landingCmsCampos.ts`, com `sugestoes` (atalhos clicáveis) — usado só nesta aba pra oferecer as duas cores que o usuário pediu lado a lado: "Azul Kukie (cor ativa hoje)" e "Cobre Queimado (cor padrão do sistema)", `#9c5523`, a mesma cor de marca usada no resto do produto fora da landing/superadmin (ver DESIGN.md).
+- Nova função `corAcentoLanding()` em `lib/landing.ts`: a partir de UM hex salvo (`landing_theme_color`, fallback pro Azul Kukie se vazio), deriva um tom mais escuro (~18%, pro hover — equivalente ao `#1d4ed8` que já existia fixo) e um tom claro (~92% branco, pro `#eef2ff` de fundos suaves), mais os componentes RGB separados (pra sombras com qualquer opacidade via `rgb(var(--landing-accent-rgb)/ALPHA)`, sem precisar de uma variável por sombra).
+- `src/app/page.tsx` injeta essas 4 variáveis CSS (`--landing-accent`, `-dark`, `-soft`, `-rgb`) inline no wrapper raiz da página.
+- Os ~45 usos de hex fixo nos 17 arquivos de componente foram trocados pra referenciar essas variáveis (`bg-[var(--landing-accent)]`, `shadow-[...rgb(var(--landing-accent-rgb)/0.4)]` etc.) — confirmado no CSS compilado (Tailwind gera a regra real, não só preserva a classe sem efeito).
+
+Com isso, trocar a cor nessa aba e salvar muda a cor em toda a página pública de uma vez — não precisa editar seção por seção.
+
 ## Unresolved decisions
 
 - Os 16 itens de Roadmap vão precisar de páginas reais (ou serem removidos) conforme o produto evolui — hoje são deliberadamente não-clicáveis.

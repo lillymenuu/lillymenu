@@ -306,7 +306,7 @@ export function HeroSignupForm({
               type="submit"
               disabled={enviando}
               className={cn(
-                "flex h-11 w-full items-center justify-center rounded-lg bg-[#2563eb] text-base font-semibold text-white shadow-[0_10px_22px_-6px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8] disabled:opacity-60",
+                "flex h-11 w-full items-center justify-center rounded-lg bg-[var(--landing-accent)] text-base font-semibold text-white shadow-[0_10px_22px_-6px_rgb(var(--landing-accent-rgb)/0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-accent-dark)] disabled:opacity-60",
                 !enviando && "landing-cta-pulse"
               )}
             >

@@ -43,7 +43,7 @@ export function LandingHighlights() {
             className={cn("flex flex-col items-center gap-1 text-center", visivel ? "landing-card-reveal" : "opacity-0 translate-y-4")}
             style={visivel ? { animationDelay: `${i * 90}ms` } : undefined}
           >
-            <span className="text-xl font-extrabold text-[#2563eb] sm:text-2xl">{d.titulo}</span>
+            <span className="text-xl font-extrabold text-[var(--landing-accent)] sm:text-2xl">{d.titulo}</span>
             <span className="text-xs font-semibold tracking-wide text-[#6b7280] uppercase">{d.texto}</span>
           </div>
         ))}

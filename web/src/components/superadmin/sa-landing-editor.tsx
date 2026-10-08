@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { GRUPOS_LANDING } from "@/lib/landingCmsCampos";
+import { COR_ACENTO_LANDING_PADRAO } from "@/lib/landing";
+import { cn } from "cn";
 
 /* Editor do CMS da landing publica (lillymenu.com) — layout no mesmo padrao das outras telas do
    superadmin (cabecalho com titulo+subtitulo, conteudo em Card, abas como em sa-lojas-manager.tsx
@@ -110,6 +112,45 @@ export function SaLandingEditor({ configInicial }: { configInicial: Record<strin
                         rows={campo.ajuda ? 4 : 2}
                         className="w-full rounded-lg border border-input bg-transparent p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                       />
+                    )}
+
+                    {campo.tipo === "cor" && (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={valores[campo.chave] || COR_ACENTO_LANDING_PADRAO}
+                            onChange={(e) => setCampo(campo.chave, e.target.value)}
+                            className="h-9 w-14 shrink-0 cursor-pointer rounded-md border border-input p-1"
+                            aria-label={campo.label}
+                          />
+                          <Input
+                            id={`campo-${campo.chave}`}
+                            value={valores[campo.chave] ?? ""}
+                            onChange={(e) => setCampo(campo.chave, e.target.value)}
+                            placeholder={COR_ACENTO_LANDING_PADRAO}
+                            className="w-32"
+                          />
+                        </div>
+                        {campo.sugestoes && campo.sugestoes.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {campo.sugestoes.map((s) => (
+                              <button
+                                key={s.hex}
+                                type="button"
+                                onClick={() => setCampo(campo.chave, s.hex)}
+                                className={cn(
+                                  "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-muted",
+                                  (valores[campo.chave] || COR_ACENTO_LANDING_PADRAO).toLowerCase() === s.hex.toLowerCase() && "border-foreground font-medium"
+                                )}
+                              >
+                                <span className="size-3.5 shrink-0 rounded-full border" style={{ background: s.hex }} />
+                                {s.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {campo.tipo === "imagem" && (

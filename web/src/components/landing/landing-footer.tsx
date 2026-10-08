@@ -70,7 +70,7 @@ export function LandingFooter({
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Instagram"
-                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[#2563eb] hover:text-[#2563eb]"
+                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[var(--landing-accent)] hover:text-[var(--landing-accent)]"
               >
                 <InstagramIcon />
               </a>
@@ -81,7 +81,7 @@ export function LandingFooter({
                 target="_blank"
                 rel="noreferrer"
                 aria-label="LinkedIn"
-                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[#2563eb] hover:text-[#2563eb]"
+                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[var(--landing-accent)] hover:text-[var(--landing-accent)]"
               >
                 <LinkedinIcon />
               </a>
@@ -92,7 +92,7 @@ export function LandingFooter({
                 target="_blank"
                 rel="noreferrer"
                 aria-label="YouTube"
-                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[#2563eb] hover:text-[#2563eb]"
+                className="flex size-9 items-center justify-center rounded-full border border-[#e5e7eb] hover:border-[var(--landing-accent)] hover:text-[var(--landing-accent)]"
               >
                 <YoutubeIcon />
               </a>

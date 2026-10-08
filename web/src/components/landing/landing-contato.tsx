@@ -21,7 +21,7 @@ export function LandingContato() {
             <div>
               <span className="text-xs font-medium tracking-wide text-[#6b7280] uppercase">E-mail</span>
               <div className="mt-1 flex items-center gap-2 text-base font-semibold text-[#111827]">
-                <Mail className="size-4 text-[#2563eb]" />
+                <Mail className="size-4 text-[var(--landing-accent)]" />
                 lilly.menuu@gmail.com
               </div>
               <p className="mt-1 text-[13px] text-[#6b7280]">Costumamos responder em até 24h úteis.</p>

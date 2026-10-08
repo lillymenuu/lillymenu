@@ -18,7 +18,7 @@ export function LandingHero({
   const resto = linhas.slice(0, -3).join(" ");
 
   return (
-    <section className="relative mx-3 mt-3 overflow-hidden rounded-3xl bg-linear-to-br from-[#eef2ff] via-[#f5f7ff] to-white shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)] sm:mx-6 sm:mt-6 md:mx-8 md:mt-8">
+    <section className="relative mx-3 mt-3 overflow-hidden rounded-3xl bg-linear-to-br from-[var(--landing-accent-soft)] via-[#f5f7ff] to-white shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)] sm:mx-6 sm:mt-6 md:mx-8 md:mt-8">
       <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-24">
         <div className="flex flex-col items-start gap-6">
           <HeroTypedTitle resto={resto} destaque={destaque} />
@@ -27,11 +27,11 @@ export function LandingHero({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <SmoothAnchor
               href="#cadastro"
-              className="landing-cta-pulse flex h-12 items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-6 text-base font-semibold text-white shadow-[0_10px_25px_-6px_rgba(37,99,235,0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
+              className="landing-cta-pulse flex h-12 items-center justify-center gap-2 rounded-lg bg-[var(--landing-accent)] px-6 text-base font-semibold text-white shadow-[0_10px_25px_-6px_rgb(var(--landing-accent-rgb)/0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-accent-dark)]"
             >
               Começar grátis <ArrowRight className="size-4" />
             </SmoothAnchor>
-            <SmoothAnchor href="#como-funciona" className="text-base font-semibold text-[#2563eb] hover:text-[#1d4ed8]">
+            <SmoothAnchor href="#como-funciona" className="text-base font-semibold text-[var(--landing-accent)] hover:text-[var(--landing-accent-dark)]">
               Ver como funciona
             </SmoothAnchor>
           </div>
@@ -54,7 +54,7 @@ export function LandingHero({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={bgImage} alt="" className="aspect-[4/3] w-full object-cover" />
             ) : (
-              <div className="aspect-[4/3] w-full bg-linear-to-br from-[#2563eb] to-[#1d4ed8]" />
+              <div className="aspect-[4/3] w-full bg-linear-to-br from-[var(--landing-accent)] to-[var(--landing-accent-dark)]" />
             )}
           </div>
 
@@ -80,7 +80,7 @@ export function LandingHero({
             </div>
             <div className="mt-2 flex items-center justify-between border-t border-[#e5e7eb] pt-2 text-[13px] font-bold">
               <span>Total</span>
-              <span className="text-[#2563eb]">R$ 66,00</span>
+              <span className="text-[var(--landing-accent)]">R$ 66,00</span>
             </div>
           </div>
         </div>

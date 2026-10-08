@@ -1,10 +1,12 @@
-export type TipoCampoLanding = "texto" | "textarea" | "imagem";
+export type TipoCampoLanding = "texto" | "textarea" | "imagem" | "cor";
 
 export type CampoLanding = {
   chave: string;
   label: string;
   tipo: TipoCampoLanding;
   ajuda?: string;
+  /** Só pro tipo "cor": atalhos clicáveis (ex. cor padrão do sistema vs. a cor já ativa na landing). */
+  sugestoes?: { label: string; hex: string }[];
 };
 
 export type GrupoLanding = {
@@ -17,6 +19,21 @@ const AJUDA_LISTA = "Um item por linha";
 
 /** Espelha exatamente os campos usados em src/app/page.tsx — nao expõe chave que a landing não renderiza (ex.: theme_*, nav_brand_font). */
 export const GRUPOS_LANDING: GrupoLanding[] = [
+  {
+    titulo: "Tema",
+    campos: [
+      {
+        chave: "landing_theme_color",
+        label: "Cor de destaque da Landing page",
+        tipo: "cor",
+        ajuda: "Usada em botões, links, bordas e sombras da página pública inteira — não precisa editar seção por seção.",
+        sugestoes: [
+          { label: "Azul Kukie (cor ativa hoje)", hex: "#2563eb" },
+          { label: "Cobre Queimado (cor padrão do sistema)", hex: "#9c5523" },
+        ],
+      },
+    ],
+  },
   {
     titulo: "Marca e navegação",
     campos: [

@@ -11,12 +11,12 @@ const ICONES: LucideIcon[] = [Monitor, ShoppingBag, Users, Wallet, BarChart3];
 
 const MESAS = [
   { mesa: "Mesa 2", status: "Ocupada", cor: "bg-amber-100 text-amber-700" },
-  { mesa: "Mesa 4", status: "Aguardando pedido", cor: "bg-blue-100 text-[#2563eb]" },
+  { mesa: "Mesa 4", status: "Aguardando pedido", cor: "bg-[var(--landing-accent-soft)] text-[var(--landing-accent)]" },
   { mesa: "Balcão 1", status: "Fechando conta", cor: "bg-emerald-100 text-emerald-700" },
 ];
 
 const CARD_HOVER =
-  "transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-[#c7d2fe] hover:shadow-[0_20px_40px_rgba(15,23,42,0.1)]";
+  "transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-[rgb(var(--landing-accent-rgb)/0.35)] hover:shadow-[0_20px_40px_rgba(15,23,42,0.1)]";
 
 export function LandingSolucoes({ titulo, itens }: { titulo: string; itens: Solucao[] }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ export function LandingSolucoes({ titulo, itens }: { titulo: string; itens: Solu
   return (
     <section id="solucoes" className="mx-auto max-w-[1180px] scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
       <div className="flex flex-col items-center gap-3 text-center">
-        <span className="text-xs font-bold tracking-widest text-[#2563eb] uppercase">Recursos</span>
+        <span className="text-xs font-bold tracking-widest text-[var(--landing-accent)] uppercase">Recursos</span>
         <h2 className="max-w-xl text-[30px] leading-[1.2] font-extrabold tracking-tight">{titulo}</h2>
       </div>
 
@@ -62,7 +62,7 @@ export function LandingSolucoes({ titulo, itens }: { titulo: string; itens: Solu
           style={visivel ? { animationDelay: "0ms" } : undefined}
         >
           <div className="flex flex-1 flex-col gap-2">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef2ff] text-[#2563eb]">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-[var(--landing-accent-soft)] text-[var(--landing-accent)]">
               <Monitor className="size-4.5" />
             </span>
             <span className="text-xs font-bold tracking-wide text-[#6b7280] uppercase">{TAGS[0]}</span>
@@ -91,7 +91,7 @@ export function LandingSolucoes({ titulo, itens }: { titulo: string; itens: Solu
               )}
               style={visivel ? { animationDelay: `${(i + 1) * 100}ms` } : undefined}
             >
-              <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef2ff] text-[#2563eb]">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-[var(--landing-accent-soft)] text-[var(--landing-accent)]">
                 <Icone className="size-4.5" />
               </span>
               <span className="text-xs font-bold tracking-wide text-[#6b7280] uppercase">{TAGS[(i + 1) % TAGS.length]}</span>

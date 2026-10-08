@@ -1,6 +1,7 @@
+import type { CSSProperties } from "react";
 import { Poppins } from "next/font/google";
 import { getLandingConfig, getPlanosMarketing, lc, parseLines, parseLinkList } from "@/db/queries/landingConfig";
-import { aplicarBrand } from "@/lib/landing";
+import { aplicarBrand, corAcentoLanding } from "@/lib/landing";
 import { LandingHeader } from "@/components/landing/landing-header";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { LandingHighlights } from "@/components/landing/landing-highlights";
@@ -59,8 +60,20 @@ export default async function LandingPage() {
     botao: lc(config, "lead_button_text", "Enviar"),
   };
 
+  const acento = corAcentoLanding(config.landing_theme_color);
+
   return (
-    <div className={`${poppins.className} flex flex-1 flex-col bg-white text-[#111827]`}>
+    <div
+      className={`${poppins.className} flex flex-1 flex-col bg-white text-[#111827]`}
+      style={
+        {
+          "--landing-accent": acento.hex,
+          "--landing-accent-dark": acento.escuroHex,
+          "--landing-accent-soft": acento.claroHex,
+          "--landing-accent-rgb": acento.rgb,
+        } as CSSProperties
+      }
+    >
       <LandingHeader
         brand={brand}
         logoImage={lc(config, "logo_image")}

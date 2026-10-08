@@ -33,7 +33,7 @@ export function LandingSignup({
           <ul className="flex flex-col gap-2.5">
             {REFORCOS.map((r) => (
               <li key={r} className="flex items-center gap-2.5 text-sm">
-                <Check className="size-4 shrink-0 text-[#2563eb]" />
+                <Check className="size-4 shrink-0 text-[var(--landing-accent)]" />
                 {r}
               </li>
             ))}

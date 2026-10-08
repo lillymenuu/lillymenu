@@ -19,7 +19,7 @@ export function LandingCta({
 }) {
   return (
     <section id="contato" className="mx-auto max-w-[1180px] scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
-      <div className="landing-dots-bg relative grid gap-10 overflow-hidden rounded-[22px] p-8 shadow-[0_24px_50px_rgba(37,99,235,0.3)] md:grid-cols-2 md:items-center md:p-14">
+      <div className="landing-dots-bg relative grid gap-10 overflow-hidden rounded-[22px] p-8 shadow-[0_24px_50px_rgb(var(--landing-accent-rgb)/0.3)] md:grid-cols-2 md:items-center md:p-14">
         <div className="relative flex flex-col gap-6 text-white">
           <span className="w-fit rounded-full bg-white/15 px-3 py-1 text-xs font-bold tracking-widest uppercase">Contato</span>
           <div>

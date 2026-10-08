@@ -46,9 +46,9 @@ export function LandingComoFunciona() {
             <div
               key={passo.titulo}
               className={cn(
-                "flex flex-col gap-4 rounded-2xl border p-6 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(37,99,235,0.18)]",
+                "flex flex-col gap-4 rounded-2xl border p-6 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgb(var(--landing-accent-rgb)/0.18)]",
                 i === PASSOS.length - 1
-                  ? "border-[#2563eb]/50 bg-[#111a2e] hover:border-[#2563eb]"
+                  ? "border-[rgb(var(--landing-accent-rgb)/0.5)] bg-[#111a2e] hover:border-[var(--landing-accent)]"
                   : "border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/[0.07]",
                 visivel ? "landing-card-reveal" : "opacity-0 translate-y-4"
               )}

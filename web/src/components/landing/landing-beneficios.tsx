@@ -50,7 +50,7 @@ export function LandingBeneficios({ titulo, beneficios }: { titulo: string; bene
               )}
               style={visivel ? { animationDelay: `${i * 90}ms` } : undefined}
             >
-              <span className="flex size-9 items-center justify-center rounded-lg bg-[#eef2ff] text-[#2563eb]">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-[var(--landing-accent-soft)] text-[var(--landing-accent)]">
                 <Icone className="size-4.5" />
               </span>
               <h4 className="text-[15px] font-bold">{b.titulo}</h4>
