@@ -85,6 +85,13 @@
       "when": 1791250165230,
       "tag": "0011_sweet_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791496373643,
+      "tag": "0012_clear_gauntlet",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,8 @@
 import "server-only";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { taxasBairro, taxasDinamicas, configuracoes } from "@/db/schema";
+import { taxasBairro, taxasDinamicas, taxasAreas, configuracoes } from "@/db/schema";
+import { pontoDentroPoligono, type PontoGeo } from "@/lib/geo";
 
 /*
  * Equivalente de admin/api/v1/taxa_bairro_listar.php, taxa_bairro_salvar.php,
@@ -129,4 +130,81 @@ export async function excluirTaxaDinamica(lojaId: number, id: number): Promise<{
   if (id <= 0) return { ok: false, msg: "ID invalido." };
   await db.delete(taxasDinamicas).where(and(eq(taxasDinamicas.id, id), eq(taxasDinamicas.loja_id, lojaId)));
   return { ok: true };
+}
+
+export type TaxaArea = { id: number; nome: string; taxa: number; tempoMin: number | null; tempoMax: number | null; poligono: PontoGeo[] };
+
+export async function listarTaxasAreas(lojaId: number): Promise<TaxaArea[]> {
+  const linhas = await db
+    .select({ id: taxasAreas.id, nome: taxasAreas.nome, taxa: taxasAreas.taxa, tempoMin: taxasAreas.tempo_min, tempoMax: taxasAreas.tempo_max, poligono: taxasAreas.poligono })
+    .from(taxasAreas)
+    .where(eq(taxasAreas.loja_id, lojaId))
+    .orderBy(taxasAreas.nome);
+  return linhas.map((l) => ({ ...l, poligono: (l.poligono as PontoGeo[]) ?? [] }));
+}
+
+export type SalvarTaxaAreaInput = {
+  id?: number;
+  nome: string;
+  taxa: number | string;
+  tempoMin?: number | string | null;
+  tempoMax?: number | string | null;
+  poligono: PontoGeo[];
+};
+
+function poligonoValido(poligono: PontoGeo[]): boolean {
+  return (
+    Array.isArray(poligono) &&
+    poligono.length >= 3 &&
+    poligono.every((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng) && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180)
+  );
+}
+
+export async function salvarTaxaArea(lojaId: number, input: SalvarTaxaAreaInput): Promise<{ ok: true } | { ok: false; msg: string }> {
+  const nome = input.nome.trim();
+  const taxa = Math.round(paraNumero(input.taxa) * 100) / 100;
+  const tempoMin = paraInteiroOuNull(input.tempoMin);
+  const tempoMax = paraInteiroOuNull(input.tempoMax);
+  const poligono = (input.poligono ?? []).map((p) => ({ lat: Number(p.lat), lng: Number(p.lng) }));
+
+  if (nome === "" || taxa < 0) return { ok: false, msg: "Informe nome e taxa validos." };
+  if (!poligonoValido(poligono)) return { ok: false, msg: "Desenhe uma area com pelo menos 3 pontos." };
+  if (tempoMin !== null && tempoMin < 0) return { ok: false, msg: "Tempo minimo invalido." };
+  if (tempoMax !== null && tempoMax < 0) return { ok: false, msg: "Tempo maximo invalido." };
+  if (tempoMin !== null && tempoMax !== null && tempoMin > tempoMax) return { ok: false, msg: "Tempo minimo deve ser menor que o maximo." };
+
+  const id = input.id && input.id > 0 ? input.id : 0;
+  const condDup = id > 0 ? and(eq(taxasAreas.loja_id, lojaId), sql`lower(${taxasAreas.nome}) = lower(${nome})`, ne(taxasAreas.id, id)) : and(eq(taxasAreas.loja_id, lojaId), sql`lower(${taxasAreas.nome}) = lower(${nome})`);
+  const duplicado = await db.select({ id: taxasAreas.id }).from(taxasAreas).where(condDup).limit(1);
+  if (duplicado.length > 0) return { ok: false, msg: "Ja existe uma area cadastrada com este nome." };
+
+  if (id > 0) {
+    await db.update(taxasAreas).set({ nome, taxa, poligono, tempo_min: tempoMin, tempo_max: tempoMax, atualizado_em: sql`now()` }).where(and(eq(taxasAreas.id, id), eq(taxasAreas.loja_id, lojaId)));
+  } else {
+    await db.insert(taxasAreas).values({ nome, taxa, poligono, tempo_min: tempoMin, tempo_max: tempoMax, loja_id: lojaId });
+  }
+
+  await upsertConfig(lojaId, "taxa_entrega_tipo", "area");
+
+  return { ok: true };
+}
+
+export async function excluirTaxaArea(lojaId: number, id: number): Promise<{ ok: true } | { ok: false; msg: string }> {
+  if (id <= 0) return { ok: false, msg: "ID invalido." };
+  await db.delete(taxasAreas).where(and(eq(taxasAreas.id, id), eq(taxasAreas.loja_id, lojaId)));
+  return { ok: true };
+}
+
+export async function buscarTaxaAreaPorPonto(lojaId: number, lat: number, lng: number): Promise<{ taxa: number; tempoMin: number | null; tempoMax: number | null } | null> {
+  const linhas = await db
+    .select({ taxa: taxasAreas.taxa, tempoMin: taxasAreas.tempo_min, tempoMax: taxasAreas.tempo_max, poligono: taxasAreas.poligono })
+    .from(taxasAreas)
+    .where(eq(taxasAreas.loja_id, lojaId));
+  for (const l of linhas) {
+    const poligono = (l.poligono as PontoGeo[]) ?? [];
+    if (pontoDentroPoligono(lat, lng, poligono)) {
+      return { taxa: Number(l.taxa), tempoMin: l.tempoMin, tempoMax: l.tempoMax };
+    }
+  }
+  return null;
 }

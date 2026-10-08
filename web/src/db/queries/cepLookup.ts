@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { taxasBairro, taxasDinamicas } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
+import { buscarTaxaAreaPorPonto } from "@/db/queries/taxasEntrega";
 
 /*
  * Equivalente de admin/api/cep_lookup.php (usado via ponte de sessao por
@@ -43,7 +44,7 @@ async function obterCoordsAwesomeApi(cep: string): Promise<Coords | null> {
   return { lat, lng, logradouro: String(resp.address ?? ""), bairro: String(resp.district ?? ""), cidade: String(resp.city ?? ""), estado: String(resp.state ?? "") };
 }
 
-async function obterCoordsPorCep(cep: string): Promise<Coords | null> {
+export async function obterCoordsPorCep(cep: string): Promise<Coords | null> {
   const coords = await obterCoordsBrasilApi(cep);
   if (coords) return coords;
   return obterCoordsAwesomeApi(cep);
@@ -121,8 +122,11 @@ export async function buscarCep(lojaId: number, cepInput: string): Promise<Resul
     const bairroAlvo = normalizarTexto(destino.bairro);
     const encontrada = lista.find((r) => normalizarTexto(r.bairro ?? "") === bairroAlvo);
     taxaEntrega = encontrada ? Number(encontrada.taxa) : 0;
-  } else if (tipoTaxa === "dinamica" || tipoTaxa === "area") {
-    taxaEntrega = await calcularTaxaDinamica(distancia, lojaId, tipoTaxa === "area");
+  } else if (tipoTaxa === "dinamica") {
+    taxaEntrega = await calcularTaxaDinamica(distancia, lojaId, false);
+  } else if (tipoTaxa === "area") {
+    const area = await buscarTaxaAreaPorPonto(lojaId, destino.lat, destino.lng);
+    taxaEntrega = area ? area.taxa : 0;
   }
 
   return {

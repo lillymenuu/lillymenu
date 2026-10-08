@@ -158,6 +158,17 @@ export type TaxaDinamica = {
 
 export type TaxaDinamicaListarResposta = { ok: true; itens: TaxaDinamica[] };
 
+export type TaxaArea = {
+  id: number;
+  nome: string;
+  taxa: string;
+  tempo_min: number | null;
+  tempo_max: number | null;
+  poligono: { lat: number; lng: number }[];
+};
+
+export type TaxaAreaListarResposta = { ok: true; itens: TaxaArea[] };
+
 export const BANDEIRAS_PADRAO: Record<string, string> = {
   visa: "Visa",
   mastercard: "Mastercard",

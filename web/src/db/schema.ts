@@ -7,7 +7,7 @@
  *  - enum -> text com tipo TypeScript (validacao na aplicacao).
  *  - AUTO_INCREMENT -> identity "by default" (preserva os ids na migracao dos dados).
  */
-import { bigint, boolean, char, date, foreignKey, index, integer, numeric, pgTable, primaryKey, smallint, text, time, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+import { bigint, boolean, char, date, foreignKey, index, integer, jsonb, numeric, pgTable, primaryKey, smallint, text, time, timestamp, unique, varchar } from "drizzle-orm/pg-core";
 
 export const admins = pgTable(
   "admins",
@@ -1375,6 +1375,24 @@ export const taxasDinamicas = pgTable(
     atualizado_em: timestamp("atualizado_em", { mode: "string" }),
     loja_id: integer("loja_id").notNull().default(1),
   }
+);
+
+export const taxasAreas = pgTable(
+  "taxas_areas",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    nome: varchar("nome", { length: 120 }).notNull(),
+    poligono: jsonb("poligono").notNull(),
+    taxa: numeric("taxa", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
+    tempo_min: integer("tempo_min"),
+    tempo_max: integer("tempo_max"),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    atualizado_em: timestamp("atualizado_em", { mode: "string" }),
+    loja_id: integer("loja_id").notNull().default(1),
+  },
+  (t) => [
+    unique("taxas_areas_uniq_nome").on(t.loja_id, t.nome),
+  ]
 );
 
 export const versiculoReacoes = pgTable(
