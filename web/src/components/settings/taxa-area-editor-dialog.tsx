@@ -20,6 +20,7 @@ export function TaxaAreaEditorDialog({
   open,
   onOpenChange,
   centro,
+  zoom,
   outras,
   form,
   onFormChange,
@@ -29,6 +30,7 @@ export function TaxaAreaEditorDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   centro: PontoMapa;
+  zoom?: number;
   outras: { nome: string; poligono: PontoMapa[] }[];
   form: TaxaAreaForm;
   onFormChange: (f: TaxaAreaForm) => void;
@@ -83,7 +85,7 @@ export function TaxaAreaEditorDialog({
 
         <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
           <div className="relative min-h-[46vh] flex-1 bg-muted sm:min-h-0">
-            <TaxaAreaMapa centro={centro} poligono={form.poligono} onChange={(p) => onFormChange({ ...form, poligono: p })} outras={outras} />
+            <TaxaAreaMapa centro={centro} zoom={zoom} poligono={form.poligono} onChange={(p) => onFormChange({ ...form, poligono: p })} outras={outras} />
           </div>
 
           <div className="flex w-full flex-col border-t sm:w-[340px] sm:border-t-0 sm:border-l">

@@ -13,7 +13,7 @@ import type { ConfiguracoesDetalhe, TaxaBairro, TaxaDinamica, TaxaArea } from "@
 import type { PontoMapa } from "@/components/settings/taxa-area-mapa";
 import { TaxaAreaEditorDialog, type TaxaAreaForm } from "@/components/settings/taxa-area-editor-dialog";
 
-const CENTRO_PADRAO: PontoMapa = { lat: -14.235, lng: -51.9253 };
+const CENTRO_PADRAO = { lat: -14.235, lng: -51.9253, zoom: 4 };
 
 type TaxaEntregaCfg = ConfiguracoesDetalhe["taxa_entrega"];
 type Tab = "sem" | "bairro" | "dinamica" | "fixa" | "area";
@@ -54,7 +54,7 @@ export function TaxaEntregaDialog({
 
   const [areas, setAreas] = useState<TaxaArea[]>([]);
   const [carregandoAreas, setCarregandoAreas] = useState(false);
-  const [centroMapa, setCentroMapa] = useState<PontoMapa | null>(null);
+  const [centroMapa, setCentroMapa] = useState<(PontoMapa & { zoom: number }) | null>(null);
   const [formArea, setFormArea] = useState<TaxaAreaForm | null>(null);
   const [salvandoArea, setSalvandoArea] = useState(false);
 
@@ -282,7 +282,7 @@ export function TaxaEntregaDialog({
     try {
       const res = await fetch("/api/settings/taxa-area/centro");
       const data = await res.json();
-      if (data.ok && data.lat && data.lng) setCentroMapa({ lat: data.lat, lng: data.lng });
+      if (data.ok && data.lat && data.lng) setCentroMapa({ lat: data.lat, lng: data.lng, zoom: data.zoom ?? 12 });
     } catch {
       // mantem o centro padrao em caso de falha
     }
@@ -650,6 +650,7 @@ export function TaxaEntregaDialog({
           if (!v) setFormArea(null);
         }}
         centro={centroMapa ?? CENTRO_PADRAO}
+        zoom={(centroMapa ?? CENTRO_PADRAO).zoom}
         outras={areas.filter((a) => a.id !== formArea.id).map((a) => ({ nome: a.nome, poligono: a.poligono }))}
         form={formArea}
         onFormChange={setFormArea}

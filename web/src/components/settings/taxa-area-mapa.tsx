@@ -23,12 +23,14 @@ function CliquesMapa({ onClick }: { onClick: (p: PontoMapa) => void }) {
 
 export function TaxaAreaMapa({
   centro,
+  zoom = 14,
   poligono,
   onChange,
   outras = [],
   className,
 }: {
   centro: PontoMapa;
+  zoom?: number;
   poligono: PontoMapa[];
   onChange: (p: PontoMapa[]) => void;
   outras?: { nome: string; poligono: PontoMapa[] }[];
@@ -51,7 +53,7 @@ export function TaxaAreaMapa({
   }
 
   return (
-    <MapContainer center={[centro.lat, centro.lng]} zoom={14} doubleClickZoom={false} className={className} style={{ height: "100%", width: "100%" }}>
+    <MapContainer center={[centro.lat, centro.lng]} zoom={zoom} doubleClickZoom={false} className={className} style={{ height: "100%", width: "100%" }}>
       <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <CliquesMapa onClick={adicionarPonto} />
       {outras.map((a, i) => (
