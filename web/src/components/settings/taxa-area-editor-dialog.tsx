@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
-import { Undo2, X } from "lucide-react";
+import { toast } from "sonner";
+import { Loader2, Search, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,6 +13,8 @@ import type { PontoMapa } from "@/components/settings/taxa-area-mapa";
 const TaxaAreaMapa = dynamic(() => import("@/components/settings/taxa-area-mapa").then((m) => m.TaxaAreaMapa), { ssr: false });
 
 export type TaxaAreaForm = { id: number; nome: string; taxa: string; min: string; max: string; poligono: PontoMapa[] };
+
+type ResultadoBairro = { nome: string; descricao: string; poligono: PontoMapa[] };
 
 export function TaxaAreaEditorDialog({
   open,
@@ -31,6 +35,38 @@ export function TaxaAreaEditorDialog({
   onSalvar: () => void;
   salvando: boolean;
 }) {
+  const [buscaTermo, setBuscaTermo] = useState("");
+  const [buscando, setBuscando] = useState(false);
+  const [resultadosBusca, setResultadosBusca] = useState<ResultadoBairro[] | null>(null);
+
+  async function buscarContorno() {
+    const termo = buscaTermo.trim();
+    if (termo.length < 2) return;
+    setBuscando(true);
+    setResultadosBusca(null);
+    try {
+      const res = await fetch(`/api/settings/taxa-area/buscar-bairro?q=${encodeURIComponent(termo)}`);
+      const data = await res.json();
+      if (!data.ok) {
+        toast.error(data.msg ?? "Erro ao buscar o bairro.");
+        return;
+      }
+      setResultadosBusca(data.resultados);
+      if (data.resultados.length === 0) toast.info("Nenhum contorno encontrado — desenhe manualmente no mapa.");
+    } catch {
+      toast.error("Erro ao buscar o bairro.");
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  function usarContorno(r: ResultadoBairro) {
+    onFormChange({ ...form, poligono: r.poligono, nome: form.nome.trim() ? form.nome : r.nome });
+    setResultadosBusca(null);
+    setBuscaTermo("");
+    toast.success(`Contorno de ${r.nome} carregado — ajuste os pontos se precisar.`);
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="flex h-[94vh] max-h-[94vh] w-[96vw] max-w-[1440px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[1440px]">
@@ -52,6 +88,37 @@ export function TaxaAreaEditorDialog({
 
           <div className="flex w-full flex-col border-t sm:w-[340px] sm:border-t-0 sm:border-l">
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Buscar contorno real do bairro</Label>
+                <div className="flex gap-1.5">
+                  <Input
+                    value={buscaTermo}
+                    onChange={(e) => setBuscaTermo(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && buscarContorno()}
+                    placeholder="Ex.: Bonsucesso"
+                  />
+                  <Button type="button" size="icon" variant="outline" className="shrink-0" onClick={buscarContorno} disabled={buscando || buscaTermo.trim().length < 2}>
+                    {buscando ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Carrega o contorno oficial (OpenStreetMap) como ponto de partida — você ainda pode ajustar os pontos.</p>
+                {resultadosBusca && resultadosBusca.length > 0 ? (
+                  <div className="space-y-1 rounded-lg border p-1.5">
+                    {resultadosBusca.map((r, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => usarContorno(r)}
+                        className="w-full rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted"
+                      >
+                        <div className="font-medium">{r.nome}</div>
+                        <div className="truncate text-[11px] text-muted-foreground">{r.descricao}</div>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
               <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2 text-xs">
                 <span>{form.poligono.length} ponto(s) · mínimo 3</span>
                 <Button
