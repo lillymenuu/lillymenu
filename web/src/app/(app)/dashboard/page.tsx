@@ -27,9 +27,13 @@ type VersiculoResponse = {
 
 /*
  * Busca do versiculo do dia (scraping de bibliaon.com) deliberadamente
- * deixada em PHP — ver o comentario em db/queries/versiculoReacao.ts.
- * Isolada num import() dinamico pra nao derrubar a pagina inteira quando
- * PHP_API_BASE_URL nao esta configurada (so o widget some).
+ * deixada em PHP — ver o comentario em db/queries/versiculoReacao.ts. O PHP
+ * roda contra o MySQL legado e tem seu proprio check de "ativo" ali, mas o
+ * toggle em Settings (settings-manager.tsx / configuracoesLoja.ts) grava em
+ * `versiculo_dashboard_ativo` no Postgres — bancos diferentes, nunca se veem.
+ * Por isso o "ativo" que decide se o card aparece e sempre o do Postgres
+ * (getConfig abaixo); o PHP so e chamado, e so quando precisa buscar o
+ * texto do dia, quando esse Postgres ja disse que esta ativo.
  */
 async function carregarVersiculo(): Promise<VersiculoResponse | null> {
   try {
@@ -94,7 +98,8 @@ export default async function DashboardPage({
     // busca fica vazia se o sidebar nao carregar; nao bloqueia o resto do dashboard
   }
 
-  const versiculo = await carregarVersiculo();
+  const versiculoAtivo = (await getConfig(sessao.lojaId, "versiculo_dashboard_ativo", "1")) !== "0";
+  const versiculo = versiculoAtivo ? await carregarVersiculo() : null;
 
   if (erro || !data) {
     return (
@@ -180,7 +185,7 @@ export default async function DashboardPage({
         />
       )}
 
-      {versiculo?.ok && versiculo.ativo && versiculo.texto && (
+      {versiculoAtivo && versiculo?.ok && versiculo.texto && (
         <VerseOfDay
           texto={versiculo.texto}
           referencia={versiculo.referencia ?? ""}
