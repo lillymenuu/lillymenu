@@ -40,16 +40,6 @@ async function obterCoordsBrasilApi(cep: string): Promise<Coords | null> {
   return { lat, lng, logradouro: String(resp.street ?? ""), bairro: String(resp.neighborhood ?? ""), cidade: String(resp.city ?? ""), estado: String(resp.state ?? "") };
 }
 
-async function obterCoordsAwesomeApiDebug(cep: string): Promise<{ coords: Coords | null; debug: Record<string, unknown> }> {
-  const debug: Record<string, unknown> = {};
-  const resp = await fetchJson(`https://cep.awesomeapi.com.br/json/${cep}`, 6000, debug);
-  if (!resp) return { coords: null, debug };
-  const lat = resp.lat !== undefined ? Number(resp.lat) : null;
-  const lng = resp.lng !== undefined ? Number(resp.lng) : null;
-  if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return { coords: null, debug };
-  return { coords: { lat, lng, logradouro: String(resp.address ?? ""), bairro: String(resp.district ?? ""), cidade: String(resp.city ?? ""), estado: String(resp.state ?? "") }, debug };
-}
-
 async function obterCoordsAwesomeApi(cep: string): Promise<Coords | null> {
   const resp = await fetchJson(`https://cep.awesomeapi.com.br/json/${cep}`);
   if (!resp) return null;
@@ -57,6 +47,38 @@ async function obterCoordsAwesomeApi(cep: string): Promise<Coords | null> {
   const lng = resp.lng !== undefined ? Number(resp.lng) : null;
   if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   return { lat, lng, logradouro: String(resp.address ?? ""), bairro: String(resp.district ?? ""), cidade: String(resp.city ?? ""), estado: String(resp.state ?? "") };
+}
+
+/* Nominatim (mesmo provedor/User-Agent usado por geoReverso.ts) geocodificando
+ * por CEP (busca estruturada por postalcode). Mais confiavel que AwesomeApi a
+ * partir da rede da Vercel — AwesomeApi devolve 429 (rate limit) pro IP
+ * compartilhado da Vercel, o que fazia a taxa por area nunca bater em
+ * producao mesmo com o CEP certo. */
+async function obterCoordsNominatim(cep: string): Promise<Coords | null> {
+  const cepFormatado = `${cep.slice(0, 5)}-${cep.slice(5)}`;
+  const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(cepFormatado)}&country=Brazil&format=jsonv2&addressdetails=1&limit=1`;
+  let resp: Record<string, unknown> | null = null;
+  try {
+    const r = await fetch(url, { headers: { "User-Agent": "LillyMenu/1.0 (contato@lillymenu.com)" }, signal: AbortSignal.timeout(6000) });
+    if (!r.ok) return null;
+    const data = await r.json().catch(() => null);
+    resp = Array.isArray(data) ? (data[0] as Record<string, unknown> | undefined) ?? null : null;
+  } catch {
+    return null;
+  }
+  if (!resp) return null;
+  const lat = resp.lat !== undefined ? Number(resp.lat) : null;
+  const lng = resp.lon !== undefined ? Number(resp.lon) : null;
+  if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const endereco = resp.address as Record<string, unknown> | undefined;
+  return {
+    lat,
+    lng,
+    logradouro: String(endereco?.road ?? ""),
+    bairro: String(endereco?.suburb ?? endereco?.neighbourhood ?? ""),
+    cidade: String(endereco?.municipality ?? endereco?.city ?? ""),
+    estado: String(endereco?.state ?? ""),
+  };
 }
 
 export async function obterCoordsPorCep(cep: string): Promise<Coords | null> {
@@ -68,23 +90,23 @@ export async function obterCoordsPorCep(cep: string): Promise<Coords | null> {
 /*
  * Taxa por area/poligono e muito mais sensivel a erro de geocodificacao do
  * que distancia (um ponto alguns metros fora do poligono ja da "nao
- * atendido"). BrasilAPI e AwesomeAPI geocodificam o mesmo CEP de formas
- * diferentes e, pra alguns CEPs, uma das duas devolve coordenada claramente
- * errada (ex.: BrasilAPI pode acertar cidade/bairro mas devolver lat/lng a
- * varios km de distancia). Por isso aqui tentamos as duas fontes e aceitamos
- * a primeira que caia dentro de algum poligono cadastrado, em vez de confiar
- * so na ordem de fallback usada pra distancia/bairro.
+ * atendido"). As fontes gratuitas de CEP->coordenada discordam bastante
+ * entre si e, pra alguns CEPs, uma delas acerta cidade/bairro mas devolve
+ * lat/lng a varios km de distancia (BrasilAPI) ou e bloqueada (429) pelo IP
+ * compartilhado da Vercel (AwesomeApi). Por isso tentamos as tres fontes em
+ * paralelo e aceitamos a primeira coordenada que cair dentro de algum
+ * poligono cadastrado, em vez de confiar na ordem de fallback usada pra
+ * distancia/bairro.
  */
-export async function buscarTaxaAreaPorCep(lojaId: number, cep: string): Promise<{ atendido: boolean; taxa: number; debug?: unknown } | null> {
-  const [brasilApi, awesomeApiResult] = await Promise.all([obterCoordsBrasilApi(cep), obterCoordsAwesomeApiDebug(cep)]);
-  const awesomeApi = awesomeApiResult.coords;
-  for (const coords of [brasilApi, awesomeApi]) {
+export async function buscarTaxaAreaPorCep(lojaId: number, cep: string): Promise<{ atendido: boolean; taxa: number } | null> {
+  const [brasilApi, nominatim, awesomeApi] = await Promise.all([obterCoordsBrasilApi(cep), obterCoordsNominatim(cep), obterCoordsAwesomeApi(cep)]);
+  for (const coords of [brasilApi, nominatim, awesomeApi]) {
     if (!coords) continue;
     const area = await buscarTaxaAreaPorPonto(lojaId, coords.lat, coords.lng);
-    if (area) return { atendido: true, taxa: area.taxa, debug: { brasilApi, awesomeApi, awesomeApiDebug: awesomeApiResult.debug } };
+    if (area) return { atendido: true, taxa: area.taxa };
   }
-  if (!brasilApi && !awesomeApi) return null;
-  return { atendido: false, taxa: 0, debug: { brasilApi, awesomeApi, awesomeApiDebug: awesomeApiResult.debug } };
+  if (!brasilApi && !nominatim && !awesomeApi) return null;
+  return { atendido: false, taxa: 0 };
 }
 
 function calcularDistanciaKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
