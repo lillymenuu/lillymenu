@@ -6,15 +6,8 @@ import { versiculoReacoes } from "@/db/schema";
 /*
  * Equivalente de admin/api/v1/versiculo_reacao.php: guarda a reacao
  * (gostou/nao_gostou) do admin ao versiculo do dia exibido no dashboard.
- *
- * A busca do texto do versiculo em si (admin/api/v1/versiculo_dia.php)
- * ficou FORA desta etapa por decisao deliberada: e um scraper de HTML de
- * terceiros (bibliaon.com) com ~150 linhas de heuristicas de extracao
- * (varias estrategias de fallback via XPath) pra um widget decorativo do
- * dashboard — exigiria adicionar uma dependencia de parsing de HTML nova
- * ao projeto so pra isso, e o resultado seria inerentemente fragil (quebra
- * se o site de origem mudar o HTML). Fica marcado aqui pra retomar se
- * o widget for considerado prioridade.
+ * A busca do texto em si (scraping de bibliaon.com) mora em
+ * db/queries/versiculoDoDia.ts — o PHP/MySQL legado saiu de uso.
  */
 
 const REACOES_VALIDAS = ["gostou", "nao_gostou"] as const;

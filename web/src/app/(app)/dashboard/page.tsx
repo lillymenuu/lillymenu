@@ -13,36 +13,10 @@ import { getSidebarDataNeon } from "@/db/queries/sidebar";
 import { montarDashboard } from "@/db/queries/dashboard";
 import { funilConversao } from "@/db/queries/funilConversao";
 import { getConfig } from "@/db/queries/config";
+import { buscarVersiculoDoDia } from "@/db/queries/versiculoDoDia";
+import { reacaoVersiculoDoDia } from "@/db/queries/versiculoReacao";
+import { dataFortaleza } from "@/db/queries/tempo";
 import { formatBRLMilhar } from "@/components/ordermanager/constants";
-
-type VersiculoResponse = {
-  ok: true;
-  ativo: boolean;
-  texto?: string;
-  referencia?: string;
-  data?: string;
-  reacao?: "gostou" | "nao_gostou" | null;
-  fonte_url?: string;
-};
-
-/*
- * Busca do versiculo do dia (scraping de bibliaon.com) deliberadamente
- * deixada em PHP — ver o comentario em db/queries/versiculoReacao.ts. O PHP
- * roda contra o MySQL legado e tem seu proprio check de "ativo" ali, mas o
- * toggle em Settings (settings-manager.tsx / configuracoesLoja.ts) grava em
- * `versiculo_dashboard_ativo` no Postgres — bancos diferentes, nunca se veem.
- * Por isso o "ativo" que decide se o card aparece e sempre o do Postgres
- * (getConfig abaixo); o PHP so e chamado, e so quando precisa buscar o
- * texto do dia, quando esse Postgres ja disse que esta ativo.
- */
-async function carregarVersiculo(): Promise<VersiculoResponse | null> {
-  try {
-    const { phpApiFetch } = await import("@/lib/phpApi");
-    return await phpApiFetch<VersiculoResponse>("/admin/api/v1/versiculo_dia.php");
-  } catch {
-    return null;
-  }
-}
 
 async function resolverLinkLoja(lojaId: number): Promise<string> {
   const linkLojaRaw = await getConfig(lojaId, "link_loja", "");
@@ -99,7 +73,9 @@ export default async function DashboardPage({
   }
 
   const versiculoAtivo = (await getConfig(sessao.lojaId, "versiculo_dashboard_ativo", "1")) !== "0";
-  const versiculo = versiculoAtivo ? await carregarVersiculo() : null;
+  const versiculo = versiculoAtivo ? await buscarVersiculoDoDia() : null;
+  const hojeVersiculo = dataFortaleza();
+  const reacaoVersiculo = versiculo ? await reacaoVersiculoDoDia(sessao.id, hojeVersiculo) : null;
 
   if (erro || !data) {
     return (
@@ -185,13 +161,13 @@ export default async function DashboardPage({
         />
       )}
 
-      {versiculoAtivo && versiculo?.ok && versiculo.texto && (
+      {versiculoAtivo && versiculo && (
         <VerseOfDay
           texto={versiculo.texto}
-          referencia={versiculo.referencia ?? ""}
-          data={versiculo.data ?? ""}
-          fonteUrl={versiculo.fonte_url ?? ""}
-          reacaoInicial={versiculo.reacao ?? null}
+          referencia={versiculo.referencia}
+          data={hojeVersiculo}
+          fonteUrl={versiculo.fonteUrl}
+          reacaoInicial={reacaoVersiculo === "gostou" || reacaoVersiculo === "nao_gostou" ? reacaoVersiculo : null}
         />
       )}
 

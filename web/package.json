@@ -17,6 +17,7 @@
     "@base-ui/react": "^1.8.0",
     "@neondatabase/serverless": "^1.1.0",
     "bcryptjs": "^3.0.3",
+    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.2.6",
     "drizzle-orm": "^0.45.3",
