@@ -7,13 +7,11 @@
 
 require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../helpers/api_auth.php';
-require_once __DIR__ . '/../../helpers/config.php';
 
 header('Content-Type: application/json');
 
 $auth    = apiAuthExigir($conn);
 $adminId = $auth['admin_id'];
-$lojaId  = $auth['loja_id'];
 
 function tabelaExisteV1(PDO $conn, string $tabela): bool {
   try {
@@ -234,15 +232,17 @@ function extrairVersiculoV1(string $html): array {
   return [null, null];
 }
 
-$hoje           = date('Y-m-d');
-$fonteUrl       = 'https://www.bibliaon.com/versiculo_do_dia/';
-$temReacoes     = tabelaExisteV1($conn, 'versiculo_reacoes');
-$versiculoAtivo = config($conn, 'versiculo_dashboard_ativo', '1', $lojaId) === '1';
+$hoje       = date('Y-m-d');
+$fonteUrl   = 'https://www.bibliaon.com/versiculo_do_dia/';
+$temReacoes = tabelaExisteV1($conn, 'versiculo_reacoes');
 
-if (!$versiculoAtivo) {
-  echo json_encode(['ok' => true, 'ativo' => false]);
-  exit;
-}
+/*
+ * O "ativo" (versiculo_dashboard_ativo) NAO e checado aqui: esse endpoint e
+ * MySQL legado e o toggle em Settings grava no Postgres (configuracoesLoja.ts)
+ * -- bancos diferentes. Quem decide se chama este endpoint e se mostra o
+ * card e o Next.js (dashboard/page.tsx, via getConfig no Postgres); aqui so
+ * se busca o texto do dia.
+ */
 
 $context = stream_context_create([
   'http' => [
