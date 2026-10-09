@@ -50,6 +50,27 @@ export async function obterCoordsPorCep(cep: string): Promise<Coords | null> {
   return obterCoordsAwesomeApi(cep);
 }
 
+/*
+ * Taxa por area/poligono e muito mais sensivel a erro de geocodificacao do
+ * que distancia (um ponto alguns metros fora do poligono ja da "nao
+ * atendido"). BrasilAPI e AwesomeAPI geocodificam o mesmo CEP de formas
+ * diferentes e, pra alguns CEPs, uma das duas devolve coordenada claramente
+ * errada (ex.: BrasilAPI pode acertar cidade/bairro mas devolver lat/lng a
+ * varios km de distancia). Por isso aqui tentamos as duas fontes e aceitamos
+ * a primeira que caia dentro de algum poligono cadastrado, em vez de confiar
+ * so na ordem de fallback usada pra distancia/bairro.
+ */
+export async function buscarTaxaAreaPorCep(lojaId: number, cep: string): Promise<{ atendido: boolean; taxa: number } | null> {
+  const [brasilApi, awesomeApi] = await Promise.all([obterCoordsBrasilApi(cep), obterCoordsAwesomeApi(cep)]);
+  for (const coords of [brasilApi, awesomeApi]) {
+    if (!coords) continue;
+    const area = await buscarTaxaAreaPorPonto(lojaId, coords.lat, coords.lng);
+    if (area) return { atendido: true, taxa: area.taxa };
+  }
+  if (!brasilApi && !awesomeApi) return null;
+  return { atendido: false, taxa: 0 };
+}
+
 function calcularDistanciaKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const raio = 6371;
   const rad = (v: number) => (v * Math.PI) / 180;
@@ -125,8 +146,8 @@ export async function buscarCep(lojaId: number, cepInput: string): Promise<Resul
   } else if (tipoTaxa === "dinamica") {
     taxaEntrega = await calcularTaxaDinamica(distancia, lojaId, false);
   } else if (tipoTaxa === "area") {
-    const area = await buscarTaxaAreaPorPonto(lojaId, destino.lat, destino.lng);
-    taxaEntrega = area ? area.taxa : 0;
+    const area = await buscarTaxaAreaPorCep(lojaId, cep);
+    taxaEntrega = area?.atendido ? area.taxa : 0;
   }
 
   return {

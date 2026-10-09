@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { obterCoordsPorCep } from "@/db/queries/cepLookup";
-import { buscarTaxaAreaPorPonto } from "@/db/queries/taxasEntrega";
+import { buscarTaxaAreaPorCep } from "@/db/queries/cepLookup";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -11,11 +10,8 @@ export async function POST(request: Request) {
   const digitos = String(cep ?? "").replace(/\D/g, "");
   if (!lojaId || digitos.length !== 8) return NextResponse.json({ ok: false, msg: "Parametros invalidos." }, { status: 400 });
 
-  const coords = await obterCoordsPorCep(digitos);
-  if (!coords) return NextResponse.json({ ok: false, msg: "Nao foi possivel localizar o CEP." });
+  const area = await buscarTaxaAreaPorCep(lojaId, digitos);
+  if (!area) return NextResponse.json({ ok: false, msg: "Nao foi possivel localizar o CEP." });
 
-  const area = await buscarTaxaAreaPorPonto(lojaId, coords.lat, coords.lng);
-  if (!area) return NextResponse.json({ ok: true, atendido: false, taxa: 0 });
-
-  return NextResponse.json({ ok: true, atendido: true, taxa: area.taxa });
+  return NextResponse.json({ ok: true, atendido: area.atendido, taxa: area.taxa });
 }
