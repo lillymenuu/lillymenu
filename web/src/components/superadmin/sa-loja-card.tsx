@@ -64,7 +64,7 @@ export function SaLojaCard({
         <p className="truncate text-sm text-slate-500 dark:text-neutral-400">{loja.segmento || "Segmento não definido"}</p>
       </div>
 
-      {loja.cobranca.aguardando_revisao && (
+      {(loja.cobranca.status === "pendente" || loja.cobranca.status === "atrasado") && (
         <span
           role="button"
           tabIndex={0}
@@ -80,7 +80,7 @@ export function SaLojaCard({
           }}
           className="inline-flex w-fit items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
         >
-          <FileCheck2 size={13} /> Revisar comprovante
+          <FileCheck2 size={13} /> {loja.cobranca.aguardando_revisao ? "Revisar comprovante" : "Cobrança pendente"}
         </span>
       )}
 

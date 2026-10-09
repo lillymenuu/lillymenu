@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, inArray } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { assinaturas, planos, lojas, admins, cobrancas } from "@/db/schema";
 import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
@@ -39,6 +39,21 @@ export async function rejeitarComprovante(cobrancaId: number, motivoInput: strin
     return { ok: true };
   } catch {
     return { ok: false, msg: "Erro ao rejeitar comprovante." };
+  }
+}
+
+export async function cancelarCobranca(cobrancaId: number): Promise<{ ok: true } | { ok: false; msg: string }> {
+  if (cobrancaId <= 0) return { ok: false, msg: "Cobrança inválida." };
+  try {
+    const resultado = await db
+      .update(cobrancas)
+      .set({ status: "cancelado" })
+      .where(and(eq(cobrancas.id, cobrancaId), inArray(cobrancas.status, ["pendente", "atrasado"])))
+      .returning({ id: cobrancas.id });
+    if (resultado.length === 0) return { ok: false, msg: "Cobrança não está mais pendente." };
+    return { ok: true };
+  } catch {
+    return { ok: false, msg: "Erro ao cancelar cobrança." };
   }
 }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessaoSuperadmin } from "@/lib/session";
 import { getListagemLojasSuperadmin, getConversasSuporteSuperadmin, getNotificacoesSuperadmin } from "@/lib/superadminServer";
 import { salvarLojaSuperadmin } from "@/db/queries/superadminLojaSalvar";
-import { excluirLojaSuperadmin, aprovarComprovante, rejeitarComprovante, trocarPlanoSuperadmin, ativarLoja, suspenderLoja } from "@/db/queries/superadminLojaAcao";
+import { excluirLojaSuperadmin, aprovarComprovante, rejeitarComprovante, cancelarCobranca, trocarPlanoSuperadmin, ativarLoja, suspenderLoja } from "@/db/queries/superadminLojaAcao";
 import { salvarConfigPix, salvarConfigNominatim, salvarRecursosPlano } from "@/db/queries/superadminConfigGlobal";
 import { mensagensSuporte, enviarMensagemSuporte, digitandoSuporteSet, digitandoLojaGet, unreadSuporte, type MensagemSuporte } from "@/db/queries/suporteChat";
 import { atualizarPerfilSuperadmin } from "@/db/queries/superadminPerfil";
@@ -36,6 +36,8 @@ async function handleLojaAcao(body: Body) {
       return aprovarComprovante(Number(body.cobranca_id ?? 0));
     case "rejeitar_comprovante":
       return rejeitarComprovante(Number(body.cobranca_id ?? 0), String(body.motivo ?? ""));
+    case "cancelar_cobranca":
+      return cancelarCobranca(Number(body.cobranca_id ?? 0));
     default:
       return { ok: false, msg: "Ação inválida." };
   }

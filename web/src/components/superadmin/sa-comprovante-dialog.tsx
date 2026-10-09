@@ -45,12 +45,14 @@ function Conteudo({
   const cob = loja.cobranca;
   const [motivo, setMotivo] = useState("");
   const [rejeitando, setRejeitando] = useState(false);
+  const [cancelando, setCancelando] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
   const url = cob.comprovante ? urlArquivo(cob.comprovante, phpAdminUrl) : null;
   const ehPdf = url ? /\.pdf($|\?)/i.test(url) : false;
+  const pendente = cob.status === "pendente" || cob.status === "atrasado";
 
-  async function decidir(acao: "aprovar_comprovante" | "rejeitar_comprovante") {
+  async function decidir(acao: "aprovar_comprovante" | "rejeitar_comprovante" | "cancelar_cobranca") {
     setEnviando(true);
     try {
       const r = await saCall("superadmin_loja_acao", { acao, cobranca_id: cob.id, motivo });
@@ -58,7 +60,7 @@ function Conteudo({
         toast.error(r.msg ?? "Não foi possível concluir.");
         return;
       }
-      toast.success(acao === "aprovar_comprovante" ? "Pagamento aprovado" : "Comprovante rejeitado");
+      toast.success(acao === "aprovar_comprovante" ? "Pagamento aprovado" : acao === "rejeitar_comprovante" ? "Comprovante rejeitado" : "Cobrança cancelada");
       onAtualizado();
       onFechar();
     } finally {
@@ -107,6 +109,8 @@ function Conteudo({
         <Input placeholder="Motivo da rejeição (opcional)" value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus />
       )}
 
+      {cancelando && <p className="text-sm text-muted-foreground">Essa cobrança deixa de valer e a loja pode receber uma nova.</p>}
+
       <DialogFooter>
         {rejeitando ? (
           <>
@@ -117,8 +121,22 @@ function Conteudo({
               Confirmar rejeição
             </Button>
           </>
+        ) : cancelando ? (
+          <>
+            <Button variant="outline" onClick={() => setCancelando(false)} disabled={enviando}>
+              Voltar
+            </Button>
+            <Button variant="destructive" onClick={() => decidir("cancelar_cobranca")} disabled={enviando}>
+              {enviando ? "Cancelando..." : "Confirmar cancelamento"}
+            </Button>
+          </>
         ) : (
           <>
+            {pendente && (
+              <Button variant="outline" onClick={() => setCancelando(true)} disabled={enviando}>
+                Cancelar cobrança
+              </Button>
+            )}
             {cob.aguardando_revisao && (
               <Button variant="outline" onClick={() => setRejeitando(true)} disabled={enviando}>
                 Rejeitar

@@ -216,7 +216,7 @@ export const cobrancas = pgTable(
     plano_id: integer("plano_id"),
     valor: numeric("valor", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
     vencimento: date("vencimento", { mode: "string" }).notNull(),
-    status: text("status").$type<"pendente" | "pago" | "atrasado">().notNull().default("pendente"),
+    status: text("status").$type<"pendente" | "pago" | "atrasado" | "cancelado">().notNull().default("pendente"),
     pago_em: timestamp("pago_em", { mode: "string" }),
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
     comprovante_arquivo: varchar("comprovante_arquivo", { length: 255 }),
