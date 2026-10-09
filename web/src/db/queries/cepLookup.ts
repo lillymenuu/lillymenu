@@ -60,15 +60,15 @@ export async function obterCoordsPorCep(cep: string): Promise<Coords | null> {
  * a primeira que caia dentro de algum poligono cadastrado, em vez de confiar
  * so na ordem de fallback usada pra distancia/bairro.
  */
-export async function buscarTaxaAreaPorCep(lojaId: number, cep: string): Promise<{ atendido: boolean; taxa: number } | null> {
+export async function buscarTaxaAreaPorCep(lojaId: number, cep: string): Promise<{ atendido: boolean; taxa: number; debug?: unknown } | null> {
   const [brasilApi, awesomeApi] = await Promise.all([obterCoordsBrasilApi(cep), obterCoordsAwesomeApi(cep)]);
   for (const coords of [brasilApi, awesomeApi]) {
     if (!coords) continue;
     const area = await buscarTaxaAreaPorPonto(lojaId, coords.lat, coords.lng);
-    if (area) return { atendido: true, taxa: area.taxa };
+    if (area) return { atendido: true, taxa: area.taxa, debug: { brasilApi, awesomeApi } };
   }
   if (!brasilApi && !awesomeApi) return null;
-  return { atendido: false, taxa: 0 };
+  return { atendido: false, taxa: 0, debug: { brasilApi, awesomeApi } };
 }
 
 function calcularDistanciaKm(lat1: number, lon1: number, lat2: number, lon2: number): number {

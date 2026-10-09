@@ -13,5 +13,5 @@ export async function POST(request: Request) {
   const area = await buscarTaxaAreaPorCep(lojaId, digitos);
   if (!area) return NextResponse.json({ ok: false, msg: "Nao foi possivel localizar o CEP." });
 
-  return NextResponse.json({ ok: true, atendido: area.atendido, taxa: area.taxa });
+  return NextResponse.json({ ok: true, atendido: area.atendido, taxa: area.taxa, debug: area.debug });
 }
