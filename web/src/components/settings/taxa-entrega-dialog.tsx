@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,8 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ConfiguracoesDetalhe, TaxaBairro, TaxaDinamica, TaxaArea } from "@/lib/settings";
 import type { PontoMapa } from "@/components/settings/taxa-area-mapa";
+import { TaxaAreaEditorDialog, type TaxaAreaForm } from "@/components/settings/taxa-area-editor-dialog";
 
-const TaxaAreaMapa = dynamic(() => import("@/components/settings/taxa-area-mapa").then((m) => m.TaxaAreaMapa), { ssr: false });
 const CENTRO_PADRAO: PontoMapa = { lat: -14.235, lng: -51.9253 };
 
 type TaxaEntregaCfg = ConfiguracoesDetalhe["taxa_entrega"];
@@ -56,7 +55,8 @@ export function TaxaEntregaDialog({
   const [areas, setAreas] = useState<TaxaArea[]>([]);
   const [carregandoAreas, setCarregandoAreas] = useState(false);
   const [centroMapa, setCentroMapa] = useState<PontoMapa | null>(null);
-  const [formArea, setFormArea] = useState<{ id: number; nome: string; taxa: string; min: string; max: string; poligono: PontoMapa[] } | null>(null);
+  const [formArea, setFormArea] = useState<TaxaAreaForm | null>(null);
+  const [salvandoArea, setSalvandoArea] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -298,6 +298,7 @@ export function TaxaEntregaDialog({
       toast.error("Desenhe uma área com pelo menos 3 pontos no mapa.");
       return;
     }
+    setSalvandoArea(true);
     try {
       const res = await fetch("/api/settings/taxa-area/salvar", {
         method: "POST",
@@ -322,6 +323,8 @@ export function TaxaEntregaDialog({
       onSalvo();
     } catch {
       toast.error("Erro ao salvar.");
+    } finally {
+      setSalvandoArea(false);
     }
   }
 
@@ -346,6 +349,7 @@ export function TaxaEntregaDialog({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
         <DialogHeader>
@@ -383,64 +387,16 @@ export function TaxaEntregaDialog({
           {tab === "area" ? (
             <div className="space-y-3">
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-xs">
-                <strong>Como usar:</strong> clique no mapa para desenhar os pontos da área (mínimo 3). Arraste um ponto para ajustar e dê duplo clique nele para remover.
+                <strong>Como usar:</strong> desenhe a área num mapa grande, clicando ponto a ponto (mínimo 3). Arraste um ponto pra ajustar e dê duplo clique nele pra remover.
               </div>
-              {formArea ? (
-                <div className="space-y-2 rounded-lg border p-3">
-                  <TaxaAreaMapa
-                    centro={centroMapa ?? CENTRO_PADRAO}
-                    poligono={formArea.poligono}
-                    onChange={(p) => setFormArea({ ...formArea, poligono: p })}
-                    outras={areas.filter((a) => a.id !== formArea.id).map((a) => ({ nome: a.nome, poligono: a.poligono }))}
-                  />
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{formArea.poligono.length} ponto(s) · mínimo 3</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setFormArea({ ...formArea, poligono: formArea.poligono.slice(0, -1) })}
-                      disabled={formArea.poligono.length === 0}
-                    >
-                      Desfazer último ponto
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Nome da área</Label>
-                      <Input value={formArea.nome} onChange={(e) => setFormArea({ ...formArea, nome: e.target.value })} placeholder="Ex.: Zona Centro" />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Valor da taxa</Label>
-                      <Input type="number" step="0.01" value={formArea.taxa} onChange={(e) => setFormArea({ ...formArea, taxa: e.target.value })} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Tempo mín.</Label>
-                      <Input type="number" value={formArea.min} onChange={(e) => setFormArea({ ...formArea, min: e.target.value })} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Tempo máx.</Label>
-                      <Input type="number" value={formArea.max} onChange={(e) => setFormArea({ ...formArea, max: e.target.value })} />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setFormArea(null)}>
-                      Cancelar
-                    </Button>
-                    <Button size="sm" onClick={salvarArea}>
-                      Salvar área
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5"
-                  onClick={() => setFormArea({ id: 0, nome: "", taxa: "", min: "", max: "", poligono: [] })}
-                >
-                  <Plus className="size-3.5" /> Adicionar área
-                </Button>
-              )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => setFormArea({ id: 0, nome: "", taxa: "", min: "", max: "", poligono: [] })}
+              >
+                <Plus className="size-3.5" /> Adicionar área
+              </Button>
               <div className="space-y-1.5">
                 {carregandoAreas ? (
                   <div className="py-4 text-center text-sm text-muted-foreground">Carregando...</div>
@@ -686,5 +642,21 @@ export function TaxaEntregaDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {formArea ? (
+      <TaxaAreaEditorDialog
+        open={formArea !== null}
+        onOpenChange={(v) => {
+          if (!v) setFormArea(null);
+        }}
+        centro={centroMapa ?? CENTRO_PADRAO}
+        outras={areas.filter((a) => a.id !== formArea.id).map((a) => ({ nome: a.nome, poligono: a.poligono }))}
+        form={formArea}
+        onFormChange={setFormArea}
+        onSalvar={salvarArea}
+        salvando={salvandoArea}
+      />
+    ) : null}
+    </>
   );
 }
