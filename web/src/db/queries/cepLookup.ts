@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { taxasBairro, taxasDinamicas } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
-import { buscarTaxaAreaPorPonto } from "@/db/queries/taxasEntrega";
+import { buscarTaxaAreaPorPonto, buscarTaxaAreaPorNome } from "@/db/queries/taxasEntrega";
 
 /*
  * Equivalente de admin/api/cep_lookup.php (usado via ponte de sessao por
@@ -105,6 +105,22 @@ export async function buscarTaxaAreaPorCep(lojaId: number, cep: string): Promise
     const area = await buscarTaxaAreaPorPonto(lojaId, coords.lat, coords.lng);
     if (area) return { atendido: true, taxa: area.taxa };
   }
+
+  /* Nenhuma coordenada caiu num poligono — pode ser CEP sem dado preciso em
+   * nenhuma das APIs gratuitas (visto na pratica: BrasilAPI devolve uma
+   * coordenada generica errada, AwesomeApi aponta pro bairro errado,
+   * Nominatim nao acha o CEP). O nome do bairro, porem, costuma vir certo
+   * mesmo quando a coordenada falha — inclusive do ViaCEP, que so tem texto.
+   * Se bater com o nome de uma area cadastrada, usa ela. */
+  const via = await fetchJson(`https://viacep.com.br/ws/${cep}/json/`);
+  const nomesBairroCandidatos = [brasilApi?.bairro, nominatim?.bairro, awesomeApi?.bairro, via && !via.erro ? String(via.bairro ?? "") : ""].filter(
+    (b): b is string => Boolean(b)
+  );
+  for (const candidato of nomesBairroCandidatos) {
+    const porNome = await buscarTaxaAreaPorNome(lojaId, candidato);
+    if (porNome) return { atendido: true, taxa: porNome.taxa };
+  }
+
   if (!brasilApi && !nominatim && !awesomeApi) return null;
   return { atendido: false, taxa: 0 };
 }

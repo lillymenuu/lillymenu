@@ -208,3 +208,30 @@ export async function buscarTaxaAreaPorPonto(lojaId: number, lat: number, lng: n
   }
   return null;
 }
+
+function normalizarNomeArea(texto: string): string {
+  return texto
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+/*
+ * Fallback de buscarTaxaAreaPorPonto: usado quando nenhuma coordenada
+ * geocodificada caiu dentro de um poligono (CEP sem dado preciso nas APIs
+ * gratuitas), mas o NOME do bairro retornado por alguma fonte bate
+ * exatamente com o nome de uma area cadastrada — mesma logica de match ja
+ * usada em "taxa por bairro".
+ */
+export async function buscarTaxaAreaPorNome(lojaId: number, nome: string): Promise<{ taxa: number; tempoMin: number | null; tempoMax: number | null } | null> {
+  const alvo = normalizarNomeArea(nome);
+  if (!alvo) return null;
+  const linhas = await db
+    .select({ nome: taxasAreas.nome, taxa: taxasAreas.taxa, tempoMin: taxasAreas.tempo_min, tempoMax: taxasAreas.tempo_max })
+    .from(taxasAreas)
+    .where(eq(taxasAreas.loja_id, lojaId));
+  const encontrada = linhas.find((l) => normalizarNomeArea(l.nome) === alvo);
+  return encontrada ? { taxa: Number(encontrada.taxa), tempoMin: encontrada.tempoMin, tempoMax: encontrada.tempoMax } : null;
+}
