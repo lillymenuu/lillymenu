@@ -230,16 +230,24 @@ export async function gerarPdfPedido(dados: DadosPdfPedido): Promise<Buffer> {
     caixa("Observações do cliente", [p.observacoesCliente]);
   }
 
-  /* Totais */
+  /* Totais — label e valor desenhados como duas colunas de posicao fixa (M e
+     xValor), nao com `continued: true`: no pdfkit o texto encadeado retoma da
+     posicao onde o glyph anterior terminou, entao linhas com labels de
+     tamanhos diferentes (ex. "Subtotal" vs. "Cashback para o cliente") saiam
+     com a coluna de valor desalinhada em vez de ficar reta a direita. */
   garantirEspaco(140);
+  const larguraValor = 150;
+  const xValor = M + largura - larguraValor;
   const linhaTotal = (label: string, valor: string, destaque = false) => {
+    const y = doc.y;
     doc
       .font(destaque ? "Helvetica-Bold" : "Helvetica")
       .fontSize(destaque ? 14 : 10.5)
       .fillColor(destaque ? COR.texto : COR.suave)
-      .text(label, M, doc.y, { continued: true, width: largura - 150 });
-    doc.text(valor, { width: 150, align: "right" });
-    doc.moveDown(destaque ? 0.1 : 0.25);
+      .text(label, M, y, { width: largura - larguraValor });
+    doc.text(valor, xValor, y, { width: larguraValor, align: "right" });
+    doc.y = y;
+    doc.moveDown(destaque ? 1.1 : 1.25);
   };
   doc.x = M;
   linhaTotal("Subtotal", brl(p.subtotal));
@@ -261,13 +269,15 @@ export async function gerarPdfPedido(dados: DadosPdfPedido): Promise<Buffer> {
     doc.font("Helvetica").fontSize(10).fillColor(COR.claro).text("Não informado", M, doc.y);
   } else {
     dados.pagamentos.forEach((pg) => {
+      const y = doc.y;
       doc
         .font("Helvetica")
         .fontSize(10.5)
         .fillColor(COR.texto)
-        .text(PAGAMENTO_LABELS[pg.forma] ?? pg.forma, M, doc.y, { continued: true, width: largura - 150 });
-      doc.text(brl(pg.valor), { width: 150, align: "right" });
-      doc.moveDown(0.2);
+        .text(PAGAMENTO_LABELS[pg.forma] ?? pg.forma, M, y, { width: largura - larguraValor });
+      doc.text(brl(pg.valor), xValor, y, { width: larguraValor, align: "right" });
+      doc.y = y;
+      doc.moveDown(1.2);
     });
   }
 
