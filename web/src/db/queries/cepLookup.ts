@@ -14,13 +14,18 @@ import { buscarTaxaAreaPorPonto } from "@/db/queries/taxasEntrega";
 
 type Coords = { lat: number; lng: number; logradouro: string; bairro: string; cidade: string; estado: string };
 
-async function fetchJson(url: string, timeoutMs = 6000): Promise<Record<string, unknown> | null> {
+async function fetchJson(url: string, timeoutMs = 6000, debugOut?: Record<string, unknown>): Promise<Record<string, unknown> | null> {
   try {
     const resp = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+    if (debugOut) debugOut.status = resp.status;
     if (!resp.ok) return null;
-    const data = await resp.json().catch(() => null);
+    const data = await resp.json().catch((e) => {
+      if (debugOut) debugOut.parseError = String(e);
+      return null;
+    });
     return data && typeof data === "object" ? (data as Record<string, unknown>) : null;
-  } catch {
+  } catch (e) {
+    if (debugOut) debugOut.fetchError = String(e);
     return null;
   }
 }
@@ -33,6 +38,16 @@ async function obterCoordsBrasilApi(cep: string): Promise<Coords | null> {
   const lng = location.longitude !== undefined ? Number(location.longitude) : null;
   if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   return { lat, lng, logradouro: String(resp.street ?? ""), bairro: String(resp.neighborhood ?? ""), cidade: String(resp.city ?? ""), estado: String(resp.state ?? "") };
+}
+
+async function obterCoordsAwesomeApiDebug(cep: string): Promise<{ coords: Coords | null; debug: Record<string, unknown> }> {
+  const debug: Record<string, unknown> = {};
+  const resp = await fetchJson(`https://cep.awesomeapi.com.br/json/${cep}`, 6000, debug);
+  if (!resp) return { coords: null, debug };
+  const lat = resp.lat !== undefined ? Number(resp.lat) : null;
+  const lng = resp.lng !== undefined ? Number(resp.lng) : null;
+  if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return { coords: null, debug };
+  return { coords: { lat, lng, logradouro: String(resp.address ?? ""), bairro: String(resp.district ?? ""), cidade: String(resp.city ?? ""), estado: String(resp.state ?? "") }, debug };
 }
 
 async function obterCoordsAwesomeApi(cep: string): Promise<Coords | null> {
@@ -61,14 +76,15 @@ export async function obterCoordsPorCep(cep: string): Promise<Coords | null> {
  * so na ordem de fallback usada pra distancia/bairro.
  */
 export async function buscarTaxaAreaPorCep(lojaId: number, cep: string): Promise<{ atendido: boolean; taxa: number; debug?: unknown } | null> {
-  const [brasilApi, awesomeApi] = await Promise.all([obterCoordsBrasilApi(cep), obterCoordsAwesomeApi(cep)]);
+  const [brasilApi, awesomeApiResult] = await Promise.all([obterCoordsBrasilApi(cep), obterCoordsAwesomeApiDebug(cep)]);
+  const awesomeApi = awesomeApiResult.coords;
   for (const coords of [brasilApi, awesomeApi]) {
     if (!coords) continue;
     const area = await buscarTaxaAreaPorPonto(lojaId, coords.lat, coords.lng);
-    if (area) return { atendido: true, taxa: area.taxa, debug: { brasilApi, awesomeApi } };
+    if (area) return { atendido: true, taxa: area.taxa, debug: { brasilApi, awesomeApi, awesomeApiDebug: awesomeApiResult.debug } };
   }
   if (!brasilApi && !awesomeApi) return null;
-  return { atendido: false, taxa: 0, debug: { brasilApi, awesomeApi } };
+  return { atendido: false, taxa: 0, debug: { brasilApi, awesomeApi, awesomeApiDebug: awesomeApiResult.debug } };
 }
 
 function calcularDistanciaKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
