@@ -33,45 +33,28 @@ function formatarTempo(iso: string): string {
   return `há ${dias} dia${dias > 1 ? "s" : ""}`;
 }
 
-let audioCtx: AudioContext | null = null;
-function obterAudioCtx(): AudioContext | null {
-  if (audioCtx) return audioCtx;
+let audioAlarme: HTMLAudioElement | null = null;
+function obterAudioAlarme(): HTMLAudioElement | null {
+  if (audioAlarme) return audioAlarme;
   try {
-    const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    audioCtx = new Ctor();
+    audioAlarme = new Audio("/sounds/notificacao.mp3");
+    audioAlarme.preload = "auto";
   } catch {
     return null;
   }
-  return audioCtx;
+  return audioAlarme;
 }
 
 function tocarAlarme() {
-  const ctx = obterAudioCtx();
-  if (!ctx) return;
-  if (ctx.state === "suspended") ctx.resume().catch(() => {});
-  const bip = (freq: number, inicio: number, duracao: number, vol: number) => {
-    try {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = "square";
-      osc.frequency.value = freq;
-      const t = ctx.currentTime + inicio;
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(vol, t + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + duracao);
-      osc.start(t);
-      osc.stop(t + duracao + 0.02);
-    } catch {
-      // Web Audio pode falhar silenciosamente (autoplay policy); sem alarme visual de erro
-    }
-  };
-  const passo = 0.16;
-  for (let ciclo = 0; ciclo < 2; ciclo++) {
-    for (let i = 0; i < 4; i++) {
-      bip(i % 2 === 0 ? 1174 : 1568, (ciclo * 4 + i) * passo, passo * 0.8, 0.55);
-    }
+  const audio = obterAudioAlarme();
+  if (!audio) return;
+  try {
+    audio.currentTime = 0;
+    audio.play().catch(() => {
+      // autoplay bloqueado antes do primeiro clique na pagina; sem alarme visual de erro
+    });
+  } catch {
+    // reproducao pode falhar silenciosamente; sem alarme visual de erro
   }
 }
 
@@ -238,8 +221,14 @@ export function NotificationBell({
   useEffect(() => {
     if (!audioDesbloqueadoRef.current) {
       const desbloquear = () => {
-        const ctx = obterAudioCtx();
-        if (ctx?.state === "suspended") ctx.resume().catch(() => {});
+        const audio = obterAudioAlarme();
+        audio
+          ?.play()
+          .then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+          })
+          .catch(() => {});
         audioDesbloqueadoRef.current = true;
       };
       document.addEventListener("click", desbloquear, { once: true });
