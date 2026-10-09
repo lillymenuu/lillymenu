@@ -9,6 +9,7 @@ import { usePosOverlay } from "@/components/pos/pos-overlay-provider";
 import type { Motoboy, Pedido } from "@/lib/pedidos";
 import { OrderCard } from "./order-card";
 import { OrderDetailDialog } from "./order-detail-dialog";
+import { PrintReceiptDialog } from "./print-receipt-dialog";
 import { OrderSearchDialog } from "./order-search-dialog";
 import { ConfirmDialog } from "./confirm-dialog";
 import { LinkMotoboyDialog } from "./link-motoboy-dialog";
@@ -56,6 +57,7 @@ export function OrderManager({
     Object.fromEntries(COLUNAS.map((c) => [c.status, { tipo: "todos", hoje: false }]))
   );
   const [detalheId, setDetalheId] = useState<number | null>(null);
+  const [imprimirId, setImprimirId] = useState<number | null>(null);
   const [buscaOpen, setBuscaOpen] = useState(false);
   const [recusarId, setRecusarId] = useState<number | null>(null);
   const [recusando, setRecusando] = useState(false);
@@ -285,6 +287,7 @@ export function OrderManager({
                     key={pedido.id}
                     pedido={pedido}
                     onAbrir={() => setDetalheId(pedido.id)}
+                    onImprimir={() => setImprimirId(pedido.id)}
                     onAvancar={() => avancar(pedido)}
                     onRecusar={() => setRecusarId(pedido.id)}
                     onVincularMotoboy={() => setVincularManual(pedido)}
@@ -305,6 +308,12 @@ export function OrderManager({
         motoboys={motoboys}
         phpAdminUrl={phpAdminUrl}
         onAtualizado={carregarPedidos}
+      />
+
+      <PrintReceiptDialog
+        open={imprimirId !== null}
+        onOpenChange={(v) => !v && setImprimirId(null)}
+        pedidoId={imprimirId}
       />
 
       <OrderSearchDialog

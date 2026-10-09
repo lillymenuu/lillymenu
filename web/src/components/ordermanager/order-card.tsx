@@ -11,6 +11,7 @@ const TIPO_ICONS = { entrega: Bike, retirada: ShoppingBag, mesa: UtensilsCrossed
 export function OrderCard({
   pedido,
   onAbrir,
+  onImprimir,
   onAvancar,
   onRecusar,
   onVincularMotoboy,
@@ -19,6 +20,7 @@ export function OrderCard({
 }: {
   pedido: Pedido;
   onAbrir: () => void;
+  onImprimir: () => void;
   onAvancar: () => void;
   onRecusar: () => void;
   onVincularMotoboy: () => void;
@@ -60,7 +62,7 @@ export function OrderCard({
             type="button"
             onClick={(e) => {
               parar(e);
-              onAbrir();
+              onImprimir();
             }}
             className="flex size-6 shrink-0 items-center justify-center rounded-full border text-muted-foreground hover:bg-muted"
             aria-label="Imprimir"
