@@ -1785,44 +1785,25 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
       let maiorIdVistoAlerta = null;
       let maiorAvaliacaoVistoAlerta = null;
 
-      /* ── Alarme sonoro de novo pedido (estilo alarme de celular) ── */
-      let _alarmeCtx = null;
-      const _obterAlarmeCtx = () => {
-        if (_alarmeCtx) return _alarmeCtx;
-        try { _alarmeCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
-        return _alarmeCtx;
+      /* ── Alarme sonoro de novo pedido ── */
+      let _alarmeAudio = null;
+      const _obterAlarmeAudio = () => {
+        if (_alarmeAudio) return _alarmeAudio;
+        try { _alarmeAudio = new Audio('./assets/sounds/notificacao.mp3'); _alarmeAudio.preload = 'auto'; } catch (e) { return null; }
+        return _alarmeAudio;
       };
       document.addEventListener('click', function desbloquearAudio(){
-        const ctx = _obterAlarmeCtx();
-        if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
-      }, { once: false });
+        const audio = _obterAlarmeAudio();
+        if (audio) audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
+      }, { once: true });
 
       const tocarAlarmeNovoPedido = () => {
-        const ctx = _obterAlarmeCtx();
-        if (!ctx) return;
-        if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
-        const tocarBip = (freq, inicio, duracao, vol) => {
-          try {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain); gain.connect(ctx.destination);
-            osc.type = 'square';
-            osc.frequency.value = freq;
-            const t = ctx.currentTime + inicio;
-            gain.gain.setValueAtTime(0.0001, t);
-            gain.gain.exponentialRampToValueAtTime(vol, t + 0.015);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + duracao);
-            osc.start(t);
-            osc.stop(t + duracao + 0.02);
-          } catch (e) {}
-        };
-        /* padrão de alarme: bipes agudos alternados, repetidos, volume alto */
-        const passo = 0.16;
-        for (let ciclo = 0; ciclo < 2; ciclo++) {
-          for (let i = 0; i < 4; i++) {
-            tocarBip(i % 2 === 0 ? 1174 : 1568, (ciclo * 4 + i) * passo, passo * 0.8, 0.55);
-          }
-        }
+        const audio = _obterAlarmeAudio();
+        if (!audio) return;
+        try {
+          audio.currentTime = 0;
+          audio.play().catch(() => {});
+        } catch (e) {}
       };
 
       /* ── Toast global de novo pedido (aparece em qualquer tela do admin) ── */
