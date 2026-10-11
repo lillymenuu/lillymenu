@@ -359,7 +359,7 @@ export function StoreProdutoDialog({
     <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={615}>
       <div className="p-4">
         <div
-          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out ${
+          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] ${
             imagemAmpliada ? "" : "h-[190px]"
           }`}
           style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
