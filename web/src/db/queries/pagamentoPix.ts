@@ -138,8 +138,12 @@ export async function consultarStatusPix(lojaId: number, cobrancaId: number): Pr
 
   const pagamentoMp = await mpConsultarPagamento(cobranca.mpPaymentId);
   if (pagamentoMp && pagamentoMp.status === "approved") {
-    await confirmarPagamentoAssinatura(cobrancaId, cobranca.mpPaymentId);
-    return { ok: true, pago: true };
+    // So reporta "pago" se a assinatura foi realmente estendida — reportar pago:true
+    // sem isso ja aconteceu em producao (cobranca fica 'pago' no banco, mas o ciclo
+    // da assinatura nunca e estendido, e a loja e bloqueada de novo como se nao
+    // tivesse pago). Se falhar aqui, mantem pago:false pro front continuar tentando.
+    const confirmado = await confirmarPagamentoAssinatura(cobrancaId, cobranca.mpPaymentId);
+    return { ok: true, pago: confirmado };
   }
 
   return { ok: true, pago: false };
