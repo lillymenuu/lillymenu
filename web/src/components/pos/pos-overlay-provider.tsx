@@ -3,9 +3,11 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import { PosOverlay } from "@/components/pos/pos-overlay";
 
+type AbrirPosOpts = { agendamentoPrefillData?: string };
+
 type PosOverlayContextValue = {
   aberto: boolean;
-  abrir: (pedidoIdParaEditar?: number) => void;
+  abrir: (pedidoIdParaEditar?: number, opts?: AbrirPosOpts) => void;
   fechar: () => void;
 };
 
@@ -28,21 +30,30 @@ export function PosOverlayProvider({
 }) {
   const [aberto, setAberto] = useState(false);
   const [pedidoEditandoId, setPedidoEditandoId] = useState<number | null>(null);
+  const [agendamentoPrefillData, setAgendamentoPrefillData] = useState<string | null>(null);
 
-  const abrir = useCallback((pedidoIdParaEditar?: number) => {
+  const abrir = useCallback((pedidoIdParaEditar?: number, opts?: AbrirPosOpts) => {
     setPedidoEditandoId(pedidoIdParaEditar ?? null);
+    setAgendamentoPrefillData(opts?.agendamentoPrefillData ?? null);
     setAberto(true);
   }, []);
   const fechar = useCallback(() => {
     setAberto(false);
     setPedidoEditandoId(null);
+    setAgendamentoPrefillData(null);
   }, []);
 
   return (
     <PosOverlayContext.Provider value={{ aberto, abrir, fechar }}>
       {children}
       {aberto ? (
-        <PosOverlay onFechar={fechar} adminPerfil={adminPerfil} phpAdminUrl={phpAdminUrl} pedidoEditandoId={pedidoEditandoId} />
+        <PosOverlay
+          onFechar={fechar}
+          adminPerfil={adminPerfil}
+          phpAdminUrl={phpAdminUrl}
+          pedidoEditandoId={pedidoEditandoId}
+          agendamentoPrefillData={agendamentoPrefillData}
+        />
       ) : null}
     </PosOverlayContext.Provider>
   );

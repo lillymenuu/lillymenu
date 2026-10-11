@@ -195,6 +195,53 @@ export async function kanbanPedidos(lojaId: number): Promise<{ ok: true; pedidos
   };
 }
 
+export type ListarPedidosAgendadosInput = { lojaId: number; ano: number; mes: number };
+
+/** Pedidos com agendamento dentro do mes/ano informado (tela ScheduledOrders). */
+export async function listarPedidosAgendados(input: ListarPedidosAgendadosInput): Promise<{ ok: true; pedidos: PedidoResumo[] }> {
+  const { lojaId, ano, mes } = input;
+
+  const linhas = await db
+    .select({
+      id: pedidos.id,
+      status: pedidos.status,
+      tipo: pedidos.tipo,
+      total: pedidos.total,
+      criadoEm: pedidos.criado_em,
+      formaPagamento: pedidos.forma_pagamento,
+      enderecoEntrega: pedidos.endereco_entrega,
+      nome: sql<string>`coalesce(${clientes.nome}, '(cliente nao encontrado)')`,
+      telefone: clientes.telefone,
+      agendamento: sql<string | null>`${pedidos.agendamento}`,
+      origem: pedidos.origem,
+      observacoesCliente: pedidos.observacoes_cliente,
+      motoboyId: pedidos.motoboy_id,
+      motoboyNome: motoboys.nome,
+      motoboyWhatsapp: motoboys.whatsapp,
+      statusEm: statusEmExpr,
+    })
+    .from(pedidos)
+    .leftJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
+    .leftJoin(motoboys, and(eq(motoboys.id, pedidos.motoboy_id), eq(motoboys.loja_id, pedidos.loja_id)))
+    .where(
+      and(
+        eq(pedidos.loja_id, lojaId),
+        sql`${pedidos.agendamento} is not null`,
+        sql`extract(year from ${pedidos.agendamento}) = ${ano}`,
+        sql`extract(month from ${pedidos.agendamento}) = ${mes}`
+      )
+    )
+    .orderBy(pedidos.agendamento);
+
+  const pagamentos = await pagamentosPorPedido(linhas.map((l) => l.id), lojaId);
+  const base = await pedidoCodigoBase(lojaId);
+
+  return {
+    ok: true,
+    pedidos: linhas.map((l) => ({ ...l, codigo: codigoDisplay(l.id, base), pagamentos: pagamentos.get(l.id) ?? [] })),
+  };
+}
+
 export async function buscarPedidos(lojaId: number, termoBruto: string): Promise<{ ok: true; pedidos: PedidoResumo[] }> {
   const termo = termoBruto.trim();
   if (!termo) return { ok: true, pedidos: [] };

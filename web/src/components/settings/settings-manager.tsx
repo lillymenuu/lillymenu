@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   Store,
@@ -46,7 +46,6 @@ import { ClubePontosDialog } from "@/components/settings/clube-pontos-dialog";
 import { ReceberPedidosDialog } from "@/components/settings/receber-pedidos-dialog";
 import { TiposPedidosDialog } from "@/components/settings/tipos-pedidos-dialog";
 import { ValorMinimoDialog } from "@/components/settings/valor-minimo-dialog";
-import { PedidosAgendadosDialog } from "@/components/settings/pedidos-agendados-dialog";
 import { TaxaEntregaDialog } from "@/components/settings/taxa-entrega-dialog";
 import { ImpressaoDialog } from "@/components/settings/impressao-dialog";
 import { CrossSellDialog } from "@/components/settings/cross-sell-dialog";
@@ -91,10 +90,15 @@ export function SettingsManager({
 }) {
   const [dados, setDados] = useState(dadosIniciais);
   const [aberto, setAberto] = useState<CardId | null>(null);
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
     const abrirParam = searchParams.get("abrir");
+    if (abrirParam === "pedidos-agendados") {
+      router.replace("/scheduled-orders");
+      return;
+    }
     if (abrirParam) setAberto(abrirParam as CardId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -166,7 +170,7 @@ export function SettingsManager({
         { id: "tipos-pedidos", icon: ShoppingBag, title: "Tipos de pedidos", desc: "Ative entrega, retirada e mesa." },
         { id: "numeracao", icon: Hash, title: "Numeracao sequencial de pedidos", desc: "Ajuste a numeracao dos pedidos.", disabled: true },
         { id: "valor-minimo", icon: ListOrdered, title: "Valor mínimo do pedido", desc: "Defina valor mínimo para pedidos." },
-        { id: "pedidos-agendados", icon: CalendarCheck, title: "Pedidos agendados", desc: "Ative e configure pedidos futuros." },
+        { id: "pedidos-agendados", icon: CalendarCheck, title: "Pedidos agendados", desc: "Veja o calendário e configure pedidos futuros." },
         { id: "taxa-entrega", icon: MapPin, title: "Taxa de entrega", desc: "Configure taxas por area e endereço." },
       ],
     },
@@ -196,6 +200,10 @@ export function SettingsManager({
     if (id === "versiculo-dashboard") return;
     if (id === "permissoes") {
       window.open(`${phpAdminUrl}/admin/permissoes.php`, "_blank");
+      return;
+    }
+    if (id === "pedidos-agendados") {
+      router.push("/scheduled-orders");
       return;
     }
     setAberto(id as CardId);
@@ -320,12 +328,6 @@ export function SettingsManager({
         open={aberto === "valor-minimo"}
         onOpenChange={(v) => setAberto(v ? "valor-minimo" : null)}
         pedidos={dados.pedidos}
-        onSalvo={recarregar}
-      />
-      <PedidosAgendadosDialog
-        open={aberto === "pedidos-agendados"}
-        onOpenChange={(v) => setAberto(v ? "pedidos-agendados" : null)}
-        agendamento={dados.agendamento}
         onSalvo={recarregar}
       />
       <TaxaEntregaDialog

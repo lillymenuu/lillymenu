@@ -67,11 +67,13 @@ export function PosOverlay({
   adminPerfil,
   phpAdminUrl,
   pedidoEditandoId,
+  agendamentoPrefillData,
 }: {
   onFechar: () => void;
   adminPerfil: string;
   phpAdminUrl: string;
   pedidoEditandoId?: number | null;
+  agendamentoPrefillData?: string | null;
 }) {
   const cart = usePosCart();
   /* Itens do Resumo reservam estoque na loja publica; pedido ja lancado (edicao) ja teve o estoque baixado. */
@@ -341,6 +343,17 @@ export function PosOverlay({
   // Agendamento nao existe pra consumo local (mesa), igual ao legado.
   const agendamentoCfgAtual =
     tipoPedido === "entrega" ? agendamentoConfig?.delivery : tipoPedido === "retirada" ? agendamentoConfig?.retirada : null;
+
+  // Pedido novo aberto a partir de um dia da tela ScheduledOrders: pre-seleciona
+  // o dia e abre direto o modal de horario (so roda uma vez, quando a config de
+  // agendamento do tipo atual estiver disponivel e ativa).
+  const prefillAplicadoRef = useRef(false);
+  useEffect(() => {
+    if (!agendamentoPrefillData || prefillAplicadoRef.current || !agendamentoCfgAtual?.ativo) return;
+    prefillAplicadoRef.current = true;
+    setAgendamento({ data: agendamentoPrefillData, hora: "" });
+    setAgendamentoModalAberto(true);
+  }, [agendamentoPrefillData, agendamentoCfgAtual]);
 
   function onTipoPedidoChange(v: PosTipoPedidoValor) {
     const jaEraEntrega = tipoPedido === "entrega";
