@@ -23,6 +23,7 @@ $permsMenu = [
   'menu.pdv',
   'menu.gestor_pedidos',
   'menu.pedidos',
+  'menu.pedidos_agendados',
   'menu.orcamentos',
   'menu.produtos',
   'menu.promo',
@@ -765,6 +766,7 @@ function perfilLabel($perfil){
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.pdv">Pedidos (PDV)</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.gestor_pedidos">Gestor de pedidos</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.pedidos">Lista de pedidos</label>
+              <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.pedidos_agendados">Pedidos agendados</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.orcamentos">Orcamentos</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.produtos">Produtos</label>
               <label class="perm-check"><input type="checkbox" data-perm-item="menu" data-perm-key value="menu.promo">Promocoes</label>
