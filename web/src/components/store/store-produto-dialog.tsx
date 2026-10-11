@@ -37,7 +37,9 @@ export function StoreProdutoDialog({
   const [carregando, setCarregando] = useState(false);
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
   const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
-  const [imagemAmpliada, setImagemAmpliada] = useState(false);
+  /* Comeca ja expandida (foto inteira, sem cortar) tanto no desktop quanto no mobile —
+     o botao "Recolher" continua disponivel pra quem preferir a miniatura cortada. */
+  const [imagemAmpliada, setImagemAmpliada] = useState(true);
   const [erroCarregar, setErroCarregar] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   /** Refs das secoes (variacao + cada grupo), na ordem exibida — usadas pra rolar ate a proxima quando uma secao e concluida. */
@@ -50,7 +52,7 @@ export function StoreProdutoDialog({
     const qtdMin = Math.max(0, produto.quantidade_minima ?? 0);
     setQtd(qtdMin > 0 ? qtdMin : 1);
     setObs("");
-    setImagemAmpliada(false);
+    setImagemAmpliada(true);
     setAspectRatio(null);
     setVariacaoId(null);
     setSelecoesGrupos({});
@@ -408,7 +410,7 @@ export function StoreProdutoDialog({
           {produto.em_promo ? (
             <div className="flex items-center gap-2">
               <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
-              <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
+              <span className="text-[1.05rem] font-bold text-emerald-600">{formatarPreco(produto.preco_final)}</span>
             </div>
           ) : (
             <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>

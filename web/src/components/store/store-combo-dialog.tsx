@@ -33,7 +33,8 @@ export function StoreComboDialog({
   const [passosBrutos, setPassos] = useState<StoreComboPasso[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [selecoes, setSelecoes] = useState<Record<number, Selecao>>({});
-  const [imagemAmpliada, setImagemAmpliada] = useState(false);
+  /* Comeca ja expandida (foto inteira, sem cortar) tanto no desktop quanto no mobile. */
+  const [imagemAmpliada, setImagemAmpliada] = useState(true);
   const [erroCarregar, setErroCarregar] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const passoRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -43,7 +44,7 @@ export function StoreComboDialog({
     if (!open || !combo) return;
     setQtd(1);
     setObs("");
-    setImagemAmpliada(false);
+    setImagemAmpliada(true);
     setAspectRatio(null);
     setPassos([]);
     setSelecoes({});
@@ -265,7 +266,7 @@ export function StoreComboDialog({
           {combo.em_promo ? (
             <div className="flex items-center gap-2">
               <span className="text-[.8rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
-              <span className="text-[1rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
+              <span className="text-[1rem] font-bold text-emerald-600">{formatarPreco(combo.preco_final)}</span>
             </div>
           ) : (
             <span className="text-[1rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
