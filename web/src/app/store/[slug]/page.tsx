@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { resolverLojaIdPorSlug, montarPerfilLoja } from "@/db/queries/lojaPerfil";
+import { resolverLojaIdPorSlug, montarPerfilLoja, fixImgPath } from "@/db/queries/lojaPerfil";
+import { getConfigs } from "@/db/queries/config";
 import { montarCatalogoLoja } from "@/db/queries/catalogo";
 import type { StorePerfil, StoreCatalogo, StoreProduto, StoreCombo } from "@/lib/store/types";
 import { StoreView } from "@/components/store/store-view";
@@ -10,6 +12,36 @@ async function baseUrlAtual(): Promise<string> {
   const host = store.get("x-forwarded-host") ?? store.get("host") ?? "localhost";
   const proto = store.get("x-forwarded-proto") ?? "http";
   return `${proto}://${host}/`;
+}
+
+/*
+ * Link do pedido compartilhado no WhatsApp (ver store-success-dialog.tsx) usa a URL
+ * da loja — sem metadata propria, o preview do WhatsApp caia pro favicon generico
+ * do sistema (src/app/icon.png). Aqui a logo da propria loja (configuracoes.loja_perfil)
+ * vira a imagem do preview.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const lojaId = await resolverLojaIdPorSlug(slug);
+  if (!lojaId) return {};
+
+  const baseUrl = await baseUrlAtual();
+  const cfg = await getConfigs(lojaId, ["nome_loja", "loja_descricao", "loja_perfil", "loja_capa"]);
+  const nomeLoja = cfg.nome_loja || "Minha Loja";
+  const descricao = cfg.loja_descricao || `Peça agora no cardápio online de ${nomeLoja}.`;
+
+  let logo = fixImgPath(cfg.loja_perfil || cfg.loja_capa || "", baseUrl);
+  if (logo.startsWith("/")) logo = `${baseUrl.replace(/\/+$/, "")}${logo}`;
+
+  return {
+    title: nomeLoja,
+    description: descricao,
+    openGraph: {
+      title: nomeLoja,
+      description: descricao,
+      images: logo ? [{ url: logo }] : undefined,
+    },
+  };
 }
 
 function mapProduto(p: import("@/db/queries/catalogo").CatalogoProduto): StoreProduto {
