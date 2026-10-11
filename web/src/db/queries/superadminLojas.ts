@@ -7,7 +7,7 @@ import { buscarLojasComDetalhes, resolverStatusLoja, buscarLeadsRecentes } from 
 /* Equivalente de admin/api/v1/superadmin_lojas.php: tela "Lojas" do superadmin (leitura). */
 
 const RECURSOS_CATEGORIAS: { titulo: string; itens: Record<string, string> }[] = [
-  { titulo: "Dia a dia", itens: { "menu.pdv": "PDV (venda balcão)", "menu.gestor_pedidos": "Gestor de pedidos", "menu.pedidos": "Lista de pedidos", "menu.orcamentos": "Orçamentos", "menu.motoboys": "Motoboys", "menu.modo_garcom": "Modo Garçom" } },
+  { titulo: "Dia a dia", itens: { "menu.pdv": "PDV (venda balcão)", "menu.gestor_pedidos": "Gestor de pedidos", "menu.pedidos": "Lista de pedidos", "menu.pedidos_agendados": "Pedidos agendados", "menu.orcamentos": "Orçamentos", "menu.motoboys": "Motoboys", "menu.modo_garcom": "Modo Garçom" } },
   { titulo: "Catálogo", itens: { "menu.produtos": "Produtos", "menu.promo": "Promoções", "menu.estoque": "Estoque" } },
   { titulo: "Clientes", itens: { "menu.clientes": "Clientes (CRM)", "menu.relatorios_fidelidade": "Fidelidade", "menu.cupons": "Cupons" } },
   { titulo: "Financeiro", itens: { "menu.controle_caixa": "Controle de caixa", "menu.controle_fiado": "Controle de fiado", "menu.financeiro": "Financeiro" } },

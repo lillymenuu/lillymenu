@@ -84,9 +84,11 @@ type Section = { title: string; cards: CardDef[] };
 export function SettingsManager({
   dadosIniciais,
   phpAdminUrl,
+  pedidosAgendadosDisponivel,
 }: {
   dadosIniciais: ConfiguracoesDetalhe;
   phpAdminUrl: string;
+  pedidosAgendadosDisponivel: boolean;
 }) {
   const [dados, setDados] = useState(dadosIniciais);
   const [aberto, setAberto] = useState<CardId | null>(null);
@@ -203,6 +205,10 @@ export function SettingsManager({
       return;
     }
     if (id === "pedidos-agendados") {
+      if (!pedidosAgendadosDisponivel) {
+        toast.error("Pedidos agendados é exclusivo do plano Essencial.");
+        return;
+      }
       router.push("/scheduled-orders");
       return;
     }
@@ -223,17 +229,23 @@ export function SettingsManager({
             {section.cards.map((card) => {
               const Icon = card.icon;
               const isToggle = card.id === "versiculo-dashboard";
+              const bloqueadoPorPlano = card.id === "pedidos-agendados" && !pedidosAgendadosDisponivel;
+              const badge = bloqueadoPorPlano ? "Essencial" : card.badge;
               return (
                 <Card
                   key={card.id}
                   className={`relative flex flex-row items-start gap-3 p-4 ${
-                    card.disabled ? "opacity-60" : "cursor-pointer hover:border-primary/40"
+                    card.disabled
+                      ? "opacity-60"
+                      : bloqueadoPorPlano
+                        ? "cursor-pointer opacity-75 hover:border-primary/40"
+                        : "cursor-pointer hover:border-primary/40"
                   }`}
                   onClick={() => !card.disabled && !isToggle && abrirCard(card.id)}
                 >
-                  {card.badge ? (
+                  {badge ? (
                     <span className="absolute right-3 top-3 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                      {card.badge}
+                      {badge}
                     </span>
                   ) : null}
                   {card.linkOut ? (
@@ -247,6 +259,8 @@ export function SettingsManager({
                     <div className="mt-0.5 text-xs text-muted-foreground">{card.desc}</div>
                     {card.disabled && !isToggle ? (
                       <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">Em breve</div>
+                    ) : bloqueadoPorPlano ? (
+                      <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">Disponível no plano Essencial</div>
                     ) : null}
                   </div>
                   {isToggle ? (

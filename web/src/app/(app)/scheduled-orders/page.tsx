@@ -4,11 +4,17 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getPedidosAgendados, getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy, Pedido } from "@/lib/pedidos";
 import { getConfiguracoesDetalhe } from "@/lib/settingsServer";
+import { temRecursoPlano } from "@/db/queries/assinatura";
 import { ScheduledOrdersCalendar } from "@/components/scheduled-orders/scheduled-orders-calendar";
 
 export default async function ScheduledOrdersPage() {
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
+
+  // Recurso exclusivo do plano Essencial — loja no plano Basico nem acessa a
+  // rota direto (o card em Settings ja fica bloqueado antes de chegar aqui).
+  const disponivel = await temRecursoPlano(sessao.lojaId, sessao.perfil, "menu.pedidos_agendados");
+  if (!disponivel) redirect("/settings");
 
   const hoje = new Date();
   const ano = hoje.getFullYear();

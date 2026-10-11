@@ -13,6 +13,34 @@ import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
  * para a proxima etapa.
  */
 
+/**
+ * Confirma se a loja (pelo plano da assinatura atual) tem acesso a um recurso
+ * especifico (chave "menu.xxx" de planos.recursos_json) — mesma logica usada
+ * pela sidebar (getSidebarDataNeon/pode(), em db/queries/sidebar.ts), so que
+ * pra checar um unico recurso fora do contexto da sidebar (gate de pagina ou
+ * de rota de API que nao recebe o SidebarData inteiro).
+ */
+export async function temRecursoPlano(lojaId: number, perfil: string, chave: string): Promise<boolean> {
+  if (perfil === "superadmin") return true;
+
+  const [linha] = await db
+    .select({ recursosJson: planos.recursos_json })
+    .from(assinaturas)
+    .leftJoin(planos, eq(planos.id, assinaturas.plano_id))
+    .where(eq(assinaturas.loja_id, lojaId))
+    .orderBy(desc(assinaturas.id))
+    .limit(1);
+
+  if (!linha?.recursosJson) return true; // sem recursos_json: plano sem restricao
+  try {
+    const lista = JSON.parse(linha.recursosJson) as unknown;
+    if (!Array.isArray(lista)) return true;
+    return lista.map(String).includes(chave);
+  } catch {
+    return true;
+  }
+}
+
 async function registrarOperacao(operadorId: number | null, acao: string, referencia: string, dados?: Record<string, unknown>): Promise<void> {
   try {
     await db.insert(operacaoLogs).values({ operador_id: operadorId, acao, referencia, dados: dados ? JSON.stringify(dados) : null });

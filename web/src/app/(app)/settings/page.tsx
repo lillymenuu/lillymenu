@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { getSessaoAdmin } from "@/lib/session";
 import { getConfiguracoesDetalhe } from "@/lib/settingsServer";
+import { temRecursoPlano } from "@/db/queries/assinatura";
 import { SettingsManager } from "@/components/settings/settings-manager";
 
 export default async function SettingsPage() {
@@ -10,10 +11,14 @@ export default async function SettingsPage() {
   if (!sessao) redirect("/login");
 
   let dados: Awaited<ReturnType<typeof getConfiguracoesDetalhe>> | null = null;
+  let pedidosAgendadosDisponivel = true;
   let erro: string | null = null;
 
   try {
-    dados = await getConfiguracoesDetalhe(sessao.lojaId, sessao.id, sessao.perfil);
+    [dados, pedidosAgendadosDisponivel] = await Promise.all([
+      getConfiguracoesDetalhe(sessao.lojaId, sessao.id, sessao.perfil),
+      temRecursoPlano(sessao.lojaId, sessao.perfil, "menu.pedidos_agendados"),
+    ]);
   } catch {
     erro = "Erro ao carregar a tela de configurações.";
   }
@@ -31,7 +36,7 @@ export default async function SettingsPage() {
   const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
   return (
     <>
-      <SettingsManager dadosIniciais={dados} phpAdminUrl={phpAdminUrl} />
+      <SettingsManager dadosIniciais={dados} phpAdminUrl={phpAdminUrl} pedidosAgendadosDisponivel={pedidosAgendadosDisponivel} />
       <ScrollToTop />
     </>
   );
