@@ -98,9 +98,13 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   }, []);
 
   /* Snapshot pro polling ler sem precisar recriar o interval a cada
-     mudanca de carrinho/modal aberto. */
+     mudanca de carrinho/modal aberto. Inclui pedidoConfirmado: sem isso, o reload
+     automatico abaixo podia derrubar a tela de sucesso (com o botao de enviar o
+     pedido pro WhatsApp) bem na hora que o cliente ia usa-la — cart.limpar() e os
+     outros modais fechados ao confirmar o pedido zeram todo o resto do calculo. */
   useEffect(() => {
-    interacaoRef.current = cart.itens.length > 0 || produtoAberto !== null || comboAberto !== null || cartAberto || checkoutAberto || infoAberto;
+    interacaoRef.current =
+      cart.itens.length > 0 || produtoAberto !== null || comboAberto !== null || cartAberto || checkoutAberto || infoAberto || pedidoConfirmado !== null;
   });
 
   /* Funil de conversao: 1 visita por sessao do navegador (o dashboard conta visitantes unicos). */
