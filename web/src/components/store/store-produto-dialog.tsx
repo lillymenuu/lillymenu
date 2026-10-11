@@ -180,28 +180,44 @@ export function StoreProdutoDialog({
 
   const pontosTotal = mostrarPontos ? (produto.pontos_ganho ?? 0) * qtd : 0;
 
-  const footer = (
-    <div className="flex items-center justify-between gap-3">
-      <QtyStepper
-        value={qtd}
-        min={Math.max(1, produto.quantidade_minima ?? 0)}
-        max={estoqueRestante}
-        onChange={setQtd}
-        onMaxAtingido={avisarEstoqueIndisponivel}
+  const obsField = (
+    <div className="mb-3">
+      <label className="mb-1.5 block text-[.86rem] font-bold text-neutral-900">Alguma observacao?</label>
+      <textarea
+        value={obs}
+        onChange={(e) => setObs(e.target.value)}
+        placeholder="Observacoes do cliente"
+        rows={2}
+        className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-base outline-none"
       />
-      <button
-        type="button"
-        disabled={!podeAdicionar}
-        onClick={adicionar}
-        className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
-        style={{ background: podeAdicionar ? brown : temVariacoes ? "#a3a3a3" : "#c0a88a" }}
-      >
-        {produto.esgotado
-          ? "Esgotado"
-          : faltaVariacao
-            ? "Selecionar variação"
-            : `Adicionar ${formatarPreco(total)}`}
-      </button>
+    </div>
+  );
+
+  const footer = (
+    <div>
+      {!temVariacoes && obsField}
+      <div className="flex items-center justify-between gap-3">
+        <QtyStepper
+          value={qtd}
+          min={Math.max(1, produto.quantidade_minima ?? 0)}
+          max={estoqueRestante}
+          onChange={setQtd}
+          onMaxAtingido={avisarEstoqueIndisponivel}
+        />
+        <button
+          type="button"
+          disabled={!podeAdicionar}
+          onClick={adicionar}
+          className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+          style={{ background: podeAdicionar ? brown : temVariacoes ? "#a3a3a3" : "#c0a88a" }}
+        >
+          {produto.esgotado
+            ? "Esgotado"
+            : faltaVariacao
+              ? "Selecionar variação"
+              : `Adicionar ${formatarPreco(total)}`}
+        </button>
+      </div>
     </div>
   );
 
@@ -274,19 +290,6 @@ export function StoreProdutoDialog({
         );
       })}
     </>
-  );
-
-  const obsField = (
-    <div className="mt-5">
-      <label className="mb-1.5 block text-[.86rem] font-bold text-neutral-900">Alguma observacao?</label>
-      <textarea
-        value={obs}
-        onChange={(e) => setObs(e.target.value)}
-        placeholder="Observacoes do cliente"
-        rows={2}
-        className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-base outline-none"
-      />
-    </div>
   );
 
   if (temVariacoes) {
@@ -413,7 +416,6 @@ export function StoreProdutoDialog({
           <PontosBadge pontos={pontosTotal} />
         </div>
         {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
-        {obsField}
       </div>
     </StoreSheet>
   );
