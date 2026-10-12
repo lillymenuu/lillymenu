@@ -18,6 +18,7 @@ const CHAVE_POR_MENU: Record<string, string> = {
   gestor: "menu.gestor_pedidos",
   pedidos: "menu.pedidos",
   pedidosAgendados: "menu.pedidos_agendados",
+  nfce: "menu.nfce",
   produtos: "menu.produtos",
   promo: "menu.promo",
   estoque: "menu.estoque",

@@ -24,6 +24,8 @@ export type ProdutoAdmin = {
   id: number;
   nome: string | null;
   codigo: string | null;
+  ncm: string | null;
+  cfop: string | null;
   precoBase: number | null;
   preco: number;
   ativo: boolean | null;
@@ -57,6 +59,8 @@ export async function listarProdutosAdmin(lojaId: number): Promise<ProdutoAdmin[
       id: produtos.id,
       nome: produtos.nome,
       codigo: produtos.codigo,
+      ncm: produtos.ncm,
+      cfop: produtos.cfop,
       precoBase: produtos.preco,
       preco: precoExpr,
       ativo: produtos.ativo,
@@ -184,6 +188,8 @@ export type SalvarProdutoInput = {
   id?: number;
   nome: string;
   codigo?: string;
+  ncm?: string;
+  cfop?: string;
   preco: number;
   categoriaId?: number | null;
   descricao?: string;
@@ -220,6 +226,8 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
 
   const categoriaId = input.categoriaId && input.categoriaId > 0 ? input.categoriaId : null;
   const codigo = (input.codigo ?? "").trim() || null;
+  const ncm = (input.ncm ?? "").replace(/\D/g, "").slice(0, 8) || null;
+  const cfop = (input.cfop ?? "").replace(/\D/g, "").slice(0, 4) || null;
   const descricao = (input.descricao ?? "").trim() || null;
   const precoPromocional = input.precoPromocional !== undefined && input.precoPromocional !== null ? Number(input.precoPromocional) : null;
   const diasSemanaJson = input.diasSemana && input.diasSemana.length > 0 ? JSON.stringify(input.diasSemana) : null;
@@ -230,6 +238,8 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
   const campos = {
     nome,
     codigo,
+    ncm,
+    cfop,
     preco,
     categoria_id: categoriaId,
     ativo: Boolean(input.ativo),

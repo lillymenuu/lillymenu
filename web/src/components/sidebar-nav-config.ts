@@ -31,6 +31,7 @@ import {
   Star,
   Settings,
   Headset,
+  ScrollText,
 } from "lucide-react";
 
 export type NavItem = {
@@ -86,6 +87,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "financeiro", label: "Contas", icon: Landmark, href: "/financialaccounts", migrated: true },
       { menuKey: "financeiro", label: "Formas de pagamento", icon: CreditCard, href: "/financialpaymentmethods", migrated: true },
       { menuKey: "financeiro", label: "DRE", icon: Table, href: "/financialdre", migrated: true },
+      { menuKey: "nfce", label: "NFCe", icon: ScrollText, href: "/nfce", migrated: true },
     ],
   },
   {

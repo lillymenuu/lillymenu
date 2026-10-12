@@ -30,6 +30,8 @@ export type Produto = {
   dias_restantes?: number | null;
   imagem?: string | null;
   codigo?: string | null;
+  ncm?: string | null;
+  cfop?: string | null;
   descricao?: string | null;
   apenas_agendamento?: number;
   quantidade_minima?: number;
@@ -98,6 +100,8 @@ export async function getProdutos(lojaId: number): Promise<{ ok: true; produtos:
       id: p.id,
       nome: p.nome ?? "",
       codigo: p.codigo,
+      ncm: p.ncm,
+      cfop: p.cfop,
       preco_base: p.precoBase ?? 0,
       preco: p.preco,
       ativo: p.ativo ? 1 : 0,

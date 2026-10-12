@@ -32,6 +32,15 @@ import type { Motoboy } from "@/lib/pedidos";
 import { cn } from "cn";
 import { usePosOverlay } from "@/components/pos/pos-overlay-provider";
 
+type NotaFiscalResumo = { status: string; chave: string | null; pdf_url: string | null; mensagem_erro: string | null };
+
+const STATUS_NFCE_LABELS: Record<string, string> = {
+  processando: "processando…",
+  concluido: "emitida",
+  rejeitado: "rejeitada",
+  denegado: "denegada",
+};
+
 function Skeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-md bg-muted", className)} />;
 }
@@ -162,6 +171,9 @@ export function OrderDetailDialog({
   const [finalizando, setFinalizando] = useState(false);
   const [motoboyOpen, setMotoboyOpen] = useState(false);
   const [clienteOpen, setClienteOpen] = useState(false);
+  const [notaFiscal, setNotaFiscal] = useState<NotaFiscalResumo | null>(null);
+  const [nfceDisponivel, setNfceDisponivel] = useState(false);
+  const [emitindoNfce, setEmitindoNfce] = useState(false);
 
   useEffect(() => {
     if (!open || !pedidoId) return;
@@ -179,6 +191,7 @@ export function OrderDetailDialog({
     setStats(null);
     setItens([]);
     setPagamentos([]);
+    setNotaFiscal(null);
     try {
       const res = await fetch(`/api/ordermanager/pedido-detalhe?id=${pedidoId}`);
       const data = await res.json();
@@ -192,6 +205,41 @@ export function OrderDetailDialog({
       }
     } finally {
       setCarregando(false);
+    }
+
+    try {
+      const resNfce = await fetch(`/api/nfce/emitir?pedidoId=${pedidoId}`);
+      if (resNfce.status === 403) {
+        setNfceDisponivel(false);
+      } else {
+        const dataNfce = await resNfce.json();
+        setNfceDisponivel(Boolean(dataNfce.ok));
+        setNotaFiscal(dataNfce.nota ?? null);
+      }
+    } catch {
+      setNfceDisponivel(false);
+    }
+  }
+
+  async function emitirNfce() {
+    if (!pedidoId) return;
+    setEmitindoNfce(true);
+    try {
+      const res = await fetch("/api/nfce/emitir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pedidoId }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        const msg = data.produtosSemFiscal?.length ? `Produtos sem NCM/CFOP cadastrado: ${data.produtosSemFiscal.join(", ")}` : data.msg ?? "Erro ao emitir a NFCe.";
+        toast.error(msg);
+        return;
+      }
+      setNotaFiscal(data.nota);
+      toast.success("NFCe enviada para processamento.");
+    } finally {
+      setEmitindoNfce(false);
     }
   }
 
@@ -553,6 +601,21 @@ export function OrderDetailDialog({
               >
                 <XCircle size={14} /> Cancelar pedido
               </Button>
+              {nfceDisponivel &&
+                (notaFiscal && notaFiscal.status !== "erro" && notaFiscal.status !== "cancelado" ? (
+                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                    NFCe: {STATUS_NFCE_LABELS[notaFiscal.status] ?? notaFiscal.status}
+                    {notaFiscal.pdf_url && (
+                      <a href={notaFiscal.pdf_url} target="_blank" rel="noreferrer" className="text-primary underline">
+                        Ver DANFE
+                      </a>
+                    )}
+                  </span>
+                ) : (
+                  <Button variant="outline" size="lg" className="rounded-lg font-normal" onClick={emitirNfce} disabled={emitindoNfce}>
+                    {emitindoNfce ? "Emitindo…" : "Emitir NFCe"}
+                  </Button>
+                ))}
               {finalizavel && (
                 <Button
                   size="lg"

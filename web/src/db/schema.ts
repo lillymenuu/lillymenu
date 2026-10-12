@@ -1244,6 +1244,8 @@ export const produtos = pgTable(
     promo_descricao: text("promo_descricao"),
     promo_etiqueta: varchar("promo_etiqueta", { length: 30 }),
     destaque: boolean("destaque").notNull().default(false),
+    ncm: varchar("ncm", { length: 8 }),
+    cfop: varchar("cfop", { length: 4 }),
   },
   (t) => [
     index("produtos_fk_produtos_categoria").on(t.categoria_id),
@@ -1447,6 +1449,83 @@ export const whatsMensagens = pgTable(
   (t) => [
     index("whats_mensagens_idx_conversa").on(t.conversa_id),
     foreignKey({ columns: [t.conversa_id], foreignColumns: [whatsConversas.id], name: "whats_mensagens_whats_mensagens_ibfk_1" }).onDelete("cascade"),
+  ]
+);
+
+/*
+ * Modulo NFCe (integracao PlugNotas, https://docs.plugnotas.com.br) — conta
+ * unica da Lilly Menu no PlugNotas; cada loja e cadastrada la como "empresa"
+ * (POST /empresa) usando os dados desta tabela. idCodigoSegurancaContribuinte
+ * e codigoSegurancaContribuinte sao o CSC que a loja gera no portal da SEFAZ
+ * da sua UF — exigido pra montar o QR Code da NFC-e.
+ */
+export const dadosFiscaisLoja = pgTable(
+  "dados_fiscais_loja",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    loja_id: integer("loja_id").notNull(),
+    razao_social: varchar("razao_social", { length: 200 }),
+    inscricao_estadual: varchar("inscricao_estadual", { length: 20 }),
+    inscricao_municipal: varchar("inscricao_municipal", { length: 20 }),
+    regime_tributario: integer("regime_tributario"),
+    regime_tributario_especial: integer("regime_tributario_especial"),
+    simples_nacional: boolean("simples_nacional").notNull().default(false),
+    ambiente_producao: boolean("ambiente_producao").notNull().default(false),
+    serie_nfce: integer("serie_nfce").notNull().default(1),
+    numero_inicial_nfce: integer("numero_inicial_nfce").notNull().default(1),
+    numeracao_automatica: boolean("numeracao_automatica").notNull().default(true),
+    id_codigo_seguranca_contribuinte: varchar("id_codigo_seguranca_contribuinte", { length: 10 }),
+    codigo_seguranca_contribuinte: varchar("codigo_seguranca_contribuinte", { length: 60 }),
+    plugnotas_empresa_cadastrada: boolean("plugnotas_empresa_cadastrada").notNull().default(false),
+    status: text("status").$type<"pendente" | "ativo" | "erro">().notNull().default("pendente"),
+    erro_mensagem: text("erro_mensagem"),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    atualizado_em: timestamp("atualizado_em", { mode: "string" }),
+  },
+  (t) => [
+    unique("dados_fiscais_loja_uq_loja").on(t.loja_id),
+  ]
+);
+
+/* Certificado digital A1 da loja, cadastrado via POST /certificado no PlugNotas — a senha nunca e persistida aqui, so trafega em transito pro PlugNotas. */
+export const certificadosFiscais = pgTable(
+  "certificados_fiscais",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    loja_id: integer("loja_id").notNull(),
+    plugnotas_certificado_id: varchar("plugnotas_certificado_id", { length: 60 }).notNull(),
+    validade: date("validade", { mode: "string" }),
+    status: text("status").$type<"ativo" | "vencido" | "erro">().notNull().default("ativo"),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    atualizado_em: timestamp("atualizado_em", { mode: "string" }),
+  },
+  (t) => [
+    unique("certificados_fiscais_uq_loja").on(t.loja_id),
+  ]
+);
+
+/* Uma NFCe por pedido — id_integracao (= pedido_id) garante idempotencia na chamada POST /nfce. Status final chega pelo webhook do PlugNotas. */
+export const notasFiscais = pgTable(
+  "notas_fiscais",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    loja_id: integer("loja_id").notNull(),
+    pedido_id: integer("pedido_id").notNull(),
+    id_integracao: varchar("id_integracao", { length: 60 }).notNull(),
+    plugnotas_id: varchar("plugnotas_id", { length: 60 }),
+    chave: varchar("chave", { length: 44 }),
+    protocolo: varchar("protocolo", { length: 30 }),
+    status: text("status").$type<"processando" | "concluido" | "rejeitado" | "denegado" | "cancelado" | "erro">().notNull().default("processando"),
+    mensagem_erro: text("mensagem_erro"),
+    xml_url: varchar("xml_url", { length: 255 }),
+    pdf_url: varchar("pdf_url", { length: 255 }),
+    xml_cancelamento_url: varchar("xml_cancelamento_url", { length: 255 }),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    atualizado_em: timestamp("atualizado_em", { mode: "string" }),
+  },
+  (t) => [
+    unique("notas_fiscais_uq_pedido").on(t.pedido_id),
+    index("notas_fiscais_idx_loja").on(t.loja_id),
   ]
 );
 

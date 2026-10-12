@@ -78,6 +78,8 @@ export async function POST(request: Request) {
     id: idRaw && Number(idRaw) > 0 ? Number(idRaw) : undefined,
     nome: typeof body.nome === "string" ? body.nome : "",
     codigo: typeof body.codigo === "string" ? body.codigo : undefined,
+    ncm: typeof body.ncm === "string" ? body.ncm : undefined,
+    cfop: typeof body.cfop === "string" ? body.cfop : undefined,
     preco: Number(body.preco ?? 0),
     categoriaId: categoriaIdRaw !== null && categoriaIdRaw !== undefined && categoriaIdRaw !== "" ? Number(categoriaIdRaw) : null,
     descricao: typeof body.descricao === "string" ? body.descricao : undefined,

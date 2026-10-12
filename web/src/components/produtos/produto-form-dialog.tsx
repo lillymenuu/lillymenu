@@ -78,6 +78,8 @@ export function ProdutoFormDialog({
   const [aba, setAba] = useState("detalhes");
   const [nome, setNome] = useState("");
   const [codigo, setCodigo] = useState("");
+  const [ncm, setNcm] = useState("");
+  const [cfop, setCfop] = useState("");
   const [descricao, setDescricao] = useState("");
   const [categoriaId, setCategoriaId] = useState<string>("");
   const [apenasAgendamento, setApenasAgendamento] = useState(false);
@@ -140,6 +142,8 @@ export function ProdutoFormDialog({
     if (produto) {
       setNome(produto.nome);
       setCodigo(produto.codigo ?? "");
+      setNcm(produto.ncm ?? "");
+      setCfop(produto.cfop ?? "");
       setDescricao(produto.descricao ?? "");
       setCategoriaId(produto.categoria_id ? String(produto.categoria_id) : "");
       setApenasAgendamento(produto.apenas_agendamento === 1);
@@ -196,6 +200,8 @@ export function ProdutoFormDialog({
     } else {
       setNome("");
       setCodigo("");
+      setNcm("");
+      setCfop("");
       setDescricao("");
       setCategoriaId(categoriaPadrao ? String(categoriaPadrao) : "");
       setApenasAgendamento(false);
@@ -274,6 +280,8 @@ export function ProdutoFormDialog({
         categoria_id: categoriaOverride !== undefined ? categoriaOverride || null : categoriaId || null,
         descricao: descricao.trim(),
         codigo: codigo.trim(),
+        ncm: ncm.trim(),
+        cfop: cfop.trim(),
         preco_promocional: promoAtiva && precoPromocional ? parseFloat(precoPromocional.replace(",", ".")) : "",
         promo_desativado: promoAtiva ? 0 : 1,
         ativo,
@@ -481,6 +489,29 @@ export function ProdutoFormDialog({
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="p-codigo">Código do produto (PDV)</Label>
                   <Input id="p-codigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex.: 123" className="max-w-64" />
+                </div>
+
+                <div className="flex gap-3.5">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="p-ncm">NCM (NFCe)</Label>
+                    <Input
+                      id="p-ncm"
+                      value={ncm}
+                      onChange={(e) => setNcm(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                      placeholder="Ex.: 21069090"
+                      className="max-w-36"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="p-cfop">CFOP (NFCe)</Label>
+                    <Input
+                      id="p-cfop"
+                      value={cfop}
+                      onChange={(e) => setCfop(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      placeholder="Ex.: 5102"
+                      className="max-w-36"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
