@@ -15,7 +15,7 @@ export default async function NfceReportPage() {
   let dadosIniciais: Awaited<ReturnType<typeof listarNotasFiscais>> | null = null;
   let erro: string | null = null;
   try {
-    dadosIniciais = await listarNotasFiscais(sessao.lojaId, "30dias");
+    dadosIniciais = await listarNotasFiscais(sessao.lojaId, "hoje");
   } catch {
     erro = "Erro ao carregar o relatório de notas emitidas.";
   }

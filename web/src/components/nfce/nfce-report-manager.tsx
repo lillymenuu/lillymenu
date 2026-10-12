@@ -54,7 +54,7 @@ function descricaoPeriodo(periodo: string): string {
 }
 
 export function NfceReportManager({ dadosIniciais }: { dadosIniciais: Dados }) {
-  const [periodo, setPeriodo] = useState("30dias");
+  const [periodo, setPeriodo] = useState("hoje");
   const [dataIni, setDataIni] = useState(dadosIniciais.inicio.slice(0, 10));
   const [dataFim, setDataFim] = useState(dadosIniciais.fim.slice(0, 10));
   const [dados, setDados] = useState(dadosIniciais);
