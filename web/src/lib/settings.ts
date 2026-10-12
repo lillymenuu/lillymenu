@@ -21,6 +21,7 @@ export type ConfiguracoesDetalhe = {
     cidade: string;
     estado: string;
     complemento: string;
+    codigo_ibge: string;
     capa: string;
     perfil: string;
     verificada: boolean;

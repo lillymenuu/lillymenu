@@ -34,6 +34,7 @@ export async function getConfiguracoesDetalhe(lojaId: number, adminId: number, p
       cidade: d.loja.cidade,
       estado: d.loja.estado,
       complemento: d.loja.complemento,
+      codigo_ibge: d.loja.codigoIbge,
       capa: d.loja.capa,
       perfil: d.loja.perfil,
       verificada: d.loja.verificada,

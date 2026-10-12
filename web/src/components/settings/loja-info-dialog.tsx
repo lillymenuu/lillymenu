@@ -105,6 +105,8 @@ export function LojaInfoDialog({
   const [cidade, setCidade] = useState(loja.cidade);
   const [estado, setEstado] = useState(loja.estado);
   const [complemento, setComplemento] = useState(loja.complemento);
+  const [codigoIbge, setCodigoIbge] = useState(loja.codigo_ibge);
+  const [buscandoCep, setBuscandoCep] = useState(false);
 
   const [capaPreview, setCapaPreview] = useState(loja.capa);
   const [capaBase64, setCapaBase64] = useState("");
@@ -133,6 +135,7 @@ export function LojaInfoDialog({
     setCidade(loja.cidade);
     setEstado(loja.estado);
     setComplemento(loja.complemento);
+    setCodigoIbge(loja.codigo_ibge);
     setCapaPreview(loja.capa);
     setCapaBase64("");
     setCapaRemover(false);
@@ -179,6 +182,33 @@ export function LojaInfoDialog({
     setPerfilRemover(true);
   }
 
+  async function buscarCep() {
+    const digitos = cep.replace(/\D/g, "");
+    if (digitos.length !== 8) {
+      toast.error("Informe um CEP válido.");
+      return;
+    }
+    setBuscandoCep(true);
+    try {
+      const res = await fetch(`/api/nfce/cep?cep=${digitos}`);
+      const data = await res.json();
+      if (!data.ok) {
+        toast.error(data.msg ?? "CEP não encontrado.");
+        return;
+      }
+      setRua(data.endereco.logradouro ?? "");
+      setBairro(data.endereco.bairro ?? "");
+      setCidade(data.endereco.municipio ?? "");
+      setEstado(data.endereco.uf ?? "");
+      setCodigoIbge(data.endereco.ibge ?? "");
+      toast.success("Endereço preenchido a partir do CEP.");
+    } catch {
+      toast.error("Erro ao consultar o CEP.");
+    } finally {
+      setBuscandoCep(false);
+    }
+  }
+
   const linkCompleto = `${lojaLinkBase}${encodeURIComponent(linkSlug)}`;
 
   function alterarLinkSlug(valor: string) {
@@ -221,6 +251,7 @@ export function LojaInfoDialog({
           loja_cidade: cidade,
           loja_estado: estado,
           loja_complemento: complemento,
+          loja_codigo_ibge: codigoIbge,
           loja_capa_base64: capaBase64,
           loja_capa_remover: capaRemover ? "1" : "0",
           loja_perfil_base64: perfilBase64,
@@ -355,7 +386,12 @@ export function LojaInfoDialog({
           <div className="col-span-full mt-2 text-xs font-semibold tracking-wide text-primary uppercase">Endereço</div>
           <div className="space-y-1">
             <Label className="text-xs">CEP</Label>
-            <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" />
+            <div className="flex gap-2">
+              <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" />
+              <Button type="button" variant="outline" size="sm" onClick={buscarCep} disabled={buscandoCep}>
+                {buscandoCep ? "Buscando…" : "Buscar"}
+              </Button>
+            </div>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Número</Label>
@@ -380,6 +416,11 @@ export function LojaInfoDialog({
           <div className="space-y-1">
             <Label className="text-xs">Complemento</Label>
             <Input value={complemento} onChange={(e) => setComplemento(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Código IBGE do município</Label>
+            <Input value={codigoIbge} onChange={(e) => setCodigoIbge(e.target.value.replace(/\D/g, ""))} placeholder="Preenchido pelo Buscar CEP" />
+            <p className="text-[11px] text-muted-foreground">Usado só pelo módulo de NFCe (cadastro fiscal).</p>
           </div>
         </div>
         </div>
