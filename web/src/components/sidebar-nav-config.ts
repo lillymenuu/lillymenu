@@ -88,8 +88,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "financeiro", label: "Contas", icon: Landmark, href: "/financialaccounts", migrated: true },
       { menuKey: "financeiro", label: "Formas de pagamento", icon: CreditCard, href: "/financialpaymentmethods", migrated: true },
       { menuKey: "financeiro", label: "DRE", icon: Table, href: "/financialdre", migrated: true },
-      { menuKey: "nfce", label: "NFCe", icon: ScrollText, href: "/nfce", migrated: true },
-      { menuKey: "nfceReport", label: "Notas emitidas (NFC-e)", icon: FileBarChart, href: "/nfcereport", migrated: true },
     ],
   },
   {
@@ -112,6 +110,13 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: null, label: "Assinatura", icon: CreditCard, href: "/plan-details", migrated: true },
       { menuKey: "configuracoes", label: "Configurações", icon: Settings, href: "/settings", migrated: true },
       { menuKey: null, label: "Suporte", icon: Headset, href: "/suporte", migrated: true },
+    ],
+  },
+  {
+    title: "NFCe",
+    items: [
+      { menuKey: "nfce", label: "NFCe", icon: ScrollText, href: "/nfce", migrated: true },
+      { menuKey: "nfceReport", label: "Notas emitidas (NFC-e)", icon: FileBarChart, href: "/nfcereport", migrated: true },
     ],
   },
 ];
