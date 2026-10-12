@@ -6,6 +6,7 @@ import { getConfig, getConfigs } from "@/db/queries/config";
 import {
   pnCadastrarCertificado,
   pnCadastrarEmpresa,
+  pnAtualizarEmpresa,
   pnEmitirNfce,
   pnConsultarResumoNfce,
   pnCancelarNfce,
@@ -129,7 +130,7 @@ export async function cadastrarEmpresaNoPlugNotas(lojaId: number): Promise<{ ok:
     descricaoCidade: cfg.loja_cidade,
   };
 
-  const resultado = await pnCadastrarEmpresa({
+  const dadosEmpresa = {
     cpfCnpj: cfg.loja_cnpj.replace(/\D/g, ""),
     razaoSocial: dadosFiscais.razao_social ?? cfg.nome_loja,
     nomeFantasia: cfg.nome_loja,
@@ -147,7 +148,14 @@ export async function cadastrarEmpresaNoPlugNotas(lojaId: number): Promise<{ ok:
     numeracaoAutomatica: dadosFiscais.numeracao_automatica,
     idCodigoSegurancaContribuinte: dadosFiscais.id_codigo_seguranca_contribuinte ?? undefined,
     codigoSegurancaContribuinte: dadosFiscais.codigo_seguranca_contribuinte ?? undefined,
-  });
+  };
+
+  // Tenta sempre POST primeiro; se o CNPJ ja estiver cadastrado naquele ambiente
+  // (sandbox e producao sao cadastros independentes no PlugNotas), cai pra PATCH.
+  let resultado = await pnCadastrarEmpresa(dadosEmpresa);
+  if (!resultado.ok && resultado.status === 409) {
+    resultado = await pnAtualizarEmpresa(dadosEmpresa);
+  }
 
   if (!resultado.ok) {
     await upsertDadosFiscaisLoja(lojaId, { status: "erro", erro_mensagem: resultado.erro });

@@ -10,7 +10,7 @@ import "server-only";
 const PN_BASE_SANDBOX = "https://api.sandbox.plugnotas.com.br";
 const PN_BASE_PRODUCAO = "https://api.plugnotas.com.br";
 
-type ResultadoPn<T> = { ok: true; dados: T } | { ok: false; erro: string };
+type ResultadoPn<T> = { ok: true; dados: T } | { ok: false; erro: string; status?: number };
 
 function pnConfig(producao: boolean): { apiKey: string; baseUrl: string } {
   const apiKey = ((producao ? process.env.PLUGNOTAS_API_KEY_PRODUCAO : process.env.PLUGNOTAS_API_KEY_SANDBOX) ?? "").trim();
@@ -41,7 +41,7 @@ async function pnRequest<T>(
 
   if (!resp.ok) {
     const erro = dados?.error?.message ?? dados?.message ?? `Erro ${resp.status} ao chamar o PlugNotas.`;
-    return { ok: false, erro };
+    return { ok: false, erro, status: resp.status };
   }
   return { ok: true, dados };
 }
@@ -99,9 +99,8 @@ export type DadosEmpresaFiscal = {
   codigoSegurancaContribuinte?: string;
 };
 
-/** Cadastra (ou atualiza, via PATCH) a loja como "empresa" no PlugNotas, com o modulo NFCe ativo. */
-export async function pnCadastrarEmpresa(dados: DadosEmpresaFiscal): Promise<ResultadoPn<{ message: string }>> {
-  const body = {
+function montarBodyEmpresa(dados: DadosEmpresaFiscal) {
+  return {
     cpfCnpj: dados.cpfCnpj,
     razaoSocial: dados.razaoSocial,
     nomeFantasia: dados.nomeFantasia,
@@ -135,11 +134,23 @@ export async function pnCadastrarEmpresa(dados: DadosEmpresaFiscal): Promise<Res
       },
     },
   };
+}
 
+/** Cadastra a loja como "empresa" no PlugNotas (primeiro cadastro do CNPJ) com o modulo NFCe ativo. */
+export async function pnCadastrarEmpresa(dados: DadosEmpresaFiscal): Promise<ResultadoPn<{ message: string }>> {
   return pnRequest<{ message: string }>("/empresa", dados.producao, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(montarBodyEmpresa(dados)),
+  });
+}
+
+/** Atualiza os dados da empresa ja cadastrada (PlugNotas rejeita um 2o POST pro mesmo CNPJ com 409). */
+export async function pnAtualizarEmpresa(dados: DadosEmpresaFiscal): Promise<ResultadoPn<{ message: string }>> {
+  return pnRequest<{ message: string }>(`/empresa/${encodeURIComponent(dados.cpfCnpj)}`, dados.producao, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(montarBodyEmpresa(dados)),
   });
 }
 
