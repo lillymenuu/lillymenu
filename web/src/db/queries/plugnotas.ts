@@ -205,6 +205,8 @@ export async function pnEmitirNfce(dados: EmissaoNfceInput, producao: boolean): 
 
 export type ResumoNfce = {
   id?: string;
+  numero?: string;
+  serie?: string;
   status: "REJEITADO" | "CONCLUIDO" | "DENEGADO" | "CANCELADO";
   chave?: string;
   protocolo?: string;

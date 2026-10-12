@@ -1513,6 +1513,8 @@ export const notasFiscais = pgTable(
     pedido_id: integer("pedido_id").notNull(),
     id_integracao: varchar("id_integracao", { length: 60 }).notNull(),
     plugnotas_id: varchar("plugnotas_id", { length: 60 }),
+    numero: varchar("numero", { length: 20 }),
+    serie: varchar("serie", { length: 10 }),
     chave: varchar("chave", { length: 44 }),
     protocolo: varchar("protocolo", { length: 30 }),
     status: text("status").$type<"processando" | "concluido" | "rejeitado" | "denegado" | "cancelado" | "erro">().notNull().default("processando"),

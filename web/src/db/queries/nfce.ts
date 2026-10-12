@@ -1,8 +1,9 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { dadosFiscaisLoja, certificadosFiscais, notasFiscais, pedidos, pedidoItens, pedidoPagamentos, produtos } from "@/db/schema";
 import { getConfig, getConfigs } from "@/db/queries/config";
+import { dataFortaleza } from "@/db/queries/tempo";
 import {
   pnCadastrarCertificado,
   pnCadastrarEmpresa,
@@ -278,6 +279,8 @@ export async function atualizarStatusNotaFiscal(pedidoId: number): Promise<void>
     .set({
       status: statusMap[resumo.status] ?? "erro",
       plugnotas_id: resumo.id ?? nota.plugnotas_id,
+      numero: resumo.numero ?? nota.numero,
+      serie: resumo.serie ?? nota.serie,
       chave: resumo.chave ?? null,
       protocolo: resumo.protocolo ?? nota.protocolo,
       mensagem_erro: resumo.erro ?? resumo.mensagem ?? null,
@@ -300,4 +303,75 @@ export async function cancelarNotaFiscal(lojaId: number, pedidoId: number, justi
 
   await db.update(notasFiscais).set({ status: "cancelado", atualizado_em: new Date().toISOString() }).where(eq(notasFiscais.pedido_id, pedidoId));
   return { ok: true };
+}
+
+function resolverPeriodoNfce(periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
+  const hoje = dataFortaleza();
+  if (dataIni && dataFim) return { inicio: `${dataIni} 00:00:00`, fim: `${dataFim} 23:59:59` };
+  if (periodo === "hoje") return { inicio: `${hoje} 00:00:00`, fim: `${hoje} 23:59:59` };
+
+  const dias = periodo === "7dias" ? 7 : 30;
+  const [y, m, d] = hoje.split("-").map(Number);
+  const inicioDt = new Date(Date.UTC(y, m - 1, d) - (dias - 1) * 86_400_000);
+  const inicio = `${inicioDt.getUTCFullYear()}-${String(inicioDt.getUTCMonth() + 1).padStart(2, "0")}-${String(inicioDt.getUTCDate()).padStart(2, "0")}`;
+  return { inicio: `${inicio} 00:00:00`, fim: `${hoje} 23:59:59` };
+}
+
+export type NotaFiscalRelatorio = {
+  pedidoId: number;
+  pedidoCodigo: string | null;
+  numero: string | null;
+  serie: string | null;
+  status: NotaFiscal["status"];
+  valorTotal: number;
+  protocolo: string | null;
+  chave: string | null;
+  pdfUrl: string | null;
+  criadoEm: string;
+  pagamentos: string[];
+};
+
+export async function listarNotasFiscais(lojaId: number, periodo: string, dataIni?: string, dataFim?: string): Promise<{ notas: NotaFiscalRelatorio[]; inicio: string; fim: string }> {
+  const { inicio, fim } = resolverPeriodoNfce(periodo, dataIni, dataFim);
+
+  const linhas = await db
+    .select({
+      pedidoId: notasFiscais.pedido_id,
+      pedidoCodigo: pedidos.codigo,
+      numero: notasFiscais.numero,
+      serie: notasFiscais.serie,
+      status: notasFiscais.status,
+      valorTotal: pedidos.total,
+      protocolo: notasFiscais.protocolo,
+      chave: notasFiscais.chave,
+      pdfUrl: notasFiscais.pdf_url,
+      criadoEm: notasFiscais.criado_em,
+    })
+    .from(notasFiscais)
+    .leftJoin(pedidos, eq(pedidos.id, notasFiscais.pedido_id))
+    .where(and(eq(notasFiscais.loja_id, lojaId), gte(notasFiscais.criado_em, inicio), lte(notasFiscais.criado_em, fim)))
+    .orderBy(desc(notasFiscais.criado_em));
+
+  if (linhas.length === 0) return { notas: [], inicio, fim };
+
+  const pedidoIds = linhas.map((l) => l.pedidoId);
+  const pagamentosLinhas = await db
+    .select({ pedidoId: pedidoPagamentos.pedido_id, forma: pedidoPagamentos.forma })
+    .from(pedidoPagamentos)
+    .where(inArray(pedidoPagamentos.pedido_id, pedidoIds));
+
+  const pagamentosPorPedido = new Map<number, string[]>();
+  for (const p of pagamentosLinhas) {
+    const lista = pagamentosPorPedido.get(p.pedidoId) ?? [];
+    lista.push(p.forma);
+    pagamentosPorPedido.set(p.pedidoId, lista);
+  }
+
+  const notas = linhas.map((l) => ({
+    ...l,
+    valorTotal: l.valorTotal ?? 0,
+    pagamentos: pagamentosPorPedido.get(l.pedidoId) ?? [],
+  }));
+
+  return { notas, inicio, fim };
 }
