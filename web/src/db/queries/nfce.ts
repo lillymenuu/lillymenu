@@ -124,9 +124,15 @@ export async function cadastrarEmpresaNoPlugNotas(lojaId: number): Promise<{ ok:
   ]);
 
   if (!dadosFiscais) return { ok: false, erro: "Preencha os dados fiscais da loja antes de cadastrar no PlugNotas." };
-  if (!certificado) return { ok: false, erro: "Cadastre o certificado digital antes de prosseguir." };
-  if (!cfg.loja_cnpj) return { ok: false, erro: "CNPJ da loja não cadastrado em Configurações." };
-  if (!cfg.loja_codigo_ibge) return { ok: false, erro: "Código IBGE do município não cadastrado (use o CEP pra preencher automaticamente)." };
+
+  const marcarErro = async (erro: string) => {
+    await upsertDadosFiscaisLoja(lojaId, { status: "erro", erro_mensagem: erro });
+    return { ok: false as const, erro };
+  };
+
+  if (!certificado) return marcarErro("Cadastre o certificado digital antes de prosseguir.");
+  if (!cfg.loja_cnpj) return marcarErro("CNPJ da loja não cadastrado em Configurações.");
+  if (!cfg.loja_codigo_ibge) return marcarErro("Código IBGE do município não cadastrado (use o CEP pra preencher automaticamente).");
 
   const endereco: EnderecoFiscal = {
     logradouro: cfg.loja_rua,
