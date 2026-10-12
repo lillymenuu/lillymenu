@@ -174,6 +174,7 @@ export function OrderDetailDialog({
   const [notaFiscal, setNotaFiscal] = useState<NotaFiscalResumo | null>(null);
   const [nfceDisponivel, setNfceDisponivel] = useState(false);
   const [emitindoNfce, setEmitindoNfce] = useState(false);
+  const [atualizandoNfce, setAtualizandoNfce] = useState(false);
 
   useEffect(() => {
     if (!open || !pedidoId) return;
@@ -240,6 +241,27 @@ export function OrderDetailDialog({
       toast.success("NFCe enviada para processamento.");
     } finally {
       setEmitindoNfce(false);
+    }
+  }
+
+  async function atualizarStatusNfce() {
+    if (!pedidoId) return;
+    setAtualizandoNfce(true);
+    try {
+      const res = await fetch("/api/nfce/atualizar-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pedidoId }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        toast.error(data.msg ?? "Erro ao atualizar o status da NFCe.");
+        return;
+      }
+      setNotaFiscal(data.nota);
+      toast.success("Status da NFCe atualizado.");
+    } finally {
+      setAtualizandoNfce(false);
     }
   }
 
@@ -609,6 +631,11 @@ export function OrderDetailDialog({
                       <a href={notaFiscal.pdf_url} target="_blank" rel="noreferrer" className="text-primary underline">
                         Ver DANFE
                       </a>
+                    )}
+                    {notaFiscal.status === "processando" && (
+                      <Button variant="ghost" size="sm" className="h-auto p-0 text-primary underline" onClick={atualizarStatusNfce} disabled={atualizandoNfce}>
+                        {atualizandoNfce ? "Atualizando…" : "Atualizar status"}
+                      </Button>
                     )}
                   </span>
                 ) : (
