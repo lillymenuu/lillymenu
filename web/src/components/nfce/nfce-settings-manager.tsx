@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { CheckCircle2, AlertTriangle, Clock3, FileKey2, Building2, UploadCloud, FileCheck2, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { DadosFiscaisLoja } from "@/db/queries/nfce";
+import type { DadosFiscaisLoja, CertificadoFiscal } from "@/db/queries/nfce";
+import { cn } from "cn";
 
 const REGIMES_TRIBUTARIOS: Record<string, string> = {
   "1": "Simples Nacional",
@@ -25,17 +25,43 @@ const REGIMES_ESPECIAIS: Record<string, string> = {
   "4": "Cooperativa",
 };
 
-const STATUS_LABEL: Record<string, { label: string; variant: "secondary" | "default" | "destructive" }> = {
-  pendente: { label: "Pendente", variant: "secondary" },
-  ativo: { label: "Ativo no PlugNotas", variant: "default" },
-  erro: { label: "Erro no cadastro", variant: "destructive" },
-};
+function FieldHint({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+      <Info size={12} className="mt-0.5 shrink-0" />
+      <span>{children}</span>
+    </p>
+  );
+}
 
-export function NfceSettingsManager({ dadosIniciais }: { dadosIniciais: DadosFiscaisLoja | null }) {
+function StepMarker({ icon: Icon, done, withLine }: { icon: React.ElementType; done: boolean; withLine: boolean }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div
+        className={cn(
+          "flex size-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+          done ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted text-muted-foreground"
+        )}
+      >
+        {done ? <CheckCircle2 size={18} /> : <Icon size={18} />}
+      </div>
+      {withLine && <div className="mt-2 w-px flex-1 bg-border" />}
+    </div>
+  );
+}
+
+export function NfceSettingsManager({
+  dadosIniciais,
+  certificadoInicial,
+}: {
+  dadosIniciais: DadosFiscaisLoja | null;
+  certificadoInicial: CertificadoFiscal | null;
+}) {
   const [salvando, setSalvando] = useState(false);
   const [enviandoCertificado, setEnviandoCertificado] = useState(false);
   const [status, setStatus] = useState(dadosIniciais?.status ?? null);
   const [erroMensagem, setErroMensagem] = useState(dadosIniciais?.erro_mensagem ?? null);
+  const [certificadoCadastrado, setCertificadoCadastrado] = useState(Boolean(certificadoInicial));
 
   const [razaoSocial, setRazaoSocial] = useState(dadosIniciais?.razao_social ?? "");
   const [inscricaoEstadual, setInscricaoEstadual] = useState(dadosIniciais?.inscricao_estadual ?? "");
@@ -52,6 +78,7 @@ export function NfceSettingsManager({ dadosIniciais }: { dadosIniciais: DadosFis
 
   const [arquivoCertificado, setArquivoCertificado] = useState<File | null>(null);
   const [senhaCertificado, setSenhaCertificado] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function salvarDadosFiscais() {
     if (razaoSocial.trim() === "") {
@@ -112,6 +139,7 @@ export function NfceSettingsManager({ dadosIniciais }: { dadosIniciais: DadosFis
         return;
       }
       setSenhaCertificado("");
+      setCertificadoCadastrado(true);
       toast.success("Certificado cadastrado no PlugNotas.");
     } catch {
       toast.error("Falha de conexão ao enviar certificado.");
@@ -120,141 +148,235 @@ export function NfceSettingsManager({ dadosIniciais }: { dadosIniciais: DadosFis
     }
   }
 
-  const statusInfo = status ? STATUS_LABEL[status] : null;
+  const dadosFiscaisCompletos = razaoSocial.trim() !== "";
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">NFCe</h1>
-          <p className="text-sm text-muted-foreground">Emissão de Nota Fiscal do Consumidor via PlugNotas.</p>
-        </div>
-        {statusInfo && <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>}
+    <div className="mx-auto max-w-3xl space-y-6 p-6">
+      <div>
+        <h1 className="text-xl font-semibold">Emissão de NFC-e</h1>
+        <p className="text-sm text-muted-foreground">
+          Cadastre o certificado digital e os dados fiscais da loja pra começar a emitir Nota Fiscal do Consumidor eletrônica, via PlugNotas.
+        </p>
       </div>
 
-      {erroMensagem && (
-        <Card className="border-destructive/40">
-          <CardContent className="py-3 text-sm text-destructive">{erroMensagem}</CardContent>
-        </Card>
-      )}
+      <StatusBanner status={status} erroMensagem={erroMensagem} ambienteProducao={ambienteProducao} />
 
-      <Card>
-        <CardHeader className="font-medium">1. Certificado digital (A1)</CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-xs text-muted-foreground">
-            Arquivo .pfx, .p12 ou .cer da empresa. A senha é usada só no envio — não guardamos ela.
-          </p>
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1">
-              <Label>Arquivo do certificado</Label>
-              <Input type="file" accept=".pfx,.p12,.cer,.p7" onChange={(e) => setArquivoCertificado(e.target.files?.[0] ?? null)} />
+      <div className="rounded-xl border bg-card">
+        {/* Passo 1 — Certificado digital */}
+        <div className="flex gap-4 p-6">
+          <StepMarker icon={FileKey2} done={certificadoCadastrado} withLine />
+          <div className="flex-1 space-y-4 pb-2">
+            <div>
+              <h2 className="font-medium">Certificado digital (A1)</h2>
+              <p className="text-sm text-muted-foreground">O arquivo que identifica sua empresa perante a Receita e assina as notas eletronicamente.</p>
             </div>
-            <div className="space-y-1">
-              <Label>Senha do certificado</Label>
-              <Input type="password" value={senhaCertificado} onChange={(e) => setSenhaCertificado(e.target.value)} className="w-48" />
+
+            <div className="flex flex-wrap items-start gap-3">
+              <div className="space-y-1.5">
+                <Label>Arquivo do certificado</Label>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex h-9 w-64 items-center gap-2 rounded-md border border-dashed px-3 text-left text-sm text-muted-foreground outline-none transition-colors hover:border-primary hover:text-primary focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  <UploadCloud size={15} className="shrink-0" />
+                  <span className="truncate">{arquivoCertificado ? arquivoCertificado.name : "Escolher arquivo .pfx, .p12 ou .cer"}</span>
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pfx,.p12,.cer,.p7"
+                  className="hidden"
+                  onChange={(e) => setArquivoCertificado(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Senha do certificado</Label>
+                <Input type="password" value={senhaCertificado} onChange={(e) => setSenhaCertificado(e.target.value)} className="w-48" />
+              </div>
+              <Button onClick={enviarCertificado} disabled={enviandoCertificado} className="mt-[22px]">
+                {enviandoCertificado ? "Enviando…" : certificadoCadastrado ? "Substituir" : "Enviar certificado"}
+              </Button>
             </div>
-            <Button onClick={enviarCertificado} disabled={enviandoCertificado}>
-              {enviandoCertificado ? "Enviando…" : "Enviar certificado"}
+            <FieldHint>A senha trafega só no envio — não guardamos ela, apenas o certificado fica com o PlugNotas.</FieldHint>
+          </div>
+        </div>
+
+        {/* Passo 2 — Dados fiscais */}
+        <div className="flex gap-4 border-t p-6">
+          <StepMarker icon={Building2} done={status === "ativo"} withLine={false} />
+          <div className="flex-1 space-y-5 pb-1">
+            <div>
+              <h2 className="font-medium">Dados fiscais da empresa</h2>
+              <p className="text-sm text-muted-foreground">Como sua loja é identificada e tributada perante o Fisco.</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Razão social</Label>
+              <Input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Razão social conforme CNPJ" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Inscrição estadual</Label>
+                <Input value={inscricaoEstadual} onChange={(e) => setInscricaoEstadual(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Inscrição municipal</Label>
+                <Input value={inscricaoMunicipal} onChange={(e) => setInscricaoMunicipal(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Regime tributário</Label>
+                <Select items={REGIMES_TRIBUTARIOS} value={regimeTributario} onValueChange={(v) => setRegimeTributario(v ?? "1")}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(REGIMES_TRIBUTARIOS).map(([v, label]) => (
+                      <SelectItem key={v} value={v}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Regime tributário especial</Label>
+                <Select items={REGIMES_ESPECIAIS} value={regimeTributarioEspecial} onValueChange={(v) => setRegimeTributarioEspecial(v ?? "0")}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(REGIMES_ESPECIAIS).map(([v, label]) => (
+                      <SelectItem key={v} value={v}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <FieldHint>Na dúvida sobre regime tributário, confirme com seu contador — esse dado define como o imposto é calculado em cada nota.</FieldHint>
+
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <span className="text-sm font-medium">Optante pelo Simples Nacional</span>
+              <Switch checked={simplesNacional} onCheckedChange={setSimplesNacional} />
+            </div>
+
+            <div className="space-y-1.5 border-t pt-4">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Código de Segurança do Contribuinte</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Input value={idCsc} onChange={(e) => setIdCsc(e.target.value)} placeholder="ID do CSC" />
+                <Input value={tokenCsc} onChange={(e) => setTokenCsc(e.target.value)} placeholder="Código do CSC" />
+              </div>
+              <FieldHint>Gerado no Portal do Contribuinte da SEFAZ da sua UF. É o que garante a autenticidade do QR Code impresso na nota.</FieldHint>
+            </div>
+
+            <div className="space-y-1.5 border-t pt-4">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Numeração</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-normal text-muted-foreground">Série da NFC-e</Label>
+                  <Input type="number" min={1} value={serieNfce} onChange={(e) => setSerieNfce(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-normal text-muted-foreground">Próximo número</Label>
+                  <Input type="number" min={1} value={numeroInicialNfce} onChange={(e) => setNumeroInicialNfce(e.target.value)} />
+                </div>
+              </div>
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <span className="text-sm font-medium">Numeração automática</span>
+                <Switch checked={numeracaoAutomatica} onCheckedChange={setNumeracaoAutomatica} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5 border-t pt-4">
+              <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Ambiente de emissão</Label>
+              <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+                <button
+                  type="button"
+                  onClick={() => setAmbienteProducao(false)}
+                  className={cn(
+                    "rounded-md px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                    !ambienteProducao ? "bg-card shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Homologação (testes)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAmbienteProducao(true)}
+                  className={cn(
+                    "rounded-md px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                    ambienteProducao ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Produção
+                </button>
+              </div>
+              <FieldHint>
+                {ambienteProducao
+                  ? "As notas emitidas em produção têm valor fiscal real e são enviadas à SEFAZ de verdade."
+                  : "Em homologação as notas são de teste, sem valor fiscal — use pra validar o cadastro antes de ir pra produção."}
+              </FieldHint>
+            </div>
+
+            <Button onClick={salvarDadosFiscais} disabled={salvando} className="w-full">
+              {dadosFiscaisCompletos && status === "ativo" ? <FileCheck2 size={16} /> : null}
+              {salvando ? "Salvando…" : status === "ativo" ? "Atualizar cadastro no PlugNotas" : "Salvar e cadastrar no PlugNotas"}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      <Card>
-        <CardHeader className="font-medium">2. Dados fiscais da empresa</CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-1">
-            <Label>Razão social</Label>
-            <Input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Inscrição estadual</Label>
-              <Input value={inscricaoEstadual} onChange={(e) => setInscricaoEstadual(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label>Inscrição municipal</Label>
-              <Input value={inscricaoMunicipal} onChange={(e) => setInscricaoMunicipal(e.target.value)} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Regime tributário</Label>
-              <Select items={REGIMES_TRIBUTARIOS} value={regimeTributario} onValueChange={(v) => setRegimeTributario(v ?? "1")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(REGIMES_TRIBUTARIOS).map(([v, label]) => (
-                    <SelectItem key={v} value={v}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Regime tributário especial</Label>
-              <Select items={REGIMES_ESPECIAIS} value={regimeTributarioEspecial} onValueChange={(v) => setRegimeTributarioEspecial(v ?? "0")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(REGIMES_ESPECIAIS).map(([v, label]) => (
-                    <SelectItem key={v} value={v}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div>
-              <div className="text-sm font-medium">Optante pelo Simples Nacional</div>
-            </div>
-            <Switch checked={simplesNacional} onCheckedChange={setSimplesNacional} />
-          </div>
+function StatusBanner({
+  status,
+  erroMensagem,
+  ambienteProducao,
+}: {
+  status: "pendente" | "ativo" | "erro" | null;
+  erroMensagem: string | null;
+  ambienteProducao: boolean;
+}) {
+  if (status === "ativo") {
+    return (
+      <div className="flex items-start gap-3 rounded-xl border border-[#bbf0c9] bg-[#f0fdf4] p-4">
+        <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-[#15803d]" />
+        <div>
+          <div className="text-sm font-medium text-[#15803d]">Pronta pra emitir NFC-e</div>
+          <p className="text-sm text-[#166534]">
+            Cadastro ativo no PlugNotas, ambiente de {ambienteProducao ? "produção" : "homologação"}. Emita a nota direto no detalhe do pedido.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>ID do CSC</Label>
-              <Input value={idCsc} onChange={(e) => setIdCsc(e.target.value)} placeholder="Gerado no portal da SEFAZ" />
-            </div>
-            <div className="space-y-1">
-              <Label>Código do CSC</Label>
-              <Input value={tokenCsc} onChange={(e) => setTokenCsc(e.target.value)} placeholder="Gerado no portal da SEFAZ" />
-            </div>
-          </div>
+  if (status === "erro") {
+    return (
+      <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+        <AlertTriangle size={20} className="mt-0.5 shrink-0 text-destructive" />
+        <div>
+          <div className="text-sm font-medium text-destructive">Não foi possível concluir o cadastro</div>
+          <p className="text-sm text-destructive/90">{erroMensagem ?? "Revise os dados abaixo e tente salvar novamente."}</p>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Série da NFCe</Label>
-              <Input type="number" min={1} value={serieNfce} onChange={(e) => setSerieNfce(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label>Número inicial</Label>
-              <Input type="number" min={1} value={numeroInicialNfce} onChange={(e) => setNumeroInicialNfce(e.target.value)} />
-            </div>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div className="text-sm font-medium">Numeração automática</div>
-            <Switch checked={numeracaoAutomatica} onCheckedChange={setNumeracaoAutomatica} />
-          </div>
-
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div>
-              <div className="text-sm font-medium">Ambiente de produção</div>
-              <div className="text-xs text-muted-foreground">Desligado = homologação (notas de teste, sem valor fiscal).</div>
-            </div>
-            <Switch checked={ambienteProducao} onCheckedChange={setAmbienteProducao} />
-          </div>
-
-          <Button onClick={salvarDadosFiscais} disabled={salvando} className="w-full">
-            {salvando ? "Salvando…" : "Salvar e cadastrar no PlugNotas"}
-          </Button>
-        </CardContent>
-      </Card>
+  return (
+    <div className="flex items-start gap-3 rounded-xl border bg-muted/40 p-4">
+      <Clock3 size={20} className="mt-0.5 shrink-0 text-muted-foreground" />
+      <div>
+        <div className="text-sm font-medium">Cadastro pendente</div>
+        <p className="text-sm text-muted-foreground">Envie o certificado digital e preencha os dados fiscais abaixo pra ativar a emissão de NFC-e.</p>
+      </div>
     </div>
   );
 }

@@ -36,6 +36,13 @@ export async function getDadosFiscaisLoja(lojaId: number): Promise<DadosFiscaisL
   return linha ?? null;
 }
 
+export type CertificadoFiscal = typeof certificadosFiscais.$inferSelect;
+
+export async function getCertificadoFiscal(lojaId: number): Promise<CertificadoFiscal | null> {
+  const [linha] = await db.select().from(certificadosFiscais).where(eq(certificadosFiscais.loja_id, lojaId)).limit(1);
+  return linha ?? null;
+}
+
 export type SalvarDadosFiscaisInput = {
   razaoSocial: string;
   inscricaoEstadual?: string;
