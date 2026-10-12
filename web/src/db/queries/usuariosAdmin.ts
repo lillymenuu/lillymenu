@@ -26,6 +26,7 @@ const PERMS_MENU = [
   "menu.gestor_pedidos",
   "menu.pedidos",
   "menu.pedidos_agendados",
+  "menu.nfce",
   "menu.produtos",
   "menu.estoque",
   "menu.clientes",
