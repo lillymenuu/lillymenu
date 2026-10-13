@@ -95,7 +95,11 @@ export function PosProdutoCard({
             inputMode="numeric"
             disabled={semEstoque}
             value={texto}
-            onChange={(e) => setTexto(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => {
+              const digitos = e.target.value.replace(/\D/g, "");
+              setTexto(digitos);
+              onDefinirQtd(Math.max(0, Math.floor(Number(digitos) || 0)));
+            }}
             onFocus={(e) => e.target.select()}
             onBlur={confirmarTexto}
             onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
