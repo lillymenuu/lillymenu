@@ -78,7 +78,7 @@ export function PosProdutoCard({
           {restante > 0 ? `${restante} em estoque` : "Sem estoque"}
         </div>
       </div>
-      <div className="flex shrink-0 items-center justify-center gap-2 p-1.5">
+      <div className="flex shrink-0 items-center justify-between p-1.5">
         <button
           type="button"
           disabled={semEstoque || qtd === 0 || produto.tem_variacoes}
