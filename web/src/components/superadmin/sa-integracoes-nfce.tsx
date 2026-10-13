@@ -8,10 +8,7 @@ import { cn } from "cn";
 
 type ProvedorNfce = "plugnotas" | "focusnfe";
 
-type StatusCredenciais = {
-  plugnotas: { sandbox: boolean; producao: boolean };
-  focusnfe: { sandbox: boolean; producao: boolean };
-};
+type StatusCredenciais = Record<ProvedorNfce, { label: string; ok: boolean }[]>;
 
 const PROVEDORES: { id: ProvedorNfce; nome: string; descricao: string; docs: string }[] = [
   { id: "plugnotas", nome: "PlugNotas", descricao: "Conta única da Lilly Menu; cada loja é cadastrada lá como \"empresa\". Emissão assíncrona (webhook/consulta).", docs: "docs.plugnotas.com.br" },
@@ -72,13 +69,12 @@ export function SaIntegracoesNfce({ provedorInicial, credenciais }: { provedorIn
                     )}
                   </div>
                   <p className="max-w-md text-sm text-muted-foreground">{provedor.descricao}</p>
-                  <div className="flex gap-4 pt-1 text-xs">
-                    <span className={cred.sandbox ? "text-foreground" : "text-muted-foreground"}>
-                      {cred.sandbox ? "✓" : "✗"} Token sandbox {cred.sandbox ? "configurado" : "ausente"}
-                    </span>
-                    <span className={cred.producao ? "text-foreground" : "text-muted-foreground"}>
-                      {cred.producao ? "✓" : "✗"} Token produção {cred.producao ? "configurado" : "ausente"}
-                    </span>
+                  <div className="flex flex-wrap gap-4 pt-1 text-xs">
+                    {cred.map((c) => (
+                      <span key={c.label} className={c.ok ? "text-foreground" : "text-muted-foreground"}>
+                        {c.ok ? "✓" : "✗"} {c.label} {c.ok ? "configurado" : "ausente"}
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <Button

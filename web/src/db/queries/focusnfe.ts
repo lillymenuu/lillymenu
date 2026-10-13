@@ -4,15 +4,18 @@ import "server-only";
  * Integracao com a API do Focus NFe (https://doc.focusnfe.com.br) pra emissao de NFCe —
  * segundo provedor suportado, alternativo ao PlugNotas (ver plugnotas.ts). Modelo de
  * autenticacao bem diferente do PlugNotas:
- *  - Nao existe uma "api-key" unica pra conta inteira. Um token MESTRE (o da empresa
- *    matriz/conta, gerado no painel do Focus NFe) e usado pra CRIAR/ATUALIZAR empresas
- *    (CRUD de "Gestao > Empresas" — assumimos aqui que esse mesmo token mestre tambem
- *    administra as empresas filhas; nao confirmado em documentacao pra multiplas
- *    empresas sob a mesma conta, vale validar com o suporte do Focus NFe numa conta real).
+ *  - Nao existe uma "api-key" unica pra conta inteira, mas tambem NAO existe um token
+ *    mestre por ambiente — so ha UM "token principal" (sempre de producao, visivel no
+ *    painel em Tokens). Confirmado numa conta real: cadastro/consulta/atualizacao de
+ *    empresa ("Gestao > Empresas") e sempre feito contra a API de PRODUCAO com esse
+ *    token principal, mesmo pra configurar o lado de homologacao da empresa (o payload
+ *    de criar/atualizar empresa tem campos *_producao e *_homologacao lado a lado, numa
+ *    unica chamada).
  *  - Cada empresa cadastrada recebe seu PROPRIO par de tokens (token_producao /
- *    token_homologacao) na resposta da criacao — sao esses tokens (nao o mestre) que
- *    autenticam emissao/consulta/cancelamento de NFCe DAQUELA empresa especificamente.
- *    Por isso dados_fiscais_loja guarda um token por loja.
+ *    token_homologacao) na resposta da criacao — sao esses tokens (nao o principal) que
+ *    autenticam emissao/consulta/cancelamento de NFCe DAQUELA empresa especificamente,
+ *    e so ai a URL base muda conforme o ambiente. Por isso dados_fiscais_loja guarda um
+ *    token por loja.
  *  - Autenticacao e HTTP Basic: usuario = token, senha em branco.
  *  - Emissao de NFCe e SINCRONA — a resposta do POST ja vem com o status final
  *    (autorizado/erro_autorizacao), sem precisar de webhook ou consulta posterior pro
@@ -24,21 +27,21 @@ const FN_BASE_HOMOLOGACAO = "https://homologacao.focusnfe.com.br";
 
 type ResultadoFn<T> = { ok: true; dados: T } | { ok: false; erro: string; status?: number };
 
-function fnMasterToken(producao: boolean): string {
-  return ((producao ? process.env.FOCUSNFE_TOKEN_PRODUCAO : process.env.FOCUSNFE_TOKEN_SANDBOX) ?? "").trim();
+function fnTokenPrincipal(): string {
+  return (process.env.FOCUSNFE_TOKEN_PRODUCAO ?? "").trim();
 }
 
 function fnBaseUrl(producao: boolean): string {
   return producao ? FN_BASE_PRODUCAO : FN_BASE_HOMOLOGACAO;
 }
 
-async function fnRequest<T>(path: string, token: string, producao: boolean, init: { method: string; body?: BodyInit }): Promise<ResultadoFn<T>> {
+async function fnRequest<T>(baseUrl: string, path: string, token: string, init: { method: string; body?: BodyInit }): Promise<ResultadoFn<T>> {
   if (!token) return { ok: false, erro: "Focus NFe não configurado (token ausente)." };
 
   const auth = Buffer.from(`${token}:`).toString("base64");
   let resp: Response;
   try {
-    resp = await fetch(`${fnBaseUrl(producao)}${path}`, {
+    resp = await fetch(`${baseUrl}${path}`, {
       method: init.method,
       headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
       body: init.body,
@@ -122,9 +125,9 @@ function mapearRespostaEmpresa(dados: Record<string, unknown>): ResultadoCadastr
   };
 }
 
-/** Cria a empresa no Focus NFe (primeiro cadastro do CNPJ) — usa o token MESTRE da conta. */
-export async function fnCriarEmpresa(dados: DadosEmpresaFocusNfe, producao: boolean): Promise<ResultadoFn<ResultadoCadastroEmpresaFn>> {
-  const resultado = await fnRequest<Record<string, unknown>>("/v2/empresas", fnMasterToken(producao), producao, {
+/** Cria a empresa no Focus NFe (primeiro cadastro do CNPJ) — sempre via API de producao com o token principal, mesmo configurando o lado de homologacao da empresa (campos *_producao e *_homologacao vao juntos no mesmo payload). */
+export async function fnCriarEmpresa(dados: DadosEmpresaFocusNfe): Promise<ResultadoFn<ResultadoCadastroEmpresaFn>> {
+  const resultado = await fnRequest<Record<string, unknown>>(fnBaseUrl(true), "/v2/empresas", fnTokenPrincipal(), {
     method: "POST",
     body: JSON.stringify(montarBodyEmpresaFn(dados)),
   });
@@ -132,9 +135,9 @@ export async function fnCriarEmpresa(dados: DadosEmpresaFocusNfe, producao: bool
   return { ok: true, dados: mapearRespostaEmpresa(resultado.dados) };
 }
 
-/** Atualiza a empresa ja cadastrada — usa o token MESTRE (gestao de empresas e operacao de conta, nao da empresa individual). */
-export async function fnAtualizarEmpresa(empresaId: string, dados: DadosEmpresaFocusNfe, producao: boolean): Promise<ResultadoFn<ResultadoCadastroEmpresaFn>> {
-  const resultado = await fnRequest<Record<string, unknown>>(`/v2/empresas/${encodeURIComponent(empresaId)}`, fnMasterToken(producao), producao, {
+/** Atualiza a empresa ja cadastrada — mesma regra: sempre producao + token principal. */
+export async function fnAtualizarEmpresa(empresaId: string, dados: DadosEmpresaFocusNfe): Promise<ResultadoFn<ResultadoCadastroEmpresaFn>> {
+  const resultado = await fnRequest<Record<string, unknown>>(fnBaseUrl(true), `/v2/empresas/${encodeURIComponent(empresaId)}`, fnTokenPrincipal(), {
     method: "PUT",
     body: JSON.stringify(montarBodyEmpresaFn(dados)),
   });
@@ -212,7 +215,7 @@ export async function fnEmitirNfce(input: EmissaoNfceFnInput, tokenEmpresa: stri
     formas_pagamento: input.pagamentos.map((p) => ({ forma_pagamento: p.meio, valor_pagamento: p.valor })),
   };
 
-  const resultado = await fnRequest<Record<string, unknown>>(`/v2/nfce?ref=${encodeURIComponent(input.ref)}`, tokenEmpresa, producao, {
+  const resultado = await fnRequest<Record<string, unknown>>(fnBaseUrl(producao), `/v2/nfce?ref=${encodeURIComponent(input.ref)}`, tokenEmpresa, {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -221,13 +224,13 @@ export async function fnEmitirNfce(input: EmissaoNfceFnInput, tokenEmpresa: stri
 }
 
 export async function fnConsultarNfce(ref: string, tokenEmpresa: string, producao: boolean): Promise<ResultadoFn<ResultadoNfceFn>> {
-  const resultado = await fnRequest<Record<string, unknown>>(`/v2/nfce/${encodeURIComponent(ref)}`, tokenEmpresa, producao, { method: "GET" });
+  const resultado = await fnRequest<Record<string, unknown>>(fnBaseUrl(producao), `/v2/nfce/${encodeURIComponent(ref)}`, tokenEmpresa, { method: "GET" });
   if (!resultado.ok) return resultado;
   return { ok: true, dados: mapearRespostaNfce(resultado.dados) };
 }
 
 export async function fnCancelarNfce(ref: string, justificativa: string, tokenEmpresa: string, producao: boolean): Promise<ResultadoFn<ResultadoNfceFn>> {
-  const resultado = await fnRequest<Record<string, unknown>>(`/v2/nfce/${encodeURIComponent(ref)}`, tokenEmpresa, producao, {
+  const resultado = await fnRequest<Record<string, unknown>>(fnBaseUrl(producao), `/v2/nfce/${encodeURIComponent(ref)}`, tokenEmpresa, {
     method: "DELETE",
     body: JSON.stringify({ justificativa }),
   });

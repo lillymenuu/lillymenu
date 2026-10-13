@@ -249,10 +249,9 @@ async function cadastrarEmpresaFocusNfe(
     senhaCertificado: certificadoOverride?.senhaCertificado,
   };
 
-  const producao = dadosFiscais.ambiente_producao;
   const resultado = dadosFiscais.focusnfe_empresa_id
-    ? await fnAtualizarEmpresa(dadosFiscais.focusnfe_empresa_id, dadosEmpresa, producao)
-    : await fnCriarEmpresa(dadosEmpresa, producao);
+    ? await fnAtualizarEmpresa(dadosFiscais.focusnfe_empresa_id, dadosEmpresa)
+    : await fnCriarEmpresa(dadosEmpresa);
 
   if (!resultado.ok) return marcarErro(resultado.erro);
 

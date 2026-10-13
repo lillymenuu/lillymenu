@@ -4,14 +4,11 @@ import { getProvedorNfceAtivo, salvarProvedorNfceAtivo, type ProvedorNfce } from
 
 function statusCredenciais() {
   return {
-    plugnotas: {
-      sandbox: Boolean((process.env.PLUGNOTAS_API_KEY_SANDBOX ?? "").trim()),
-      producao: Boolean((process.env.PLUGNOTAS_API_KEY_PRODUCAO ?? "").trim()),
-    },
-    focusnfe: {
-      sandbox: Boolean((process.env.FOCUSNFE_TOKEN_SANDBOX ?? "").trim()),
-      producao: Boolean((process.env.FOCUSNFE_TOKEN_PRODUCAO ?? "").trim()),
-    },
+    plugnotas: [
+      { label: "Token sandbox", ok: Boolean((process.env.PLUGNOTAS_API_KEY_SANDBOX ?? "").trim()) },
+      { label: "Token produção", ok: Boolean((process.env.PLUGNOTAS_API_KEY_PRODUCAO ?? "").trim()) },
+    ],
+    focusnfe: [{ label: "Token principal", ok: Boolean((process.env.FOCUSNFE_TOKEN_PRODUCAO ?? "").trim()) }],
   };
 }
 
