@@ -26,6 +26,7 @@ export type ProdutoAdmin = {
   codigo: string | null;
   ncm: string | null;
   cfop: string | null;
+  icmsSituacaoTributaria: string | null;
   precoBase: number | null;
   preco: number;
   ativo: boolean | null;
@@ -61,6 +62,7 @@ export async function listarProdutosAdmin(lojaId: number): Promise<ProdutoAdmin[
       codigo: produtos.codigo,
       ncm: produtos.ncm,
       cfop: produtos.cfop,
+      icmsSituacaoTributaria: produtos.icms_situacao_tributaria,
       precoBase: produtos.preco,
       preco: precoExpr,
       ativo: produtos.ativo,
@@ -190,6 +192,7 @@ export type SalvarProdutoInput = {
   codigo?: string;
   ncm?: string;
   cfop?: string;
+  icmsSituacaoTributaria?: string;
   preco: number;
   categoriaId?: number | null;
   descricao?: string;
@@ -228,6 +231,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
   const codigo = (input.codigo ?? "").trim() || null;
   const ncm = (input.ncm ?? "").replace(/\D/g, "").slice(0, 8) || null;
   const cfop = (input.cfop ?? "").replace(/\D/g, "").slice(0, 4) || null;
+  const icmsSituacaoTributaria = (input.icmsSituacaoTributaria ?? "").replace(/\D/g, "").slice(0, 3) || null;
   const descricao = (input.descricao ?? "").trim() || null;
   const precoPromocional = input.precoPromocional !== undefined && input.precoPromocional !== null ? Number(input.precoPromocional) : null;
   const diasSemanaJson = input.diasSemana && input.diasSemana.length > 0 ? JSON.stringify(input.diasSemana) : null;
@@ -240,6 +244,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     codigo,
     ncm,
     cfop,
+    icms_situacao_tributaria: icmsSituacaoTributaria,
     preco,
     categoria_id: categoriaId,
     ativo: Boolean(input.ativo),

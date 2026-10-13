@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { temRecursoPlano } from "@/db/queries/assinatura";
-import { getDadosFiscaisLoja, getCertificadoFiscal } from "@/db/queries/nfce";
+import { getDadosFiscaisLoja, getCertificadoFiscal, getProvedorNfceAtivo } from "@/db/queries/nfce";
 import { NfceSettingsManager } from "@/components/nfce/nfce-settings-manager";
 
 export default async function NfcePage() {
@@ -16,9 +16,10 @@ export default async function NfcePage() {
 
   let dadosIniciais: Awaited<ReturnType<typeof getDadosFiscaisLoja>> = null;
   let certificadoInicial: Awaited<ReturnType<typeof getCertificadoFiscal>> = null;
+  let provedorAtivo: Awaited<ReturnType<typeof getProvedorNfceAtivo>> = "plugnotas";
   let erro: string | null = null;
   try {
-    [dadosIniciais, certificadoInicial] = await Promise.all([getDadosFiscaisLoja(sessao.lojaId), getCertificadoFiscal(sessao.lojaId)]);
+    [dadosIniciais, certificadoInicial, provedorAtivo] = await Promise.all([getDadosFiscaisLoja(sessao.lojaId), getCertificadoFiscal(sessao.lojaId), getProvedorNfceAtivo()]);
   } catch {
     erro = "Erro ao carregar os dados fiscais da loja.";
   }
@@ -33,5 +34,5 @@ export default async function NfcePage() {
     );
   }
 
-  return <NfceSettingsManager dadosIniciais={dadosIniciais} certificadoInicial={certificadoInicial} />;
+  return <NfceSettingsManager dadosIniciais={dadosIniciais} certificadoInicial={certificadoInicial} provedorAtivo={provedorAtivo} />;
 }

@@ -80,6 +80,7 @@ export async function POST(request: Request) {
     codigo: typeof body.codigo === "string" ? body.codigo : undefined,
     ncm: typeof body.ncm === "string" ? body.ncm : undefined,
     cfop: typeof body.cfop === "string" ? body.cfop : undefined,
+    icmsSituacaoTributaria: typeof body.icms_situacao_tributaria === "string" ? body.icms_situacao_tributaria : undefined,
     preco: Number(body.preco ?? 0),
     categoriaId: categoriaIdRaw !== null && categoriaIdRaw !== undefined && categoriaIdRaw !== "" ? Number(categoriaIdRaw) : null,
     descricao: typeof body.descricao === "string" ? body.descricao : undefined,

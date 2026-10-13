@@ -80,6 +80,7 @@ export function ProdutoFormDialog({
   const [codigo, setCodigo] = useState("");
   const [ncm, setNcm] = useState("");
   const [cfop, setCfop] = useState("");
+  const [icmsSituacaoTributaria, setIcmsSituacaoTributaria] = useState("");
   const [descricao, setDescricao] = useState("");
   const [categoriaId, setCategoriaId] = useState<string>("");
   const [apenasAgendamento, setApenasAgendamento] = useState(false);
@@ -144,6 +145,7 @@ export function ProdutoFormDialog({
       setCodigo(produto.codigo ?? "");
       setNcm(produto.ncm ?? "");
       setCfop(produto.cfop ?? "");
+      setIcmsSituacaoTributaria(produto.icms_situacao_tributaria ?? "");
       setDescricao(produto.descricao ?? "");
       setCategoriaId(produto.categoria_id ? String(produto.categoria_id) : "");
       setApenasAgendamento(produto.apenas_agendamento === 1);
@@ -202,6 +204,7 @@ export function ProdutoFormDialog({
       setCodigo("");
       setNcm("");
       setCfop("");
+      setIcmsSituacaoTributaria("");
       setDescricao("");
       setCategoriaId(categoriaPadrao ? String(categoriaPadrao) : "");
       setApenasAgendamento(false);
@@ -282,6 +285,7 @@ export function ProdutoFormDialog({
         codigo: codigo.trim(),
         ncm: ncm.trim(),
         cfop: cfop.trim(),
+        icms_situacao_tributaria: icmsSituacaoTributaria.trim(),
         preco_promocional: promoAtiva && precoPromocional ? parseFloat(precoPromocional.replace(",", ".")) : "",
         promo_desativado: promoAtiva ? 0 : 1,
         ativo,
@@ -509,6 +513,16 @@ export function ProdutoFormDialog({
                       value={cfop}
                       onChange={(e) => setCfop(e.target.value.replace(/\D/g, "").slice(0, 4))}
                       placeholder="Ex.: 5102"
+                      className="max-w-36"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="p-icms">CST/CSOSN (NFCe)</Label>
+                    <Input
+                      id="p-icms"
+                      value={icmsSituacaoTributaria}
+                      onChange={(e) => setIcmsSituacaoTributaria(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                      placeholder="Ex.: 102"
                       className="max-w-36"
                     />
                   </div>

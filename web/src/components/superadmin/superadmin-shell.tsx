@@ -38,6 +38,7 @@ import {
   CirclePlus,
   CircleCheck,
   CreditCard,
+  Plug,
   PanelLeft,
   Sun,
   Moon,
@@ -57,6 +58,7 @@ const NAV = [
   { href: "/superadmin/lojas", label: "Lojas", icon: Store },
   { href: "/superadmin/suporte", label: "Suporte", icon: Headset },
   { href: "/superadmin/landing", label: "Landing page", icon: Globe },
+  { href: "/superadmin/integracoes-nfce", label: "Integração NFCe", icon: Plug },
 ];
 
 /* Mesmas opcoes e icones do menu de referencia (Dashtrans) que ainda nao tem pagina real aqui —

@@ -53,10 +53,13 @@ function StepMarker({ icon: Icon, done, withLine }: { icon: React.ElementType; d
 export function NfceSettingsManager({
   dadosIniciais,
   certificadoInicial,
+  provedorAtivo,
 }: {
   dadosIniciais: DadosFiscaisLoja | null;
   certificadoInicial: CertificadoFiscal | null;
+  provedorAtivo: "plugnotas" | "focusnfe";
 }) {
+  const nomeProvedor = provedorAtivo === "focusnfe" ? "Focus NFe" : "PlugNotas";
   const [salvando, setSalvando] = useState(false);
   const [enviandoCertificado, setEnviandoCertificado] = useState(false);
   const [status, setStatus] = useState(dadosIniciais?.status ?? null);
@@ -114,7 +117,7 @@ export function NfceSettingsManager({
       }
       setStatus("ativo");
       setErroMensagem(null);
-      toast.success("Dados fiscais salvos e empresa cadastrada no PlugNotas.");
+      toast.success(`Dados fiscais salvos e empresa cadastrada no ${nomeProvedor}.`);
     } catch {
       toast.error("Falha de conexão ao salvar dados fiscais.");
     } finally {
@@ -140,7 +143,7 @@ export function NfceSettingsManager({
       }
       setSenhaCertificado("");
       setCertificadoCadastrado(true);
-      toast.success("Certificado cadastrado no PlugNotas.");
+      toast.success(`Certificado cadastrado no ${nomeProvedor}.`);
     } catch {
       toast.error("Falha de conexão ao enviar certificado.");
     } finally {
@@ -155,11 +158,11 @@ export function NfceSettingsManager({
       <div>
         <h1 className="text-xl font-semibold">Emissão de NFC-e</h1>
         <p className="text-sm text-muted-foreground">
-          Cadastre o certificado digital e os dados fiscais da loja pra começar a emitir Nota Fiscal do Consumidor eletrônica, via PlugNotas.
+          Cadastre o certificado digital e os dados fiscais da loja pra começar a emitir Nota Fiscal do Consumidor eletrônica, via {nomeProvedor}.
         </p>
       </div>
 
-      <StatusBanner status={status} erroMensagem={erroMensagem} ambienteProducao={ambienteProducao} />
+      <StatusBanner status={status} erroMensagem={erroMensagem} ambienteProducao={ambienteProducao} nomeProvedor={nomeProvedor} />
 
       <div className="rounded-xl border bg-card">
         {/* Passo 1 — Certificado digital */}
@@ -215,7 +218,7 @@ export function NfceSettingsManager({
                 {enviandoCertificado ? "Enviando…" : certificadoCadastrado ? "Substituir" : "Enviar certificado"}
               </Button>
             </div>
-            <FieldHint>A senha trafega só no envio — não guardamos ela, apenas o certificado fica com o PlugNotas.</FieldHint>
+            <FieldHint>A senha trafega só no envio — não guardamos ela, apenas o certificado fica com o {nomeProvedor}.</FieldHint>
           </div>
         </div>
 
@@ -343,7 +346,7 @@ export function NfceSettingsManager({
 
             <Button onClick={salvarDadosFiscais} disabled={salvando} className="w-full">
               {dadosFiscaisCompletos && status === "ativo" ? <FileCheck2 size={16} /> : null}
-              {salvando ? "Salvando…" : status === "ativo" ? "Atualizar cadastro no PlugNotas" : "Salvar e cadastrar no PlugNotas"}
+              {salvando ? "Salvando…" : status === "ativo" ? `Atualizar cadastro no ${nomeProvedor}` : `Salvar e cadastrar no ${nomeProvedor}`}
             </Button>
           </div>
         </div>
@@ -356,10 +359,12 @@ function StatusBanner({
   status,
   erroMensagem,
   ambienteProducao,
+  nomeProvedor,
 }: {
   status: "pendente" | "ativo" | "erro" | null;
   erroMensagem: string | null;
   ambienteProducao: boolean;
+  nomeProvedor: string;
 }) {
   if (status === "ativo") {
     return (
@@ -368,7 +373,7 @@ function StatusBanner({
         <div>
           <div className="text-sm font-medium text-[#15803d]">Pronta pra emitir NFC-e</div>
           <p className="text-sm text-[#166534]">
-            Cadastro ativo no PlugNotas, ambiente de {ambienteProducao ? "produção" : "homologação"}. Emita a nota direto no detalhe do pedido.
+            Cadastro ativo no {nomeProvedor}, ambiente de {ambienteProducao ? "produção" : "homologação"}. Emita a nota direto no detalhe do pedido.
           </p>
         </div>
       </div>

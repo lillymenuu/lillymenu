@@ -1246,6 +1246,8 @@ export const produtos = pgTable(
     destaque: boolean("destaque").notNull().default(false),
     ncm: varchar("ncm", { length: 8 }),
     cfop: varchar("cfop", { length: 4 }),
+    /* CST (regime normal) ou CSOSN (Simples Nacional) do ICMS — exigido pelo Focus NFe por item; o PlugNotas nao pede isso diretamente. */
+    icms_situacao_tributaria: varchar("icms_situacao_tributaria", { length: 3 }),
   },
   (t) => [
     index("produtos_fk_produtos_categoria").on(t.categoria_id),
@@ -1477,6 +1479,10 @@ export const dadosFiscaisLoja = pgTable(
     id_codigo_seguranca_contribuinte: varchar("id_codigo_seguranca_contribuinte", { length: 10 }),
     codigo_seguranca_contribuinte: varchar("codigo_seguranca_contribuinte", { length: 60 }),
     plugnotas_empresa_cadastrada: boolean("plugnotas_empresa_cadastrada").notNull().default(false),
+    /* Focus NFe: cada empresa cadastrada tem seu proprio par de tokens (nao usa uma api-key unica de conta como o PlugNotas) — usados nas chamadas de emissao/consulta/cancelamento dessa loja especifica. */
+    focusnfe_empresa_id: varchar("focusnfe_empresa_id", { length: 30 }),
+    focusnfe_token_producao: varchar("focusnfe_token_producao", { length: 100 }),
+    focusnfe_token_homologacao: varchar("focusnfe_token_homologacao", { length: 100 }),
     status: text("status").$type<"pendente" | "ativo" | "erro">().notNull().default("pendente"),
     erro_mensagem: text("erro_mensagem"),
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
@@ -1487,13 +1493,14 @@ export const dadosFiscaisLoja = pgTable(
   ]
 );
 
-/* Certificado digital A1 da loja, cadastrado via POST /certificado no PlugNotas — a senha nunca e persistida aqui, so trafega em transito pro PlugNotas. */
+/* Certificado digital A1 da loja — a senha nunca e persistida aqui, so trafega em transito pro provedor ativo (PlugNotas ou Focus NFe). No PlugNotas fica um id referenciavel (plugnotas_certificado_id); no Focus NFe o certificado vai embutido direto no cadastro da empresa, sem id proprio — essa linha so marca "certificado ja enviado" nesse caso. */
 export const certificadosFiscais = pgTable(
   "certificados_fiscais",
   {
     id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
     loja_id: integer("loja_id").notNull(),
-    plugnotas_certificado_id: varchar("plugnotas_certificado_id", { length: 60 }).notNull(),
+    provedor: text("provedor").$type<"plugnotas" | "focusnfe">().notNull().default("plugnotas"),
+    plugnotas_certificado_id: varchar("plugnotas_certificado_id", { length: 60 }),
     validade: date("validade", { mode: "string" }),
     status: text("status").$type<"ativo" | "vencido" | "erro">().notNull().default("ativo"),
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
