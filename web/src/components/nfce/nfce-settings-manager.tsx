@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, AlertTriangle, Clock3, FileKey2, Building2, UploadCloud, FileCheck2, Info } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Clock3, FileKey2, Building2, UploadCloud, FileCheck2, Info, HelpCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -170,6 +170,23 @@ export function NfceSettingsManager({
               <h2 className="font-medium">Certificado digital (A1)</h2>
               <p className="text-sm text-muted-foreground">O arquivo que identifica sua empresa perante a Receita e assina as notas eletronicamente.</p>
             </div>
+
+            <details className="group rounded-md border border-dashed px-3 py-2 text-muted-foreground open:bg-muted/30">
+              <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-foreground marker:content-none [&::-webkit-details-marker]:hidden">
+                <HelpCircle size={13} className="shrink-0" />
+                Não sei onde encontrar o arquivo do certificado
+              </summary>
+              <div className="mt-2 space-y-1.5 pl-[19px] text-xs">
+                <p>
+                  O arquivo (.pfx ou .p12) é baixado no site da <strong className="text-foreground">Autoridade Certificadora</strong> que emitiu o certificado — Certisign,
+                  Serasa Experian, Soluti, SafeWeb, AC Bird ID etc. — na área &quot;Meus Certificados&quot; da conta, dentro do prazo de validade.
+                </p>
+                <p>
+                  Se o certificado foi enviado pra outra plataforma de emissão de notas (não a certificadora original), normalmente não dá pra baixar de volta por lá — essas
+                  plataformas guardam o arquivo só pra uso interno. É preciso pegar o arquivo direto com quem emitiu o certificado.
+                </p>
+              </div>
+            </details>
 
             <div className="flex flex-wrap items-start gap-3">
               <div className="space-y-1.5">
