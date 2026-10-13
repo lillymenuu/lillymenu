@@ -31,6 +31,7 @@ export type PosCatalogoResposta = {
   categorias: PosCategoria[];
   produtos: PosProduto[];
   combos: PosCombo[];
+  nfceDisponivel: boolean;
 };
 
 export type PosVariacao = {

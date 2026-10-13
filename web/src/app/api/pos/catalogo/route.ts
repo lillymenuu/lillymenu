@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { getSessaoAdmin } from "@/lib/session";
 import { catalogoPdv } from "@/db/queries/pdvCatalogo";
+import { temRecursoPlano } from "@/db/queries/assinatura";
 
 export async function GET() {
   const sessao = await getSessaoAdmin();
   if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
 
-  const resultado = await catalogoPdv(sessao.lojaId);
+  const [resultado, nfceDisponivel] = await Promise.all([catalogoPdv(sessao.lojaId), temRecursoPlano(sessao.lojaId, sessao.perfil, "menu.nfce")]);
 
   return NextResponse.json({
     ok: true,
+    nfceDisponivel,
     categorias: resultado.categorias,
     produtos: resultado.produtos.map((p) => ({
       id: p.id,

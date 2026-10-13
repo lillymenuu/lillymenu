@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Banknote, CreditCard, Smartphone, Ticket, Receipt, Percent, Coins, Split } from "lucide-react";
+import { ArrowLeft, Banknote, CreditCard, Smartphone, Ticket, Receipt, Percent, Coins, Split, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { MoneyInput } from "@/components/produtos/money-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosClienteStats, PosFormaPagamento, PosPagamentoLinha } from "@/lib/pos";
+import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
 
 const FORMAS: { valor: PosFormaPagamento; label: string; icon: typeof Banknote }[] = [
   { valor: "dinheiro", label: "Dinheiro", icon: Banknote },
@@ -27,6 +28,7 @@ export type PosPagamentoDados = {
   descontoTipo: "valor" | "percent";
   descontoValor: number;
   cashbackUsado: number;
+  cpfCnpjNota: string;
 };
 
 export function PosPagamentoPanel({
@@ -36,6 +38,7 @@ export function PosPagamentoPanel({
   podeAplicarDesconto,
   clienteStats,
   valoresIniciais,
+  nfceDisponivel,
   onDadosChange,
   onVoltar,
   onFinalizar,
@@ -47,7 +50,8 @@ export function PosPagamentoPanel({
   cupom: { codigo: string; valor: number } | null;
   podeAplicarDesconto: boolean;
   clienteStats: PosClienteStats | null;
-  valoresIniciais?: { descontoTipo?: "valor" | "percent"; descontoValor?: number; cashbackUsado?: number };
+  valoresIniciais?: { descontoTipo?: "valor" | "percent"; descontoValor?: number; cashbackUsado?: number; cpfCnpjNota?: string };
+  nfceDisponivel: boolean;
   onDadosChange: (dados: PosPagamentoDados, total: number) => void;
   onVoltar: () => void;
   onFinalizar: () => void;
@@ -75,6 +79,9 @@ export function PosPagamentoPanel({
   const [cashbackValor, setCashbackValor] = useState(() =>
     (valoresIniciais?.cashbackUsado ?? 0) > 0 ? String(valoresIniciais!.cashbackUsado) : ""
   );
+
+  const [cpfCnpjAberto, setCpfCnpjAberto] = useState(() => (valoresIniciais?.cpfCnpjNota ?? "") !== "");
+  const [cpfCnpjNota, setCpfCnpjNota] = useState(() => valoresIniciais?.cpfCnpjNota ?? "");
 
   const descontoCalculado = useMemo(() => {
     const v = Number(descontoValor || 0);
@@ -108,11 +115,12 @@ export function PosPagamentoPanel({
         descontoTipo,
         descontoValor: descontoCalculado > 0 ? Number(descontoValor || 0) : 0,
         cashbackUsado: cashbackNum,
+        cpfCnpjNota: cpfCnpjAberto && validarCpfCnpj(cpfCnpjNota) ? cpfCnpjNota : "",
       },
       total
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formaPrimaria, dividido, formaSecundaria, valorSecundario, valorRecebido, descontoTipo, descontoValor, descontoCalculado, cashbackNum, total]);
+  }, [formaPrimaria, dividido, formaSecundaria, valorSecundario, valorRecebido, descontoTipo, descontoValor, descontoCalculado, cashbackNum, cpfCnpjAberto, cpfCnpjNota, total]);
 
   return (
     <div className="space-y-3">
@@ -236,6 +244,28 @@ export function PosPagamentoPanel({
             <Switch checked={usarCashback} onCheckedChange={setUsarCashback} />
           </div>
           {usarCashback ? <MoneyInput value={cashbackValor} onChange={setCashbackValor} className="h-8 text-xs" /> : null}
+        </div>
+      ) : null}
+
+      {nfceDisponivel ? (
+        <div className="space-y-1.5 rounded-xl border p-2.5">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-xs font-medium">
+              <FileText className="size-3.5" /> CPF/CNPJ na nota (NFC-e)
+            </span>
+            <Switch checked={cpfCnpjAberto} onCheckedChange={setCpfCnpjAberto} />
+          </div>
+          {cpfCnpjAberto ? (
+            <div className="space-y-1 pt-1">
+              <Input
+                className="h-8 text-xs"
+                value={cpfCnpjNota}
+                onChange={(e) => setCpfCnpjNota(formatarCpfCnpj(e.target.value))}
+                placeholder="000.000.000-00"
+              />
+              {cpfCnpjNota !== "" && !validarCpfCnpj(cpfCnpjNota) ? <p className="text-[11px] text-destructive">CPF/CNPJ inválido.</p> : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
 

@@ -169,6 +169,7 @@ export type PagamentoNfce = { meio: string; valor: number };
 export type EmissaoNfceInput = {
   idIntegracao: string;
   cpfCnpjEmitente: string;
+  cpfCnpjDestinatario?: string;
   itens: ItemNfce[];
   pagamentos: PagamentoNfce[];
   valorTotal: number;
@@ -181,6 +182,7 @@ export async function pnEmitirNfce(dados: EmissaoNfceInput, producao: boolean): 
       idIntegracao: dados.idIntegracao,
       presencial: true,
       emitente: { cpfCnpj: dados.cpfCnpjEmitente },
+      destinatario: dados.cpfCnpjDestinatario ? { cpfCnpj: dados.cpfCnpjDestinatario } : undefined,
       itens: dados.itens.map((item) => ({
         codigo: item.codigo,
         descricao: item.descricao,

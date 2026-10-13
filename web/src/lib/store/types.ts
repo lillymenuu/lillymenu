@@ -73,6 +73,7 @@ export type StorePerfil = {
   agendRetiradaMaxTipo: "horas" | "dias";
   agendDeliveryHorarios: Record<string, StoreAgendHorario>;
   agendRetiradaHorarios: Record<string, StoreAgendHorario>;
+  nfceDisponivel: boolean;
 };
 
 export type StoreAgendHorario = { inicio: string; fim: string };

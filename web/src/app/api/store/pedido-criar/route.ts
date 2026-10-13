@@ -69,6 +69,7 @@ export async function POST(request: Request) {
     cupomCodigo: typeof b.cupom_codigo === "string" ? b.cupom_codigo : undefined,
     cupomDesconto: b.cupom_desconto !== undefined ? Number(b.cupom_desconto) : undefined,
     clienteAniversario: typeof b.cliente_aniversario === "string" ? b.cliente_aniversario : undefined,
+    clienteCpfCnpj: typeof b.cliente_cpf_cnpj === "string" ? b.cliente_cpf_cnpj : undefined,
   });
 
   if (!resultado.ok) return NextResponse.json(resultado);

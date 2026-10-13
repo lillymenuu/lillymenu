@@ -427,6 +427,7 @@ export function PosOverlay({
           taxa_maquininha_percent: 0,
           cashback_aplicado: cashbackAtivo ? "1" : "0",
           cashback_usado: pagamentoDados.cashbackUsado,
+          cpf_cnpj_nota: pagamentoDados.cpfCnpjNota,
           observacoes_cliente: "",
           caixa_id: caixa?.caixa?.id ?? null,
           offline_uuid: crypto.randomUUID(),
@@ -636,6 +637,7 @@ export function PosOverlay({
             podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
             clienteStats={clienteStats}
             valoresIniciais={pagamentoValoresIniciais}
+            nfceDisponivel={catalogo?.nfceDisponivel ?? false}
             onDadosChange={(dados) => setPagamentoDados(dados)}
             onVoltar={() => setEtapa("resumo")}
             onFinalizar={finalizarPedido}

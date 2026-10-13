@@ -6,6 +6,7 @@ import { mesas, cupons, avaliacoes, lojas, configuracoes } from "@/db/schema";
 import { getConfigs, getConfig } from "@/db/queries/config";
 import { estaAberto } from "@/db/queries/lojaStatus";
 import { reservaMapaPdv } from "@/db/queries/pdvReservas";
+import { temRecursoPlano } from "@/db/queries/assinatura";
 import { BANDEIRAS_PADRAO } from "@/lib/settings";
 
 /*
@@ -200,6 +201,7 @@ export type PerfilLoja = {
   agendRetiradaMaxTipo: string;
   agendDeliveryHorarios: Record<string, AgendHorario>;
   agendRetiradaHorarios: Record<string, AgendHorario>;
+  nfceDisponivel: boolean;
 };
 
 const CHAVES = [
@@ -437,6 +439,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; 
   }
 
   const geoAtivo = (await getConfig(0, "saas_nominatim_ativo", "1")) === "1";
+  const nfceDisponivel = await temRecursoPlano(lojaId, "cliente", "menu.nfce");
 
   const diasFuncInfo = (cfg.dias_funcionamento || "")
     .split(",")
@@ -544,5 +547,6 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; 
     agendRetiradaMaxTipo: cfg.agendamento_retirada_max_tipo || "dias",
     agendDeliveryHorarios,
     agendRetiradaHorarios,
+    nfceDisponivel,
   };
 }

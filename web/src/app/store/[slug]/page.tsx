@@ -177,6 +177,7 @@ export default async function StorePage({
     agendRetiradaMaxTipo: perfilNeon.agendRetiradaMaxTipo as StorePerfil["agendRetiradaMaxTipo"],
     agendDeliveryHorarios: perfilNeon.agendDeliveryHorarios,
     agendRetiradaHorarios: perfilNeon.agendRetiradaHorarios,
+    nfceDisponivel: perfilNeon.nfceDisponivel,
   };
 
   const produtosPorCat: Record<string, StoreProduto[]> = {};

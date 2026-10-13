@@ -12,6 +12,7 @@ import { useStoreTheme } from "@/components/store/store-theme";
 import { buscarEnderecoPorCep, formatarCep } from "@/lib/cep";
 import { trackStoreEvento } from "@/lib/store/tracking";
 import { formatarPreco, formatarTelefone, maskValorDigitado, parseValorMascarado } from "@/lib/store/format";
+import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
 import type { StoreCartItem, StoreCupomResultado, StorePedidoSnapshot, StorePerfil } from "@/lib/store/types";
 
 type Etapa = "dados" | "entrega" | "pagamento" | "resumo";
@@ -60,6 +61,8 @@ export function StoreCheckoutDialog({
   /* true quando o cliente encontrado ja tinha aniversario cadastrado — nesse
      caso o campo nem aparece, so pedimos pra quem ainda nao informou. */
   const [aniversarioJaCadastrado, setAniversarioJaCadastrado] = useState(false);
+  const [cpfCnpjAberto, setCpfCnpjAberto] = useState(false);
+  const [cpfCnpjNota, setCpfCnpjNota] = useState("");
   /* null = ainda nao verificado pra esse telefone; so passa a true/false
      depois que a busca em /api/store/cliente-por-telefone responde. */
   const [clienteEncontrado, setClienteEncontrado] = useState<boolean | null>(null);
@@ -395,6 +398,10 @@ export function StoreCheckoutDialog({
 
   async function finalizarPedido() {
     if (formaPagamento === "" || abaixoDoMinimo) return;
+    if (cpfCnpjNota !== "" && !validarCpfCnpj(cpfCnpjNota)) {
+      setErroEnvio("CPF/CNPJ informado para a nota é inválido.");
+      return;
+    }
     setEnviando(true);
     setErroEnvio("");
     try {
@@ -406,6 +413,7 @@ export function StoreCheckoutDialog({
           cliente_nome: nome.trim(),
           cliente_telefone: telefone.replace(/\D/g, ""),
           cliente_aniversario: aniversario || undefined,
+          cliente_cpf_cnpj: cpfCnpjNota || undefined,
           /* pedido_criar.php so reconhece "entrega"/"retirada"/"mesa" no campo tipo;
              a variante "_agendada" (usada so pra UI/cupom) e normalizada aqui. */
           tipo: isEntregaTipo ? "entrega" : "retirada",
@@ -562,6 +570,37 @@ export function StoreCheckoutDialog({
                               className={cn(fieldClass(), "block w-full min-w-0 max-w-full")}
                             />
                           </div>
+                        </div>
+                      )}
+
+                      {perfil.nfceDisponivel && (
+                        <div className="w-full">
+                          {!cpfCnpjAberto ? (
+                            <button
+                              type="button"
+                              onClick={() => setCpfCnpjAberto(true)}
+                              className="text-[.82rem] font-medium underline underline-offset-2"
+                              style={{ color: brown }}
+                            >
+                              Adicionar CPF/CNPJ na nota (NFC-e)?
+                            </button>
+                          ) : (
+                            <>
+                              <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">
+                                CPF/CNPJ na nota (opcional)
+                              </label>
+                              <input
+                                value={cpfCnpjNota}
+                                onChange={(e) => setCpfCnpjNota(formatarCpfCnpj(e.target.value))}
+                                inputMode="numeric"
+                                placeholder="000.000.000-00"
+                                className={fieldClass()}
+                              />
+                              {cpfCnpjNota !== "" && !validarCpfCnpj(cpfCnpjNota) && (
+                                <p className="mt-1 text-[.72rem] text-red-500">CPF/CNPJ inválido.</p>
+                              )}
+                            </>
+                          )}
                         </div>
                       )}
                     </>

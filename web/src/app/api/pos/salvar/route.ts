@@ -83,6 +83,7 @@ export async function POST(request: Request) {
     offlineUuid: body.offline_uuid ? String(body.offline_uuid) : undefined,
     pedidoEdicaoId: body.pedido_edicao_id ? Number(body.pedido_edicao_id) : undefined,
     observacoesCliente: body.observacoes_cliente ? String(body.observacoes_cliente) : undefined,
+    cpfCnpjNota: body.cpf_cnpj_nota ? String(body.cpf_cnpj_nota) : undefined,
   });
 
   if (!resultado.ok) return NextResponse.json(resultado);

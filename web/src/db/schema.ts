@@ -1024,6 +1024,8 @@ export const pedidos = pgTable(
     observacoes_cliente: varchar("observacoes_cliente", { length: 255 }),
     loja_id: integer("loja_id").notNull().default(1),
     cashback_usado: numeric("cashback_usado", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
+    /* CPF/CNPJ opcional do cliente final, so quando o modulo NFCe esta ativo — vai como destinatario na nota se preenchido. */
+    cpf_cnpj_nota: varchar("cpf_cnpj_nota", { length: 18 }),
   },
   (t) => [
     unique("pedidos_idx_pedidos_offline_uuid").on(t.offline_uuid),

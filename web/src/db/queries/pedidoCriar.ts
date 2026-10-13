@@ -70,6 +70,7 @@ export type CriarPedidoInput = {
   cupomCodigo?: string;
   cupomDesconto?: number;
   clienteAniversario?: string;
+  clienteCpfCnpj?: string;
 };
 
 export type CriarPedidoResultado = { ok: true; id: number; codigo: number } | { ok: false; msg: string };
@@ -197,6 +198,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           agendamento: agendamentoDt,
           cupom: cupomCodigo || null,
           desconto: cupomDesconto > 0 ? cupomDesconto : 0,
+          cpf_cnpj_nota: input.clienteCpfCnpj?.replace(/\D/g, "") || null,
         })
         .returning({ id: pedidos.id });
       pedidoId = novoPedido.id;

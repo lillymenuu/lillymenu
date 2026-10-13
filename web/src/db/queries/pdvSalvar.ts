@@ -107,6 +107,7 @@ export type SalvarPedidoPdvInput = {
   offlineUuid?: string;
   pedidoEdicaoId?: number;
   observacoesCliente?: string;
+  cpfCnpjNota?: string;
 };
 
 export type SalvarPedidoPdvResultado = { ok: true; pedidoId: number; codigo: number; tipo: string; jaExistia?: boolean } | { ok: false; msg: string };
@@ -186,6 +187,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   if (!input.clienteId || itens.length === 0) return { ok: false, msg: "Dados incompletos" };
 
   const offlineUuid = input.offlineUuid && /^[0-9a-fA-F-]{32,36}$/.test(input.offlineUuid) ? input.offlineUuid : "";
+  const cpfCnpjNota = input.cpfCnpjNota?.replace(/\D/g, "") || null;
   if (offlineUuid) {
     const [existente] = await db.select({ id: pedidos.id, codigo: pedidos.codigo }).from(pedidos).where(and(eq(pedidos.offline_uuid, offlineUuid), eq(pedidos.loja_id, lojaId))).limit(1);
     if (existente) {
@@ -493,6 +495,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
               valor_pago: dinheiroRecebido > 0 ? dinheiroRecebido : null,
               troco,
               cupom: cupom !== "" ? cupom : null,
+              cpf_cnpj_nota: cpfCnpjNota,
               updated_at: sql`now()`,
             })
             .where(and(eq(pedidos.id, pedidoEdicaoId), eq(pedidos.loja_id, lojaId)));
@@ -525,6 +528,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         status: "aceito",
         loja_id: lojaId,
         observacoes_cliente: input.observacoesCliente?.trim() || null,
+        cpf_cnpj_nota: cpfCnpjNota,
         agendamento: agendamentoValor,
         cashback_valor: cashbackAplicadoFinal ? cashbackValor : 0,
         cashback_usado: cashbackUsadoInput > 0 ? cashbackUsadoInput : 0,

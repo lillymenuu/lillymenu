@@ -343,6 +343,7 @@ export async function emitirNfceDoPedido(lojaId: number, pedidoId: number): Prom
       {
         ref: idIntegracao,
         cnpjEmitente: cfg.loja_cnpj.replace(/\D/g, ""),
+        cpfCnpjDestinatario: pedido.cpf_cnpj_nota ?? undefined,
         itens: itensRaw.map((i, idx) => ({
           numeroItem: idx + 1,
           codigo: i.codigo || "SEM-CODIGO",
@@ -388,6 +389,7 @@ export async function emitirNfceDoPedido(lojaId: number, pedidoId: number): Prom
     {
       idIntegracao,
       cpfCnpjEmitente: cfg.loja_cnpj.replace(/\D/g, ""),
+      cpfCnpjDestinatario: pedido.cpf_cnpj_nota ?? undefined,
       itens: itensRaw.map((i) => ({
         codigo: i.codigo || "SEM-CODIGO",
         descricao: i.nome ?? "Item",

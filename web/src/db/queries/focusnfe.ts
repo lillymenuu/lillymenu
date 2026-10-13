@@ -159,7 +159,7 @@ export type ItemNfceFn = {
 
 export type PagamentoNfceFn = { meio: string; valor: number };
 
-export type EmissaoNfceFnInput = { ref: string; cnpjEmitente: string; itens: ItemNfceFn[]; pagamentos: PagamentoNfceFn[] };
+export type EmissaoNfceFnInput = { ref: string; cnpjEmitente: string; cpfCnpjDestinatario?: string; itens: ItemNfceFn[]; pagamentos: PagamentoNfceFn[] };
 
 export type ResultadoNfceFn = {
   status: "autorizado" | "erro_autorizacao" | "denegado" | "processando_autorizacao" | "cancelado";
@@ -196,6 +196,8 @@ export async function fnEmitirNfce(input: EmissaoNfceFnInput, tokenEmpresa: stri
     modalidade_frete: "9",
     local_destino: "1",
     natureza_operacao: "VENDA AO CONSUMIDOR",
+    cpf_destinatario: input.cpfCnpjDestinatario && input.cpfCnpjDestinatario.length === 11 ? input.cpfCnpjDestinatario : undefined,
+    cnpj_destinatario: input.cpfCnpjDestinatario && input.cpfCnpjDestinatario.length === 14 ? input.cpfCnpjDestinatario : undefined,
     items: input.itens.map((item) => ({
       numero_item: String(item.numeroItem),
       codigo_ncm: item.ncm,
