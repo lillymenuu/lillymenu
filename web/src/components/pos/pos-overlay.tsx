@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X, ShoppingBag, Copy, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
+import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
 import type {
   PosCartItem,
   PosCatalogoResposta,
@@ -122,6 +124,7 @@ export function PosOverlay({
   >(undefined);
   const [cashbackUsarValor, setCashbackUsarValor] = useState(0);
   const [cashbackModalAberto, setCashbackModalAberto] = useState(false);
+  const [cpfCnpjNota, setCpfCnpjNota] = useState("");
 
   const [agora, setAgora] = useState<Date | null>(null);
   useEffect(() => {
@@ -432,7 +435,7 @@ export function PosOverlay({
           taxa_maquininha_percent: 0,
           cashback_aplicado: cashbackAtivo ? "1" : "0",
           cashback_usado: pagamentoDados.cashbackUsado,
-          cpf_cnpj_nota: pagamentoDados.cpfCnpjNota,
+          cpf_cnpj_nota: cpfCnpjNota,
           observacoes_cliente: "",
           caixa_id: caixa?.caixa?.id ?? null,
           offline_uuid: crypto.randomUUID(),
@@ -603,7 +606,7 @@ export function PosOverlay({
                       <span>-{formatBRL(cashbackResumoNum)}</span>
                     </div>
                   ) : null}
-                  <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
+                  <div className="flex justify-between text-base font-semibold">
                     <span>Total</span>
                     <span>{formatBRL(totalResumo)}</span>
                   </div>
@@ -648,6 +651,19 @@ export function PosOverlay({
                   onConfirmar={setCashbackUsarValor}
                 />
 
+                {catalogo?.nfceDisponivel ? (
+                  <div>
+                    <Input
+                      value={cpfCnpjNota}
+                      onChange={(e) => setCpfCnpjNota(formatarCpfCnpj(e.target.value))}
+                      inputMode="numeric"
+                      placeholder="Adicionar CPF/CNPJ na nota (NFC-e)?"
+                      className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
+                    />
+                    {cpfCnpjNota !== "" && !validarCpfCnpj(cpfCnpjNota) ? <p className="mt-1 text-[11px] text-destructive">CPF/CNPJ inválido.</p> : null}
+                  </div>
+                ) : null}
+
                 <Button
                   className="h-12 w-full rounded-xl text-sm"
                   onClick={irParaPagamento}
@@ -674,7 +690,6 @@ export function PosOverlay({
             clienteStats={clienteStats}
             valoresIniciais={pagamentoValoresIniciais}
             cashbackAplicado={cashbackResumoNum}
-            nfceDisponivel={catalogo?.nfceDisponivel ?? false}
             onDadosChange={(dados) => setPagamentoDados(dados)}
             onVoltar={() => setEtapa("resumo")}
             onFinalizar={finalizarPedido}
