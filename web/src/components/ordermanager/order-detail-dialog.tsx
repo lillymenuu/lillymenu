@@ -634,11 +634,11 @@ export function OrderDetailDialog({
           </div>
 
           {pedido && (
-            <DialogFooter>
+            <DialogFooter className="border-t-0 bg-transparent">
               <Button
                 variant="outline"
                 size="lg"
-                className="rounded-lg font-normal"
+                className="cursor-pointer rounded-full font-normal"
                 onClick={() => setCancelarOpen(true)}
                 disabled={pedido.status === "cancelado"}
               >
@@ -654,20 +654,20 @@ export function OrderDetailDialog({
                       </a>
                     )}
                     {notaFiscal.status === "processando" && (
-                      <Button variant="ghost" size="sm" className="h-auto p-0 text-primary underline" onClick={atualizarStatusNfce} disabled={atualizandoNfce}>
+                      <Button variant="ghost" size="sm" className="h-auto cursor-pointer p-0 text-primary underline" onClick={atualizarStatusNfce} disabled={atualizandoNfce}>
                         {atualizandoNfce ? "Atualizando…" : "Atualizar status"}
                       </Button>
                     )}
                   </span>
                 ) : (
-                  <Button variant="outline" size="lg" className="rounded-lg font-normal" onClick={emitirNfce} disabled={emitindoNfce}>
+                  <Button variant="outline" size="lg" className="cursor-pointer rounded-full font-normal" onClick={emitirNfce} disabled={emitindoNfce}>
                     {emitindoNfce ? "Emitindo…" : "Emitir NFCe"}
                   </Button>
                 ))}
               {finalizavel && (
                 <Button
                   size="lg"
-                  className="rounded-lg font-normal"
+                  className="cursor-pointer rounded-full font-normal"
                   onClick={finalizar}
                   disabled={finalizando}
                 >
