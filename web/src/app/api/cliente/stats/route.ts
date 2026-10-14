@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     aniversario: s.aniversario,
     criado_em: s.criadoEm,
     cashback: s.cashback,
+    cashback_valido_ate: s.cashbackValidoAte,
     pontos: s.pontos,
     saldo_fiado: s.saldoFiado,
     ticket_medio: s.ticketMedio,

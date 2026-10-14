@@ -121,6 +121,7 @@ export type PosClienteStats = {
   nome?: string;
   telefone?: string;
   cashback?: number;
+  cashback_valido_ate?: string | null;
   pontos?: number;
   saldo_fiado?: number;
   pedidos_feitos?: number;

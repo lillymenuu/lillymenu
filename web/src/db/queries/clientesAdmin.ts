@@ -1,8 +1,9 @@
 import "server-only";
-import { and, eq, ne, ilike, or, sql, desc } from "drizzle-orm";
+import { and, eq, ne, gte, ilike, or, sql, desc } from "drizzle-orm";
 import { db } from "@/db";
-import { clientes, pedidos, avaliacoes } from "@/db/schema";
+import { clientes, pedidos, avaliacoes, cashbackMovimentacoes } from "@/db/schema";
 import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
+import { dataFortaleza } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/clientes_listar.php, cliente_detalhe.php,
@@ -285,6 +286,7 @@ export type ClienteStats = {
   ultimoPedido: string | null;
   pedidosFeitos: number;
   avaliacaoMedia: number | null;
+  cashbackValidoAte: string | null;
 };
 
 export async function clienteStats(lojaId: number, clienteId: number): Promise<{ ok: true; stats: ClienteStats } | { ok: false; msg: string }> {
@@ -332,6 +334,25 @@ export async function clienteStats(lojaId: number, clienteId: number): Promise<{
   const [avRow] = await db.select({ media: sql<string | null>`avg(${avaliacoes.nota})` }).from(avaliacoes).where(and(eq(avaliacoes.cliente_id, clienteId), eq(avaliacoes.loja_id, lojaId)));
   const avaliacaoMedia = avRow?.media !== null && avRow?.media !== undefined ? Math.round(Number(avRow.media) * 10) / 10 : null;
 
+  // Data de expiracao mais proxima entre as entradas de cashback ainda validas — so uma
+  // estimativa pra exibir ao operador (nao rastreia qual parcela especifica compoe o saldo
+  // atual), mas e a mesma logica "mais proximo vence primeiro" usada no resto do sistema.
+  let cashbackValidoAte: string | null = null;
+  if (cliente.cashbackSaldo > 0) {
+    const [proximaExpiracao] = await db
+      .select({ expiraEm: sql<string | null>`min(${cashbackMovimentacoes.expira_em})` })
+      .from(cashbackMovimentacoes)
+      .where(
+        and(
+          eq(cashbackMovimentacoes.cliente_id, clienteId),
+          eq(cashbackMovimentacoes.loja_id, lojaId),
+          eq(cashbackMovimentacoes.tipo, "entrada"),
+          gte(cashbackMovimentacoes.expira_em, dataFortaleza())
+        )
+      );
+    cashbackValidoAte = proximaExpiracao?.expiraEm ?? null;
+  }
+
   return {
     ok: true,
     stats: {
@@ -357,6 +378,7 @@ export async function clienteStats(lojaId: number, clienteId: number): Promise<{
       ultimoPedido,
       pedidosFeitos: totalPed,
       avaliacaoMedia,
+      cashbackValidoAte,
     },
   };
 }

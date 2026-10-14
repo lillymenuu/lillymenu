@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosClienteStats, PosFormaPagamento, PosPagamentoLinha } from "@/lib/pos";
 import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
+import { PosCashbackDialog } from "@/components/pos/pos-cashback-dialog";
 
 const FORMAS: { valor: PosFormaPagamento; label: string; icon: typeof Banknote }[] = [
   { valor: "dinheiro", label: "Dinheiro", icon: Banknote },
@@ -79,6 +80,7 @@ export function PosPagamentoPanel({
   const [cashbackValor, setCashbackValor] = useState(() =>
     (valoresIniciais?.cashbackUsado ?? 0) > 0 ? String(valoresIniciais!.cashbackUsado) : ""
   );
+  const [cashbackModalAberto, setCashbackModalAberto] = useState(false);
 
   const [cpfCnpjAberto, setCpfCnpjAberto] = useState(() => (valoresIniciais?.cpfCnpjNota ?? "") !== "");
   const [cpfCnpjNota, setCpfCnpjNota] = useState(() => valoresIniciais?.cpfCnpjNota ?? "");
@@ -235,18 +237,6 @@ export function PosPagamentoPanel({
         </div>
       ) : null}
 
-      {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
-        <div className="space-y-1.5 rounded-xl border p-2.5">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-xs font-medium">
-              <Coins className="size-3.5 text-amber-600" /> Usar cashback ({formatBRL(clienteStats.cashback ?? 0)} disponível)
-            </span>
-            <Switch checked={usarCashback} onCheckedChange={setUsarCashback} />
-          </div>
-          {usarCashback ? <MoneyInput value={cashbackValor} onChange={setCashbackValor} className="h-8 text-xs" /> : null}
-        </div>
-      ) : null}
-
       {nfceDisponivel ? (
         <div className="space-y-1.5 rounded-xl border p-2.5">
           <div className="flex items-center justify-between">
@@ -303,6 +293,37 @@ export function PosPagamentoPanel({
           <span>{formatBRL(total)}</span>
         </div>
       </div>
+
+      {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
+        <button
+          type="button"
+          onClick={() => setCashbackModalAberto(true)}
+          className="flex w-full items-center gap-1.5 rounded-full bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+        >
+          <Coins className="size-3.5 text-amber-600" />
+          {cashbackNum > 0 ? (
+            <>
+              Cashback de <span className="text-primary">{formatBRL(cashbackNum)}</span> aplicado · editar
+            </>
+          ) : (
+            <>
+              Usar cashback disponível de <span className="text-primary">{formatBRL(clienteStats.cashback ?? 0)}</span>
+            </>
+          )}
+        </button>
+      ) : null}
+
+      <PosCashbackDialog
+        open={cashbackModalAberto}
+        onOpenChange={setCashbackModalAberto}
+        saldoDisponivel={clienteStats?.cashback ?? 0}
+        validoAte={clienteStats?.cashback_valido_ate}
+        valorInicial={cashbackNum}
+        onConfirmar={(valor) => {
+          setUsarCashback(valor > 0);
+          setCashbackValor(valor > 0 ? String(valor) : "");
+        }}
+      />
 
       <Button className="h-11 w-full text-sm" onClick={onFinalizar} disabled={desabilitado || finalizando}>
         {finalizando ? "Finalizando..." : `Finalizar pedido · ${formatBRL(total)}`}
