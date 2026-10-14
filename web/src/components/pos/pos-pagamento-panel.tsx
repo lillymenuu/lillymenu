@@ -153,6 +153,19 @@ export function PosPagamentoPanel({
             Restante a cobrar {formatBRL(restante)}
           </div>
         ) : null}
+        {descontoReais > 0 ? (
+          <div className="flex items-center justify-center gap-1.5 font-medium text-primary">
+            Desconto concedido {formatBRL(descontoReais)}
+            <button
+              type="button"
+              onClick={() => setDescontoReais(0)}
+              aria-label="Remover desconto"
+              className="text-primary/70 hover:text-primary"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-3 gap-2">
