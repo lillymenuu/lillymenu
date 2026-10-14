@@ -144,7 +144,7 @@ export function PosPagamentoPanel({
         disabled={restante <= 0}
       />
 
-      <div className="space-y-0.5 text-center text-sm">
+      <div className="space-y-0.5 text-center text-xs">
         <div>
           Total do pedido <span className="font-semibold">{formatBRL(total)}</span>
         </div>
@@ -168,12 +168,12 @@ export function PosPagamentoPanel({
         ) : null}
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 justify-items-center gap-2">
         <button
           type="button"
           onClick={() => setTrocoModalAberto(true)}
           disabled={restante <= 0}
-          className="flex flex-col items-center gap-1.5 rounded-xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-[86%] flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Banknote className="size-4 text-muted-foreground" />
           Dinheiro
@@ -186,7 +186,7 @@ export function PosPagamentoPanel({
               type="button"
               onClick={() => registrarPagamento(f.valor)}
               disabled={restante <= 0}
-              className="flex flex-col items-center gap-1.5 rounded-xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex w-[86%] flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Icon className="size-4 text-muted-foreground" />
               {f.label}
@@ -197,7 +197,7 @@ export function PosPagamentoPanel({
           <button
             type="button"
             onClick={() => setDescontoModalAberto(true)}
-            className="flex flex-col items-center gap-1.5 rounded-xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40"
+            className="flex w-[86%] flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40"
           >
             <Tag className="size-4 text-muted-foreground" />
             Desconto
@@ -207,7 +207,7 @@ export function PosPagamentoPanel({
           type="button"
           onClick={() => registrarPagamento("fiado")}
           disabled={restante <= 0}
-          className="flex flex-col items-center gap-1.5 rounded-xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-[86%] flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Wallet className="size-4 text-muted-foreground" />
           Fiado
@@ -230,16 +230,16 @@ export function PosPagamentoPanel({
       />
 
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Finalizar sem pagamento</span>
+        <span className="text-xs font-medium">Finalizar sem pagamento</span>
         <Switch checked={semPagamento} onCheckedChange={setSemPagamento} />
       </div>
 
       {pagamentosRegistrados.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-sm font-medium">Pagamento registrados</p>
+          <p className="text-xs font-medium">Pagamento registrados</p>
           <div className="space-y-1.5">
             {pagamentosRegistrados.map((p, i) => (
-              <div key={i} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2 text-sm">
+              <div key={i} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2 text-xs">
                 <span className="font-medium text-primary">{LABEL_FORMA[p.forma]}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{formatBRL(p.valor)}</span>
@@ -256,14 +256,14 @@ export function PosPagamentoPanel({
       <div className="flex gap-2">
         <Button
           variant="outline"
-          className="h-11 flex-1 rounded-full"
+          className="h-11 flex-1 rounded-full text-xs"
           onClick={() => onFinalizar(false)}
           disabled={desabilitado || finalizando || (restante > 0 && !semPagamento)}
         >
           {finalizando ? "Finalizando..." : "Finalizar"}
         </Button>
         <Button
-          className="h-11 flex-1 rounded-full"
+          className="h-11 flex-1 rounded-full text-xs"
           onClick={() => onFinalizar(true)}
           disabled={desabilitado || finalizando || (restante > 0 && !semPagamento)}
         >
