@@ -514,6 +514,7 @@ export function PosOverlay({
                 </button>
               </div>
             ) : null}
+            <PosImpressaoToggle phpAdminUrl={phpAdminUrl} />
             <Button variant="ghost" size="icon" onClick={onFechar}>
               <X className="size-4.5" />
             </Button>
@@ -550,11 +551,7 @@ export function PosOverlay({
                     restaurada no carrinho. Revise os itens antes de salvar.
                   </div>
                 ) : null}
-                <PosTipoPedido
-                  tipo={tipoPedido}
-                  onTipoChange={onTipoPedidoChange}
-                  rightSlot={<PosImpressaoToggle phpAdminUrl={phpAdminUrl} />}
-                />
+                <PosTipoPedido tipo={tipoPedido} onTipoChange={onTipoPedidoChange} />
                 {agendamentoCfgAtual?.ativo ? (
                   <PosAgendamentoCard
                     valor={agendamento}

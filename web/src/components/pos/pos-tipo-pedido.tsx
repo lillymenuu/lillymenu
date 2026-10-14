@@ -23,38 +23,33 @@ const OPCOES: { valor: PosTipoPedidoValor; label: string; icon: LucideIcon }[] =
 export function PosTipoPedido({
   tipo,
   onTipoChange,
-  rightSlot,
 }: {
   tipo: PosTipoPedidoValor;
   onTipoChange: (t: PosTipoPedidoValor) => void;
-  rightSlot?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-end gap-2">
-      <div className="min-w-0 flex-1 space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Tipo do pedido</label>
-        <div className="grid grid-cols-4 gap-1.5">
-          {OPCOES.map((opcao) => {
-            const ativo = tipo === opcao.valor;
-            const Icon = opcao.icon;
-            return (
-              <button
-                key={opcao.valor}
-                type="button"
-                onClick={() => onTipoChange(opcao.valor)}
-                className={cn(
-                  "flex h-16 flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-medium transition-colors",
-                  ativo ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:border-primary/40 hover:bg-muted"
-                )}
-              >
-                <Icon size={18} />
-                {opcao.label}
-              </button>
-            );
-          })}
-        </div>
+    <div className="space-y-1">
+      <label className="text-xs font-medium text-muted-foreground">Tipo do pedido</label>
+      <div className="grid grid-cols-4 gap-1.5">
+        {OPCOES.map((opcao) => {
+          const ativo = tipo === opcao.valor;
+          const Icon = opcao.icon;
+          return (
+            <button
+              key={opcao.valor}
+              type="button"
+              onClick={() => onTipoChange(opcao.valor)}
+              className={cn(
+                "flex h-16 flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-medium transition-colors",
+                ativo ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:border-primary/40 hover:bg-muted"
+              )}
+            >
+              <Icon size={18} />
+              {opcao.label}
+            </button>
+          );
+        })}
       </div>
-      {rightSlot}
     </div>
   );
 }
