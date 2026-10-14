@@ -26,6 +26,9 @@ export function PosTrocoDialog({
     setRecebida("");
   }, [open]);
 
+  const recebidaNum = Math.max(0, Number(recebida.replace(",", ".")) || 0);
+  const troco = Math.max(0, Math.round((recebidaNum - quantiaACobrar) * 100) / 100);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
@@ -41,6 +44,11 @@ export function PosTrocoDialog({
           <p className="text-xs text-muted-foreground">
             Quantia à ser cobrada <span className="font-semibold text-foreground">{formatBRL(quantiaACobrar)}</span>
           </p>
+          {troco > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Troco <span className="font-semibold text-foreground">{formatBRL(troco)}</span>
+            </p>
+          ) : null}
         </div>
 
         <DialogFooter className="border-t-0 bg-transparent sm:justify-end">
