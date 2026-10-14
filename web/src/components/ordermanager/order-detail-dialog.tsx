@@ -325,7 +325,7 @@ export function OrderDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg gap-3 overflow-hidden sm:max-w-lg">
+        <DialogContent className="max-w-lg gap-3 overflow-hidden rounded-3xl sm:max-w-lg">
           <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden">
             <DialogHeader className="pr-8">
               <div className="flex items-center justify-between gap-2">
