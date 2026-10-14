@@ -217,7 +217,7 @@ export function PosEntregaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto rounded-3xl sm:max-w-sm">
+      <DialogContent className="scrollbar-hidden max-h-[90vh] max-w-sm overflow-y-auto rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Preencha os dados de entrega do pedido</DialogTitle>
         </DialogHeader>
