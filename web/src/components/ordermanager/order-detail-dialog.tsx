@@ -12,6 +12,7 @@ import {
   User,
   PhoneCall,
   MapPin,
+  Wallet,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -511,24 +512,37 @@ export function OrderDetailDialog({
 
                 <div className="flex flex-col gap-1.5 border-t pt-2.5">
                   <div className="flex items-center gap-1.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                    Pagamento
+                    <Wallet size={11} /> Pagamento
                   </div>
                   {pagamentos.length > 0 ? (
-                    pagamentos.map((p, i) => (
-                      <div key={i} className="flex items-center justify-between">
-                        <span className="font-normal text-muted-foreground">{p.forma}</span>
-                        <span className="font-normal">{formatBRL(p.valor)}</span>
-                      </div>
-                    ))
+                    pagamentos.map((p, i) => {
+                      const isDinheiro = p.forma.toLowerCase() === "dinheiro";
+                      const clientePagaCom = pedido.valor_pago && pedido.valor_pago > 0 ? pedido.valor_pago : p.valor;
+                      const trocoValor = pedido.troco ?? 0;
+                      return (
+                        <div key={i} className="flex flex-col gap-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-normal text-muted-foreground capitalize">{p.forma}</span>
+                            <span className="font-normal">{formatBRL(p.valor)}</span>
+                          </div>
+                          {isDinheiro ? (
+                            <>
+                              <div className="flex items-center justify-between text-muted-foreground">
+                                <span className="font-normal">Cliente pagará com</span>
+                                <span className="font-normal">{formatBRL(clientePagaCom)}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="font-normal text-muted-foreground">Troco no valor de</span>
+                                <span className="font-semibold">{formatBRL(trocoValor)}</span>
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      );
+                    })
                   ) : (
                     <span className="text-muted-foreground">-</span>
                   )}
-                  {pedido.troco && pedido.troco > 0 ? (
-                    <div className="flex items-center justify-between">
-                      <span className="font-normal text-muted-foreground">Troco</span>
-                      <span className="font-normal">{formatBRL(pedido.troco)}</span>
-                    </div>
-                  ) : null}
                 </div>
 
                 {pedido.observacoes_cliente && (
