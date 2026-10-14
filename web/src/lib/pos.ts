@@ -130,7 +130,7 @@ export type PosClienteStats = {
 
 export type PosTipoPedido = "venda_rapida" | "entrega" | "retirada" | "mesa";
 
-export type PosFormaPagamento = "dinheiro" | "credito" | "debito" | "pix" | "voucher" | "fiado";
+export type PosFormaPagamento = "dinheiro" | "credito" | "debito" | "pix" | "voucher" | "outro" | "fiado";
 
 export type PosPagamentoLinha = { forma: PosFormaPagamento; valor: number };
 

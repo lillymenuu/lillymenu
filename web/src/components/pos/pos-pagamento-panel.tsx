@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Banknote, CreditCard, Smartphone, Ticket, Receipt, Percent, Split } from "lucide-react";
+import { toast } from "sonner";
+import { Banknote, CreditCard, Smartphone, Ticket, MessageCircle, Tag, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { MoneyInput } from "@/components/produtos/money-input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosClienteStats, PosFormaPagamento, PosPagamentoLinha } from "@/lib/pos";
+import { PosDescontoDialog } from "@/components/pos/pos-desconto-dialog";
 
 const FORMAS: { valor: PosFormaPagamento; label: string; icon: typeof Banknote }[] = [
   { valor: "dinheiro", label: "Dinheiro", icon: Banknote },
@@ -17,8 +16,18 @@ const FORMAS: { valor: PosFormaPagamento; label: string; icon: typeof Banknote }
   { valor: "debito", label: "Débito", icon: CreditCard },
   { valor: "pix", label: "Pix", icon: Smartphone },
   { valor: "voucher", label: "Voucher", icon: Ticket },
-  { valor: "fiado", label: "Fiado", icon: Receipt },
+  { valor: "outro", label: "Outro", icon: MessageCircle },
 ];
+
+const LABEL_FORMA: Record<PosFormaPagamento, string> = {
+  dinheiro: "Dinheiro",
+  credito: "Cartão de crédito",
+  debito: "Cartão de débito",
+  pix: "Transferência Pix",
+  voucher: "Voucher",
+  outro: "Outro",
+  fiado: "Fiado",
+};
 
 export type PosPagamentoDados = {
   pagamentos: PosPagamentoLinha[];
@@ -38,7 +47,6 @@ export function PosPagamentoPanel({
   valoresIniciais,
   cashbackAplicado,
   onDadosChange,
-  onVoltar,
   onFinalizar,
   finalizando,
   desabilitado,
@@ -52,217 +60,173 @@ export function PosPagamentoPanel({
   /** Valor de cashback a usar, ja decidido no resumo do pedido (ver pos-overlay.tsx). */
   cashbackAplicado: number;
   onDadosChange: (dados: PosPagamentoDados, total: number) => void;
-  onVoltar: () => void;
-  onFinalizar: () => void;
+  onFinalizar: (imprimir: boolean) => void;
   finalizando: boolean;
   desabilitado: boolean;
 }) {
-  const [formaPrimaria, setFormaPrimaria] = useState<PosFormaPagamento>("dinheiro");
-  const [dividido, setDividido] = useState(false);
-  const [formaSecundaria, setFormaSecundaria] = useState<PosFormaPagamento>("pix");
-  const [valorSecundario, setValorSecundario] = useState("");
-  const [valorRecebido, setValorRecebido] = useState("");
-
-  // Usados quando reabrindo o painel pra editar um pedido existente — sem
-  // isso, um desconto manual (sem cupom) ou cashback usado no pedido
-  // original ficam de fora do total recalculado aqui, e o total do
-  // cliente diverge do que o servidor recalcula ao salvar (erro "soma dos
-  // pagamentos precisa ser igual ao total").
-  const [descontoAberto, setDescontoAberto] = useState(() => (valoresIniciais?.descontoValor ?? 0) > 0);
-  const [descontoTipo, setDescontoTipo] = useState<"valor" | "percent">(valoresIniciais?.descontoTipo ?? "valor");
-  const [descontoValor, setDescontoValor] = useState(() =>
-    (valoresIniciais?.descontoValor ?? 0) > 0 ? String(valoresIniciais!.descontoValor) : ""
-  );
-
-  const descontoCalculado = useMemo(() => {
-    const v = Number(descontoValor || 0);
-    if (!descontoAberto || v <= 0) return 0;
-    return descontoTipo === "percent" ? subtotal * (v / 100) : v;
-  }, [descontoAberto, descontoTipo, descontoValor, subtotal]);
+  const [pagamentosRegistrados, setPagamentosRegistrados] = useState<PosPagamentoLinha[]>([]);
+  const [valorInput, setValorInput] = useState("");
+  const [descontoModalAberto, setDescontoModalAberto] = useState(false);
+  const [descontoReais, setDescontoReais] = useState(() => {
+    const v = valoresIniciais?.descontoValor ?? 0;
+    if (v <= 0) return 0;
+    return valoresIniciais?.descontoTipo === "percent" ? Math.round(subtotal * (v / 100) * 100) / 100 : v;
+  });
+  const [semPagamento, setSemPagamento] = useState(false);
 
   const cashbackNum = Math.max(0, Math.min(cashbackAplicado, clienteStats?.cashback ?? cashbackAplicado));
   const cupomValorAplicado = cupom?.valor ?? 0;
 
-  const total = Math.max(0, subtotal + taxaEntrega - descontoCalculado - cupomValorAplicado - cashbackNum);
+  const total = Math.max(0, subtotal + taxaEntrega - descontoReais - cupomValorAplicado - cashbackNum);
+  const pagoAteAgora = useMemo(() => pagamentosRegistrados.reduce((s, p) => s + p.valor, 0), [pagamentosRegistrados]);
+  const restante = Math.max(0, Math.round((total - pagoAteAgora) * 100) / 100);
 
-  const valorSecundarioNum = dividido ? Number(valorSecundario || 0) : 0;
-  const valorPrimario = dividido ? Math.max(0, total - valorSecundarioNum) : total;
+  // Mantem o campo de valor sempre igual ao restante quando o restante muda
+  // (nova linha registrada, desconto/cashback alterado) — o operador so edita
+  // na mao quando quer registrar um valor diferente do que falta.
+  useEffect(() => {
+    setValorInput(restante > 0 ? String(restante) : "");
+  }, [restante]);
 
-  const pagamentos: PosPagamentoLinha[] = dividido
-    ? [
-        { forma: formaPrimaria, valor: Number(valorPrimario.toFixed(2)) },
-        { forma: formaSecundaria, valor: Number(valorSecundarioNum.toFixed(2)) },
-      ]
-    : [{ forma: formaPrimaria, valor: Number(total.toFixed(2)) }];
-
-  const troco = formaPrimaria === "dinheiro" && !dividido && valorRecebido ? Math.max(0, Number(valorRecebido) - total) : 0;
+  const pagamentosFinais: PosPagamentoLinha[] = semPagamento && restante > 0 ? [...pagamentosRegistrados, { forma: "fiado", valor: restante }] : pagamentosRegistrados;
 
   useEffect(() => {
     onDadosChange(
       {
-        pagamentos,
-        pagamentoDividido: dividido,
-        valorPago: formaPrimaria === "dinheiro" ? Number(valorRecebido || total) : total,
-        descontoTipo,
-        descontoValor: descontoCalculado > 0 ? Number(descontoValor || 0) : 0,
+        pagamentos: pagamentosFinais,
+        pagamentoDividido: true,
+        valorPago: pagamentosFinais.reduce((s, p) => s + p.valor, 0),
+        descontoTipo: "valor",
+        descontoValor: descontoReais,
         cashbackUsado: cashbackNum,
       },
       total
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formaPrimaria, dividido, formaSecundaria, valorSecundario, valorRecebido, descontoTipo, descontoValor, descontoCalculado, cashbackAplicado, cashbackNum, total]);
+  }, [pagamentosFinais, descontoReais, cashbackNum, total]);
+
+  function registrarPagamento(forma: PosFormaPagamento) {
+    const digitado = Math.max(0, Number(valorInput.replace(",", ".")) || 0);
+    if (digitado <= 0 || restante <= 0) return;
+    const aplicado = Math.min(digitado, restante);
+    setPagamentosRegistrados((prev) => [...prev, { forma, valor: Number(aplicado.toFixed(2)) }]);
+    if (forma === "dinheiro" && digitado > restante + 0.009) {
+      toast.success(`Troco: ${formatBRL(digitado - restante)}`);
+    }
+  }
+
+  function removerPagamento(index: number) {
+    setPagamentosRegistrados((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  const restanteAntesDoDesconto = Math.max(0, subtotal + taxaEntrega - cupomValorAplicado - cashbackNum - pagoAteAgora + descontoReais);
 
   return (
-    <div className="space-y-3">
-      <button type="button" onClick={onVoltar} className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-3.5" /> Voltar ao resumo
-      </button>
+    <div className="space-y-4">
+      <MoneyInput
+        value={valorInput}
+        onChange={setValorInput}
+        className="h-12 w-full rounded-full border-0 bg-muted/60 px-4 text-base font-medium"
+        disabled={restante <= 0}
+      />
 
-      <div>
-        <Label className="mb-1.5 block text-xs">Forma de pagamento</Label>
-        <div className="grid grid-cols-3 gap-1.5">
-          {FORMAS.map((f) => {
-            const Icon = f.icon;
-            const ativo = formaPrimaria === f.valor;
-            return (
-              <button
-                key={f.valor}
-                type="button"
-                onClick={() => setFormaPrimaria(f.valor)}
-                className={`flex flex-col items-center gap-1 rounded-xl border py-2 text-[11px] font-medium transition-colors ${
-                  ativo ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted/40"
-                }`}
-              >
-                <Icon className="size-3.5" />
-                {f.label}
-              </button>
-            );
-          })}
+      <div className="space-y-0.5 text-center text-sm">
+        <div>
+          Total do pedido <span className="font-semibold">{formatBRL(total)}</span>
         </div>
+        {restante > 0 ? (
+          <div className="font-medium text-destructive">
+            Restante a cobrar {formatBRL(restante)}
+          </div>
+        ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setDividido((v) => !v)}
-        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-      >
-        <Split className="size-3.5" />
-        {dividido ? "Cancelar pagamento dividido" : "Dividir pagamento"}
-      </button>
-
-      {dividido ? (
-        <div className="grid grid-cols-2 gap-2 rounded-xl border bg-muted/30 p-2.5">
-          <div className="space-y-1">
-            <Label className="text-[11px]">2ª forma</Label>
-            <Select value={formaSecundaria} onValueChange={(v) => v && setFormaSecundaria(v as PosFormaPagamento)}>
-              <SelectTrigger className="h-8 w-full text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FORMAS.filter((f) => f.valor !== formaPrimaria).map((f) => (
-                  <SelectItem key={f.valor} value={f.valor}>
-                    {f.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[11px]">Valor ({FORMAS.find((f) => f.valor === formaSecundaria)?.label})</Label>
-            <MoneyInput value={valorSecundario} onChange={setValorSecundario} className="h-8 text-xs" />
-          </div>
-          <div className="col-span-2 text-[11px] text-muted-foreground">
-            1ª forma ({FORMAS.find((f) => f.valor === formaPrimaria)?.label}): <strong>{formatBRL(valorPrimario)}</strong>
-          </div>
-        </div>
-      ) : null}
-
-      {formaPrimaria === "dinheiro" && !dividido ? (
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label className="text-[11px]">Valor recebido</Label>
-            <MoneyInput value={valorRecebido} onChange={setValorRecebido} className="h-8 text-xs" placeholder={formatBRL(total)} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[11px]">Troco</Label>
-            <div className="flex h-8 items-center rounded-md border bg-muted/40 px-3 text-xs font-semibold">{formatBRL(troco)}</div>
-          </div>
-        </div>
-      ) : null}
-
-      {podeAplicarDesconto ? (
-        <div className="space-y-1.5 rounded-xl border p-2.5">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-xs font-medium">
-              <Percent className="size-3.5" /> Desconto
-            </span>
-            <Switch checked={descontoAberto} onCheckedChange={setDescontoAberto} />
-          </div>
-          {descontoAberto ? (
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <Select value={descontoTipo} onValueChange={(v) => v && setDescontoTipo(v as "valor" | "percent")}>
-                <SelectTrigger className="h-8 w-full text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="valor">Em reais</SelectItem>
-                  <SelectItem value="percent">Em %</SelectItem>
-                </SelectContent>
-              </Select>
-              {descontoTipo === "valor" ? (
-                <MoneyInput value={descontoValor} onChange={setDescontoValor} className="h-8 text-xs" />
-              ) : (
-                <Input
-                  className="h-8 text-xs"
-                  type="number"
-                  value={descontoValor}
-                  onChange={(e) => setDescontoValor(e.target.value)}
-                  placeholder="0"
-                />
-              )}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="space-y-1 border-t pt-2.5 text-xs">
-        <div className="flex justify-between text-muted-foreground">
-          <span>Subtotal</span>
-          <span>{formatBRL(subtotal)}</span>
-        </div>
-        {taxaEntrega > 0 ? (
-          <div className="flex justify-between text-muted-foreground">
-            <span>Taxa de entrega</span>
-            <span>{formatBRL(taxaEntrega)}</span>
-          </div>
+      <div className="grid grid-cols-3 gap-2">
+        {FORMAS.map((f) => {
+          const Icon = f.icon;
+          return (
+            <button
+              key={f.valor}
+              type="button"
+              onClick={() => registrarPagamento(f.valor)}
+              disabled={restante <= 0}
+              className="flex flex-col items-center gap-1.5 rounded-xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Icon className="size-4 text-muted-foreground" />
+              {f.label}
+            </button>
+          );
+        })}
+        {podeAplicarDesconto ? (
+          <button
+            type="button"
+            onClick={() => setDescontoModalAberto(true)}
+            className="flex flex-col items-center gap-1.5 rounded-xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40"
+          >
+            <Tag className="size-4 text-muted-foreground" />
+            Desconto
+          </button>
         ) : null}
-        {descontoCalculado > 0 ? (
-          <div className="flex justify-between text-emerald-600">
-            <span>Desconto</span>
-            <span>-{formatBRL(descontoCalculado)}</span>
-          </div>
-        ) : null}
-        {cupomValorAplicado > 0 ? (
-          <div className="flex justify-between text-emerald-600">
-            <span>Cupom {cupom?.codigo}</span>
-            <span>-{formatBRL(cupomValorAplicado)}</span>
-          </div>
-        ) : null}
-        {cashbackNum > 0 ? (
-          <div className="flex justify-between text-emerald-600">
-            <span>Cashback usado</span>
-            <span>-{formatBRL(cashbackNum)}</span>
-          </div>
-        ) : null}
-        <div className="flex justify-between border-t pt-1.5 text-sm font-semibold">
-          <span>Total</span>
-          <span>{formatBRL(total)}</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => registrarPagamento("fiado")}
+          disabled={restante <= 0}
+          className="flex flex-col items-center gap-1.5 rounded-xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Wallet className="size-4 text-muted-foreground" />
+          Fiado
+        </button>
       </div>
 
-      <Button className="h-11 w-full text-sm" onClick={onFinalizar} disabled={desabilitado || finalizando}>
-        {finalizando ? "Finalizando..." : `Finalizar pedido · ${formatBRL(total)}`}
-      </Button>
+      <PosDescontoDialog
+        open={descontoModalAberto}
+        onOpenChange={setDescontoModalAberto}
+        restanteAntes={restanteAntesDoDesconto}
+        descontoReaisAtual={descontoReais}
+        onAplicar={setDescontoReais}
+      />
+
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">Finalizar sem pagamento</span>
+        <Switch checked={semPagamento} onCheckedChange={setSemPagamento} />
+      </div>
+
+      {pagamentosRegistrados.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Pagamento registrados</p>
+          <div className="space-y-1.5">
+            {pagamentosRegistrados.map((p, i) => (
+              <div key={i} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2 text-sm">
+                <span className="font-medium text-primary">{LABEL_FORMA[p.forma]}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{formatBRL(p.valor)}</span>
+                  <button type="button" onClick={() => removerPagamento(i)} aria-label="Remover pagamento" className="text-muted-foreground hover:text-destructive">
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="h-11 flex-1 rounded-full"
+          onClick={() => onFinalizar(false)}
+          disabled={desabilitado || finalizando || (restante > 0 && !semPagamento)}
+        >
+          {finalizando ? "Finalizando..." : "Finalizar"}
+        </Button>
+        <Button
+          className="h-11 flex-1 rounded-full"
+          onClick={() => onFinalizar(true)}
+          disabled={desabilitado || finalizando || (restante > 0 && !semPagamento)}
+        >
+          {finalizando ? "Finalizando..." : "Finalizar e imprimir"}
+        </Button>
+      </div>
     </div>
   );
 }

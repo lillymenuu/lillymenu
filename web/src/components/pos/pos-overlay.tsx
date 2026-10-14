@@ -386,7 +386,7 @@ export function PosOverlay({
     setEtapa("pagamento");
   }
 
-  async function finalizarPedido() {
+  async function finalizarPedido(imprimir: boolean) {
     if (!pagamentoDados || !cliente) return;
 
     setFinalizando(true);
@@ -448,7 +448,7 @@ export function PosOverlay({
         return;
       }
       toast.success(pedidoEditandoId ? "Pedido atualizado com sucesso!" : `Pedido #${data.codigo} criado com sucesso!`);
-      if (window.impressaoQZ) {
+      if (imprimir && window.impressaoQZ) {
         try {
           await Promise.race([
             window.impressaoQZ.imprimirAutomaticoPedido("pdv", data.pedido_id, lojaNome),
@@ -678,9 +678,9 @@ export function PosOverlay({
       </div>
 
       <Dialog open={etapa === "pagamento"} onOpenChange={(v) => !v && setEtapa("resumo")}>
-        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-3xl sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Pagamento</DialogTitle>
+            <DialogTitle>Registre o pagamento do pedido</DialogTitle>
           </DialogHeader>
           <PosPagamentoPanel
             subtotal={cart.subtotal}
@@ -691,7 +691,6 @@ export function PosOverlay({
             valoresIniciais={pagamentoValoresIniciais}
             cashbackAplicado={cashbackResumoNum}
             onDadosChange={(dados) => setPagamentoDados(dados)}
-            onVoltar={() => setEtapa("resumo")}
             onFinalizar={finalizarPedido}
             finalizando={finalizando}
             desabilitado={cart.itens.length === 0 || !cliente}
