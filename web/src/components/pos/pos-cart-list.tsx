@@ -15,7 +15,7 @@ export function PosCartList({
 }) {
   return (
     <div className="space-y-2.5">
-      <div className="text-sm font-semibold">Resumo do pedido</div>
+      <div className="text-xs font-semibold">Resumo do pedido</div>
       {itens.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-6 text-center text-sm text-muted-foreground">
           <ShoppingBag className="size-6 text-muted-foreground/40" />

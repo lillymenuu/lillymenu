@@ -589,7 +589,7 @@ export function PosOverlay({
               </div>
 
               <div className="shrink-0 space-y-3 bg-card p-4">
-                <div className="space-y-1 text-sm">
+                <div className="space-y-1 text-xs">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
                     <span>{formatBRL(cart.subtotal)}</span>
@@ -606,7 +606,7 @@ export function PosOverlay({
                       <span>-{formatBRL(cashbackResumoNum)}</span>
                     </div>
                   ) : null}
-                  <div className="flex justify-between text-base font-semibold">
+                  <div className="flex justify-between text-sm font-semibold">
                     <span>Total</span>
                     <span>{formatBRL(totalResumo)}</span>
                   </div>

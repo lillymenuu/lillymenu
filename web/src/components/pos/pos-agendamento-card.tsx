@@ -26,8 +26,8 @@ export function PosAgendamentoCard({
       className="flex w-full cursor-pointer items-center justify-between rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/30"
     >
       <div>
-        <div className="mb-0.5 text-xs font-semibold text-muted-foreground">Agendamento</div>
-        <div className="text-sm text-muted-foreground">
+        <div className="mb-0.5 text-[11px] font-semibold text-muted-foreground">Agendamento</div>
+        <div className="text-xs text-muted-foreground">
           {valor ? <span className="font-medium text-foreground">{formatarResumo(valor.data, valor.hora)}</span> : "Pedido disponível para agendamento"}
         </div>
       </div>

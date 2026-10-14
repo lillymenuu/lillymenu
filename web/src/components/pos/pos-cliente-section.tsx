@@ -91,11 +91,11 @@ export function PosClienteSection({
     <>
       {cliente ? (
         <PosInfoCard onLimpar={() => onClienteChange(null)} onEditar={() => setDialogAberto(true)}>
-          <div className="text-sm font-semibold">
+          <div className="text-xs font-semibold">
             {cliente.nome} <span className="font-normal text-muted-foreground">- {cliente.telefone}</span>
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Cashback nesta compra?</span>
+            <span className="text-[11px] text-muted-foreground">Cashback nesta compra?</span>
             <Switch checked={cashbackAtivo} onCheckedChange={onCashbackAtivoChange} />
           </div>
         </PosInfoCard>
