@@ -490,10 +490,10 @@ export function PosOverlay({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-4"
     >
       <div className="flex h-full w-full max-w-[1680px] flex-col overflow-hidden rounded-3xl bg-background shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 duration-200">
-        <header className="flex shrink-0 items-center justify-between border-b bg-card px-5 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <ShoppingBag className="size-4" />
+        <header className="flex shrink-0 items-center justify-between border-b bg-card px-5 py-2">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <ShoppingBag className="size-3.5" />
             </div>
             <div>
               <div className="text-sm font-semibold leading-tight">
@@ -509,7 +509,7 @@ export function PosOverlay({
           </div>
           <div className="flex items-center gap-2">
             {lojaLink ? (
-              <div className="flex items-center gap-1.5 rounded-full border bg-muted/40 px-3 py-1.5">
+              <div className="flex items-center gap-1.5 rounded-full border bg-muted/40 px-3 py-1">
                 <span className="max-w-40 truncate text-xs text-muted-foreground sm:max-w-56">{lojaLink}</span>
                 <button
                   type="button"
