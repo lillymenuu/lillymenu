@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Banknote, CreditCard, Smartphone, Ticket, Receipt, Percent, Coins, Split, FileText } from "lucide-react";
+import { ArrowLeft, Banknote, CreditCard, Smartphone, Ticket, Receipt, Percent, Split, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosClienteStats, PosFormaPagamento, PosPagamentoLinha } from "@/lib/pos";
 import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
-import { PosCashbackDialog } from "@/components/pos/pos-cashback-dialog";
 
 const FORMAS: { valor: PosFormaPagamento; label: string; icon: typeof Banknote }[] = [
   { valor: "dinheiro", label: "Dinheiro", icon: Banknote },
@@ -39,6 +38,7 @@ export function PosPagamentoPanel({
   podeAplicarDesconto,
   clienteStats,
   valoresIniciais,
+  cashbackAplicado,
   nfceDisponivel,
   onDadosChange,
   onVoltar,
@@ -51,7 +51,9 @@ export function PosPagamentoPanel({
   cupom: { codigo: string; valor: number } | null;
   podeAplicarDesconto: boolean;
   clienteStats: PosClienteStats | null;
-  valoresIniciais?: { descontoTipo?: "valor" | "percent"; descontoValor?: number; cashbackUsado?: number; cpfCnpjNota?: string };
+  valoresIniciais?: { descontoTipo?: "valor" | "percent"; descontoValor?: number; cpfCnpjNota?: string };
+  /** Valor de cashback a usar, ja decidido no resumo do pedido (ver pos-overlay.tsx). */
+  cashbackAplicado: number;
   nfceDisponivel: boolean;
   onDadosChange: (dados: PosPagamentoDados, total: number) => void;
   onVoltar: () => void;
@@ -76,12 +78,6 @@ export function PosPagamentoPanel({
     (valoresIniciais?.descontoValor ?? 0) > 0 ? String(valoresIniciais!.descontoValor) : ""
   );
 
-  const [usarCashback, setUsarCashback] = useState(() => (valoresIniciais?.cashbackUsado ?? 0) > 0);
-  const [cashbackValor, setCashbackValor] = useState(() =>
-    (valoresIniciais?.cashbackUsado ?? 0) > 0 ? String(valoresIniciais!.cashbackUsado) : ""
-  );
-  const [cashbackModalAberto, setCashbackModalAberto] = useState(false);
-
   const [cpfCnpjAberto, setCpfCnpjAberto] = useState(() => (valoresIniciais?.cpfCnpjNota ?? "") !== "");
   const [cpfCnpjNota, setCpfCnpjNota] = useState(() => valoresIniciais?.cpfCnpjNota ?? "");
 
@@ -91,7 +87,7 @@ export function PosPagamentoPanel({
     return descontoTipo === "percent" ? subtotal * (v / 100) : v;
   }, [descontoAberto, descontoTipo, descontoValor, subtotal]);
 
-  const cashbackNum = usarCashback ? Math.min(Number(cashbackValor || 0), clienteStats?.cashback ?? 0) : 0;
+  const cashbackNum = Math.max(0, Math.min(cashbackAplicado, clienteStats?.cashback ?? cashbackAplicado));
   const cupomValorAplicado = cupom?.valor ?? 0;
 
   const total = Math.max(0, subtotal + taxaEntrega - descontoCalculado - cupomValorAplicado - cashbackNum);
@@ -122,7 +118,7 @@ export function PosPagamentoPanel({
       total
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formaPrimaria, dividido, formaSecundaria, valorSecundario, valorRecebido, descontoTipo, descontoValor, descontoCalculado, cashbackNum, cpfCnpjAberto, cpfCnpjNota, total]);
+  }, [formaPrimaria, dividido, formaSecundaria, valorSecundario, valorRecebido, descontoTipo, descontoValor, descontoCalculado, cashbackAplicado, cashbackNum, cpfCnpjAberto, cpfCnpjNota, total]);
 
   return (
     <div className="space-y-3">
@@ -293,37 +289,6 @@ export function PosPagamentoPanel({
           <span>{formatBRL(total)}</span>
         </div>
       </div>
-
-      {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
-        <button
-          type="button"
-          onClick={() => setCashbackModalAberto(true)}
-          className="flex w-full items-center gap-1.5 rounded-full bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
-        >
-          <Coins className="size-3.5 text-amber-600" />
-          {cashbackNum > 0 ? (
-            <>
-              Cashback de <span className="text-primary">{formatBRL(cashbackNum)}</span> aplicado · editar
-            </>
-          ) : (
-            <>
-              Usar cashback disponível de <span className="text-primary">{formatBRL(clienteStats.cashback ?? 0)}</span>
-            </>
-          )}
-        </button>
-      ) : null}
-
-      <PosCashbackDialog
-        open={cashbackModalAberto}
-        onOpenChange={setCashbackModalAberto}
-        saldoDisponivel={clienteStats?.cashback ?? 0}
-        validoAte={clienteStats?.cashback_valido_ate}
-        valorInicial={cashbackNum}
-        onConfirmar={(valor) => {
-          setUsarCashback(valor > 0);
-          setCashbackValor(valor > 0 ? String(valor) : "");
-        }}
-      />
 
       <Button className="h-11 w-full text-sm" onClick={onFinalizar} disabled={desabilitado || finalizando}>
         {finalizando ? "Finalizando..." : `Finalizar pedido · ${formatBRL(total)}`}

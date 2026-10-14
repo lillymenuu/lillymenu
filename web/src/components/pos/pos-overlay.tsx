@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { X, ShoppingBag, Copy } from "lucide-react";
+import { X, ShoppingBag, Copy, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type {
@@ -33,6 +33,7 @@ import { PosAgendamentoDialog } from "@/components/pos/pos-agendamento-dialog";
 import type { AgendamentoConfig } from "@/lib/agendamento";
 import { PosCupomField } from "@/components/pos/pos-cupom-field";
 import { PosPagamentoPanel, type PosPagamentoDados } from "@/components/pos/pos-pagamento-panel";
+import { PosCashbackDialog } from "@/components/pos/pos-cashback-dialog";
 import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
 import { PosImpressaoToggle } from "@/components/pos/pos-impressao-toggle";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -117,8 +118,10 @@ export function PosOverlay({
   const [pedidoEditandoCodigo, setPedidoEditandoCodigo] = useState<number | null>(null);
   const [temItemComboNaEdicao, setTemItemComboNaEdicao] = useState(false);
   const [pagamentoValoresIniciais, setPagamentoValoresIniciais] = useState<
-    { descontoTipo?: "valor" | "percent"; descontoValor?: number; cashbackUsado?: number } | undefined
+    { descontoTipo?: "valor" | "percent"; descontoValor?: number } | undefined
   >(undefined);
+  const [cashbackUsarValor, setCashbackUsarValor] = useState(0);
+  const [cashbackModalAberto, setCashbackModalAberto] = useState(false);
 
   const [agora, setAgora] = useState<Date | null>(null);
   useEffect(() => {
@@ -226,7 +229,7 @@ export function PosOverlay({
         }
         const cashbackUsadoOriginal = Number(pedido.cashback_usado) || 0;
         if (cashbackUsadoOriginal > 0) {
-          setPagamentoValoresIniciais((prev) => ({ ...prev, cashbackUsado: cashbackUsadoOriginal }));
+          setCashbackUsarValor(cashbackUsadoOriginal);
         }
 
         setTemItemComboNaEdicao(itens.some((i) => (i.observacoes ?? "").startsWith("[combo]")));
@@ -338,7 +341,8 @@ export function PosOverlay({
           ? taxaEntregaConfig.valorFixo
           : 0;
 
-  const totalResumo = Math.max(0, cart.subtotal + taxaEntrega - (cupom?.valor ?? 0));
+  const cashbackResumoNum = Math.max(0, Math.min(cashbackUsarValor, clienteStats?.cashback ?? cashbackUsarValor));
+  const totalResumo = Math.max(0, cart.subtotal + taxaEntrega - (cupom?.valor ?? 0) - cashbackResumoNum);
 
   // Agendamento nao existe pra consumo local (mesa), igual ao legado.
   const agendamentoCfgAtual =
@@ -593,6 +597,12 @@ export function PosOverlay({
                       <span>{formatBRL(taxaEntrega)}</span>
                     </div>
                   ) : null}
+                  {cashbackResumoNum > 0 ? (
+                    <div className="flex justify-between text-emerald-600">
+                      <span>Cashback usado</span>
+                      <span>-{formatBRL(cashbackResumoNum)}</span>
+                    </div>
+                  ) : null}
                   <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
                     <span>Total</span>
                     <span>{formatBRL(totalResumo)}</span>
@@ -609,6 +619,34 @@ export function PosOverlay({
                     onCupomChange={setCupom}
                   />
                 ) : null}
+
+                {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCashbackModalAberto(true)}
+                    className="flex w-full items-center gap-1.5 rounded-full bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+                  >
+                    <Coins className="size-3.5 text-amber-600" />
+                    {cashbackResumoNum > 0 ? (
+                      <>
+                        Cashback de <span className="text-primary">{formatBRL(cashbackResumoNum)}</span> aplicado · editar
+                      </>
+                    ) : (
+                      <>
+                        Usar cashback disponível de <span className="text-primary">{formatBRL(clienteStats.cashback ?? 0)}</span>
+                      </>
+                    )}
+                  </button>
+                ) : null}
+
+                <PosCashbackDialog
+                  open={cashbackModalAberto}
+                  onOpenChange={setCashbackModalAberto}
+                  saldoDisponivel={clienteStats?.cashback ?? 0}
+                  validoAte={clienteStats?.cashback_valido_ate}
+                  valorInicial={cashbackResumoNum}
+                  onConfirmar={setCashbackUsarValor}
+                />
 
                 <Button
                   className="h-12 w-full rounded-xl text-sm"
@@ -635,6 +673,7 @@ export function PosOverlay({
             podeAplicarDesconto={adminPerfil === "admin" || adminPerfil === "gerente"}
             clienteStats={clienteStats}
             valoresIniciais={pagamentoValoresIniciais}
+            cashbackAplicado={cashbackResumoNum}
             nfceDisponivel={catalogo?.nfceDisponivel ?? false}
             onDadosChange={(dados) => setPagamentoDados(dados)}
             onVoltar={() => setEtapa("resumo")}
