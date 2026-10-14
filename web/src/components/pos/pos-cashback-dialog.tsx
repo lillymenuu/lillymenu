@@ -33,9 +33,12 @@ export function PosCashbackDialog({
     setValor(valorInicial > 0 ? String(valorInicial) : "");
   }, [open, valorInicial]);
 
+  const valorNum = Math.max(0, Number(valor) || 0);
+  const excedeSaldo = valorNum > saldoDisponivel;
+
   function usar() {
-    const n = Math.min(saldoDisponivel, Math.max(0, Number(valor) || 0));
-    onConfirmar(n);
+    if (excedeSaldo) return;
+    onConfirmar(valorNum);
     onOpenChange(false);
   }
 
@@ -46,21 +49,24 @@ export function PosCashbackDialog({
           <DialogTitle>Cashback</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3.5">
           <div className="space-y-0.5">
-            <div className="text-xs font-normal text-muted-foreground">Saldo disponível</div>
-            <div className="text-lg font-semibold">{formatBRL(saldoDisponivel)}</div>
-            {validoAte ? <div className="text-xs text-muted-foreground">Válido até {formatarValidade(validoAte)}</div> : null}
+            <div className="text-[11px] font-normal text-muted-foreground">Saldo disponível</div>
+            <div className="text-sm font-semibold">{formatBRL(saldoDisponivel)}</div>
+            {validoAte ? <div className="text-[11px] text-muted-foreground">Válido até {formatarValidade(validoAte)}</div> : null}
           </div>
 
           <div className="space-y-1.5">
-            <p className="text-sm font-medium">Qual valor de cashback você deseja utilizar neste pedido?</p>
+            <p className="text-xs font-medium">Qual valor de cashback você deseja utilizar neste pedido?</p>
             <MoneyInput value={valor} onChange={setValor} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
+            {excedeSaldo ? (
+              <p className="text-[11px] text-destructive">O valor não pode ser maior que o saldo disponível ({formatBRL(saldoDisponivel)}).</p>
+            ) : null}
           </div>
         </div>
 
         <DialogFooter className="border-t-0 bg-transparent">
-          <Button className="h-11 w-full rounded-full" onClick={usar}>
+          <Button className="h-11 w-full rounded-full" onClick={usar} disabled={excedeSaldo}>
             Usar
           </Button>
         </DialogFooter>
