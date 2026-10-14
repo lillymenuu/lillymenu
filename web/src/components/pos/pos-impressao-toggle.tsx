@@ -45,8 +45,8 @@ export function PosImpressaoToggle({ phpAdminUrl }: { phpAdminUrl: string }) {
           type="button"
           onClick={alternar}
           title={ligada ? "Impressão automática ligada — clique para desligar" : "Impressão automática desligada — clique para ligar"}
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition-colors ${
-            ligada ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50"
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-colors ${
+            ligada ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50"
           }`}
         >
           <Printer className="size-4" />
@@ -55,7 +55,7 @@ export function PosImpressaoToggle({ phpAdminUrl }: { phpAdminUrl: string }) {
         <Link
           href="/settings?abrir=impressao"
           title="Nenhuma impressora configurada para o PDV — configurar agora"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border text-muted-foreground transition-colors hover:bg-muted/50"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted/50"
         >
           <Printer className="size-4" />
         </Link>
