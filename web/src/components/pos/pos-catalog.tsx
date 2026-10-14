@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight, Rocket } from "lucide-react";
+import { cn } from "cn";
 import { Input } from "@/components/ui/input";
 import type { PosCartItem, PosCatalogoResposta, PosCombo, PosProduto } from "@/lib/pos";
 import { PosProdutoCard } from "@/components/pos/pos-produto-card";
@@ -28,6 +29,7 @@ export function PosCatalog({
   onAbrirAvulso: () => void;
 }) {
   const [busca, setBusca] = useState("");
+  const [mostrarTopo, setMostrarTopo] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState<number>(catalogo.categorias[0]?.id ?? SEM_CATEGORIA);
   const scrollRef = useRef<HTMLDivElement>(null);
   const secaoRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -108,7 +110,9 @@ export function PosCatalog({
   }
 
   function onScroll() {
-    if (ignorarScrollSpy.current || !scrollRef.current) return;
+    if (!scrollRef.current) return;
+    setMostrarTopo(scrollRef.current.scrollTop > 300);
+    if (ignorarScrollSpy.current) return;
     const containerTop = scrollRef.current.getBoundingClientRect().top;
     let atual: number | null = null;
     for (const secao of secoes) {
@@ -118,6 +122,10 @@ export function PosCatalog({
       if (top <= 80) atual = secao.categoria.id;
     }
     if (atual !== null && atual !== categoriaAtiva) setCategoriaAtiva(atual);
+  }
+
+  function irParaTopo() {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return (
@@ -176,32 +184,48 @@ export function PosCatalog({
         </button>
       </div>
 
-      <div ref={scrollRef} onScroll={onScroll} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
-        {secoes.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Nenhum produto encontrado.</div>
-        ) : (
-          secoes.map((s) => (
-            <div key={s.categoria.id} ref={(el) => void (secaoRefs.current[s.categoria.id] = el)}>
-              <h3 className="mb-2 text-sm font-semibold text-foreground">{s.categoria.nome}</h3>
-              <div className="flex max-w-[758px] flex-wrap gap-2.5">
-                {s.combos.map((c) => (
-                  <PosComboCard key={`combo-${c.id}`} combo={c} qtd={qtdPorCombo[c.id] ?? 0} onAbrir={onAbrirCombo} />
-                ))}
-                {s.produtos.map((p) => (
-                  <PosProdutoCard
-                    key={`produto-${p.id}`}
-                    produto={p}
-                    qtd={qtdPorProduto[p.id] ?? 0}
-                    estoqueRestante={estoqueRestantePorProduto[p.id] ?? p.estoque}
-                    onAdicionar={onAdicionarProduto}
-                    onAlterarQtd={(delta) => onAlterarQtdProduto(p, delta)}
-                    onDefinirQtd={(qtd) => onDefinirQtdProduto(p, qtd)}
-                  />
-                ))}
+      <div className="relative min-h-0 flex-1">
+        <div ref={scrollRef} onScroll={onScroll} className="h-full space-y-5 overflow-y-auto pr-1">
+          {secoes.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Nenhum produto encontrado.</div>
+          ) : (
+            secoes.map((s) => (
+              <div key={s.categoria.id} ref={(el) => void (secaoRefs.current[s.categoria.id] = el)}>
+                <h3 className="mb-2 text-sm font-semibold text-foreground">{s.categoria.nome}</h3>
+                <div className="flex max-w-[758px] flex-wrap gap-2.5">
+                  {s.combos.map((c) => (
+                    <PosComboCard key={`combo-${c.id}`} combo={c} qtd={qtdPorCombo[c.id] ?? 0} onAbrir={onAbrirCombo} />
+                  ))}
+                  {s.produtos.map((p) => (
+                    <PosProdutoCard
+                      key={`produto-${p.id}`}
+                      produto={p}
+                      qtd={qtdPorProduto[p.id] ?? 0}
+                      estoqueRestante={estoqueRestantePorProduto[p.id] ?? p.estoque}
+                      onAdicionar={onAdicionarProduto}
+                      onAlterarQtd={(delta) => onAlterarQtdProduto(p, delta)}
+                      onDefinirQtd={(qtd) => onDefinirQtdProduto(p, qtd)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={irParaTopo}
+          aria-label="Voltar ao topo dos produtos"
+          title="Voltar ao topo"
+          tabIndex={mostrarTopo ? 0 : -1}
+          className={cn(
+            "absolute right-3 bottom-3 flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+            mostrarTopo ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
+          )}
+        >
+          <Rocket className="size-4.5" />
+        </button>
       </div>
     </div>
   );
