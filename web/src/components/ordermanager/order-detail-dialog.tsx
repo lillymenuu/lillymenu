@@ -326,34 +326,34 @@ export function OrderDetailDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-lg gap-3 overflow-hidden rounded-3xl sm:max-w-lg">
-          <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden">
-            <DialogHeader className="pr-8">
-              <div className="flex items-center justify-between gap-2">
-                <DialogTitle>Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>
-                {pedido && (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        abrirPos(pedido.id);
-                        onOpenChange(false);
-                      }}
-                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
-                    >
-                      Editar pedido
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => window.print()}
-                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
-                    >
-                      <Printer size={13} /> Imprimir
-                    </button>
-                  </div>
-                )}
-              </div>
-            </DialogHeader>
+          <DialogHeader className="pr-8">
+            <div className="flex items-center justify-between gap-2">
+              <DialogTitle>Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>
+              {pedido && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      abrirPos(pedido.id);
+                      onOpenChange(false);
+                    }}
+                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
+                  >
+                    Editar pedido
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
+                  >
+                    <Printer size={13} /> Imprimir
+                  </button>
+                </div>
+              )}
+            </div>
+          </DialogHeader>
 
+          <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden">
             {carregando ? (
               <DetalheSkeleton />
             ) : pedido ? (
