@@ -9,9 +9,10 @@ import { MoneyInput } from "@/components/produtos/money-input";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosClienteStats, PosFormaPagamento, PosPagamentoLinha } from "@/lib/pos";
 import { PosDescontoDialog } from "@/components/pos/pos-desconto-dialog";
+import { PosTrocoDialog } from "@/components/pos/pos-troco-dialog";
+import { cn } from "cn";
 
 const FORMAS: { valor: PosFormaPagamento; label: string; icon: typeof Banknote }[] = [
-  { valor: "dinheiro", label: "Dinheiro", icon: Banknote },
   { valor: "credito", label: "Crédito", icon: CreditCard },
   { valor: "debito", label: "Débito", icon: CreditCard },
   { valor: "pix", label: "Pix", icon: Smartphone },
@@ -67,6 +68,7 @@ export function PosPagamentoPanel({
   const [pagamentosRegistrados, setPagamentosRegistrados] = useState<PosPagamentoLinha[]>([]);
   const [valorInput, setValorInput] = useState("");
   const [descontoModalAberto, setDescontoModalAberto] = useState(false);
+  const [trocoModalAberto, setTrocoModalAberto] = useState(false);
   const [descontoReais, setDescontoReais] = useState(() => {
     const v = valoresIniciais?.descontoValor ?? 0;
     if (v <= 0) return 0;
@@ -110,9 +112,15 @@ export function PosPagamentoPanel({
     if (digitado <= 0 || restante <= 0) return;
     const aplicado = Math.min(digitado, restante);
     setPagamentosRegistrados((prev) => [...prev, { forma, valor: Number(aplicado.toFixed(2)) }]);
-    if (forma === "dinheiro" && digitado > restante + 0.009) {
-      toast.success(`Troco: ${formatBRL(digitado - restante)}`);
+  }
+
+  function confirmarTroco(recebida: number | null) {
+    if (restante <= 0) return;
+    setPagamentosRegistrados((prev) => [...prev, { forma: "dinheiro", valor: restante }]);
+    if (recebida !== null && recebida > restante + 0.009) {
+      toast.success(`Troco: ${formatBRL(recebida - restante)}`);
     }
+    setTrocoModalAberto(false);
   }
 
   function removerPagamento(index: number) {
@@ -120,9 +128,15 @@ export function PosPagamentoPanel({
   }
 
   const restanteAntesDoDesconto = Math.max(0, subtotal + taxaEntrega - cupomValorAplicado - cashbackNum - pagoAteAgora + descontoReais);
+  const algumSubModalAberto = descontoModalAberto || trocoModalAberto;
 
   return (
-    <div className="space-y-4">
+    <div
+      className={cn(
+        "space-y-4 transition-[filter,opacity] duration-150",
+        algumSubModalAberto && "pointer-events-none opacity-60 blur-sm"
+      )}
+    >
       <MoneyInput
         value={valorInput}
         onChange={setValorInput}
@@ -142,6 +156,15 @@ export function PosPagamentoPanel({
       </div>
 
       <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={() => setTrocoModalAberto(true)}
+          disabled={restante <= 0}
+          className="flex flex-col items-center gap-1.5 rounded-xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Banknote className="size-4 text-muted-foreground" />
+          Dinheiro
+        </button>
         {FORMAS.map((f) => {
           const Icon = f.icon;
           return (
@@ -184,6 +207,13 @@ export function PosPagamentoPanel({
         restanteAntes={restanteAntesDoDesconto}
         descontoReaisAtual={descontoReais}
         onAplicar={setDescontoReais}
+      />
+
+      <PosTrocoDialog
+        open={trocoModalAberto}
+        onOpenChange={setTrocoModalAberto}
+        quantiaACobrar={restante}
+        onConfirmar={confirmarTroco}
       />
 
       <div className="flex items-center justify-between">
