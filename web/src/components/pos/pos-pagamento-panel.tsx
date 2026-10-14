@@ -75,6 +75,7 @@ export function PosPagamentoPanel({
     return valoresIniciais?.descontoTipo === "percent" ? Math.round(subtotal * (v / 100) * 100) / 100 : v;
   });
   const [semPagamento, setSemPagamento] = useState(false);
+  const [dinheiroRecebido, setDinheiroRecebido] = useState(0);
 
   const cashbackNum = Math.max(0, Math.min(cashbackAplicado, clienteStats?.cashback ?? cashbackAplicado));
   const cupomValorAplicado = cupom?.valor ?? 0;
@@ -91,13 +92,17 @@ export function PosPagamentoPanel({
   }, [restante]);
 
   const pagamentosFinais: PosPagamentoLinha[] = semPagamento && restante > 0 ? [...pagamentosRegistrados, { forma: "fiado", valor: restante }] : pagamentosRegistrados;
+  const dinheiroValorLinha = useMemo(() => pagamentosFinais.filter((p) => p.forma === "dinheiro").reduce((s, p) => s + p.valor, 0), [pagamentosFinais]);
+  // valorPago so tem sentido quando ha uma linha em dinheiro — representa o quanto o cliente
+  // de fato entregou em especie (pode ser maior que a linha registrada, gerando troco no backend).
+  const valorPagoFinal = dinheiroValorLinha > 0 ? Math.max(dinheiroRecebido, dinheiroValorLinha) : 0;
 
   useEffect(() => {
     onDadosChange(
       {
         pagamentos: pagamentosFinais,
         pagamentoDividido: true,
-        valorPago: pagamentosFinais.reduce((s, p) => s + p.valor, 0),
+        valorPago: valorPagoFinal,
         descontoTipo: "valor",
         descontoValor: descontoReais,
         cashbackUsado: cashbackNum,
@@ -105,7 +110,7 @@ export function PosPagamentoPanel({
       total
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagamentosFinais, descontoReais, cashbackNum, total]);
+  }, [pagamentosFinais, valorPagoFinal, descontoReais, cashbackNum, total]);
 
   function registrarPagamento(forma: PosFormaPagamento) {
     const digitado = Math.max(0, Number(valorInput.replace(",", ".")) || 0);
@@ -117,6 +122,7 @@ export function PosPagamentoPanel({
   function confirmarTroco(recebida: number | null) {
     if (restante <= 0) return;
     setPagamentosRegistrados((prev) => [...prev, { forma: "dinheiro", valor: restante }]);
+    setDinheiroRecebido(recebida !== null ? Math.max(recebida, restante) : restante);
     if (recebida !== null && recebida > restante + 0.009) {
       toast.success(`Troco: ${formatBRL(recebida - restante)}`);
     }
@@ -124,6 +130,8 @@ export function PosPagamentoPanel({
   }
 
   function removerPagamento(index: number) {
+    const removido = pagamentosRegistrados[index];
+    if (removido?.forma === "dinheiro") setDinheiroRecebido(0);
     setPagamentosRegistrados((prev) => prev.filter((_, i) => i !== index));
   }
 

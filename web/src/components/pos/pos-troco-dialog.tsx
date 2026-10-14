@@ -28,6 +28,7 @@ export function PosTrocoDialog({
 
   const recebidaNum = Math.max(0, Number(recebida.replace(",", ".")) || 0);
   const troco = Math.max(0, Math.round((recebidaNum - quantiaACobrar) * 100) / 100);
+  const insuficiente = recebidaNum > 0 && recebidaNum < quantiaACobrar - 0.009;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -44,7 +45,9 @@ export function PosTrocoDialog({
           <p className="text-xs text-muted-foreground">
             Quantia à ser cobrada <span className="font-semibold text-foreground">{formatBRL(quantiaACobrar)}</span>
           </p>
-          {troco > 0 ? (
+          {insuficiente ? (
+            <p className="text-xs text-destructive">A quantia recebida não pode ser menor que o valor a cobrar.</p>
+          ) : troco > 0 ? (
             <p className="text-xs text-muted-foreground">
               Troco <span className="font-semibold text-foreground">{formatBRL(troco)}</span>
             </p>
@@ -55,7 +58,7 @@ export function PosTrocoDialog({
           <Button variant="outline" className="rounded-full" onClick={() => onConfirmar(null)}>
             Não preciso
           </Button>
-          <Button className="rounded-full" onClick={() => onConfirmar(Math.max(0, Number(recebida) || 0))}>
+          <Button className="rounded-full" onClick={() => onConfirmar(recebidaNum)} disabled={insuficiente}>
             Continuar
           </Button>
         </DialogFooter>

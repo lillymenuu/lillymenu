@@ -141,6 +141,7 @@ type PedidoDetalhe = {
   caixa_id: number | null;
   forma_pagamento: string | null;
   valor_pago: number | null;
+  troco: number | null;
   cupom: string | null;
   cashback_aplicado: number | boolean | null;
 };
@@ -522,6 +523,12 @@ export function OrderDetailDialog({
                   ) : (
                     <span className="text-muted-foreground">-</span>
                   )}
+                  {pedido.troco && pedido.troco > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <span className="font-normal text-muted-foreground">Troco</span>
+                      <span className="font-normal">{formatBRL(pedido.troco)}</span>
+                    </div>
+                  ) : null}
                 </div>
 
                 {pedido.observacoes_cliente && (
