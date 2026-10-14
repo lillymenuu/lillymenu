@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,9 @@ import type { PosCepLookupResposta, PosClienteBusca, PosClienteStats } from "@/l
 import type { PosEndereco } from "@/components/pos/pos-tipo-pedido";
 
 const ENDERECO_VAZIO: PosEndereco = { rua: "", numero: "", bairro: "", cidade: "", cep: "", complemento: "" };
+
+const campoClasse = "h-10 rounded-full border-0 bg-muted/60 px-4 text-sm placeholder:text-xs placeholder:text-muted-foreground/70";
+const labelClasse = "text-xs font-normal text-muted-foreground";
 
 export function PosEntregaDialog({
   open,
@@ -213,20 +217,20 @@ export function PosEntregaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto sm:max-w-sm">
+      <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Preencha os dados de entrega do pedido</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="relative space-y-1">
-            <Label className="text-xs">Busque pelo cliente</Label>
+            <Label className={labelClasse}>Busque pelo cliente</Label>
             <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 autoComplete="off"
-                placeholder="Pesquise por número ou nome"
-                className="pl-8"
+                placeholder="Busque por número ou nome"
+                className={cn(campoClasse, "pl-9")}
                 value={busca}
                 onChange={(e) => handleBuscaChange(e.target.value)}
               />
@@ -249,9 +253,10 @@ export function PosEntregaDialog({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Número de contato</Label>
+            <Label className={labelClasse}>Número de contato</Label>
             <Input
               placeholder="Ex.: (11) 9 8888-9999"
+              className={campoClasse}
               value={telefone}
               onChange={(e) => {
                 setTelefone(e.target.value);
@@ -260,9 +265,10 @@ export function PosEntregaDialog({
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Nome do cliente</Label>
+            <Label className={labelClasse}>Nome do cliente</Label>
             <Input
               placeholder="Ex.: João da Silva"
+              className={campoClasse}
               value={nome}
               onChange={(e) => {
                 setNome(e.target.value);
@@ -272,44 +278,45 @@ export function PosEntregaDialog({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">CEP</Label>
-            <Input placeholder="Ex.: 00000-000" value={rascunho.cep} onChange={(e) => handleCepChange(e.target.value)} />
+            <Label className={labelClasse}>CEP</Label>
+            <Input placeholder="Ex.: 00000-000" className={campoClasse} value={rascunho.cep} onChange={(e) => handleCepChange(e.target.value)} />
             {buscandoCep ? <p className="text-[11px] text-muted-foreground">Buscando endereço...</p> : null}
           </div>
 
           <div className="grid grid-cols-[1fr_100px] gap-2">
             <div className="space-y-1">
-              <Label className="text-xs">Rua/Avenida</Label>
-              <Input placeholder="Ex.: Rua Oscar Freire" value={rascunho.rua} onChange={(e) => setRascunho({ ...rascunho, rua: e.target.value })} />
+              <Label className={labelClasse}>Rua/Avenida</Label>
+              <Input placeholder="Ex.: Rua Oscar Freire" className={campoClasse} value={rascunho.rua} onChange={(e) => setRascunho({ ...rascunho, rua: e.target.value })} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Número</Label>
-              <Input placeholder="Ex.: 44" value={rascunho.numero} onChange={(e) => setRascunho({ ...rascunho, numero: e.target.value })} />
+              <Label className={labelClasse}>Número</Label>
+              <Input placeholder="Ex.: 44" className={campoClasse} value={rascunho.numero} onChange={(e) => setRascunho({ ...rascunho, numero: e.target.value })} />
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Bairro</Label>
-            <Input placeholder="Ex.: Bairro Jardim" value={rascunho.bairro} onChange={(e) => setRascunho({ ...rascunho, bairro: e.target.value })} />
+            <Label className={labelClasse}>Bairro</Label>
+            <Input placeholder="Ex.: Bairro Jardim" className={campoClasse} value={rascunho.bairro} onChange={(e) => setRascunho({ ...rascunho, bairro: e.target.value })} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Cidade</Label>
-            <Input placeholder="Ex.: Santo André" value={rascunho.cidade} onChange={(e) => setRascunho({ ...rascunho, cidade: e.target.value })} />
+            <Label className={labelClasse}>Cidade</Label>
+            <Input placeholder="Ex.: Santo André" className={campoClasse} value={rascunho.cidade} onChange={(e) => setRascunho({ ...rascunho, cidade: e.target.value })} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Complemento</Label>
+            <Label className={labelClasse}>Complemento</Label>
             <Input
               placeholder="ex.: próximo ao posto de gasolina"
+              className={campoClasse}
               value={rascunho.complemento}
               onChange={(e) => setRascunho({ ...rascunho, complemento: e.target.value })}
             />
           </div>
 
-          <div className="flex items-center justify-between border-t pt-3">
+          <div className="flex items-center justify-between pt-1">
             <div>
               <div className="text-xs text-muted-foreground">Taxa de entrega</div>
               {editarTaxa ? (
-                <MoneyInput value={taxaManual} onChange={setTaxaManual} className="mt-1 h-8 w-28 text-sm" />
+                <MoneyInput value={taxaManual} onChange={setTaxaManual} className="mt-1 h-8 w-28 rounded-full border-0 bg-muted/60 text-sm" />
               ) : (
                 <div className="text-lg font-semibold">{formatBRL(taxaCalculada)}</div>
               )}
@@ -323,8 +330,8 @@ export function PosEntregaDialog({
           {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
         </div>
 
-        <DialogFooter>
-          <Button className="h-11 w-full" onClick={confirmar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="h-11 w-full rounded-full" onClick={confirmar} disabled={salvando}>
             {salvando ? "Salvando..." : "Continuar"}
           </Button>
         </DialogFooter>
