@@ -173,7 +173,7 @@ export function PosPagamentoPanel({
           type="button"
           onClick={() => setTrocoModalAberto(true)}
           disabled={restante <= 0}
-          className="flex w-full flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-full flex-col items-center gap-2 rounded-2xl border py-4 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Banknote className="size-4 text-muted-foreground" />
           Dinheiro
@@ -186,7 +186,7 @@ export function PosPagamentoPanel({
               type="button"
               onClick={() => registrarPagamento(f.valor)}
               disabled={restante <= 0}
-              className="flex w-full flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex w-full flex-col items-center gap-2 rounded-2xl border py-4 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Icon className="size-4 text-muted-foreground" />
               {f.label}
@@ -197,7 +197,7 @@ export function PosPagamentoPanel({
           <button
             type="button"
             onClick={() => setDescontoModalAberto(true)}
-            className="flex w-full flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40"
+            className="flex w-full flex-col items-center gap-2 rounded-2xl border py-4 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40"
           >
             <Tag className="size-4 text-muted-foreground" />
             Desconto
@@ -207,7 +207,7 @@ export function PosPagamentoPanel({
           type="button"
           onClick={() => registrarPagamento("fiado")}
           disabled={restante <= 0}
-          className="flex w-full flex-col items-center gap-1.5 rounded-2xl border py-3 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-full flex-col items-center gap-2 rounded-2xl border py-4 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Wallet className="size-4 text-muted-foreground" />
           Fiado

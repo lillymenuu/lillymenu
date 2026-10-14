@@ -678,7 +678,7 @@ export function PosOverlay({
       </div>
 
       <Dialog open={etapa === "pagamento"} onOpenChange={(v) => !v && setEtapa("resumo")}>
-        <DialogContent className="max-h-[90vh] max-w-[450px] overflow-y-auto rounded-3xl sm:max-w-[450px]">
+        <DialogContent className="max-h-[90vh] min-h-[560px] max-w-[450px] overflow-y-auto rounded-3xl sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>Registre o pagamento do pedido</DialogTitle>
           </DialogHeader>
