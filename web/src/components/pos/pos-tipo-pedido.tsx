@@ -1,6 +1,7 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FastForward, Bike, ShoppingBasket, UtensilsCrossed, type LucideIcon } from "lucide-react";
+import { cn } from "cn";
 import type { PosTipoPedido as PosTipoPedidoValor } from "@/lib/pos";
 
 export type PosEndereco = {
@@ -12,11 +13,12 @@ export type PosEndereco = {
   complemento: string;
 };
 
-const LABELS: Record<PosTipoPedidoValor, string> = {
-  entrega: "Entrega",
-  retirada: "Retirada",
-  mesa: "Consumo local",
-};
+const OPCOES: { valor: PosTipoPedidoValor; label: string; icon: LucideIcon }[] = [
+  { valor: "venda_rapida", label: "Venda rápida", icon: FastForward },
+  { valor: "entrega", label: "Entrega", icon: Bike },
+  { valor: "retirada", label: "Retirada", icon: ShoppingBasket },
+  { valor: "mesa", label: "Comer no local", icon: UtensilsCrossed },
+];
 
 export function PosTipoPedido({
   tipo,
@@ -31,16 +33,26 @@ export function PosTipoPedido({
     <div className="flex items-end gap-2">
       <div className="min-w-0 flex-1 space-y-1">
         <label className="text-xs font-medium text-muted-foreground">Tipo do pedido</label>
-        <Select value={tipo} onValueChange={(v) => v && onTipoChange(v as PosTipoPedidoValor)}>
-          <SelectTrigger className="h-12 w-full rounded-xl text-sm">
-            <SelectValue>{() => LABELS[tipo]}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="entrega">Entrega</SelectItem>
-            <SelectItem value="retirada">Retirada</SelectItem>
-            <SelectItem value="mesa">Consumo local</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-4 gap-1.5">
+          {OPCOES.map((opcao) => {
+            const ativo = tipo === opcao.valor;
+            const Icon = opcao.icon;
+            return (
+              <button
+                key={opcao.valor}
+                type="button"
+                onClick={() => onTipoChange(opcao.valor)}
+                className={cn(
+                  "flex h-16 flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-medium transition-colors",
+                  ativo ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:border-primary/40 hover:bg-muted"
+                )}
+              >
+                <Icon size={18} />
+                {opcao.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       {rightSlot}
     </div>

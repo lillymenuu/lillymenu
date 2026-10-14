@@ -402,6 +402,7 @@ export function PosOverlay({
         body: JSON.stringify({
           cliente_id: cliente.id,
           tipo: tipoPedido,
+          venda_rapida: tipoPedido === "venda_rapida" ? "1" : "0",
           endereco: tipoPedido === "entrega" ? montarEnderecoTexto(endereco) : "",
           distancia_km: 0,
           itens: JSON.stringify(itensPayload),

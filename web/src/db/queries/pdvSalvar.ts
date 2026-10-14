@@ -26,6 +26,7 @@ import { sincronizarEstoqueVinculo, registrarComponentesCombo } from "@/db/queri
 import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 import { pedidoRestaurarEstoqueCancelado } from "@/db/queries/pedidoEstoque";
 import { syncOrderRevenue, reverseCanceledOrder } from "@/db/queries/financeiroSync";
+import { finalizarPedido } from "@/db/queries/pedidosStatus";
 
 /*
  * Equivalente de admin/api/pdv_salvar.php: cria (ou edita) um pedido de
@@ -108,6 +109,7 @@ export type SalvarPedidoPdvInput = {
   pedidoEdicaoId?: number;
   observacoesCliente?: string;
   cpfCnpjNota?: string;
+  vendaRapida?: boolean;
 };
 
 export type SalvarPedidoPdvResultado = { ok: true; pedidoId: number; codigo: number; tipo: string; jaExistia?: boolean } | { ok: false; msg: string };
@@ -702,6 +704,13 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
     await registrarOperacao(adminId, "pedido_criado", `pedido:${resultadoTx.pedidoId}`, { total, tipo: input.tipo });
     if (resultadoTx.pedidoEdicaoId) {
       await registrarOperacao(adminId, "pedido_editado", `pedido:${resultadoTx.pedidoEdicaoId}`, { novo_pedido: resultadoTx.pedidoId });
+    }
+
+    // Venda rapida: pula o Gestor de Pedidos e ja finaliza (mesma rotina do botao
+    // "Mover para finalizado" — promove pontos/cashback pendentes, atribui ao
+    // caixa aberto e sincroniza no financeiro).
+    if (input.vendaRapida) {
+      await finalizarPedido(lojaId, adminId, resultadoTx.pedidoId);
     }
 
     return { ok: true, pedidoId: resultadoTx.pedidoId, codigo, tipo: input.tipo };

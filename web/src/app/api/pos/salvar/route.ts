@@ -84,6 +84,7 @@ export async function POST(request: Request) {
     pedidoEdicaoId: body.pedido_edicao_id ? Number(body.pedido_edicao_id) : undefined,
     observacoesCliente: body.observacoes_cliente ? String(body.observacoes_cliente) : undefined,
     cpfCnpjNota: body.cpf_cnpj_nota ? String(body.cpf_cnpj_nota) : undefined,
+    vendaRapida: toBool01(body.venda_rapida),
   });
 
   if (!resultado.ok) return NextResponse.json(resultado);

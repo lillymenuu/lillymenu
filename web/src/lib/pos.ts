@@ -127,7 +127,7 @@ export type PosClienteStats = {
   endereco?: PosClienteEndereco;
 };
 
-export type PosTipoPedido = "entrega" | "retirada" | "mesa";
+export type PosTipoPedido = "venda_rapida" | "entrega" | "retirada" | "mesa";
 
 export type PosFormaPagamento = "dinheiro" | "credito" | "debito" | "pix" | "voucher" | "fiado";
 
