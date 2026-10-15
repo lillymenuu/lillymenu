@@ -200,13 +200,13 @@ export function OrderManager({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold">Gestor de Pedidos</h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setBuscaOpen(true)}>
+          <Button variant="outline" size="sm" className="rounded-full" onClick={() => setBuscaOpen(true)}>
             <Search size={14} /> Buscar pedido
           </Button>
           <button
             type="button"
             onClick={() => abrirPos()}
-            className="inline-flex h-7 items-center gap-1 rounded-lg bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
+            className="inline-flex h-7 items-center gap-1 rounded-full bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
           >
             <Plus size={14} /> Novo pedido
           </button>

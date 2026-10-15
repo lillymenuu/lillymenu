@@ -149,10 +149,10 @@ export function OrderCard({
       <div className="mt-0.5 flex items-center gap-1.5" onClick={parar}>
         {pedido.status === "pendente" ? (
           <>
-            <Button variant="outline" className="min-w-0 flex-1 rounded-lg px-1.5" onClick={onRecusar}>
+            <Button variant="outline" className="min-w-0 flex-1 rounded-full px-1.5" onClick={onRecusar}>
               Recusar
             </Button>
-            <Button className="min-w-0 flex-1 rounded-lg px-1.5" onClick={onAvancar}>
+            <Button className="min-w-0 flex-1 rounded-full px-1.5" onClick={onAvancar}>
               Aceitar
             </Button>
           </>
@@ -160,7 +160,7 @@ export function OrderCard({
           proxima && (
             <Button
               className={cn(
-                "w-full rounded-lg",
+                "w-full rounded-full",
                 finalizarEmVerde && "bg-emerald-500 text-white hover:bg-emerald-600"
               )}
               onClick={onAvancar}
