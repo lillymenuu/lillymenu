@@ -415,7 +415,7 @@ export function ProdutoFormDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] max-w-4xl overflow-x-hidden sm:max-w-4xl">
+      <DialogContent className="max-h-[88vh] max-w-4xl overflow-x-hidden rounded-3xl sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{produto ? "Editar produto" : "Novo produto"} - detalhes</DialogTitle>
         </DialogHeader>
@@ -487,12 +487,18 @@ export function ProdutoFormDialog({
                   <Label htmlFor="p-nome">
                     Nome do produto<span className="text-destructive">*</span>
                   </Label>
-                  <Input id="p-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+                  <Input id="p-nome" value={nome} onChange={(e) => setNome(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="p-codigo">Código do produto (PDV)</Label>
-                  <Input id="p-codigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex.: 123" className="max-w-64" />
+                  <Input
+                    id="p-codigo"
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value)}
+                    placeholder="Ex.: 123"
+                    className="h-10 max-w-64 rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
 
                 <div className="flex gap-3.5">
@@ -503,7 +509,7 @@ export function ProdutoFormDialog({
                       value={ncm}
                       onChange={(e) => setNcm(e.target.value.replace(/\D/g, "").slice(0, 8))}
                       placeholder="Ex.: 21069090"
-                      className="max-w-36"
+                      className="h-10 max-w-36 rounded-full border-0 bg-muted/60 px-4 text-sm"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -513,7 +519,7 @@ export function ProdutoFormDialog({
                       value={cfop}
                       onChange={(e) => setCfop(e.target.value.replace(/\D/g, "").slice(0, 4))}
                       placeholder="Ex.: 5102"
-                      className="max-w-36"
+                      className="h-10 max-w-36 rounded-full border-0 bg-muted/60 px-4 text-sm"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -523,7 +529,7 @@ export function ProdutoFormDialog({
                       value={icmsSituacaoTributaria}
                       onChange={(e) => setIcmsSituacaoTributaria(e.target.value.replace(/\D/g, "").slice(0, 3))}
                       placeholder="Ex.: 102"
-                      className="max-w-36"
+                      className="h-10 max-w-36 rounded-full border-0 bg-muted/60 px-4 text-sm"
                     />
                   </div>
                 </div>
@@ -536,7 +542,7 @@ export function ProdutoFormDialog({
                     onChange={(e) => setDescricao(e.target.value)}
                     rows={2}
                     placeholder="Descreva o produto"
-                    className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                    className="rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
                   />
                 </div>
 
@@ -567,7 +573,7 @@ export function ProdutoFormDialog({
                         min={1}
                         value={qtdMinima}
                         onChange={(e) => setQtdMinima(e.target.value)}
-                        className="max-w-32"
+                        className="h-10 max-w-32 rounded-full border-0 bg-muted/60 px-4 text-sm"
                       />
                     )}
                   </div>
@@ -580,7 +586,7 @@ export function ProdutoFormDialog({
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="p-preco">Preço</Label>
-                <MoneyInput id="p-preco" value={preco} onChange={setPreco} className="max-w-48" />
+                <MoneyInput id="p-preco" value={preco} onChange={setPreco} className="h-10 max-w-48 rounded-full border-0 bg-muted/60 px-4 text-sm" />
               </div>
 
               <div className="flex flex-col gap-3 rounded-lg border p-3">
@@ -595,7 +601,7 @@ export function ProdutoFormDialog({
                       id="p-preco-promo"
                       value={precoPromocional}
                       onChange={setPrecoPromocional}
-                      className="max-w-48"
+                      className="h-10 max-w-48 rounded-full border-0 bg-muted/60 px-4 text-sm"
                     />
                   </div>
                 )}
@@ -816,6 +822,7 @@ export function ProdutoFormDialog({
                     type="date"
                     value={dataFabricacao}
                     onChange={(e) => setDataFabricacao(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -825,6 +832,7 @@ export function ProdutoFormDialog({
                     type="date"
                     value={dataValidade}
                     onChange={(e) => setDataValidade(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                   />
                 </div>
               </div>
@@ -904,18 +912,18 @@ export function ProdutoFormDialog({
         {erro && <p className="text-sm text-destructive">{erro}</p>}
         </div>
 
-        <DialogFooter className={produto ? "sm:justify-between" : undefined}>
+        <DialogFooter className={`border-t-0 bg-transparent ${produto ? "sm:justify-between" : ""}`}>
           {produto && (
             <Button
               variant="destructive"
               onClick={() => setConfirmExcluirOpen(true)}
               disabled={excluindo}
-              className="gap-1.5"
+              className="gap-1.5 rounded-full"
             >
               <Trash2 size={14} /> Deletar produto
             </Button>
           )}
-          <Button onClick={handleSalvarClick} disabled={salvando} className="w-full sm:w-auto">
+          <Button onClick={handleSalvarClick} disabled={salvando} className="w-full rounded-full sm:w-auto sm:min-w-40">
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
