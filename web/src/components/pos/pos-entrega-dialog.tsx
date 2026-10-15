@@ -217,12 +217,12 @@ export function PosEntregaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="scrollbar-hidden max-h-[90vh] max-w-sm overflow-y-auto rounded-3xl sm:max-w-sm">
+      <DialogContent className="flex max-h-[90vh] max-w-sm flex-col rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Preencha os dados de entrega do pedido</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto">
           <div className="relative space-y-1">
             <Label className={labelClasse}>Busque pelo cliente</Label>
             <div className="relative">
@@ -312,6 +312,10 @@ export function PosEntregaDialog({
             />
           </div>
 
+          {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
+        </div>
+
+        <div className="shrink-0 space-y-3">
           <div className="flex items-center justify-between pt-1">
             <div>
               <div className="text-xs text-muted-foreground">Taxa de entrega</div>
@@ -326,8 +330,6 @@ export function PosEntregaDialog({
               <Switch checked={editarTaxa} onCheckedChange={setEditarTaxa} />
             </label>
           </div>
-
-          {erro ? <p className="text-sm text-destructive">{erro}</p> : null}
         </div>
 
         <DialogFooter className="border-t-0 bg-transparent">
