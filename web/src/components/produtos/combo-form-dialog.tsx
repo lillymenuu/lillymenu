@@ -40,6 +40,9 @@ export function ComboFormDialog({
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const categoriaItems: Record<string, string> = { "": "Sem categoria" };
+  for (const c of categorias) categoriaItems[String(c.id)] = c.nome;
+
   const [comboId, setComboId] = useState<number | null>(null);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -252,7 +255,7 @@ export function ComboFormDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[88vh] max-w-3xl overflow-x-hidden sm:max-w-3xl">
+        <DialogContent className="max-h-[88vh] max-w-3xl overflow-x-hidden rounded-3xl sm:max-w-3xl">
           <DialogHeader className="flex-row items-center justify-between pr-8">
             <DialogTitle>{comboId ? "Editar combo" : "Novo combo"}</DialogTitle>
           </DialogHeader>
@@ -286,7 +289,12 @@ export function ComboFormDialog({
                   <Label htmlFor="c-nome">
                     Nome do combo<span className="text-destructive">*</span>
                   </Label>
-                  <Input id="c-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+                  <Input
+                    id="c-nome"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="c-descricao">Descrição</Label>
@@ -296,13 +304,13 @@ export function ComboFormDialog({
                     onChange={(e) => setDescricao(e.target.value)}
                     rows={2}
                     placeholder="Descreva o que inclui este combo..."
-                    className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                    className="rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs">Categoria</Label>
-                  <Select value={categoriaId} onValueChange={(v) => setCategoriaId(v ?? "")}>
-                    <SelectTrigger className="w-full">
+                  <Select items={categoriaItems} value={categoriaId} onValueChange={(v) => setCategoriaId(v ?? "")}>
+                    <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                       <SelectValue placeholder="Sem categoria" />
                     </SelectTrigger>
                     <SelectContent>
@@ -342,7 +350,7 @@ export function ComboFormDialog({
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="c-preco">Preço {tipoPreco === "por_item" ? "base" : ""}</Label>
-              <MoneyInput id="c-preco" value={preco} onChange={setPreco} className="max-w-48" />
+              <MoneyInput id="c-preco" value={preco} onChange={setPreco} className="h-10 max-w-48 rounded-full border-0 bg-muted/60 px-4 text-sm" />
             </div>
 
             <div className="flex flex-col gap-3 rounded-lg border p-3">
@@ -353,7 +361,7 @@ export function ComboFormDialog({
               {promoAtiva && (
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="c-preco-promo">Preço promocional</Label>
-                  <MoneyInput id="c-preco-promo" value={precoPromocional} onChange={setPrecoPromocional} className="max-w-48" />
+                  <MoneyInput id="c-preco-promo" value={precoPromocional} onChange={setPrecoPromocional} className="h-10 max-w-48 rounded-full border-0 bg-muted/60 px-4 text-sm" />
                 </div>
               )}
             </div>
@@ -445,13 +453,13 @@ export function ComboFormDialog({
             )}
           </div>
 
-          <DialogFooter className={comboId ? "sm:justify-between" : undefined}>
+          <DialogFooter className={cn("border-t-0 bg-transparent", comboId && "sm:justify-between")}>
             {comboId && (
-              <Button variant="destructive" onClick={() => setConfirmExcluirOpen(true)} disabled={salvando} className="gap-1.5">
+              <Button variant="destructive" onClick={() => setConfirmExcluirOpen(true)} disabled={salvando} className="gap-1.5 rounded-full">
                 <Trash2 size={14} /> Deletar combo
               </Button>
             )}
-            <Button onClick={salvar} disabled={salvando} className="w-full sm:w-auto">
+            <Button onClick={salvar} disabled={salvando} className="w-full rounded-full sm:w-auto">
               {salvando ? "Salvando..." : "Salvar informações"}
             </Button>
           </DialogFooter>
