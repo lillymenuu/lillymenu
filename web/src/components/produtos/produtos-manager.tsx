@@ -191,10 +191,11 @@ export function ProdutosManager({
           <p className="text-sm text-muted-foreground">Aqui você cadastra e gerencia seus produtos e categorias</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => setReordenarOpen(true)}>
+          <Button variant="ghost" className="rounded-full" onClick={() => setReordenarOpen(true)}>
             <ListOrdered size={15} /> Reordenar categorias
           </Button>
           <Button
+            className="rounded-full"
             onClick={() => {
               setCategoriaEditando(null);
               setCategoriaDialogOpen(true);
@@ -214,7 +215,7 @@ export function ProdutosManager({
             <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
             <Input
               id="busca-produto"
-              className="bg-background pl-8"
+              className="rounded-full bg-background pl-8"
               placeholder="Buscar por nome ou código do produto"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
@@ -258,16 +259,16 @@ export function ProdutosManager({
               </div>
               {!isSemCategoria && (
                 <div className="flex items-center gap-1.5">
-                  <Button size="sm" onClick={() => abrirNovoProduto(categoria.id)}>
+                  <Button size="sm" className="rounded-full" onClick={() => abrirNovoProduto(categoria.id)}>
                     <Plus size={14} /> Adicionar
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => abrirNovoCombo(categoria.id)}>
+                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => abrirNovoCombo(categoria.id)}>
                     <Layers size={14} /> Combo
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       render={
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="rounded-full">
                           <MoreVertical size={14} /> Opções
                         </Button>
                       }
@@ -285,7 +286,7 @@ export function ProdutosManager({
                   </DropdownMenu>
                   <button
                     onClick={() => setCategoriaParaExcluir(categoria)}
-                    className="rounded-md border p-2 text-muted-foreground hover:bg-muted hover:text-destructive"
+                    className="rounded-full border p-2 text-muted-foreground hover:bg-muted hover:text-destructive"
                     aria-label="Excluir categoria"
                   >
                     <Trash2 size={14} />
