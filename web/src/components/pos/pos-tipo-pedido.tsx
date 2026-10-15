@@ -24,7 +24,7 @@ export function PosTipoPedido({
   tipo,
   onTipoChange,
 }: {
-  tipo: PosTipoPedidoValor | null;
+  tipo: PosTipoPedidoValor;
   onTipoChange: (t: PosTipoPedidoValor) => void;
 }) {
   return (
