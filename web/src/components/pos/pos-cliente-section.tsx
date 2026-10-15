@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Search, UserPlus } from "lucide-react";
+import { cn } from "cn";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import type { PosClienteBusca, PosClienteStats } from "@/lib/pos";
 import { PosClienteDialog } from "@/components/pos/pos-cliente-dialog";
 import { PosInfoCard } from "@/components/pos/pos-info-card";
@@ -100,37 +102,29 @@ export function PosClienteSection({
           </div>
         </PosInfoCard>
       ) : (
-        <div className="flex items-stretch gap-2">
-          <div ref={comboRef} className="relative min-w-0 flex-1">
-            {comboAberto ? (
-              <div className="relative">
-                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  autoFocus
-                  autoComplete="off"
-                  placeholder="Pesquise por número ou nome"
-                  value={busca}
-                  onChange={(e) => handleBuscaChange(e.target.value)}
-                  className="h-[46px] w-full rounded-xl border bg-muted/50 py-2 pr-9 pl-9 text-sm outline-none transition-colors focus:border-primary/50 focus:bg-background"
-                />
-                <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 rotate-180 text-muted-foreground transition-transform" />
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={abrirCombo}
-                className="flex w-full cursor-pointer flex-col items-start gap-0.5 rounded-xl border bg-muted/50 px-3 py-1.5 text-left transition-colors hover:bg-muted/70"
-              >
-                <span className="text-xs font-medium text-foreground">Busque pelo cliente</span>
-                <span className="flex w-full items-center justify-between gap-2 text-sm text-muted-foreground">
-                  Pesquise por número ou nome
-                  <ChevronDown className="size-4 shrink-0" />
-                </span>
-              </button>
-            )}
+        <div className="flex items-end gap-2">
+          <div ref={comboRef} className="relative min-w-0 flex-1 space-y-1">
+            <Label className="text-xs font-normal text-muted-foreground">Busque pelo cliente</Label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                autoComplete="off"
+                placeholder="Busque por número ou nome"
+                value={busca}
+                onFocus={abrirCombo}
+                onChange={(e) => handleBuscaChange(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 pr-9 pl-9 text-sm outline-none transition-colors placeholder:text-xs placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
+              />
+              <ChevronDown
+                className={cn(
+                  "pointer-events-none absolute top-1/2 right-3.5 size-3.5 -translate-y-1/2 text-muted-foreground transition-transform duration-150",
+                  comboAberto && "rotate-180"
+                )}
+              />
+            </div>
 
             {comboAberto && (
-              <div className="animate-in fade-in slide-in-from-top-0.5 ease-out absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border bg-popover shadow-lg duration-200">
+              <div className="animate-in fade-in slide-in-from-top-0.5 ease-out absolute z-20 mt-1.5 w-full overflow-hidden rounded-2xl border bg-popover shadow-lg duration-150">
                 <div className="max-h-52 overflow-y-auto">
                   {carregando ? (
                     <div className="px-3 py-3 text-center text-xs text-muted-foreground">Carregando...</div>
@@ -160,9 +154,9 @@ export function PosClienteSection({
             type="button"
             onClick={() => setDialogAberto(true)}
             aria-label="Cadastrar novo cliente"
-            className="flex size-[46px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
-            <UserPlus className="size-3" />
+            <UserPlus className="size-3.5" />
           </button>
         </div>
       )}
