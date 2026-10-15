@@ -551,7 +551,7 @@ export function PosOverlay({
             </div>
 
             <div className="flex min-h-0 min-w-0 flex-col">
-              <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+              <div className="scrollbar-hidden min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
                 {temItemComboNaEdicao ? (
                   <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">
                     Este pedido tem um item de combo — a composição original (quais componentes) não pôde ser
