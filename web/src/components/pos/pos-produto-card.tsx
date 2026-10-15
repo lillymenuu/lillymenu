@@ -83,7 +83,7 @@ export function PosProdutoCard({
           type="button"
           disabled={semEstoque || qtd === 0 || produto.tem_variacoes}
           onClick={() => onAlterarQtd(-1)}
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Minus className="size-4" />
         </button>
@@ -113,7 +113,7 @@ export function PosProdutoCard({
             e.stopPropagation();
             produto.tem_variacoes ? onAdicionar(produto) : onAlterarQtd(1);
           }}
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Plus className="size-4" />
         </button>
