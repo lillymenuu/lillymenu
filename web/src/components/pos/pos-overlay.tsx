@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { X, ShoppingBag, Copy, Coins } from "lucide-react";
+import { X, ShoppingBag, Copy, Coins, PackageOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
@@ -98,7 +98,7 @@ export function PosOverlay({
   const [cliente, setCliente] = useState<PosClienteBusca | null>(null);
   const [clienteStats, setClienteStats] = useState<PosClienteStats | null>(null);
   const [cashbackAtivo, setCashbackAtivo] = useState(true);
-  const [tipoPedido, setTipoPedido] = useState<PosTipoPedidoValor>("retirada");
+  const [tipoPedido, setTipoPedido] = useState<PosTipoPedidoValor | null>(null);
   const [endereco, setEndereco] = useState<PosEndereco>(ENDERECO_VAZIO);
   const [cupom, setCupom] = useState<{ codigo: string; valor: number } | null>(null);
 
@@ -532,6 +532,16 @@ export function PosOverlay({
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Carregando...</div>
         ) : !caixaAberto ? (
           <PosCaixaGate onAberto={() => fetch("/api/cashcontrol/resumo").then((r) => r.json()).then((d) => d.ok && setCaixa(d))} />
+        ) : tipoPedido === null && pedidoEditandoId ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Carregando...</div>
+        ) : tipoPedido === null ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+            <PosTipoPedido tipo={tipoPedido} onTipoChange={onTipoPedidoChange} />
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+              <PackageOpen className="size-10 text-muted-foreground/40" />
+              Nenhum produto adicionado
+            </div>
+          </div>
         ) : (
           <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
             <div className="min-h-0 min-w-0 border-b bg-muted/60 p-4 lg:border-b-0 lg:border-r">
