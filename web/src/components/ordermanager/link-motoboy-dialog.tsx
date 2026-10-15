@@ -71,7 +71,7 @@ export function LinkMotoboyDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Vincular motoboy</DialogTitle>
         </DialogHeader>
@@ -88,7 +88,7 @@ export function LinkMotoboyDialog({
         <div className="flex flex-col gap-1.5">
           <span className="text-xs text-muted-foreground">Motoboy</span>
           <Select items={itens} value={selecionado} onValueChange={(v) => setSelecionado(v ?? "")}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -100,17 +100,13 @@ export function LinkMotoboyDialog({
             </SelectContent>
           </Select>
         </div>
-        <DialogFooter>
-          {alerta ? (
-            <Button variant="outline" onClick={() => { onOpenChange(false); onPular?.(); }} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          {alerta && (
+            <Button variant="outline" className="rounded-full" onClick={() => { onOpenChange(false); onPular?.(); }} disabled={salvando}>
               Mover sem vincular
             </Button>
-          ) : (
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
-              Cancelar
-            </Button>
           )}
-          <Button onClick={vincular} disabled={salvando}>
+          <Button className="rounded-full" onClick={vincular} disabled={salvando}>
             {salvando ? "Salvando..." : alerta ? "Vincular e mover" : "Salvar vínculo"}
           </Button>
         </DialogFooter>
