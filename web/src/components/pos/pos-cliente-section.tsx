@@ -134,9 +134,9 @@ export function PosClienteSection({
                         key={c.id}
                         type="button"
                         onClick={() => selecionarCliente(c)}
-                        className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-xs transition-colors duration-150 hover:bg-muted/40"
+                        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs transition-colors duration-150 hover:bg-muted/40"
                       >
-                        <span className="min-w-0 truncate font-medium">{c.nome || "Sem nome"}</span>
+                        <span className="max-w-[150px] truncate font-medium">{c.nome || "Sem nome"}</span>
                         <span className="shrink-0 text-muted-foreground">{c.telefone}</span>
                       </button>
                     ))
