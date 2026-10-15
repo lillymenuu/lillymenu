@@ -56,45 +56,59 @@ export function PosAvulsoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Item avulso</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Nome do item</Label>
-            <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Taxa extra" autoFocus />
+            <Label className="text-xs font-normal text-muted-foreground">Nome do item</Label>
+            <Input
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              placeholder="Ex.: Taxa extra"
+              autoFocus
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
+            />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Preço</Label>
-            <MoneyInput value={preco} onChange={setPreco} />
+            <Label className="text-xs font-normal text-muted-foreground">Preço</Label>
+            <MoneyInput value={preco} onChange={setPreco} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Observações</Label>
+            <Label className="text-xs font-normal text-muted-foreground">Observações</Label>
             <textarea
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               rows={2}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="w-full rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-xs placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
             />
           </div>
           <div className="flex items-center justify-between">
-            <Label className="text-xs">Quantidade</Label>
+            <Label className="text-xs font-normal text-muted-foreground">Quantidade</Label>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="size-8" onClick={() => setQtd((q) => Math.max(1, q - 1))}>
+              <button
+                type="button"
+                onClick={() => setQtd((q) => Math.max(1, q - 1))}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted"
+              >
                 <Minus className="size-3.5" />
-              </Button>
+              </button>
               <span className="w-6 text-center text-sm font-semibold">{qtd}</span>
-              <Button variant="outline" size="icon" className="size-8" onClick={() => setQtd((q) => q + 1)}>
+              <button
+                type="button"
+                onClick={() => setQtd((q) => q + 1)}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+              >
                 <Plus className="size-3.5" />
-              </Button>
+              </button>
             </div>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button className="w-full" onClick={confirmar}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="h-11 w-full rounded-full" onClick={confirmar}>
             Adicionar
           </Button>
         </DialogFooter>
