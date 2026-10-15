@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Search, Printer, Clock, Bike, ShoppingBag, UtensilsCrossed } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import type { Pedido } from "@/lib/pedidos";
 import { TIPO_LABELS, TIPO_CORES, formatBRL, formatHora } from "./constants";
 import { cn } from "cn";
@@ -134,28 +136,33 @@ export function OrderSearchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl sm:max-w-2xl">
+      <DialogContent className="max-w-2xl rounded-3xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Buscar pedido</DialogTitle>
         </DialogHeader>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
-          <Input
-            autoFocus
-            className="pl-8"
-            placeholder="Número do pedido, nome ou telefone do cliente"
-            value={termo}
-            onChange={(e) => setTermo(e.target.value)}
-          />
+        <div className="space-y-1.5">
+          <Label className="text-xs font-normal text-muted-foreground">Busque pelo pedido</Label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+            <Input
+              autoFocus
+              className="h-10 w-full rounded-full border-0 bg-muted/60 pl-9 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
+              placeholder="Número do pedido, nome ou telefone do cliente"
+              value={termo}
+              onChange={(e) => setTermo(e.target.value)}
+            />
+          </div>
         </div>
         <div className="scrollbar-hidden max-h-[60vh] overflow-y-auto">
           {!termo.trim() && (
-            <div className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
-              <Search size={22} />
-              <p className="text-sm font-medium">Como buscar um pedido</p>
+            <div className="flex flex-col items-center gap-2 rounded-2xl bg-muted/30 px-4 py-10 text-center text-muted-foreground">
+              <span className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <Search size={18} />
+              </span>
+              <p className="text-sm font-semibold text-foreground">Como buscar um pedido</p>
               <p className="max-w-64 text-xs">
-                Digite o número do pedido, o nome do cliente ou o telefone pra encontrar pedidos
-                rapidamente.
+                Digite o número do pedido, o nome ou o telefone do cliente no campo acima para
+                localizar o pedido desejado.
               </p>
             </div>
           )}
@@ -177,6 +184,11 @@ export function OrderSearchDialog({
             </div>
           )}
         </div>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
+            Fechar
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
