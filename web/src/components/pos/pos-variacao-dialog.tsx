@@ -198,7 +198,7 @@ export function PosVariacaoDialog({
         {carregando ? (
           <div className="py-6 text-center text-sm text-muted-foreground">Carregando opções...</div>
         ) : (
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+          <div className="scrollbar-hidden min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <div ref={(el) => { secaoRefs.current["variacao"] = el; }}>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-primary">{variacaoTitulo ?? "Escolha uma das opções"}</span>
