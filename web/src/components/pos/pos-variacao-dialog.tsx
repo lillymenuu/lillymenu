@@ -165,7 +165,7 @@ export function PosVariacaoDialog({
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] w-[420px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[420px]" showCloseButton={false}>
+      <DialogContent className="flex max-h-[85vh] w-[420px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[420px]" showCloseButton={false}>
         <DialogTitle className="sr-only">{produto.nome}</DialogTitle>
 
         <div className="flex shrink-0 items-start gap-3">
@@ -210,7 +210,7 @@ export function PosVariacaoDialog({
                   return (
                     <label
                       key={v.id}
-                      className={`flex cursor-pointer items-center justify-between border-b p-2.5 text-sm transition-colors ${
+                      className={`flex cursor-pointer items-center justify-between rounded-lg p-2.5 text-sm transition-colors ${
                         variacaoId === v.id ? "bg-primary/5" : "hover:bg-muted/40"
                       }`}
                     >
@@ -252,7 +252,7 @@ export function PosVariacaoDialog({
                       const ativo = selecionados.includes(it.id);
                       const desabilitado = atingiuMax && !ativo;
                       return (
-                        <div key={it.id} className={`flex items-center justify-between border-b p-2.5 text-sm ${desabilitado ? "opacity-40" : ""}`}>
+                        <div key={it.id} className={`flex items-center justify-between rounded-lg p-2.5 text-sm ${desabilitado ? "opacity-40" : ""}`}>
                           <div>
                             <div>{it.nome}</div>
                             <div className="text-xs text-muted-foreground">{formatBRL(it.preco)}</div>
@@ -309,7 +309,7 @@ export function PosVariacaoDialog({
             type="button"
             onClick={confirmar}
             disabled={!podeAdicionar}
-            className="h-11 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {variacaoObrigatorio && variacaoId === null
               ? "Selecionar variação"
