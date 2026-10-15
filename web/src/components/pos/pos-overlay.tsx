@@ -98,7 +98,7 @@ export function PosOverlay({
   const [cliente, setCliente] = useState<PosClienteBusca | null>(null);
   const [clienteStats, setClienteStats] = useState<PosClienteStats | null>(null);
   const [cashbackAtivo, setCashbackAtivo] = useState(true);
-  const [tipoPedido, setTipoPedido] = useState<PosTipoPedidoValor>("retirada");
+  const [tipoPedido, setTipoPedido] = useState<PosTipoPedidoValor | null>(null);
   const [endereco, setEndereco] = useState<PosEndereco>(ENDERECO_VAZIO);
   const [cupom, setCupom] = useState<{ codigo: string; valor: number } | null>(null);
 
@@ -559,119 +559,125 @@ export function PosOverlay({
                   </div>
                 ) : null}
                 <PosTipoPedido tipo={tipoPedido} onTipoChange={onTipoPedidoChange} />
-                {agendamentoCfgAtual?.ativo ? (
-                  <PosAgendamentoCard
-                    valor={agendamento}
-                    onAbrir={() => setAgendamentoModalAberto(true)}
-                    onLimpar={() => setAgendamento(null)}
-                  />
-                ) : null}
-                <PosClienteSection
-                  cliente={cliente}
-                  onClienteChange={setCliente}
-                  onStatsChange={setClienteStats}
-                  cashbackAtivo={cashbackAtivo}
-                  onCashbackAtivoChange={setCashbackAtivo}
-                />
-                {tipoPedido === "entrega" ? (
-                  <PosEnderecoCard
-                    endereco={endereco}
-                    onLimpar={() => {
-                      setEndereco(ENDERECO_VAZIO);
-                      setTaxaEntregaCalculada(null);
-                    }}
-                    onAbrir={() => setEntregaModalAberto(true)}
-                    taxaEntrega={taxaEntrega}
-                  />
-                ) : null}
-
-                <PosCartList itens={cart.itens} onEditar={editarItemCarrinho} onRemover={cart.remover} />
-              </div>
-
-              <div className="shrink-0 space-y-3 bg-card p-4">
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span>{formatBRL(cart.subtotal)}</span>
-                  </div>
-                  {taxaEntrega > 0 ? (
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Taxa de entrega</span>
-                      <span>{formatBRL(taxaEntrega)}</span>
-                    </div>
-                  ) : null}
-                  {cashbackResumoNum > 0 ? (
-                    <div className="flex justify-between text-emerald-600">
-                      <span>Cashback usado</span>
-                      <span>-{formatBRL(cashbackResumoNum)}</span>
-                    </div>
-                  ) : null}
-                  <div className="flex justify-between text-sm font-semibold">
-                    <span>Total</span>
-                    <span>{formatBRL(totalResumo)}</span>
-                  </div>
-                </div>
-
-                {temCupomDisponivel ? (
-                  <PosCupomField
-                    subtotal={cart.subtotal}
-                    taxaEntrega={taxaEntrega}
-                    tipoPedido={tipoPedido}
-                    clienteId={cliente?.id ?? null}
-                    cupom={cupom}
-                    onCupomChange={setCupom}
-                  />
-                ) : null}
-
-                {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => setCashbackModalAberto(true)}
-                    className="flex w-full items-center gap-1.5 rounded-full bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
-                  >
-                    <Coins className="size-3.5 text-amber-600" />
-                    {cashbackResumoNum > 0 ? (
-                      <>
-                        Cashback de <span className="text-primary">{formatBRL(cashbackResumoNum)}</span> aplicado · editar
-                      </>
-                    ) : (
-                      <>
-                        Usar cashback disponível de <span className="text-primary">{formatBRL(clienteStats.cashback ?? 0)}</span>
-                      </>
-                    )}
-                  </button>
-                ) : null}
-
-                <PosCashbackDialog
-                  open={cashbackModalAberto}
-                  onOpenChange={setCashbackModalAberto}
-                  saldoDisponivel={clienteStats?.cashback ?? 0}
-                  validoAte={clienteStats?.cashback_valido_ate}
-                  valorInicial={cashbackResumoNum}
-                  onConfirmar={setCashbackUsarValor}
-                />
-
-                {catalogo?.nfceDisponivel ? (
-                  <div>
-                    <Input
-                      value={cpfCnpjNota}
-                      onChange={(e) => setCpfCnpjNota(formatarCpfCnpj(e.target.value))}
-                      inputMode="numeric"
-                      placeholder="Adicionar CPF/CNPJ na nota (NFC-e)?"
-                      className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
+                {tipoPedido !== null ? (
+                  <>
+                    {agendamentoCfgAtual?.ativo ? (
+                      <PosAgendamentoCard
+                        valor={agendamento}
+                        onAbrir={() => setAgendamentoModalAberto(true)}
+                        onLimpar={() => setAgendamento(null)}
+                      />
+                    ) : null}
+                    <PosClienteSection
+                      cliente={cliente}
+                      onClienteChange={setCliente}
+                      onStatsChange={setClienteStats}
+                      cashbackAtivo={cashbackAtivo}
+                      onCashbackAtivoChange={setCashbackAtivo}
                     />
-                    {cpfCnpjNota !== "" && !validarCpfCnpj(cpfCnpjNota) ? <p className="mt-1 text-[11px] text-destructive">CPF/CNPJ inválido.</p> : null}
-                  </div>
-                ) : null}
+                    {tipoPedido === "entrega" ? (
+                      <PosEnderecoCard
+                        endereco={endereco}
+                        onLimpar={() => {
+                          setEndereco(ENDERECO_VAZIO);
+                          setTaxaEntregaCalculada(null);
+                        }}
+                        onAbrir={() => setEntregaModalAberto(true)}
+                        taxaEntrega={taxaEntrega}
+                      />
+                    ) : null}
 
-                <Button
-                  className="h-12 w-full rounded-xl text-sm"
-                  onClick={irParaPagamento}
-                  disabled={cart.itens.length === 0 || !cliente}
-                >
-                  Continuar
-                </Button>
+                    <PosCartList itens={cart.itens} onEditar={editarItemCarrinho} onRemover={cart.remover} />
+                  </>
+                ) : null}
               </div>
+
+              {tipoPedido !== null ? (
+                <div className="shrink-0 space-y-3 bg-card p-4">
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>{formatBRL(cart.subtotal)}</span>
+                    </div>
+                    {taxaEntrega > 0 ? (
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Taxa de entrega</span>
+                        <span>{formatBRL(taxaEntrega)}</span>
+                      </div>
+                    ) : null}
+                    {cashbackResumoNum > 0 ? (
+                      <div className="flex justify-between text-emerald-600">
+                        <span>Cashback usado</span>
+                        <span>-{formatBRL(cashbackResumoNum)}</span>
+                      </div>
+                    ) : null}
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span>Total</span>
+                      <span>{formatBRL(totalResumo)}</span>
+                    </div>
+                  </div>
+
+                  {temCupomDisponivel ? (
+                    <PosCupomField
+                      subtotal={cart.subtotal}
+                      taxaEntrega={taxaEntrega}
+                      tipoPedido={tipoPedido}
+                      clienteId={cliente?.id ?? null}
+                      cupom={cupom}
+                      onCupomChange={setCupom}
+                    />
+                  ) : null}
+
+                  {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => setCashbackModalAberto(true)}
+                      className="flex w-full items-center gap-1.5 rounded-full bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+                    >
+                      <Coins className="size-3.5 text-amber-600" />
+                      {cashbackResumoNum > 0 ? (
+                        <>
+                          Cashback de <span className="text-primary">{formatBRL(cashbackResumoNum)}</span> aplicado · editar
+                        </>
+                      ) : (
+                        <>
+                          Usar cashback disponível de <span className="text-primary">{formatBRL(clienteStats.cashback ?? 0)}</span>
+                        </>
+                      )}
+                    </button>
+                  ) : null}
+
+                  <PosCashbackDialog
+                    open={cashbackModalAberto}
+                    onOpenChange={setCashbackModalAberto}
+                    saldoDisponivel={clienteStats?.cashback ?? 0}
+                    validoAte={clienteStats?.cashback_valido_ate}
+                    valorInicial={cashbackResumoNum}
+                    onConfirmar={setCashbackUsarValor}
+                  />
+
+                  {catalogo?.nfceDisponivel ? (
+                    <div>
+                      <Input
+                        value={cpfCnpjNota}
+                        onChange={(e) => setCpfCnpjNota(formatarCpfCnpj(e.target.value))}
+                        inputMode="numeric"
+                        placeholder="Adicionar CPF/CNPJ na nota (NFC-e)?"
+                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
+                      />
+                      {cpfCnpjNota !== "" && !validarCpfCnpj(cpfCnpjNota) ? <p className="mt-1 text-[11px] text-destructive">CPF/CNPJ inválido.</p> : null}
+                    </div>
+                  ) : null}
+
+                  <Button
+                    className="h-12 w-full rounded-xl text-sm"
+                    onClick={irParaPagamento}
+                    disabled={cart.itens.length === 0 || !cliente}
+                  >
+                    Continuar
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
         )}
