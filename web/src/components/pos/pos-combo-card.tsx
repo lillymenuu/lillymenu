@@ -41,7 +41,7 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
         <button
           type="button"
           disabled
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground opacity-40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground opacity-40"
         >
           <Minus className="size-4" />
         </button>
@@ -49,7 +49,7 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
         <button
           type="button"
           onClick={() => onAbrir(combo)}
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus className="size-4" />
         </button>
