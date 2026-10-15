@@ -37,7 +37,7 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
           {emPromo ? <span className="text-[11px] text-muted-foreground line-through">{formatBRL(combo.preco)}</span> : null}
         </div>
       </div>
-      <div className="flex shrink-0 items-center justify-center gap-2 p-1.5">
+      <div className="flex shrink-0 items-center justify-between p-1.5">
         <button
           type="button"
           disabled
