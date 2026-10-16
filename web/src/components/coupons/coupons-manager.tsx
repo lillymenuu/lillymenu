@@ -110,7 +110,7 @@ export function CouponsManager({ dadosIniciais }: { dadosIniciais: CuponsListarR
           <h1 className="text-xl font-semibold">Cupons</h1>
           <p className="text-sm text-muted-foreground">Crie e gerencie cupons de desconto para seus clientes.</p>
         </div>
-        <Button className="gap-1.5" onClick={abrirNovo}>
+        <Button className="gap-1.5 rounded-full" onClick={abrirNovo}>
           <Plus className="size-4" /> Adicionar cupom
         </Button>
       </div>
@@ -152,7 +152,7 @@ export function CouponsManager({ dadosIniciais }: { dadosIniciais: CuponsListarR
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-1.5 text-xs"
+                    className="w-full gap-1.5 rounded-full text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
                       copiarLink(c.codigo);

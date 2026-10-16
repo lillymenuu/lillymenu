@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MoneyInput } from "@/components/produtos/money-input";
+import { cn } from "cn";
 import { CUPOM_TIPO_LABEL } from "@/lib/cupons";
 import type { Cupom, CupomTipo } from "@/lib/cupons";
 
@@ -117,17 +118,17 @@ export function CouponFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[520px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[520px]">
+      <DialogContent className="flex max-h-[90vh] w-[520px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle>{cupom ? "Editar cupom" : "Adicionar cupom"}</DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+        <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Tipo de desconto</Label>
               <Select value={tipo} onValueChange={(v) => v && setTipo(v as CupomTipo)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue>{() => CUPOM_TIPO_LABEL[tipo]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -144,6 +145,7 @@ export function CouponFormDialog({
                 onChange={(e) => setCodigo(e.target.value.toUpperCase().slice(0, 15))}
                 placeholder="Ex.: BEMVINDO10"
                 maxLength={15}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
               />
               <div className="text-right text-[11px] text-muted-foreground">{codigo.length}/15</div>
             </div>
@@ -160,11 +162,12 @@ export function CouponFormDialog({
                 onChange={(e) => setDesconto(e.target.value)}
                 disabled={tipo === "frete"}
                 placeholder="0"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
               />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Valor mínimo do pedido</Label>
-              <MoneyInput value={minimo} onChange={setMinimo} />
+              <MoneyInput value={minimo} onChange={setMinimo} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
             </div>
           </div>
 
@@ -177,22 +180,23 @@ export function CouponFormDialog({
               value={quantidadeTotal}
               onChange={(e) => setQuantidadeTotal(e.target.value)}
               placeholder="0 = ilimitado"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
             />
             <p className="text-[11px] text-muted-foreground">Use 0 para deixar ilimitado.</p>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="flex items-center justify-between rounded-xl border p-3">
             <div className="text-sm font-medium">Disponibilidade</div>
             <Switch checked={ativo} onCheckedChange={setAtivo} />
           </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="flex items-center justify-between rounded-xl border p-3">
             <div>
               <div className="text-sm font-medium">Primeira compra</div>
               <p className="mt-0.5 text-xs text-muted-foreground">Desconto válido só para clientes sem pedidos anteriores.</p>
             </div>
             <Switch checked={primeiraCompra} onCheckedChange={setPrimeiraCompra} />
           </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="flex items-center justify-between rounded-xl border p-3">
             <div>
               <div className="text-sm font-medium">Cupom público</div>
               <p className="mt-0.5 text-xs text-muted-foreground">Fica visível no cardápio pra todo mundo, sem precisar compartilhar o código.</p>
@@ -201,17 +205,17 @@ export function CouponFormDialog({
           </div>
         </div>
 
-        <DialogFooter className={cupom ? "sm:justify-between" : undefined}>
+        <DialogFooter className={cn("border-t-0 bg-transparent", cupom && "sm:justify-between")}>
           {cupom ? (
-            <Button variant="destructive" onClick={() => onExcluir(cupom)} disabled={salvando}>
+            <Button variant="destructive" className="rounded-full" onClick={() => onExcluir(cupom)} disabled={salvando}>
               Apagar cupom
             </Button>
           ) : null}
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+            <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={salvando}>
               Cancelar
             </Button>
-            <Button onClick={salvar} disabled={salvando}>
+            <Button className="rounded-full" onClick={salvar} disabled={salvando}>
               {salvando ? "Salvando..." : cupom ? "Salvar alterações" : "Salvar"}
             </Button>
           </div>
