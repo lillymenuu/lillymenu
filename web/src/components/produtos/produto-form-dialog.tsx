@@ -420,7 +420,7 @@ export function ProdutoFormDialog({
           <DialogTitle>{produto ? "Editar produto" : "Novo produto"} - detalhes</DialogTitle>
         </DialogHeader>
 
-        <div className="flex max-h-[65vh] flex-col overflow-y-auto overflow-x-hidden">
+        <div className="flex max-h-[65vh] flex-col overflow-y-auto overflow-x-hidden px-1 pb-1">
         <Tabs value={aba} onValueChange={(v) => v && setAba(v)}>
           <div className="overflow-x-auto">
             <TabsList variant="line" className="w-max">
