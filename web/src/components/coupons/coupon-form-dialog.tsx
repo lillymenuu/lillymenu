@@ -123,7 +123,7 @@ export function CouponFormDialog({
           <DialogTitle>{cupom ? "Editar cupom" : "Adicionar cupom"}</DialogTitle>
         </DialogHeader>
 
-        <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+        <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto px-1">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Tipo de desconto</Label>

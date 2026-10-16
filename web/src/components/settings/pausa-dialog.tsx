@@ -182,7 +182,7 @@ export function PausaDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">Agende pausas automáticas — a loja fica fechada nesses períodos.</p>
-              <div className="scrollbar-hidden max-h-[45vh] space-y-2 overflow-y-auto">
+              <div className="scrollbar-hidden max-h-[45vh] space-y-2 overflow-y-auto px-1">
                 {carregando ? (
                   <div className="py-6 text-center text-sm text-muted-foreground">Carregando...</div>
                 ) : pausas.length === 0 ? (

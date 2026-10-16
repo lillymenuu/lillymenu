@@ -67,7 +67,7 @@ export function CrossSellDialog({
           <DialogTitle>Configurações do Cross-sell</DialogTitle>
         </DialogHeader>
 
-        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto px-1 sm:grid-cols-2">
           <div className="flex items-center justify-between rounded-xl border p-3 sm:col-span-2">
             <div>
               <div className="text-sm font-medium">Cross-sell</div>

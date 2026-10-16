@@ -101,7 +101,7 @@ export function UsuariosDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <DialogHeader>
             <DialogTitle>Usuários</DialogTitle>
           </DialogHeader>
-          <div className="scrollbar-hidden max-h-[55vh] space-y-2 overflow-y-auto">
+          <div className="scrollbar-hidden max-h-[55vh] space-y-2 overflow-y-auto px-1">
             {carregando ? (
               <div className="py-6 text-center text-sm text-muted-foreground">Carregando...</div>
             ) : !dados || dados.usuarios.length === 0 ? (

@@ -111,7 +111,7 @@ export function ClienteCriarDialog({
         <DialogHeader>
           <DialogTitle>Cadastrar cliente</DialogTitle>
         </DialogHeader>
-        <div className="scrollbar-hidden flex max-h-[60vh] flex-col gap-3 overflow-y-auto">
+        <div className="scrollbar-hidden flex max-h-[60vh] flex-col gap-3 overflow-y-auto px-1">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="cli-novo-nome">Nome do cliente *</Label>
             <Input id="cli-novo-nome" placeholder="Ex.: Felipe" className={campoClasse} {...campo("nome")} />

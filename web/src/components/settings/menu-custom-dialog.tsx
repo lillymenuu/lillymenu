@@ -55,7 +55,7 @@ export function MenuCustomDialog({
           <DialogTitle>Customize o menu</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">Escolha a cor principal do seu cardápio online.</p>
-        <div className="scrollbar-hidden grid max-h-[50vh] grid-cols-1 gap-2 overflow-y-auto">
+        <div className="scrollbar-hidden grid max-h-[50vh] grid-cols-1 gap-2 overflow-y-auto px-1">
           {CORES_MENU_OPCOES.map((cor) => (
             <button
               key={cor.valor}

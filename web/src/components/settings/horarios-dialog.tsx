@@ -86,7 +86,7 @@ export function HorariosDialog({
         <p className="text-sm text-muted-foreground">
           Sua loja irá abrir e fechar automaticamente de acordo com os horários definidos. Dias sem horário configurado ficam fechados.
         </p>
-        <div className="scrollbar-hidden max-h-[50vh] space-y-2 overflow-y-auto">
+        <div className="scrollbar-hidden max-h-[50vh] space-y-2 overflow-y-auto px-1">
           {linhas.map((l) => (
             <div key={l.dia} className="flex items-center gap-2 rounded-xl border p-2.5">
               <div className="w-20 shrink-0 text-sm font-medium">{DIAS_SEMANA_LONGO[l.dia]}</div>

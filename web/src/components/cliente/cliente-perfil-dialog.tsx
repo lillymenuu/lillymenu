@@ -60,7 +60,7 @@ export function ClientePerfilDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-lg gap-3 overflow-hidden rounded-3xl sm:max-w-lg">
-          <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden">
+          <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden px-1">
             <DialogHeader className="pr-8">
               <div className="flex items-center gap-3">
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-base font-medium">

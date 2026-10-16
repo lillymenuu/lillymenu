@@ -137,7 +137,7 @@ export function ClienteEditarDialog({
         {carregando ? (
           <p className="py-8 text-center text-sm text-muted-foreground">Carregando...</p>
         ) : (
-          <div className="scrollbar-hidden flex max-h-[60vh] flex-col gap-3 overflow-y-auto">
+          <div className="scrollbar-hidden flex max-h-[60vh] flex-col gap-3 overflow-y-auto px-1">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-nome">Nome do cliente *</Label>
               <Input id="cli-nome" className={campoClasse} {...campo("nome")} />

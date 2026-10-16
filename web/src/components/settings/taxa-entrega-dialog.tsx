@@ -377,7 +377,7 @@ export function TaxaEntregaDialog({
           ))}
         </div>
 
-        <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto">
+        <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-1">
           {tab === "sem" ? (
             <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
               Defina sua loja sem taxa de entrega para pedidos de delivery.

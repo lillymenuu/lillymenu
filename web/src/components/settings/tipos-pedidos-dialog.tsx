@@ -85,7 +85,7 @@ export function TiposPedidosDialog({
         <DialogHeader>
           <DialogTitle>Tipos de pedidos</DialogTitle>
         </DialogHeader>
-        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pr-1">
+        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto px-1">
           <div className="rounded-xl border p-3">
             <div className="mb-2 flex items-center justify-between">
               <div>

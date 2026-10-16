@@ -287,7 +287,7 @@ export function LojaInfoDialog({
           <DialogTitle>Informações da loja</DialogTitle>
         </DialogHeader>
 
-        <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-1">
         <div className="relative mb-9">
           <div className="relative h-28 w-full overflow-hidden rounded-lg border bg-muted">
             {capaPreview ? (

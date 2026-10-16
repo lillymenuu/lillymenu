@@ -222,7 +222,7 @@ export function PosEntregaDialog({
           <DialogTitle>Preencha os dados de entrega do pedido</DialogTitle>
         </DialogHeader>
 
-        <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto">
+        <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto px-1">
           <div className="relative space-y-1">
             <Label className={labelClasse}>Busque pelo cliente</Label>
             <div className="relative">
