@@ -56,7 +56,7 @@ export function CaixaDetalheDialog({
 
   return (
     <Dialog open={caixaId !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto sm:max-w-lg">
+      <DialogContent className="scrollbar-hidden max-h-[85vh] max-w-lg overflow-y-auto rounded-3xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Caixa {dados ? `#${dados.caixa.numero}` : ""}</DialogTitle>
         </DialogHeader>

@@ -36,6 +36,11 @@ export function LancarSaidaDialog({
   const saldoInsuficiente = valorNumero > 0 && valorNumero > saldoDisponivel;
   const supervisorSelecionado = supervisores.find((s) => String(s.id) === autorizadoPorId);
 
+  const motivoItems: Record<string, string> = {};
+  for (const m of MOTIVOS_SAIDA) motivoItems[m.valor] = m.label;
+  const supervisorItems: Record<string, string> = {};
+  for (const s of supervisores) supervisorItems[String(s.id)] = s.nome;
+
   useEffect(() => {
     if (!open) return;
     setEtapa("dados");
@@ -114,7 +119,7 @@ export function LancarSaidaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{etapa === "dados" ? "Lançar saída" : "Autorização da saída"}</DialogTitle>
         </DialogHeader>
@@ -125,14 +130,14 @@ export function LancarSaidaDialog({
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="saida-valor">Valor</Label>
-              <MoneyInput id="saida-valor" value={valor} onChange={setValor} />
+              <MoneyInput id="saida-valor" value={valor} onChange={setValor} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
               {saldoInsuficiente && <p className="text-xs text-destructive">Valor maior que o saldo disponível em caixa.</p>}
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label>Motivo da saída</Label>
-              <Select value={motivo} onValueChange={(v) => setMotivo(v ?? "")}>
-                <SelectTrigger className="w-full">
+              <Select items={motivoItems} value={motivo} onValueChange={(v) => setMotivo(v ?? "")}>
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue placeholder="Selecione o motivo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -154,14 +159,14 @@ export function LancarSaidaDialog({
                 placeholder="Ex: Pago R$ 50,00 ao motoboy Carlos pelo conserto do pneu"
                 rows={3}
                 maxLength={255}
-                className="w-full rounded-lg border border-input bg-transparent p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="w-full rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label>Responsável pela autorização</Label>
-              <Select value={autorizadoPorId} onValueChange={(v) => setAutorizadoPorId(v ?? "")}>
-                <SelectTrigger className="w-full">
+              <Select items={supervisorItems} value={autorizadoPorId} onValueChange={(v) => setAutorizadoPorId(v ?? "")}>
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue placeholder="Selecione o gerente/supervisor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -176,7 +181,7 @@ export function LancarSaidaDialog({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1.5 rounded-lg border p-3 text-sm">
+            <div className="flex flex-col gap-1.5 rounded-xl border p-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Valor</span>
                 <strong className="text-destructive">{formatBRL(valorNumero)}</strong>
@@ -200,19 +205,20 @@ export function LancarSaidaDialog({
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Digite a senha para autorizar"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
               />
             </div>
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="border-t-0 bg-transparent">
           {etapa === "senha" && (
-            <Button variant="outline" className="rounded-lg font-normal" onClick={() => setEtapa("dados")} disabled={enviando}>
+            <Button variant="outline" className="rounded-full font-normal" onClick={() => setEtapa("dados")} disabled={enviando}>
               Voltar
             </Button>
           )}
           <Button
-            className="rounded-lg font-normal"
+            className="rounded-full font-normal"
             onClick={etapa === "dados" ? avancar : confirmarComSenha}
             disabled={enviando || (etapa === "dados" && saldoInsuficiente)}
           >

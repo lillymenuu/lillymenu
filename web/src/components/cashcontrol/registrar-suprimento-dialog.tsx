@@ -24,6 +24,9 @@ export function RegistrarSuprimentoDialog({
   const [autorizadoPorId, setAutorizadoPorId] = useState("");
   const [enviando, setEnviando] = useState(false);
 
+  const supervisorItems: Record<string, string> = {};
+  for (const s of supervisores) supervisorItems[String(s.id)] = s.nome;
+
   useEffect(() => {
     if (!open) return;
     setValor("");
@@ -78,14 +81,14 @@ export function RegistrarSuprimentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Registrar suprimento</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="suprimento-valor">Valor</Label>
-            <MoneyInput id="suprimento-valor" value={valor} onChange={setValor} />
+            <MoneyInput id="suprimento-valor" value={valor} onChange={setValor} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -97,14 +100,14 @@ export function RegistrarSuprimentoDialog({
               placeholder="Opcional"
               rows={3}
               maxLength={255}
-              className="w-full rounded-lg border border-input bg-transparent p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="w-full rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label>Responsável pela autorização</Label>
-            <Select value={autorizadoPorId} onValueChange={(v) => setAutorizadoPorId(v ?? "")}>
-              <SelectTrigger className="w-full">
+            <Select items={supervisorItems} value={autorizadoPorId} onValueChange={(v) => setAutorizadoPorId(v ?? "")}>
+              <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                 <SelectValue placeholder="Selecione o gerente/supervisor" />
               </SelectTrigger>
               <SelectContent>
@@ -117,11 +120,11 @@ export function RegistrarSuprimentoDialog({
             </Select>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={enviando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={enviando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={confirmar} disabled={enviando}>
+          <Button className="rounded-full font-normal" onClick={confirmar} disabled={enviando}>
             {enviando ? "Registrando..." : "Confirmar"}
           </Button>
         </DialogFooter>

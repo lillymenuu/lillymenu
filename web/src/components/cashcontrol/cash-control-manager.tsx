@@ -193,11 +193,11 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {caixa && (
-            <Button variant="outline" className="rounded-lg font-normal" onClick={() => setEditarAberturaAberto(true)}>
+            <Button variant="outline" className="rounded-full font-normal" onClick={() => setEditarAberturaAberto(true)}>
               Editar horário de abertura
             </Button>
           )}
-          <Button className="gap-1.5 rounded-lg font-normal" onClick={() => setOpenCloseAberto(true)}>
+          <Button className="gap-1.5 rounded-full font-normal" onClick={() => setOpenCloseAberto(true)}>
             <Wallet className="size-4" /> {caixa ? "Fechar caixa" : "Abrir caixa"}
           </Button>
         </div>
@@ -269,10 +269,10 @@ export function CashControlManager({ dadosIniciais }: { dadosIniciais: CaixaResu
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold">Movimentações</div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setSuprimentoAberto(true)}>
+                  <Button variant="ghost" size="sm" className="gap-1.5 rounded-full font-normal" onClick={() => setSuprimentoAberto(true)}>
                     <Plus className="size-3.5" /> Registrar suprimento
                   </Button>
-                  <Button size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setLancarSaidaAberto(true)}>
+                  <Button size="sm" className="gap-1.5 rounded-full font-normal" onClick={() => setLancarSaidaAberto(true)}>
                     <Plus className="size-3.5" /> Lançar saída
                   </Button>
                 </div>

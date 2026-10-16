@@ -85,7 +85,7 @@ export function OpenCloseDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{modo === "fechar" ? "Fechar caixa" : "Abrir caixa"}</DialogTitle>
         </DialogHeader>
@@ -97,7 +97,7 @@ export function OpenCloseDialog({
               <input
                 disabled
                 value={formatBRL(caixaAtual.saldo_inicial)}
-                className="h-8 rounded-lg border border-input bg-input/50 px-2.5 text-sm text-muted-foreground"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm text-muted-foreground"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -108,7 +108,7 @@ export function OpenCloseDialog({
                 step="0.01"
                 value={saldoFinal}
                 onChange={(e) => setSaldoFinal(e.target.value)}
-                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-primary/60"
               />
             </div>
             <div className="flex items-center justify-between">
@@ -121,21 +121,26 @@ export function OpenCloseDialog({
                 onChange={(e) => setObservacoes(e.target.value)}
                 placeholder="Observação do fechamento (opcional)"
                 rows={3}
-                className="w-full rounded-lg border border-input bg-transparent p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="w-full rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
               />
             )}
           </div>
         ) : (
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="caixa-saldo-inicial">Saldo inicial</Label>
-            <MoneyInput id="caixa-saldo-inicial" value={saldoInicial} onChange={setSaldoInicial} />
+            <MoneyInput
+              id="caixa-saldo-inicial"
+              value={saldoInicial}
+              onChange={setSaldoInicial}
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
           </div>
         )}
-        <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={confirmar} disabled={salvando}>
+          <Button className="rounded-full font-normal" onClick={confirmar} disabled={salvando}>
             {salvando ? "Salvando..." : modo === "fechar" ? "Fechar caixa" : "Abrir caixa"}
           </Button>
         </DialogFooter>

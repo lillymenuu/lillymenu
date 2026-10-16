@@ -61,7 +61,7 @@ export function EditAberturaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Editar horário de abertura</DialogTitle>
         </DialogHeader>
@@ -79,19 +79,29 @@ export function EditAberturaDialog({
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <Label>Data</Label>
-              <Input disabled value={dataParte.split("-").reverse().join("/")} />
+              <Input
+                disabled
+                value={dataParte.split("-").reverse().join("/")}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="caixa-editar-hora">Hora</Label>
-              <Input id="caixa-editar-hora" type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+              <Input
+                id="caixa-editar-hora"
+                type="time"
+                value={hora}
+                onChange={(e) => setHora(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+              />
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full font-normal" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
