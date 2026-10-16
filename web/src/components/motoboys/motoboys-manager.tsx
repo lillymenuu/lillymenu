@@ -188,7 +188,7 @@ export function MotoboysManager({
             />
           )}
           <Button
-            className="gap-1.5 rounded-lg font-normal"
+            className="gap-1.5 rounded-full font-normal"
             onClick={() => {
               setMotoboyEditando(null);
               setFormOpen(true);

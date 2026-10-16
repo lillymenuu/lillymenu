@@ -83,29 +83,46 @@ export function MotoboyFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-md">
+      <DialogContent className="max-w-md rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{motoboy ? "Editar motoboy" : "Novo motoboy"}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="motoboy-nome">Nome</Label>
-            <Input id="motoboy-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+            <Input
+              id="motoboy-nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="motoboy-whatsapp">Contato WhatsApp</Label>
-              <Input id="motoboy-whatsapp" inputMode="numeric" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+              <Input
+                id="motoboy-whatsapp"
+                inputMode="numeric"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="motoboy-data">Data do cadastro</Label>
-              <Input id="motoboy-data" type="date" value={dataCadastro} onChange={(e) => setDataCadastro(e.target.value)} />
+              <Input
+                id="motoboy-data"
+                type="date"
+                value={dataCadastro}
+                onChange={(e) => setDataCadastro(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+              />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Status</Label>
             <Select items={STATUS_ITEMS} value={ativo} onValueChange={(v) => v && setAtivo(v)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -118,11 +135,11 @@ export function MotoboyFormDialog({
             </Select>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full font-normal" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar motoboy"}
           </Button>
         </DialogFooter>
