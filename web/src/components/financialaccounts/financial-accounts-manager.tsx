@@ -78,12 +78,12 @@ export function FinancialAccountsManager({ dadosIniciais }: { dadosIniciais: Fin
           <h1 className="text-xl font-semibold">Contas financeiras</h1>
           <p className="text-sm text-muted-foreground">Controle as contas de banco, caixa e carteiras da operação.</p>
         </div>
-        <Button className="gap-1.5" onClick={abrirNovo}>
+        <Button className="gap-1.5 rounded-full" onClick={abrirNovo}>
           <Plus className="size-4" /> Nova conta
         </Button>
       </div>
 
-      <Card className={`overflow-hidden transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
+      <Card className={`overflow-hidden rounded-2xl transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

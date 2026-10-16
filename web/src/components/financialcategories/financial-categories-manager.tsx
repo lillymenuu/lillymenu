@@ -81,15 +81,15 @@ export function FinancialCategoriesManager({ dadosIniciais }: { dadosIniciais: F
           <h1 className="text-xl font-semibold">Categorias financeiras</h1>
           <p className="text-sm text-muted-foreground">Organize receitas e despesas por categoria.</p>
         </div>
-        <Button className="gap-1.5" onClick={abrirNovo}>
+        <Button className="gap-1.5 rounded-full" onClick={abrirNovo}>
           <Plus className="size-4" /> Nova categoria
         </Button>
       </div>
 
-      <Card className="p-4">
+      <Card className="rounded-2xl p-4">
         <div className="max-w-xs">
           <Select value={dados.tipo || "all"} onValueChange={(v) => v && carregar(v === "all" ? "" : (v as string))} disabled={carregando}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
               <SelectValue>
                 {() => (dados.tipo === "income" ? "Receita" : dados.tipo === "expense" ? "Despesa" : "Todos os tipos")}
               </SelectValue>
@@ -103,7 +103,7 @@ export function FinancialCategoriesManager({ dadosIniciais }: { dadosIniciais: F
         </div>
       </Card>
 
-      <Card className={`overflow-hidden transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
+      <Card className={`overflow-hidden rounded-2xl transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

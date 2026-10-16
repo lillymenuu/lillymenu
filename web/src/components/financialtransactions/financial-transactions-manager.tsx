@@ -121,20 +121,20 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
           <p className="text-sm text-muted-foreground">Receitas e despesas da sua loja, mês a mês.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-1.5" onClick={sincronizarPedidos} disabled={sincronizando}>
+          <Button variant="outline" className="gap-1.5 rounded-full" onClick={sincronizarPedidos} disabled={sincronizando}>
             <RefreshCw className={`size-4 ${sincronizando ? "animate-spin" : ""}`} />
             Sincronizar pedidos
           </Button>
-          <Button className="gap-1.5" onClick={abrirNovo}>
+          <Button className="gap-1.5 rounded-full" onClick={abrirNovo}>
             <Plus className="size-4" /> Novo lançamento
           </Button>
         </div>
       </div>
 
-      <Card className="p-4">
+      <Card className="rounded-2xl p-4">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           <Select value={String(dados.mes)} onValueChange={(v) => v && carregar({ mes: v, page: 1 })} disabled={carregando}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
               <SelectValue>{() => MESES_LABEL[dados.mes] ?? dados.mes}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -146,7 +146,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
             </SelectContent>
           </Select>
           <Select value={String(dados.ano)} onValueChange={(v) => v && carregar({ ano: v, page: 1 })} disabled={carregando}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
               <SelectValue>{() => dados.ano}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -158,7 +158,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
             </SelectContent>
           </Select>
           <Select value={dados.tipo || "all"} onValueChange={(v) => carregar({ tipo: v === "all" ? "" : (v as string), page: 1 })} disabled={carregando}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
               <SelectValue>
                 {() => (dados.tipo === "income" ? "Receita" : dados.tipo === "expense" ? "Despesa" : "Todos os tipos")}
               </SelectValue>
@@ -174,7 +174,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
             onValueChange={(v) => carregar({ categoria_id: v === "all" ? 0 : Number(v), page: 1 })}
             disabled={carregando}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
               <SelectValue>
                 {() => dados.categorias.find((c) => c.id === dados.categoria_id)?.name ?? "Todas categorias"}
               </SelectValue>
@@ -193,7 +193,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
             onValueChange={(v) => carregar({ conta_id: v === "all" ? 0 : Number(v), page: 1 })}
             disabled={carregando}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
               <SelectValue>{() => dados.contas.find((c) => c.id === dados.conta_id)?.name ?? "Todas contas"}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -208,7 +208,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
         </div>
       </Card>
 
-      <Card className={`overflow-hidden transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
+      <Card className={`overflow-hidden rounded-2xl transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -269,7 +269,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
             </span>
             {dados.total_paginas > 1 ? (
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" disabled={dados.page <= 1 || carregando} onClick={() => carregar({ page: dados.page - 1 })}>
+                <Button variant="outline" size="sm" className="rounded-full" disabled={dados.page <= 1 || carregando} onClick={() => carregar({ page: dados.page - 1 })}>
                   Anterior
                 </Button>
                 <span>
@@ -278,6 +278,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
                 <Button
                   variant="outline"
                   size="sm"
+                  className="rounded-full"
                   disabled={dados.page >= dados.total_paginas || carregando}
                   onClick={() => carregar({ page: dados.page + 1 })}
                 >

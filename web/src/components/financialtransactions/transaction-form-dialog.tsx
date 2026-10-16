@@ -140,16 +140,16 @@ export function TransactionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[600px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[600px]">
+      <DialogContent className="flex max-h-[90vh] w-[600px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{lancamento ? "Editar lançamento" : "Novo lançamento"}</DialogTitle>
         </DialogHeader>
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+        <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto px-1">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Tipo</Label>
               <Select value={type} onValueChange={(v) => v && setType(v as "income" | "expense")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue>{() => (type === "income" ? "Receita" : "Despesa")}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -160,24 +160,34 @@ export function TransactionFormDialog({
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Data</Label>
-              <Input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} />
+              <Input
+                type="date"
+                value={transactionDate}
+                onChange={(e) => setTransactionDate(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+              />
             </div>
           </div>
 
           <div className="space-y-1">
             <Label className="text-xs">Descrição</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex.: Venda balcão" />
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ex.: Venda balcão"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Valor</Label>
-              <MoneyInput value={amount} onChange={setAmount} />
+              <MoneyInput value={amount} onChange={setAmount} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Conta</Label>
               <Select value={accountId} onValueChange={(v) => v && setAccountId(v as string)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue placeholder="Selecione">
                     {() => contas.find((c) => String(c.id) === accountId)?.name}
                   </SelectValue>
@@ -197,7 +207,7 @@ export function TransactionFormDialog({
             <div className="space-y-1">
               <Label className="text-xs">Categoria</Label>
               <Select value={categoryId} onValueChange={(v) => v && alterarCategoria(v as string)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue placeholder="Selecione">
                     {() => categorias.find((c) => String(c.id) === categoryId)?.name}
                   </SelectValue>
@@ -214,7 +224,7 @@ export function TransactionFormDialog({
             <div className="space-y-1">
               <Label className="text-xs">Forma de pagamento</Label>
               <Select value={paymentMethodId || "none"} onValueChange={(v) => setPaymentMethodId(v === "none" ? "" : (v as string))}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue>
                     {() => formasPagamento.find((p) => String(p.id) === paymentMethodId)?.name ?? "Não informar"}
                   </SelectValue>
@@ -235,7 +245,7 @@ export function TransactionFormDialog({
             <div className="space-y-1">
               <Label className="text-xs">Mês de referência</Label>
               <Select value={referenceMonth} onValueChange={(v) => v && setReferenceMonth(v as string)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue>{() => MESES_LABEL[Number(referenceMonth)] ?? referenceMonth}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -250,7 +260,7 @@ export function TransactionFormDialog({
             <div className="space-y-1">
               <Label className="text-xs">Ano de referência</Label>
               <Select value={referenceYear} onValueChange={(v) => v && setReferenceYear(v as string)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,15 +280,15 @@ export function TransactionFormDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="w-full rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

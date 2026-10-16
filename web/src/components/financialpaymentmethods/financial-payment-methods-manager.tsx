@@ -77,12 +77,12 @@ export function FinancialPaymentMethodsManager({ dadosIniciais }: { dadosIniciai
           <h1 className="text-xl font-semibold">Formas de pagamento</h1>
           <p className="text-sm text-muted-foreground">Gerencie as formas de pagamento usadas nos lançamentos financeiros.</p>
         </div>
-        <Button className="gap-1.5" onClick={abrirNovo}>
+        <Button className="gap-1.5 rounded-full" onClick={abrirNovo}>
           <Plus className="size-4" /> Nova forma de pagamento
         </Button>
       </div>
 
-      <Card className={`overflow-hidden transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
+      <Card className={`overflow-hidden rounded-2xl transition-opacity duration-200 ${carregando ? "opacity-60" : ""}`}>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

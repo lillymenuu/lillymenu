@@ -91,21 +91,26 @@ export function CategoryFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[440px] max-w-[calc(100%-2rem)] sm:max-w-[440px]">
+      <DialogContent className="w-[440px] max-w-[calc(100%-2rem)] rounded-3xl sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle>{categoria ? "Editar categoria" : "Nova categoria"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1">
             <Label className="text-xs">Nome</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Vendas" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex.: Vendas"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Tipo</Label>
               <Select value={type} onValueChange={(v) => v && setType(v as "income" | "expense")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue>{() => (type === "income" ? "Receita" : "Despesa")}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -117,7 +122,7 @@ export function CategoryFormDialog({
             <div className="space-y-1">
               <Label className="text-xs">Categoria pai</Label>
               <Select value={parentId} onValueChange={(v) => v && setParentId(v as string)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue>
                     {() => opcoesPai.find((c) => String(c.id) === parentId)?.name ?? "Nenhuma (categoria raiz)"}
                   </SelectValue>
@@ -134,16 +139,16 @@ export function CategoryFormDialog({
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-md border px-3 py-2">
+          <div className="flex items-center justify-between rounded-xl border px-3 py-2.5">
             <Label className="text-sm">Categoria ativa</Label>
             <Switch checked={active} onCheckedChange={setActive} />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
