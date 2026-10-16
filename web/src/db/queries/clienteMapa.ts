@@ -4,7 +4,7 @@ import { obterCoordsPorCep } from "@/db/queries/cepLookup";
 
 export type ClienteMapaResultado = { ok: true; lat: number; lng: number; endereco: string } | { ok: false; msg: string };
 
-function montarEnderecoTexto(c: {
+type ClienteEnderecoCampos = {
   rua: string | null;
   numero: string | null;
   bairro: string | null;
@@ -13,7 +13,9 @@ function montarEnderecoTexto(c: {
   cep: string | null;
   complemento: string | null;
   endereco: string | null;
-}): string {
+};
+
+function montarEnderecoTexto(c: ClienteEnderecoCampos): string {
   const rua = (c.rua ?? "").trim();
   const numero = (c.numero ?? "").trim();
   const bairro = (c.bairro ?? "").trim();
@@ -34,9 +36,57 @@ function montarEnderecoTexto(c: {
   return texto !== "" ? texto : (c.endereco ?? "").trim();
 }
 
-/* Sem lat/lng salvos pro cliente — geocodifica a partir do CEP (mesma fonte usada pro PDV)
-   e, se nao der (sem CEP ou CEP sem coordenada), cai pra uma busca livre no Nominatim com
-   rua/bairro/cidade/estado. */
+type Ponto = { lat: number; lng: number };
+
+async function buscarNominatim(url: string): Promise<Ponto | null> {
+  try {
+    const resp = await fetch(url, { headers: { "User-Agent": "LillyMenu/1.0 (contato@lillymenu.com)" }, signal: AbortSignal.timeout(6000) });
+    if (!resp.ok) return null;
+    const data = (await resp.json().catch(() => null)) as { lat?: string; lon?: string }[] | null;
+    const item = data?.[0];
+    const lat = item?.lat !== undefined ? Number(item.lat) : null;
+    const lng = item?.lon !== undefined ? Number(item.lon) : null;
+    if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  } catch {
+    return null;
+  }
+}
+
+/* Busca estruturada (rua + numero + cidade/estado/cep) — muito mais precisa que geocodificar so
+   pelo CEP, ja que no Brasil um CEP costuma cobrir um trecho inteiro de rua, nao um numero exato. */
+async function geocodarEnderecoEstruturado(c: ClienteEnderecoCampos): Promise<Ponto | null> {
+  const rua = (c.rua ?? "").trim();
+  const cidade = (c.cidade ?? "").trim();
+  if (!rua || !cidade) return null;
+
+  const numero = (c.numero ?? "").trim();
+  const estado = (c.estado ?? "").trim();
+  const cep = (c.cep ?? "").replace(/\D/g, "");
+
+  const params = new URLSearchParams({
+    format: "jsonv2",
+    limit: "1",
+    country: "Brazil",
+    street: numero ? `${rua}, ${numero}` : rua,
+    city: cidade,
+  });
+  if (estado) params.set("state", estado);
+  if (cep.length === 8) params.set("postalcode", `${cep.slice(0, 5)}-${cep.slice(5)}`);
+
+  return buscarNominatim(`https://nominatim.openstreetmap.org/search?${params.toString()}`);
+}
+
+/* Busca livre (texto corrido) — fallback quando a busca estruturada nao acha nada (ex.: rua nova
+   demais pro OSM ter o numero exato, mas o texto completo ainda bate com algo). */
+async function geocodarEnderecoLivre(c: ClienteEnderecoCampos): Promise<Ponto | null> {
+  const partes = [c.rua, c.numero, c.bairro, c.cidade, c.estado].map((v) => (v ?? "").trim()).filter(Boolean);
+  if (partes.length === 0) return null;
+
+  const query = `${partes.join(", ")}, Brasil`;
+  return buscarNominatim(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=jsonv2&limit=1&countrycodes=br`);
+}
+
 export async function clienteMapa(lojaId: number, clienteId: number): Promise<ClienteMapaResultado> {
   const resultado = await clienteDetalhe(lojaId, clienteId);
   if (!resultado.ok) return resultado;
@@ -45,30 +95,18 @@ export async function clienteMapa(lojaId: number, clienteId: number): Promise<Cl
   const endereco = montarEnderecoTexto(c);
   if (!endereco) return { ok: false, msg: "Cliente sem endereço cadastrado." };
 
+  const estruturado = await geocodarEnderecoEstruturado(c);
+  if (estruturado) return { ok: true, ...estruturado, endereco };
+
+  const livre = await geocodarEnderecoLivre(c);
+  if (livre) return { ok: true, ...livre, endereco };
+
+  /* Ultimo recurso: centroide do CEP (BrasilAPI/AwesomeApi) — menos preciso que um endereco
+     completo, pode cair bem longe do numero real, mas e melhor que nao mostrar nada. */
   const cep = (c.cep ?? "").replace(/\D/g, "");
   if (cep.length === 8) {
     const coords = await obterCoordsPorCep(cep);
     if (coords) return { ok: true, lat: coords.lat, lng: coords.lng, endereco };
-  }
-
-  const partesBusca = [c.rua, c.numero, c.bairro, c.cidade, c.estado].map((v) => (v ?? "").trim()).filter(Boolean);
-  if (partesBusca.length === 0) return { ok: false, msg: "Não foi possível localizar o endereço no mapa." };
-
-  try {
-    const query = `${partesBusca.join(", ")}, Brasil`;
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=jsonv2&limit=1&countrycodes=br`;
-    const resp = await fetch(url, { headers: { "User-Agent": "LillyMenu/1.0 (contato@lillymenu.com)" }, signal: AbortSignal.timeout(6000) });
-    if (resp.ok) {
-      const data = (await resp.json().catch(() => null)) as { lat?: string; lon?: string }[] | null;
-      const item = data?.[0];
-      const lat = item?.lat !== undefined ? Number(item.lat) : null;
-      const lng = item?.lon !== undefined ? Number(item.lon) : null;
-      if (lat !== null && lng !== null && Number.isFinite(lat) && Number.isFinite(lng)) {
-        return { ok: true, lat, lng, endereco };
-      }
-    }
-  } catch {
-    /* cai no retorno de erro abaixo */
   }
 
   return { ok: false, msg: "Não foi possível localizar o endereço no mapa." };
