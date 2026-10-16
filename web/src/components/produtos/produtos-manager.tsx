@@ -85,6 +85,14 @@ export function ProdutosManager({
     });
   }, [produtos, busca, somentePromo, statusFiltro]);
 
+  const combosFiltrados = useMemo(() => {
+    return combos.filter((c) => {
+      if (statusFiltro === "ativos" && c.ativo !== 1) return false;
+      if (statusFiltro === "inativos" && c.ativo === 1) return false;
+      return true;
+    });
+  }, [combos, statusFiltro]);
+
   const grupos = useMemo(() => {
     const porCategoria = new Map<number | null, Produto[]>();
     for (const p of produtosFiltrados) {
@@ -93,21 +101,21 @@ export function ProdutosManager({
       porCategoria.get(key)!.push(p);
     }
     const combosPorCategoria = new Map<number | null, Combo[]>();
-    for (const c of combos) {
+    for (const c of combosFiltrados) {
       const key = c.categoria_id;
       if (!combosPorCategoria.has(key)) combosPorCategoria.set(key, []);
       combosPorCategoria.get(key)!.push(c);
     }
     const ordenados = categorias
       .map((c) => ({ categoria: c, produtos: porCategoria.get(c.id) ?? [], combos: combosPorCategoria.get(c.id) ?? [] }))
-      .filter((g) => g.produtos.length > 0 || g.combos.length > 0 || (!busca && !somentePromo));
+      .filter((g) => g.produtos.length > 0 || g.combos.length > 0 || (!busca && !somentePromo && statusFiltro === "todos"));
     const semCategoria = porCategoria.get(null) ?? [];
     const combosSemCategoria = combosPorCategoria.get(null) ?? [];
     if (semCategoria.length > 0 || combosSemCategoria.length > 0) {
       ordenados.push({ categoria: SEM_CATEGORIA, produtos: semCategoria, combos: combosSemCategoria });
     }
     return ordenados;
-  }, [categorias, produtosFiltrados, combos, busca, somentePromo]);
+  }, [categorias, produtosFiltrados, combosFiltrados, busca, somentePromo, statusFiltro]);
 
   function abrirNovoProduto(categoriaId?: number) {
     setProdutoEditando(null);
