@@ -14,6 +14,7 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
+import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -54,6 +55,7 @@ export function ProdutosManager({
   const router = useRouter();
   const [busca, setBusca] = useState("");
   const [somentePromo, setSomentePromo] = useState(false);
+  const [statusFiltro, setStatusFiltro] = useState<"todos" | "ativos" | "inativos">("todos");
   const [formOpen, setFormOpen] = useState(false);
   const [categoriaDialogOpen, setCategoriaDialogOpen] = useState(false);
   const [reordenarOpen, setReordenarOpen] = useState(false);
@@ -69,6 +71,8 @@ export function ProdutosManager({
   const produtosFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     return produtos.filter((p) => {
+      if (statusFiltro === "ativos" && p.ativo !== 1) return false;
+      if (statusFiltro === "inativos" && p.ativo === 1) return false;
       if (somentePromo) {
         const emPromo = Boolean(p.preco_promocional) && p.promo_desativado !== 1;
         if (!emPromo) return false;
@@ -79,7 +83,7 @@ export function ProdutosManager({
       }
       return true;
     });
-  }, [produtos, busca, somentePromo]);
+  }, [produtos, busca, somentePromo, statusFiltro]);
 
   const grupos = useMemo(() => {
     const porCategoria = new Map<number | null, Produto[]>();
@@ -223,9 +227,32 @@ export function ProdutosManager({
             />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Switch checked={somentePromo} onCheckedChange={(v) => setSomentePromo(v === true)} />
-          <span className="text-sm">Somente promo</span>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-1 rounded-full bg-muted p-1 text-sm">
+            {(
+              [
+                { valor: "todos", label: "Todos" },
+                { valor: "ativos", label: "Ativos" },
+                { valor: "inativos", label: "Inativos" },
+              ] as const
+            ).map((opcao) => (
+              <button
+                key={opcao.valor}
+                type="button"
+                onClick={() => setStatusFiltro(opcao.valor)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 font-medium transition-colors",
+                  statusFiltro === opcao.valor ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {opcao.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch checked={somentePromo} onCheckedChange={(v) => setSomentePromo(v === true)} />
+            <span className="text-sm">Somente promo</span>
+          </div>
         </div>
       </div>
 
