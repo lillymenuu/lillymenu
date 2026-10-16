@@ -108,7 +108,7 @@ export function PromoDialog({
 
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="flex flex-shrink-0 flex-col items-center gap-2 text-center sm:w-56">
-            <div className="flex size-32 items-center justify-center overflow-hidden rounded-2xl bg-muted text-muted-foreground">
+            <div className="flex h-56 w-full items-center justify-center overflow-hidden rounded-2xl bg-muted text-muted-foreground">
               {thumbUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={thumbUrl} alt={produto.nome} className="size-full object-cover" />
@@ -121,7 +121,7 @@ export function PromoDialog({
               Preço atual: <strong className="text-foreground">{formatBRL(produto.preco)}</strong>
             </div>
 
-            <label className="mt-3 flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800">
+            <label className="mt-auto flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800">
               <span>Ativar esta promoção</span>
               <Switch checked={ativar} onCheckedChange={(v) => setAtivar(v === true)} />
             </label>
