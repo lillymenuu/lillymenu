@@ -52,7 +52,7 @@ export function RegistrarFiadoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Registrar fiado</DialogTitle>
         </DialogHeader>
@@ -65,6 +65,7 @@ export function RegistrarFiadoDialog({
               placeholder="0,00"
               value={valor}
               onChange={(e) => setValor(e.target.value)}
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -74,14 +75,15 @@ export function RegistrarFiadoDialog({
               placeholder="Ex.: compra no balcão"
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full font-normal" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Registrar"}
           </Button>
         </DialogFooter>

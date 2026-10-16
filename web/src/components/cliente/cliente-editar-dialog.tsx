@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatarCep, buscarEnderecoPorCep } from "@/lib/cep";
+import { cn } from "cn";
+
+const campoClasse = "h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm";
 
 type FormState = {
   nome: string;
@@ -127,7 +130,7 @@ export function ClienteEditarDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-md gap-3 overflow-hidden sm:max-w-md">
+      <DialogContent className="max-h-[85vh] max-w-md gap-3 overflow-hidden rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Editar cliente</DialogTitle>
         </DialogHeader>
@@ -137,57 +140,57 @@ export function ClienteEditarDialog({
           <div className="scrollbar-hidden flex max-h-[60vh] flex-col gap-3 overflow-y-auto">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-nome">Nome do cliente *</Label>
-              <Input id="cli-nome" {...campo("nome")} />
+              <Input id="cli-nome" className={campoClasse} {...campo("nome")} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-tel">Número de contato *</Label>
-              <Input id="cli-tel" {...campo("telefone")} />
+              <Input id="cli-tel" className={campoClasse} {...campo("telefone")} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-aniv">Aniversário do cliente</Label>
-              <Input id="cli-aniv" type="date" {...campo("aniversario")} />
+              <Input id="cli-aniv" type="date" className={cn(campoClasse, "pr-5")} {...campo("aniversario")} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-cep">CEP</Label>
-              <Input id="cli-cep" value={form.cep} onChange={handleCepChange} disabled={buscandoCep} />
+              <Input id="cli-cep" value={form.cep} onChange={handleCepChange} disabled={buscandoCep} className={campoClasse} />
             </div>
             <div className="grid grid-cols-[1fr_auto] gap-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="cli-rua">Rua</Label>
-                <Input id="cli-rua" {...campo("rua")} />
+                <Input id="cli-rua" className={campoClasse} {...campo("rua")} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="cli-num">Número</Label>
-                <Input id="cli-num" className="w-24" {...campo("numero")} />
+                <Input id="cli-num" className={cn(campoClasse, "w-24")} {...campo("numero")} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="cli-bairro">Bairro</Label>
-                <Input id="cli-bairro" {...campo("bairro")} />
+                <Input id="cli-bairro" className={campoClasse} {...campo("bairro")} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="cli-cidade">Cidade</Label>
-                <Input id="cli-cidade" {...campo("cidade")} />
+                <Input id="cli-cidade" className={campoClasse} {...campo("cidade")} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="cli-estado">Estado</Label>
-                <Input id="cli-estado" {...campo("estado")} />
+                <Input id="cli-estado" className={campoClasse} {...campo("estado")} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="cli-compl">Complemento</Label>
-                <Input id="cli-compl" {...campo("complemento")} />
+                <Input id="cli-compl" className={campoClasse} {...campo("complemento")} />
               </div>
             </div>
           </div>
         )}
-        <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={salvar} disabled={salvando || carregando}>
+          <Button className="rounded-full font-normal" onClick={salvar} disabled={salvando || carregando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

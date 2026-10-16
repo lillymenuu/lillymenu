@@ -16,7 +16,7 @@ import { formatDataCurta, type ClienteStats } from "./types";
 import { cn } from "cn";
 
 const tabTriggerClass =
-  "rounded-lg px-3 font-normal data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none";
+  "rounded-full px-3 font-normal data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none";
 
 export function ClientePerfilDialog({
   open,
@@ -59,7 +59,7 @@ export function ClientePerfilDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg gap-3 overflow-hidden sm:max-w-lg">
+        <DialogContent className="max-w-lg gap-3 overflow-hidden rounded-3xl sm:max-w-lg">
           <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden">
             <DialogHeader className="pr-8">
               <div className="flex items-center gap-3">
@@ -79,7 +79,7 @@ export function ClientePerfilDialog({
               <p className="py-10 text-center text-sm text-muted-foreground">Carregando...</p>
             ) : (
               <Tabs value={aba} onValueChange={(v) => v && setAba(v)} className="pt-3">
-                <TabsList className="w-full rounded-lg bg-muted p-1">
+                <TabsList className="w-full rounded-full bg-muted p-1">
                   <TabsTrigger value="perfil" className={cn(tabTriggerClass, "flex-1")}>
                     <User size={13} /> Perfil
                   </TabsTrigger>
@@ -110,17 +110,17 @@ export function ClientePerfilDialog({
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="border-t-0 bg-transparent">
             <Button
               variant="outline"
-              className="rounded-lg font-normal"
+              className="rounded-full font-normal"
               onClick={() => setFiadoOpen(true)}
               disabled={!clienteId}
             >
               Registrar fiado
             </Button>
             <Button
-              className="rounded-lg font-normal"
+              className="rounded-full font-normal"
               onClick={() => setEditarOpen(true)}
               disabled={!clienteId}
             >

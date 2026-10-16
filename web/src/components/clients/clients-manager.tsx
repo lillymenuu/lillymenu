@@ -93,7 +93,7 @@ export function ClientsManager({
           <h1 className="text-lg font-semibold">Clientes</h1>
           <p className="text-sm text-muted-foreground">Aqui você cadastra e gerencia seus clientes.</p>
         </div>
-        <Button size="sm" onClick={() => setCriarOpen(true)}>
+        <Button size="sm" className="rounded-full" onClick={() => setCriarOpen(true)}>
           <Plus size={14} /> Cadastrar cliente
         </Button>
       </div>
@@ -105,7 +105,7 @@ export function ClientsManager({
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" size={14} />
               <Input
-                className="pl-8"
+                className="rounded-full bg-background pl-8"
                 placeholder="Pesquise pelo nome ou telefone"
                 value={busca}
                 onChange={(e) => mudarBusca(e.target.value)}

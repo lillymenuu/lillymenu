@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatarCep, buscarEnderecoPorCep } from "@/lib/cep";
+import { cn } from "cn";
+
+const campoClasse = "h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm";
 
 type FormState = {
   nome: string;
@@ -104,22 +107,22 @@ export function ClienteCriarDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-md gap-3 overflow-hidden sm:max-w-md">
+      <DialogContent className="max-h-[85vh] max-w-md gap-3 overflow-hidden rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Cadastrar cliente</DialogTitle>
         </DialogHeader>
         <div className="scrollbar-hidden flex max-h-[60vh] flex-col gap-3 overflow-y-auto">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="cli-novo-nome">Nome do cliente *</Label>
-            <Input id="cli-novo-nome" placeholder="Ex.: Felipe" {...campo("nome")} />
+            <Input id="cli-novo-nome" placeholder="Ex.: Felipe" className={campoClasse} {...campo("nome")} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="cli-novo-tel">Número de contato *</Label>
-            <Input id="cli-novo-tel" placeholder="Ex.: (11) 9 3232-5454" {...campo("telefone")} />
+            <Input id="cli-novo-tel" placeholder="Ex.: (11) 9 3232-5454" className={campoClasse} {...campo("telefone")} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="cli-novo-aniv">Aniversário do cliente</Label>
-            <Input id="cli-novo-aniv" type="date" {...campo("aniversario")} />
+            <Input id="cli-novo-aniv" type="date" className={cn(campoClasse, "pr-5")} {...campo("aniversario")} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="cli-novo-cep">CEP</Label>
@@ -129,44 +132,45 @@ export function ClienteCriarDialog({
               value={form.cep}
               onChange={handleCepChange}
               disabled={buscandoCep}
+              className={campoClasse}
             />
           </div>
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-novo-rua">Rua</Label>
-              <Input id="cli-novo-rua" placeholder="Ex.: Santa Efigênia" {...campo("rua")} />
+              <Input id="cli-novo-rua" placeholder="Ex.: Santa Efigênia" className={campoClasse} {...campo("rua")} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-novo-num">Número</Label>
-              <Input id="cli-novo-num" className="w-24" placeholder="Ex.: 123" {...campo("numero")} />
+              <Input id="cli-novo-num" className={cn(campoClasse, "w-24")} placeholder="Ex.: 123" {...campo("numero")} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-novo-bairro">Bairro</Label>
-              <Input id="cli-novo-bairro" placeholder="Bairro" {...campo("bairro")} />
+              <Input id="cli-novo-bairro" placeholder="Bairro" className={campoClasse} {...campo("bairro")} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-novo-cidade">Cidade</Label>
-              <Input id="cli-novo-cidade" placeholder="Cidade" {...campo("cidade")} />
+              <Input id="cli-novo-cidade" placeholder="Cidade" className={campoClasse} {...campo("cidade")} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-novo-estado">Estado</Label>
-              <Input id="cli-novo-estado" placeholder="Estado" {...campo("estado")} />
+              <Input id="cli-novo-estado" placeholder="Estado" className={campoClasse} {...campo("estado")} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="cli-novo-compl">Complemento</Label>
-              <Input id="cli-novo-compl" placeholder="Complemento" {...campo("complemento")} />
+              <Input id="cli-novo-compl" placeholder="Complemento" className={campoClasse} {...campo("complemento")} />
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full font-normal" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
