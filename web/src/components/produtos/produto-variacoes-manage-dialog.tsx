@@ -62,7 +62,7 @@ export function ProdutoVariacoesManageDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] w-[520px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[520px]">
+      <DialogContent className="flex max-h-[80vh] w-[520px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[520px]">
         <DialogHeader className="flex-row items-start justify-between gap-2 pr-8">
           <DialogTitle className="sr-only">Variações do produto</DialogTitle>
           <div className="flex-1 space-y-2.5">
@@ -70,7 +70,7 @@ export function ProdutoVariacoesManageDialog({
               value={tituloEditado}
               onChange={(e) => setTituloEditado(e.target.value)}
               placeholder="Ex.: Escolha o tamanho"
-              className="text-sm font-medium"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm font-medium"
             />
             <p className="text-xs text-muted-foreground">Cadastre tamanhos, cores e preços para usar no pedido.</p>
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -100,6 +100,7 @@ export function ProdutoVariacoesManageDialog({
                     value={linha.tamanho}
                     onChange={(e) => atualizarLinha(idx, { tamanho: e.target.value })}
                     placeholder="Ex.: 500ml"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                   />
                 </div>
                 <div className="flex-1 space-y-1">
@@ -108,11 +109,16 @@ export function ProdutoVariacoesManageDialog({
                     value={linha.cor}
                     onChange={(e) => atualizarLinha(idx, { cor: e.target.value })}
                     placeholder="Ex.: Vermelho"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                   />
                 </div>
                 <div className="w-28 space-y-1">
                   <label className="text-xs text-muted-foreground">Preço</label>
-                  <MoneyInput value={String(linha.preco ?? "")} onChange={(v) => atualizarLinha(idx, { preco: v })} />
+                  <MoneyInput
+                    value={String(linha.preco ?? "")}
+                    onChange={(v) => atualizarLinha(idx, { preco: v })}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <button
                   type="button"
@@ -127,8 +133,8 @@ export function ProdutoVariacoesManageDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button onClick={salvar} className="w-full sm:w-auto">
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button onClick={salvar} className="w-full rounded-full sm:w-auto">
             Salvar variações
           </Button>
         </DialogFooter>
