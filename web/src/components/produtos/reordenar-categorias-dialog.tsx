@@ -56,10 +56,10 @@ export function ReordenarCategoriasDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-md">
+      <DialogContent className="max-w-md rounded-3xl sm:max-w-md">
         <DialogHeader className="flex-row items-center justify-between pr-8">
           <DialogTitle>Reordenar</DialogTitle>
-          <Button size="sm" onClick={salvar} disabled={salvando}>
+          <Button size="sm" className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogHeader>

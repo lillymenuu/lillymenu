@@ -73,7 +73,7 @@ export function CriarCategoriaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg sm:max-w-lg">
+      <DialogContent className="max-w-lg rounded-3xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{categoria ? "Editar categoria" : "Criar categoria"}</DialogTitle>
         </DialogHeader>
@@ -83,7 +83,12 @@ export function CriarCategoriaDialog({
             <Label htmlFor="cat-nome">
               Nome da categoria<span className="text-destructive">*</span>
             </Label>
-            <Input id="cat-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+            <Input
+              id="cat-nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -123,11 +128,8 @@ export function CriarCategoriaDialog({
           {erro && <p className="text-sm text-destructive">{erro}</p>}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : categoria ? "Salvar" : "Adicionar"}
           </Button>
         </DialogFooter>
