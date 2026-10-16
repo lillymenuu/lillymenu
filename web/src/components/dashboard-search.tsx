@@ -57,24 +57,24 @@ export function DashboardSearch({
           if (!v) setTermo("");
         }}
       >
-        <DialogContent className="max-w-lg sm:max-w-lg">
+        <DialogContent className="max-w-lg rounded-3xl sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Buscar página</DialogTitle>
           </DialogHeader>
           <div className="relative">
             <Search
-              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
               size={14}
             />
             <Input
               autoFocus
-              className="pl-8"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 pl-9 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
               placeholder="Buscar página..."
               value={termo}
               onChange={(e) => setTermo(e.target.value)}
             />
           </div>
-          <div className="grid max-h-96 grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
+          <div className="scrollbar-hidden grid max-h-96 grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
             {resultado.length === 0 && (
               <div className="col-span-full py-8 text-center text-sm text-muted-foreground">
                 Nenhuma página encontrada.
