@@ -255,12 +255,12 @@ export function ComboFormDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[88vh] max-w-3xl overflow-x-hidden rounded-3xl sm:max-w-3xl">
+        <DialogContent className="max-h-[88vh] max-w-3xl overflow-hidden rounded-3xl sm:max-w-3xl">
           <DialogHeader className="flex-row items-center justify-between pr-8">
             <DialogTitle>{comboId ? "Editar combo" : "Novo combo"}</DialogTitle>
           </DialogHeader>
 
-          <div className="flex max-h-[68vh] flex-col gap-5 overflow-y-auto overflow-x-hidden pr-1">
+          <div className="scrollbar-hidden flex max-h-[68vh] flex-col gap-5 overflow-y-auto overflow-x-hidden px-1">
             <div className="flex flex-col gap-4 sm:flex-row">
               <div className="flex flex-col gap-2">
                 <button
