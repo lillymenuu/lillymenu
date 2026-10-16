@@ -154,7 +154,7 @@ export function FlyersDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg gap-3 sm:max-w-lg">
+      <DialogContent className="max-w-lg gap-3 rounded-3xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Gerenciar slides de loja</DialogTitle>
         </DialogHeader>
@@ -211,6 +211,7 @@ export function FlyersDialog({
                         type="button"
                         variant="outline"
                         size="sm"
+                        className="rounded-full"
                         onClick={() => fileInputRefs.current[i]?.click()}
                       >
                         Anexar imagem
@@ -225,7 +226,7 @@ export function FlyersDialog({
                         onChange={(e) => handleArquivo(i, e)}
                       />
                       {preview && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => removerSlot(i)}>
+                        <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => removerSlot(i)}>
                           Remover
                         </Button>
                       )}
@@ -239,8 +240,8 @@ export function FlyersDialog({
 
         {erro && <p className="text-xs font-semibold text-destructive">{erro}</p>}
 
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando} className={cn(salvando && "opacity-70")}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button onClick={salvar} disabled={salvando} className={cn("rounded-full", salvando && "opacity-70")}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

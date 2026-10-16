@@ -140,7 +140,7 @@ export function PromoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl gap-3 sm:max-w-2xl">
+      <DialogContent className="max-w-2xl gap-3 rounded-3xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Promoção do produto</DialogTitle>
         </DialogHeader>
@@ -175,6 +175,7 @@ export function PromoDialog({
                   onChange={(e) => setPreco(e.target.value)}
                   placeholder="R$ 0,00"
                   inputMode="decimal"
+                  className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -185,6 +186,7 @@ export function PromoDialog({
                   value={dias}
                   onChange={(e) => setDias(e.target.value)}
                   placeholder="Sem expiração"
+                  className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                 />
               </div>
             </div>
@@ -192,7 +194,7 @@ export function PromoDialog({
             <div className="flex flex-col gap-1.5">
               <Label>Etiqueta de destaque (opcional)</Label>
               <Select items={ETIQUETA_ITEMS} value={etiqueta} onValueChange={(v) => setEtiqueta(v ?? "")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -212,7 +214,7 @@ export function PromoDialog({
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
                 placeholder="Alguma informação extra sobre essa promoção..."
-                className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
               />
             </div>
 
@@ -228,11 +230,11 @@ export function PromoDialog({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                  <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => fileInputRef.current?.click()}>
                     Anexar foto
                   </Button>
                   {previewPromoUrl && (
-                    <Button type="button" variant="outline" size="sm" onClick={removerImagem}>
+                    <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={removerImagem}>
                       Remover
                     </Button>
                   )}
@@ -251,8 +253,8 @@ export function PromoDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando} className={cn(salvando && "opacity-70")}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button onClick={salvar} disabled={salvando} className={cn("rounded-full", salvando && "opacity-70")}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

@@ -95,7 +95,7 @@ export function PromotionManager({
             {ativasCount}/{limiteAtivas} ativos)
           </p>
         </div>
-        <Button size="sm" onClick={() => setFlyersOpen(true)}>
+        <Button size="sm" className="rounded-full" onClick={() => setFlyersOpen(true)}>
           <Images size={14} /> Gerenciar slides de loja
         </Button>
       </div>
