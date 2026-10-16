@@ -796,7 +796,7 @@ export function ProdutoFormDialog({
                   {estoqueAtual > 0 ? "✓" : "✕"} {estoqueAtual} em estoque
                 </div>
                 <div className="mt-3 flex justify-end">
-                  <Button size="sm" onClick={() => setEstoqueDialogOpen(true)}>
+                  <Button size="sm" className="rounded-full" onClick={() => setEstoqueDialogOpen(true)}>
                     Editar estoque
                   </Button>
                 </div>
