@@ -228,7 +228,7 @@ export function QuoteFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[85vh] w-[960px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[960px]">
+      <DialogContent className="flex h-[85vh] w-[960px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[960px]">
         <DialogHeader>
           <DialogTitle>{orcamentoId ? "Editar orçamento" : "Novo orçamento"}</DialogTitle>
         </DialogHeader>
@@ -238,32 +238,47 @@ export function QuoteFormDialog({
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto" className="pl-9" />
+                <Input
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar produto"
+                  className="h-10 w-full rounded-full border-0 bg-muted/60 pl-9 text-sm"
+                />
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => setAvulsoAberto(true)}>
+              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => setAvulsoAberto(true)}>
                 <Plus className="size-3.5" /> Item avulso
               </Button>
             </div>
 
             {avulsoAberto ? (
-              <div className="space-y-2 rounded-lg border p-3">
+              <div className="space-y-2 rounded-2xl border p-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <Input value={avulsoNome} onChange={(e) => setAvulsoNome(e.target.value)} placeholder="Nome do item" />
-                  <MoneyInput value={avulsoPreco} onChange={setAvulsoPreco} />
+                  <Input
+                    value={avulsoNome}
+                    onChange={(e) => setAvulsoNome(e.target.value)}
+                    placeholder="Nome do item"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
+                  <MoneyInput value={avulsoPreco} onChange={setAvulsoPreco} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
                 </div>
-                <Input value={avulsoObs} onChange={(e) => setAvulsoObs(e.target.value)} placeholder="Observações (opcional)" />
+                <Input
+                  value={avulsoObs}
+                  onChange={(e) => setAvulsoObs(e.target.value)}
+                  placeholder="Observações (opcional)"
+                  className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                />
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => setAvulsoAberto(false)}>
+                  <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => setAvulsoAberto(false)}>
                     Cancelar
                   </Button>
-                  <Button type="button" size="sm" onClick={adicionarAvulso}>
+                  <Button type="button" size="sm" className="rounded-full" onClick={adicionarAvulso}>
                     Adicionar
                   </Button>
                 </div>
               </div>
             ) : null}
 
-            <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
+            <div className="scrollbar-hidden grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto px-1 sm:grid-cols-3">
               {carregando ? (
                 <div className="col-span-full py-8 text-center text-sm text-muted-foreground">Carregando...</div>
               ) : produtosFiltrados.length === 0 ? (
@@ -272,15 +287,15 @@ export function QuoteFormDialog({
                 produtosFiltrados.map((p) => {
                   const qtd = qtdDoProduto(p.id);
                   return (
-                    <div key={p.id} className="space-y-1.5 rounded-lg border p-2.5">
+                    <div key={p.id} className="space-y-1.5 rounded-2xl border p-2.5">
                       <div className="line-clamp-2 text-xs font-medium">{p.nome}</div>
                       <div className="text-xs text-muted-foreground">{formatarMoeda(p.preco)}</div>
                       {qtd === 0 ? (
-                        <Button type="button" variant="outline" size="sm" className="h-7 w-full text-xs" onClick={() => alterarQtdProduto(p, 1)}>
+                        <Button type="button" variant="outline" size="sm" className="h-7 w-full rounded-full text-xs" onClick={() => alterarQtdProduto(p, 1)}>
                           Adicionar
                         </Button>
                       ) : (
-                        <div className="flex items-center justify-between rounded-md border">
+                        <div className="flex items-center justify-between rounded-full border">
                           <button type="button" className="flex h-7 w-7 items-center justify-center" onClick={() => alterarQtdProduto(p, -1)}>
                             <Minus className="size-3" />
                           </button>
@@ -297,17 +312,22 @@ export function QuoteFormDialog({
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
+          <div className="scrollbar-hidden flex min-h-0 flex-col gap-3 overflow-y-auto px-1">
             <div className="space-y-2">
               <Label className="text-xs">Nome do cliente</Label>
-              <Input value={clienteNome} onChange={(e) => setClienteNome(e.target.value)} placeholder="Nome completo" />
+              <Input
+                value={clienteNome}
+                onChange={(e) => setClienteNome(e.target.value)}
+                placeholder="Nome completo"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs">Tipo de cadastro</Label>
                 <Select value={clienteTipoDocumento} onValueChange={(v) => v && setClienteTipoDocumento(v as "fisica" | "juridica")}>
-                  <SelectTrigger className="w-full text-xs">
+                  <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-xs">
                     <SelectValue>{() => (clienteTipoDocumento === "fisica" ? "Pessoa física" : "Pessoa jurídica")}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -318,32 +338,60 @@ export function QuoteFormDialog({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">{clienteTipoDocumento === "fisica" ? "CPF" : "CNPJ"}</Label>
-                <Input value={clienteDocumento} onChange={(e) => setClienteDocumento(e.target.value)} placeholder="Opcional" />
+                <Input
+                  value={clienteDocumento}
+                  onChange={(e) => setClienteDocumento(e.target.value)}
+                  placeholder="Opcional"
+                  className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                />
               </div>
             </div>
 
             <div className="space-y-1">
               <Label className="text-xs">WhatsApp</Label>
-              <Input value={clienteWhatsapp} onChange={(e) => setClienteWhatsapp(e.target.value)} placeholder="(00) 00000-0000" />
+              <Input
+                value={clienteWhatsapp}
+                onChange={(e) => setClienteWhatsapp(e.target.value)}
+                placeholder="(00) 00000-0000"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
 
             <div className="space-y-1">
               <Label className="text-xs">Endereço</Label>
               <div className="flex gap-1.5">
-                <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="CEP" className="w-28" />
-                <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={buscarCep} disabled={buscandoCep} title="Buscar CEP">
+                <Input
+                  value={cep}
+                  onChange={(e) => setCep(e.target.value)}
+                  placeholder="CEP"
+                  className="h-10 w-28 rounded-full border-0 bg-muted/60 px-4 text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0 rounded-full"
+                  onClick={buscarCep}
+                  disabled={buscandoCep}
+                  title="Buscar CEP"
+                >
                   <MapPin className="size-3.5" />
                 </Button>
               </div>
-              <Input value={clienteEndereco} onChange={(e) => setClienteEndereco(e.target.value)} placeholder="Rua, número, bairro, cidade" />
+              <Input
+                value={clienteEndereco}
+                onChange={(e) => setClienteEndereco(e.target.value)}
+                placeholder="Rua, número, bairro, cidade"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
 
-            <div className="mt-auto space-y-2 rounded-lg border p-3">
+            <div className="mt-auto space-y-2 rounded-2xl border p-3">
               <div className="text-xs font-semibold text-muted-foreground">Itens</div>
               {itens.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Nenhum item adicionado.</p>
               ) : (
-                <div className="max-h-32 space-y-1 overflow-y-auto">
+                <div className="scrollbar-hidden max-h-32 space-y-1 overflow-y-auto">
                   {itens.map((i) => (
                     <div key={i.uid} className="flex items-center justify-between gap-2 text-xs">
                       <span className="truncate">{i.qtd}x {i.nome}</span>
@@ -360,7 +408,7 @@ export function QuoteFormDialog({
 
               <div className="flex items-center gap-2 border-t pt-2">
                 <Select value={descontoTipo} onValueChange={(v) => v && setDescontoTipo(v as OrcamentoDescontoTipo)}>
-                  <SelectTrigger className="w-28 text-xs">
+                  <SelectTrigger className="h-9 w-28 rounded-full border-0 bg-muted/60 px-3.5 text-xs">
                     <SelectValue>{() => (descontoTipo === "percent" ? "% Desc." : "R$ Desc.")}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -368,7 +416,14 @@ export function QuoteFormDialog({
                     <SelectItem value="percent">Percentual (%)</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input type="number" step="0.01" min="0" value={descontoValor} onChange={(e) => setDescontoValor(e.target.value)} className="flex-1" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={descontoValor}
+                  onChange={(e) => setDescontoValor(e.target.value)}
+                  className="h-9 flex-1 rounded-full border-0 bg-muted/60 px-3.5 text-sm"
+                />
               </div>
 
               <div className="flex items-center justify-between border-t pt-2 text-sm font-semibold">
@@ -379,11 +434,11 @@ export function QuoteFormDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button onClick={salvar} disabled={salvando || carregando}>
+          <Button className="rounded-full" onClick={salvar} disabled={salvando || carregando}>
             {salvando ? "Salvando..." : "Salvar orçamento"}
           </Button>
         </DialogFooter>

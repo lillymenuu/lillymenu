@@ -118,17 +118,17 @@ export function QuotesManager({ dadosIniciais }: { dadosIniciais: OrcamentosList
           <h1 className="text-xl font-semibold">Gerar orçamentos</h1>
           <p className="text-sm text-muted-foreground">Monte, salve e acompanhe orçamentos e recibos para seus clientes.</p>
         </div>
-        <Button className="gap-1.5" onClick={abrirNovo}>
+        <Button className="gap-1.5 rounded-full" onClick={abrirNovo}>
           <Plus className="size-4" /> Novo orçamento
         </Button>
       </div>
 
       <div className={`grid grid-cols-1 gap-3 transition-opacity duration-200 sm:grid-cols-2 lg:grid-cols-3 ${carregando ? "opacity-60" : ""}`}>
         {dados.orcamentos.length === 0 ? (
-          <Card className="col-span-full p-8 text-center text-sm text-muted-foreground">Nenhum orçamento salvo ainda.</Card>
+          <Card className="col-span-full rounded-2xl p-8 text-center text-sm text-muted-foreground">Nenhum orçamento salvo ainda.</Card>
         ) : (
           dados.orcamentos.map((o) => (
-            <Card key={o.id} className="space-y-3 p-4">
+            <Card key={o.id} className="space-y-3 rounded-2xl p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
@@ -149,9 +149,9 @@ export function QuotesManager({ dadosIniciais }: { dadosIniciais: OrcamentosList
                 <span className="font-semibold">{formatarMoeda(o.total)}</span>
               </div>
 
-              <div className="space-y-2 border-t pt-3">
+              <div className="space-y-2 pt-1">
                 <Select value={o.status} onValueChange={(v) => v && trocarStatus(o, v as OrcamentoStatus)} disabled={alternando === o.id}>
-                  <SelectTrigger className="w-full text-xs">
+                  <SelectTrigger className="h-9 w-full rounded-full border-0 bg-muted/60 px-3.5 text-xs">
                     <SelectValue>{() => ORCAMENTO_STATUS_LABEL[o.status]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -162,7 +162,7 @@ export function QuotesManager({ dadosIniciais }: { dadosIniciais: OrcamentosList
                 </Select>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => abrirEdicao(o)}>
+                  <Button variant="outline" size="sm" className="flex-1 gap-1.5 rounded-full text-xs" onClick={() => abrirEdicao(o)}>
                     Editar
                   </Button>
                   <a
@@ -170,7 +170,7 @@ export function QuotesManager({ dadosIniciais }: { dadosIniciais: OrcamentosList
                     target="_blank"
                     rel="noreferrer"
                     title="Gerar PDF"
-                    className={cn(buttonVariants({ variant: "outline", size: "icon" }), "size-8")}
+                    className={cn(buttonVariants({ variant: "outline", size: "icon" }), "size-8 rounded-full")}
                   >
                     <Download className="size-3.5" />
                   </a>
@@ -179,12 +179,12 @@ export function QuotesManager({ dadosIniciais }: { dadosIniciais: OrcamentosList
                     target="_blank"
                     rel="noreferrer"
                     title="Gerar recibo"
-                    className={cn(buttonVariants({ variant: "outline", size: "icon" }), "size-8")}
+                    className={cn(buttonVariants({ variant: "outline", size: "icon" }), "size-8 rounded-full")}
                   >
                     <Receipt className="size-3.5" />
                   </a>
                 </div>
-                <Button variant="ghost" size="sm" className="w-full text-xs text-destructive hover:text-destructive" onClick={() => setExcluir(o)}>
+                <Button variant="ghost" size="sm" className="w-full rounded-full text-xs text-destructive hover:text-destructive" onClick={() => setExcluir(o)}>
                   Apagar
                 </Button>
               </div>
