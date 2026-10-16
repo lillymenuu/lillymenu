@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MoneyInput } from "@/components/produtos/money-input";
 import { formatarTelefone } from "@/lib/store/format";
+import { formatarCpfCnpj } from "@/lib/cpfCnpj";
 import type { OrcamentoDescontoTipo, OrcamentoDetalheResposta, OrcamentoProduto, OrcamentoProdutosResposta } from "@/lib/orcamentos";
 import type { PosCepLookupResposta } from "@/lib/pos";
 
@@ -389,7 +390,7 @@ export function QuoteFormDialog({
                 <Label className="text-xs">{clienteTipoDocumento === "fisica" ? "CPF" : "CNPJ"}</Label>
                 <Input
                   value={clienteDocumento}
-                  onChange={(e) => setClienteDocumento(e.target.value)}
+                  onChange={(e) => setClienteDocumento(formatarCpfCnpj(e.target.value))}
                   placeholder="Opcional"
                   className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                 />
