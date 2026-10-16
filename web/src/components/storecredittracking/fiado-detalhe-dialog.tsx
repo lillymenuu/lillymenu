@@ -80,7 +80,7 @@ export function FiadoDetalheDialog({
   return (
     <>
       <Dialog open={clienteId !== null} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto sm:max-w-xl">
+        <DialogContent className="scrollbar-hidden max-h-[85vh] max-w-xl overflow-y-auto rounded-3xl sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{dados ? `Dívidas - ${dados.cliente.nome}` : "Dívidas"}</DialogTitle>
           </DialogHeader>
@@ -106,7 +106,7 @@ export function FiadoDetalheDialog({
                         key={l.id}
                         type="button"
                         onClick={() => handleLancamentoClick(l)}
-                        className="flex items-center justify-between rounded-lg border px-3 py-2 text-left text-sm hover:bg-muted/40"
+                        className="flex items-center justify-between rounded-2xl border px-3 py-2 text-left text-sm hover:bg-muted/40"
                       >
                         <div className="flex items-center gap-2">
                           {ehPago ? (
@@ -151,11 +151,11 @@ export function FiadoDetalheDialog({
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" className="rounded-lg font-normal" onClick={() => setRegistrarPagamentoOpen(true)}>
+          <DialogFooter className="border-t-0 bg-transparent">
+            <Button variant="outline" className="rounded-full font-normal" onClick={() => setRegistrarPagamentoOpen(true)}>
               Registrar pagamento
             </Button>
-            <Button className="rounded-lg font-normal" onClick={() => setRegistrarFiadoOpen(true)}>
+            <Button className="rounded-full font-normal" onClick={() => setRegistrarFiadoOpen(true)}>
               Registrar fiado
             </Button>
           </DialogFooter>

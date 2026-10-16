@@ -73,7 +73,7 @@ export function RegistrarPagamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Registrar pagamento</DialogTitle>
         </DialogHeader>
@@ -86,6 +86,7 @@ export function RegistrarPagamentoDialog({
               placeholder="0,00"
               value={valor}
               onChange={(e) => setValor(e.target.value)}
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
             />
           </div>
           <div>
@@ -99,7 +100,7 @@ export function RegistrarPagamentoDialog({
                     type="button"
                     onClick={() => setForma(f.forma)}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-1.5 rounded-lg border p-3 text-xs transition-colors",
+                      "flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-xs transition-colors",
                       forma === f.forma ? "border-primary bg-primary/5 text-primary" : "hover:border-foreground/30"
                     )}
                   >
@@ -111,11 +112,11 @@ export function RegistrarPagamentoDialog({
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full font-normal" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
