@@ -220,20 +220,16 @@ export function ProdutosManager({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-muted/50 p-4">
-        <div className="flex min-w-56 flex-1 flex-col gap-1.5">
-          <label htmlFor="busca-produto" className="text-sm font-medium">
-            Buscar produto
-          </label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
-            <Input
-              id="busca-produto"
-              className="rounded-full bg-background pl-8"
-              placeholder="Buscar por nome ou código do produto"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-            />
-          </div>
+        <div className="relative min-w-56 flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+          <Input
+            id="busca-produto"
+            aria-label="Buscar produto"
+            className="rounded-full bg-background pl-8"
+            placeholder="Buscar por nome ou código do produto"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+          />
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-1 rounded-full bg-muted p-1 text-sm">
