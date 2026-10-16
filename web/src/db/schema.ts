@@ -1004,7 +1004,7 @@ export const pedidos = pgTable(
     taxa_servico: numeric("taxa_servico", { precision: 10, scale: 2, mode: "number" }),
     total: numeric("total", { precision: 10, scale: 2, mode: "number" }),
     criado_em: timestamp("criado_em", { mode: "string" }).defaultNow(),
-    tipo: text("tipo").$type<"retirada" | "entrega" | "mesa">().notNull().default("retirada"),
+    tipo: text("tipo").$type<"retirada" | "entrega" | "mesa" | "venda_rapida">().notNull().default("retirada"),
     endereco_entrega: text("endereco_entrega"),
     subtotal: numeric("subtotal", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
     desconto: numeric("desconto", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),

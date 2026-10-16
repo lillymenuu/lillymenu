@@ -87,7 +87,7 @@ export type SalvarPedidoPdvInput = {
   adminId: number;
   perfil: string;
   clienteId: number;
-  tipo: "retirada" | "entrega";
+  tipo: "retirada" | "entrega" | "venda_rapida" | "mesa";
   endereco?: string;
   distanciaKm?: number;
   agendamento?: string;

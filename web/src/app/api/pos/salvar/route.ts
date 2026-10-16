@@ -62,7 +62,10 @@ export async function POST(request: Request) {
     adminId: sessao.id,
     perfil: sessao.perfil,
     clienteId: toNum(body.cliente_id),
-    tipo: body.tipo === "entrega" ? "entrega" : "retirada",
+    tipo:
+      body.tipo === "entrega" || body.tipo === "venda_rapida" || body.tipo === "mesa"
+        ? body.tipo
+        : "retirada",
     endereco: body.endereco ? String(body.endereco) : undefined,
     distanciaKm: toNum(body.distancia_km),
     agendamento: body.agendamento ? String(body.agendamento) : undefined,
