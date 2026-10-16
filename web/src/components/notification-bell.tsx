@@ -264,38 +264,40 @@ export function NotificationBell({
   const panel = open && mounted && (
     <div
       ref={panelRef}
-      className="fixed z-50 w-80 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
+      className="fixed z-50 w-80 overflow-hidden rounded-3xl border bg-popover text-popover-foreground shadow-2xl"
       style={{ top: pos.top, left: pos.left }}
     >
-          <div className="flex items-center justify-between border-b px-3 py-2">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
             <span className="text-sm font-semibold">Notificações</span>
-            <button onClick={() => setOpen(false)} className="rounded p-1 hover:bg-muted" aria-label="Fechar">
+            <button onClick={() => setOpen(false)} className="rounded-full p-1 text-muted-foreground hover:bg-muted" aria-label="Fechar">
               <X size={14} />
             </button>
           </div>
-          <div className="flex gap-1 border-b p-1.5">
-            <button
-              onClick={() => setTab("all")}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-xs",
-                tab === "all" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-              )}
-            >
-              Todas
-            </button>
-            <button
-              onClick={() => setTab("unread")}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-xs",
-                tab === "unread" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-              )}
-            >
-              Não lidas
-            </button>
+          <div className="flex gap-1 px-4 pb-3">
+            <div className="flex gap-1 rounded-full bg-muted p-1">
+              <button
+                onClick={() => setTab("all")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  tab === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Todas
+              </button>
+              <button
+                onClick={() => setTab("unread")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                  tab === "unread" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Não lidas
+              </button>
+            </div>
           </div>
-          <div className="max-h-80 overflow-y-auto">
+          <div className="scrollbar-hidden max-h-80 space-y-1 overflow-y-auto px-2 pb-2">
             {visiveis.length === 0 && (
-              <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
+              <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
                 <Bell size={22} />
                 <span className="text-xs">
                   {tab === "unread" ? "Nenhuma notificação no momento." : "Nenhuma notificação."}
@@ -311,15 +313,18 @@ export function NotificationBell({
                 <button
                   key={item.chave}
                   onClick={() => abrirItem(item)}
-                  className="flex w-full items-start gap-2.5 border-b px-3 py-2.5 text-left last:border-b-0 hover:bg-muted"
+                  className={cn(
+                    "flex w-full items-start gap-2.5 rounded-2xl px-2.5 py-2.5 text-left transition-colors hover:bg-muted/70",
+                    isNaoLida && "bg-primary/5"
+                  )}
                 >
                   <div
                     className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-full",
+                      "flex size-9 shrink-0 items-center justify-center rounded-full",
                       isAvaliacao ? "bg-amber-500/15 text-amber-500" : "bg-primary/15 text-primary"
                     )}
                   >
-                    {isAvaliacao ? <Star size={14} /> : <Receipt size={14} />}
+                    {isAvaliacao ? <Star size={15} /> : <Receipt size={15} />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium">
