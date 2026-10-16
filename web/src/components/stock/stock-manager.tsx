@@ -89,7 +89,7 @@ export function StockManager({
             decrementada a cada pedido feito se o produto(s) do pedido estiver no estoque.
           </p>
         </div>
-        <Button size="sm" onClick={() => setAdicionarOpen(true)}>
+        <Button size="sm" className="rounded-full" onClick={() => setAdicionarOpen(true)}>
           <Plus size={14} /> Adicionar
         </Button>
       </div>
@@ -100,9 +100,9 @@ export function StockManager({
             Buscar item de estoque
           </span>
           <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" size={14} />
+            <Search className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground" size={14} />
             <Input
-              className="pl-8"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 pl-9 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
               placeholder="Pesquise pelo nome do item"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
