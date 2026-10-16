@@ -115,7 +115,7 @@ export function PausaDialog({ open, onOpenChange }: { open: boolean; onOpenChang
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] max-w-md sm:max-w-md">
+        <DialogContent className="max-h-[90vh] max-w-md rounded-3xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Pausa programada</DialogTitle>
           </DialogHeader>
@@ -124,31 +124,57 @@ export function PausaDialog({ open, onOpenChange }: { open: boolean; onOpenChang
             <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-xs">Título</Label>
-                <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={100} placeholder="Ex.: Manutenção" />
+                <Input
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  maxLength={100}
+                  placeholder="Ex.: Manutenção"
+                  className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Data início</Label>
-                  <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+                  <Input
+                    type="date"
+                    value={dataInicio}
+                    onChange={(e) => setDataInicio(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Hora início</Label>
-                  <Input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
+                  <Input
+                    type="time"
+                    value={horaInicio}
+                    onChange={(e) => setHoraInicio(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Data fim</Label>
-                  <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
+                  <Input
+                    type="date"
+                    value={dataFim}
+                    onChange={(e) => setDataFim(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Hora fim</Label>
-                  <Input type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
+                  <Input
+                    type="time"
+                    value={horaFim}
+                    onChange={(e) => setHoraFim(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+                  />
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setMostrarForm(false)} disabled={salvando}>
+              <DialogFooter className="border-t-0 bg-transparent">
+                <Button variant="outline" className="rounded-full" onClick={() => setMostrarForm(false)} disabled={salvando}>
                   Cancelar
                 </Button>
-                <Button onClick={salvar} disabled={salvando}>
+                <Button className="rounded-full" onClick={salvar} disabled={salvando}>
                   {salvando ? "Salvando..." : "Salvar pausa"}
                 </Button>
               </DialogFooter>
@@ -156,14 +182,14 @@ export function PausaDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">Agende pausas automáticas — a loja fica fechada nesses períodos.</p>
-              <div className="max-h-[45vh] space-y-2 overflow-y-auto">
+              <div className="scrollbar-hidden max-h-[45vh] space-y-2 overflow-y-auto">
                 {carregando ? (
                   <div className="py-6 text-center text-sm text-muted-foreground">Carregando...</div>
                 ) : pausas.length === 0 ? (
                   <div className="py-6 text-center text-sm text-muted-foreground">Nenhuma pausa programada.</div>
                 ) : (
                   pausas.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between rounded-lg border p-2.5">
+                    <div key={p.id} className="flex items-center justify-between rounded-xl border p-2.5">
                       <div>
                         <div className="text-sm font-medium">{p.titulo}</div>
                         <div className="text-xs text-muted-foreground">
@@ -178,11 +204,11 @@ export function PausaDialog({ open, onOpenChange }: { open: boolean; onOpenChang
                   ))
                 )}
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <DialogFooter className="border-t-0 bg-transparent">
+                <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
                   Fechar
                 </Button>
-                <Button className="gap-1.5" onClick={abrirNovaForm}>
+                <Button className="gap-1.5 rounded-full" onClick={abrirNovaForm}>
                   <Plus className="size-4" /> Nova pausa
                 </Button>
               </DialogFooter>

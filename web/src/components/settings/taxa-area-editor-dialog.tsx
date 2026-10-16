@@ -71,7 +71,7 @@ export function TaxaAreaEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="flex h-[94vh] max-h-[94vh] w-[96vw] max-w-[1440px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[1440px]">
+      <DialogContent showCloseButton={false} className="flex h-[94vh] max-h-[94vh] w-[96vw] max-w-[1440px] flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-[1440px]">
         <div className="flex items-center justify-between border-b px-5 py-3.5">
           <div>
             <div className="text-sm font-semibold">{form.id ? "Editar área de entrega" : "Nova área de entrega"}</div>
@@ -98,8 +98,9 @@ export function TaxaAreaEditorDialog({
                     onChange={(e) => setBuscaTermo(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && buscarContorno()}
                     placeholder="Ex.: Bonsucesso"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                   />
-                  <Button type="button" size="icon" variant="outline" className="shrink-0" onClick={buscarContorno} disabled={buscando || buscaTermo.trim().length < 2}>
+                  <Button type="button" size="icon" variant="outline" className="shrink-0 rounded-full" onClick={buscarContorno} disabled={buscando || buscaTermo.trim().length < 2}>
                     {buscando ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
                   </Button>
                 </div>
@@ -137,28 +138,52 @@ export function TaxaAreaEditorDialog({
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="col-span-2 space-y-1">
                   <Label className="text-xs">Nome da área</Label>
-                  <Input value={form.nome} onChange={(e) => onFormChange({ ...form, nome: e.target.value })} placeholder="Ex.: Zona Centro" />
+                  <Input
+                    value={form.nome}
+                    onChange={(e) => onFormChange({ ...form, nome: e.target.value })}
+                    placeholder="Ex.: Zona Centro"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <div className="col-span-2 space-y-1">
                   <Label className="text-xs">Valor da taxa</Label>
-                  <Input type="number" step="0.01" value={form.taxa} onChange={(e) => onFormChange({ ...form, taxa: e.target.value })} placeholder="0,00" />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={form.taxa}
+                    onChange={(e) => onFormChange({ ...form, taxa: e.target.value })}
+                    placeholder="0,00"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Tempo mín.</Label>
-                  <Input type="number" value={form.min} onChange={(e) => onFormChange({ ...form, min: e.target.value })} placeholder="40" />
+                  <Input
+                    type="number"
+                    value={form.min}
+                    onChange={(e) => onFormChange({ ...form, min: e.target.value })}
+                    placeholder="40"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Tempo máx.</Label>
-                  <Input type="number" value={form.max} onChange={(e) => onFormChange({ ...form, max: e.target.value })} placeholder="60" />
+                  <Input
+                    type="number"
+                    value={form.max}
+                    onChange={(e) => onFormChange({ ...form, max: e.target.value })}
+                    placeholder="60"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 border-t bg-muted/30 p-4">
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+              <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={salvando}>
                 Cancelar
               </Button>
-              <Button onClick={onSalvar} disabled={salvando}>
+              <Button className="rounded-full" onClick={onSalvar} disabled={salvando}>
                 {salvando ? "Salvando..." : "Salvar área"}
               </Button>
             </div>

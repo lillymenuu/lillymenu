@@ -66,7 +66,7 @@ export function ValorMinimoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Valor mínimo do pedido</DialogTitle>
         </DialogHeader>
@@ -74,7 +74,7 @@ export function ValorMinimoDialog({
           Para finalizar o pedido, o valor precisará ser igual ou superior ao valor que você definir.
         </p>
         <div className="space-y-3">
-          <div className="rounded-lg border p-3">
+          <div className="rounded-xl border p-3">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-sm font-medium">Valor mínimo para entrega</div>
               <Switch checked={entregaAtiva} onCheckedChange={setEntregaAtiva} />
@@ -82,11 +82,11 @@ export function ValorMinimoDialog({
             {entregaAtiva ? (
               <div className="space-y-1">
                 <Label className="text-xs">Valor mínimo</Label>
-                <MoneyInput value={entregaValor} onChange={setEntregaValor} />
+                <MoneyInput value={entregaValor} onChange={setEntregaValor} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
               </div>
             ) : null}
           </div>
-          <div className="rounded-lg border p-3">
+          <div className="rounded-xl border p-3">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-sm font-medium">Valor mínimo para retirada</div>
               <Switch checked={retiradaAtiva} onCheckedChange={setRetiradaAtiva} />
@@ -94,13 +94,13 @@ export function ValorMinimoDialog({
             {retiradaAtiva ? (
               <div className="space-y-1">
                 <Label className="text-xs">Valor mínimo</Label>
-                <MoneyInput value={retiradaValor} onChange={setRetiradaValor} />
+                <MoneyInput value={retiradaValor} onChange={setRetiradaValor} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
               </div>
             ) : null}
           </div>
         </div>
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

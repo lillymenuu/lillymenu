@@ -108,7 +108,7 @@ export function SeloVerificacaoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BadgeCheck className="size-4.5 text-primary" /> Selo de verificação
@@ -120,11 +120,11 @@ export function SeloVerificacaoDialog({
             <p className="text-sm text-muted-foreground">
               Sua loja está verificada e exibe o selo de loja verificada no cardápio.
             </p>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <DialogFooter className="border-t-0 bg-transparent">
+              <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
                 Fechar
               </Button>
-              <Button variant="destructive" onClick={removerSelo} disabled={removendo}>
+              <Button variant="destructive" className="rounded-full" onClick={removerSelo} disabled={removendo}>
                 {removendo ? "Removendo..." : "Remover selo"}
               </Button>
             </DialogFooter>
@@ -136,13 +136,18 @@ export function SeloVerificacaoDialog({
             </p>
             <div className="space-y-1">
               <Label className="text-xs">Número de WhatsApp</Label>
-              <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="85999999999" />
+              <Input
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                placeholder="85999999999"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={enviando}>
+            <DialogFooter className="border-t-0 bg-transparent">
+              <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={enviando}>
                 Cancelar
               </Button>
-              <Button onClick={enviarCodigo} disabled={enviando || !whatsapp.trim()}>
+              <Button className="rounded-full" onClick={enviarCodigo} disabled={enviando || !whatsapp.trim()}>
                 {enviando ? "Enviando..." : "Enviar código"}
               </Button>
             </DialogFooter>
@@ -153,7 +158,7 @@ export function SeloVerificacaoDialog({
               Digite o código de 6 dígitos enviado por WhatsApp. Ele expira em 4 minutos.
             </p>
             {codigoManual ? (
-              <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
+              <div className="rounded-2xl border border-primary/40 bg-primary/5 p-3 text-sm">
                 WhatsApp desconectado — use o código: <strong className="tracking-widest">{codigoManual}</strong>
               </div>
             ) : null}
@@ -163,14 +168,14 @@ export function SeloVerificacaoDialog({
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="000000"
-                className="text-center tracking-widest"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-center text-sm tracking-widest"
               />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEtapa("inicio")} disabled={confirmando}>
+            <DialogFooter className="border-t-0 bg-transparent">
+              <Button variant="outline" className="rounded-full" onClick={() => setEtapa("inicio")} disabled={confirmando}>
                 Voltar
               </Button>
-              <Button onClick={confirmarCodigo} disabled={confirmando || codigo.length !== 6}>
+              <Button className="rounded-full" onClick={confirmarCodigo} disabled={confirmando || codigo.length !== 6}>
                 {confirmando ? "Confirmando..." : "Confirmar"}
               </Button>
             </DialogFooter>

@@ -351,12 +351,12 @@ export function TaxaEntregaDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
+      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Taxa de entrega</DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center justify-between rounded-lg border p-3">
+        <div className="flex items-center justify-between rounded-xl border p-3">
           <div>
             <div className="text-sm font-medium">Entrega grátis para pedidos com valor mínimo</div>
             <div className="text-xs text-muted-foreground">Combine com o valor mínimo configurado no card correspondente.</div>
@@ -364,35 +364,35 @@ export function TaxaEntregaDialog({
           <Switch checked={gratis} onCheckedChange={alternarGratis} disabled={salvandoBasico} />
         </div>
 
-        <div className="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
+        <div className="flex flex-wrap gap-1 rounded-full bg-muted p-1">
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => trocarTab(t.id)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}
+              className={`rounded-full px-2.5 py-1 text-xs font-medium ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}
             >
               {t.label}
             </button>
           ))}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto">
           {tab === "sem" ? (
-            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+            <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
               Defina sua loja sem taxa de entrega para pedidos de delivery.
             </div>
           ) : null}
 
           {tab === "area" ? (
             <div className="space-y-3">
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-xs">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-2.5 text-xs">
                 <strong>Como usar:</strong> desenhe a área num mapa grande, clicando ponto a ponto (mínimo 3). Arraste um ponto pra ajustar e dê duplo clique nele pra remover.
               </div>
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-1.5"
+                className="gap-1.5 rounded-full"
                 onClick={() => setFormArea({ id: 0, nome: "", taxa: "", min: "", max: "", poligono: [] })}
               >
                 <Plus className="size-3.5" /> Adicionar área
@@ -404,7 +404,7 @@ export function TaxaEntregaDialog({
                   <div className="py-4 text-center text-sm text-muted-foreground">Nenhuma área cadastrada.</div>
                 ) : (
                   areas.map((a) => (
-                    <div key={a.id} className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
+                    <div key={a.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
                       <div>
                         <div className="font-medium">{a.nome}</div>
                         <div className="text-xs text-muted-foreground">
@@ -444,18 +444,37 @@ export function TaxaEntregaDialog({
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Valor</Label>
-                  <Input type="number" step="0.01" value={fixaValor} onChange={(e) => setFixaValor(e.target.value)} placeholder="0,00" />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={fixaValor}
+                    onChange={(e) => setFixaValor(e.target.value)}
+                    placeholder="0,00"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Tempo mín.</Label>
-                  <Input type="number" value={fixaMin} onChange={(e) => setFixaMin(e.target.value)} placeholder="40" />
+                  <Input
+                    type="number"
+                    value={fixaMin}
+                    onChange={(e) => setFixaMin(e.target.value)}
+                    placeholder="40"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Tempo máx.</Label>
-                  <Input type="number" value={fixaMax} onChange={(e) => setFixaMax(e.target.value)} placeholder="60" />
+                  <Input
+                    type="number"
+                    value={fixaMax}
+                    onChange={(e) => setFixaMax(e.target.value)}
+                    placeholder="60"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
               </div>
-              <Button size="sm" onClick={salvarFixa} disabled={salvandoBasico}>
+              <Button size="sm" className="rounded-full" onClick={salvarFixa} disabled={salvandoBasico}>
                 Salvar taxa fixa
               </Button>
             </div>
@@ -464,30 +483,50 @@ export function TaxaEntregaDialog({
           {tab === "bairro" ? (
             <div className="space-y-3">
               {formBairro ? (
-                <div className="space-y-2 rounded-lg border p-3">
+                <div className="space-y-2 rounded-xl border p-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Bairro</Label>
-                      <Input value={formBairro.bairro} onChange={(e) => setFormBairro({ ...formBairro, bairro: e.target.value })} />
+                      <Input
+                        value={formBairro.bairro}
+                        onChange={(e) => setFormBairro({ ...formBairro, bairro: e.target.value })}
+                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Valor da taxa</Label>
-                      <Input type="number" step="0.01" value={formBairro.taxa} onChange={(e) => setFormBairro({ ...formBairro, taxa: e.target.value })} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formBairro.taxa}
+                        onChange={(e) => setFormBairro({ ...formBairro, taxa: e.target.value })}
+                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Tempo mín.</Label>
-                      <Input type="number" value={formBairro.min} onChange={(e) => setFormBairro({ ...formBairro, min: e.target.value })} />
+                      <Input
+                        type="number"
+                        value={formBairro.min}
+                        onChange={(e) => setFormBairro({ ...formBairro, min: e.target.value })}
+                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Tempo máx.</Label>
-                      <Input type="number" value={formBairro.max} onChange={(e) => setFormBairro({ ...formBairro, max: e.target.value })} />
+                      <Input
+                        type="number"
+                        value={formBairro.max}
+                        onChange={(e) => setFormBairro({ ...formBairro, max: e.target.value })}
+                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                      />
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setFormBairro(null)}>
+                    <Button variant="outline" size="sm" className="rounded-full" onClick={() => setFormBairro(null)}>
                       Cancelar
                     </Button>
-                    <Button size="sm" onClick={salvarBairro}>
+                    <Button size="sm" className="rounded-full" onClick={salvarBairro}>
                       Salvar taxa por bairro
                     </Button>
                   </div>
@@ -496,7 +535,7 @@ export function TaxaEntregaDialog({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1.5"
+                  className="gap-1.5 rounded-full"
                   onClick={() => setFormBairro({ id: 0, bairro: "", taxa: "", min: "", max: "" })}
                 >
                   <Plus className="size-3.5" /> Adicionar taxa por bairro
@@ -509,7 +548,7 @@ export function TaxaEntregaDialog({
                   <div className="py-4 text-center text-sm text-muted-foreground">Nenhuma taxa por bairro cadastrada.</div>
                 ) : (
                   bairros.map((b) => (
-                    <div key={b.id} className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
+                    <div key={b.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
                       <div>
                         <div className="font-medium">{b.bairro}</div>
                         <div className="text-xs text-muted-foreground">
@@ -539,24 +578,36 @@ export function TaxaEntregaDialog({
 
           {tab === "dinamica" ? (
             <div className="space-y-3">
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 text-xs">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-2.5 text-xs">
                 <strong>Atenção!</strong> Com a taxa dinâmica habilitada, você cobra de acordo com a distância. Ex.: até 2km, R$ 4,00.
               </div>
               {formDinamica ? (
-                <div className="space-y-2 rounded-lg border p-3">
+                <div className="space-y-2 rounded-xl border p-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Distância (km)</Label>
-                      <Input type="number" step="0.1" value={formDinamica.distancia} onChange={(e) => setFormDinamica({ ...formDinamica, distancia: e.target.value })} />
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={formDinamica.distancia}
+                        onChange={(e) => setFormDinamica({ ...formDinamica, distancia: e.target.value })}
+                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Valor da taxa</Label>
-                      <Input type="number" step="0.01" value={formDinamica.valor} onChange={(e) => setFormDinamica({ ...formDinamica, valor: e.target.value })} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formDinamica.valor}
+                        onChange={(e) => setFormDinamica({ ...formDinamica, valor: e.target.value })}
+                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Tipo</Label>
                       <Select value={formDinamica.tipo} onValueChange={(v) => v && setFormDinamica({ ...formDinamica, tipo: v as string })}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -568,16 +619,28 @@ export function TaxaEntregaDialog({
                     <div className="space-y-1">
                       <Label className="text-xs">Tempo mín./máx.</Label>
                       <div className="flex gap-1">
-                        <Input type="number" value={formDinamica.min} onChange={(e) => setFormDinamica({ ...formDinamica, min: e.target.value })} placeholder="40" />
-                        <Input type="number" value={formDinamica.max} onChange={(e) => setFormDinamica({ ...formDinamica, max: e.target.value })} placeholder="60" />
+                        <Input
+                          type="number"
+                          value={formDinamica.min}
+                          onChange={(e) => setFormDinamica({ ...formDinamica, min: e.target.value })}
+                          placeholder="40"
+                          className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                        />
+                        <Input
+                          type="number"
+                          value={formDinamica.max}
+                          onChange={(e) => setFormDinamica({ ...formDinamica, max: e.target.value })}
+                          placeholder="60"
+                          className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                        />
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setFormDinamica(null)}>
+                    <Button variant="outline" size="sm" className="rounded-full" onClick={() => setFormDinamica(null)}>
                       Cancelar
                     </Button>
-                    <Button size="sm" onClick={salvarDinamica}>
+                    <Button size="sm" className="rounded-full" onClick={salvarDinamica}>
                       Salvar taxa dinâmica
                     </Button>
                   </div>
@@ -586,7 +649,7 @@ export function TaxaEntregaDialog({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1.5"
+                  className="gap-1.5 rounded-full"
                   onClick={() => setFormDinamica({ id: 0, distancia: "", valor: "", tipo: "fixa", min: "", max: "" })}
                 >
                   <Plus className="size-3.5" /> Adicionar taxa dinâmica
@@ -599,7 +662,7 @@ export function TaxaEntregaDialog({
                   <div className="py-4 text-center text-sm text-muted-foreground">Nenhuma regra de taxa dinâmica cadastrada.</div>
                 ) : (
                   dinamicas.map((d) => (
-                    <div key={d.id} className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
+                    <div key={d.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
                       <div>
                         <div className="font-medium">{d.distancia_km}km · {d.tipo === "por_km" ? "Por km" : "Taxa fixa"}</div>
                         <div className="text-xs text-muted-foreground">
@@ -635,8 +698,8 @@ export function TaxaEntregaDialog({
           ) : null}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
         </DialogFooter>

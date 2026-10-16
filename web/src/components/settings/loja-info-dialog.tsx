@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "cn";
 import type { ConfiguracoesDetalhe } from "@/lib/settings";
 
 type Loja = ConfiguracoesDetalhe["loja"];
@@ -45,6 +46,8 @@ function redimensionarImagem(file: File, maxLado: number): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+const campoClasse = "h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm";
 
 function imagemUrl(rel: string, phpAdminUrl: string): string {
   if (!rel) return "";
@@ -275,7 +278,7 @@ export function LojaInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[88vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
+      <DialogContent className="flex max-h-[88vh] w-[776px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Informações da loja</DialogTitle>
         </DialogHeader>
@@ -344,27 +347,27 @@ export function LojaInfoDialog({
           <div className="col-span-full text-xs font-semibold tracking-wide text-primary uppercase">Informações principais</div>
           <div className="space-y-1">
             <Label className="text-xs">Nome da loja</Label>
-            <Input value={nome} onChange={(e) => setNome(e.target.value)} />
+            <Input value={nome} onChange={(e) => setNome(e.target.value)} className={campoClasse} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Número de contato</Label>
-            <Input value={contato} onChange={(e) => setContato(e.target.value)} placeholder="(00) 00000-0000" />
+            <Input value={contato} onChange={(e) => setContato(e.target.value)} placeholder="(00) 00000-0000" className={campoClasse} />
           </div>
 
           <div className="col-span-full mt-2 text-xs font-semibold tracking-wide text-primary uppercase">Documentos e link</div>
           <div className="space-y-1">
             <Label className="text-xs">CPF</Label>
-            <Input value={cpf} onChange={(e) => setCpf(maskCpf(e.target.value))} placeholder="000.000.000-00" />
+            <Input value={cpf} onChange={(e) => setCpf(maskCpf(e.target.value))} placeholder="000.000.000-00" className={campoClasse} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">CNPJ</Label>
-            <Input value={cnpj} onChange={(e) => setCnpj(maskCnpj(e.target.value))} placeholder="00.000.000/0000-00" />
+            <Input value={cnpj} onChange={(e) => setCnpj(maskCnpj(e.target.value))} placeholder="00.000.000/0000-00" className={campoClasse} />
           </div>
           <div className="col-span-full space-y-1">
             <Label className="text-xs">Link customizado</Label>
             <div className="flex items-center gap-2">
-              <Input value={linkSlug} onChange={(e) => alterarLinkSlug(e.target.value)} placeholder="ex: minhaloja" className="flex-1" />
-              <div className="flex flex-1 items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1">
+              <Input value={linkSlug} onChange={(e) => alterarLinkSlug(e.target.value)} placeholder="ex: minhaloja" className={cn(campoClasse, "flex-1")} />
+              <div className="flex flex-1 items-center gap-1.5 rounded-full border-0 bg-muted/60 px-4 py-2.5">
                 <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{linkCompleto}</span>
                 <button type="button" onClick={copiarLink} className="shrink-0 text-muted-foreground hover:text-foreground">
                   <Copy className="size-3.5" />
@@ -376,57 +379,57 @@ export function LojaInfoDialog({
           <div className="col-span-full mt-2 text-xs font-semibold tracking-wide text-primary uppercase">Redes sociais</div>
           <div className="space-y-1">
             <Label className="text-xs">Instagram</Label>
-            <Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="Ex.: minhaloja" />
+            <Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="Ex.: minhaloja" className={campoClasse} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">TikTok</Label>
-            <Input value={tiktok} onChange={(e) => setTiktok(e.target.value)} placeholder="Ex.: minhaloja" />
+            <Input value={tiktok} onChange={(e) => setTiktok(e.target.value)} placeholder="Ex.: minhaloja" className={campoClasse} />
           </div>
 
           <div className="col-span-full mt-2 text-xs font-semibold tracking-wide text-primary uppercase">Endereço</div>
           <div className="space-y-1">
             <Label className="text-xs">CEP</Label>
             <div className="flex gap-2">
-              <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" />
-              <Button type="button" variant="outline" size="sm" onClick={buscarCep} disabled={buscandoCep}>
+              <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" className={campoClasse} />
+              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={buscarCep} disabled={buscandoCep}>
                 {buscandoCep ? "Buscando…" : "Buscar"}
               </Button>
             </div>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Número</Label>
-            <Input value={numero} onChange={(e) => setNumero(e.target.value)} />
+            <Input value={numero} onChange={(e) => setNumero(e.target.value)} className={campoClasse} />
           </div>
           <div className="col-span-full space-y-1">
             <Label className="text-xs">Rua</Label>
-            <Input value={rua} onChange={(e) => setRua(e.target.value)} />
+            <Input value={rua} onChange={(e) => setRua(e.target.value)} className={campoClasse} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Bairro</Label>
-            <Input value={bairro} onChange={(e) => setBairro(e.target.value)} />
+            <Input value={bairro} onChange={(e) => setBairro(e.target.value)} className={campoClasse} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Cidade</Label>
-            <Input value={cidade} onChange={(e) => setCidade(e.target.value)} />
+            <Input value={cidade} onChange={(e) => setCidade(e.target.value)} className={campoClasse} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Estado</Label>
-            <Input value={estado} onChange={(e) => setEstado(e.target.value)} />
+            <Input value={estado} onChange={(e) => setEstado(e.target.value)} className={campoClasse} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Complemento</Label>
-            <Input value={complemento} onChange={(e) => setComplemento(e.target.value)} />
+            <Input value={complemento} onChange={(e) => setComplemento(e.target.value)} className={campoClasse} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Código IBGE do município</Label>
-            <Input value={codigoIbge} onChange={(e) => setCodigoIbge(e.target.value.replace(/\D/g, ""))} placeholder="Preenchido pelo Buscar CEP" />
+            <Input value={codigoIbge} onChange={(e) => setCodigoIbge(e.target.value.replace(/\D/g, ""))} placeholder="Preenchido pelo Buscar CEP" className={campoClasse} />
             <p className="text-[11px] text-muted-foreground">Usado só pelo módulo de NFCe (cadastro fiscal).</p>
           </div>
         </div>
         </div>
 
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

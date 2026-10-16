@@ -50,12 +50,12 @@ export function MenuCustomDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md sm:max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Customize o menu</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">Escolha a cor principal do seu cardápio online.</p>
-        <div className="grid max-h-[50vh] grid-cols-1 gap-2 overflow-y-auto">
+        <div className="scrollbar-hidden grid max-h-[50vh] grid-cols-1 gap-2 overflow-y-auto">
           {CORES_MENU_OPCOES.map((cor) => (
             <button
               key={cor.valor}
@@ -75,8 +75,8 @@ export function MenuCustomDialog({
             </button>
           ))}
         </div>
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

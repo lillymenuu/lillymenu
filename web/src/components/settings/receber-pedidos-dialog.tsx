@@ -83,7 +83,7 @@ export function ReceberPedidosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Receber pedidos</DialogTitle>
         </DialogHeader>
@@ -92,13 +92,18 @@ export function ReceberPedidosDialog({
           <Linha titulo="Gestor de pedidos" desc="Ativa a tela de gestão de pedidos em tempo real." checked={gestor} onCheckedChange={setGestor} />
           <Linha titulo="Notificar por WhatsApp" desc="Envia um aviso por WhatsApp a cada novo pedido." checked={notificar} onCheckedChange={setNotificar} />
           <Linha titulo="Aceite automático" desc="Aceita pedidos automaticamente sem confirmação manual." checked={aceiteAutomatico} onCheckedChange={setAceiteAutomatico} />
-          <div className="space-y-1 rounded-lg border p-3">
+          <div className="space-y-1 rounded-xl border p-3">
             <Label className="text-xs">Número do WhatsApp para receber pedidos</Label>
-            <Input value={whatsappNumero} onChange={(e) => setWhatsappNumero(maskTelefone(e.target.value))} placeholder="(11) 99999-9999" />
+            <Input
+              value={whatsappNumero}
+              onChange={(e) => setWhatsappNumero(maskTelefone(e.target.value))}
+              placeholder="(11) 99999-9999"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
           </div>
         </div>
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

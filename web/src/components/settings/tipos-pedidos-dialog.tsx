@@ -81,12 +81,12 @@ export function TiposPedidosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
+      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Tipos de pedidos</DialogTitle>
         </DialogHeader>
-        <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pr-1">
-          <div className="rounded-lg border p-3">
+        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pr-1">
+          <div className="rounded-xl border p-3">
             <div className="mb-2 flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium">Receber pedidos de entrega</div>
@@ -99,19 +99,41 @@ export function TiposPedidosDialog({
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Tempo mín. estimado (min)</Label>
-                    <Input type="number" min="0" value={entregaMin} onChange={(e) => setEntregaMin(e.target.value)} />
+                    <Input
+                      type="number"
+                      min="0"
+                      value={entregaMin}
+                      onChange={(e) => setEntregaMin(e.target.value)}
+                      className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                    />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Tempo máx. estimado (min)</Label>
-                    <Input type="number" min="0" value={entregaMax} onChange={(e) => setEntregaMax(e.target.value)} />
+                    <Input
+                      type="number"
+                      min="0"
+                      value={entregaMax}
+                      onChange={(e) => setEntregaMax(e.target.value)}
+                      className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                    />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Horário de funcionamento da entrega (opcional)</Label>
                   <div className="flex items-center gap-2">
-                    <Input type="time" className="max-w-36" value={horarioIni} onChange={(e) => setHorarioIni(e.target.value)} />
+                    <Input
+                      type="time"
+                      className="h-10 max-w-36 rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+                      value={horarioIni}
+                      onChange={(e) => setHorarioIni(e.target.value)}
+                    />
                     <span className="text-xs text-muted-foreground">até</span>
-                    <Input type="time" className="max-w-36" value={horarioFim} onChange={(e) => setHorarioFim(e.target.value)} />
+                    <Input
+                      type="time"
+                      className="h-10 max-w-36 rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
+                      value={horarioFim}
+                      onChange={(e) => setHorarioFim(e.target.value)}
+                    />
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Fora desse horário, &quot;Receber pedidos de entrega&quot; é desativado automaticamente. Deixe em branco para não
@@ -121,7 +143,7 @@ export function TiposPedidosDialog({
               </div>
             ) : null}
           </div>
-          <div className="rounded-lg border p-3">
+          <div className="rounded-xl border p-3">
             <div className="mb-2 flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium">Receber pedidos de retirada</div>
@@ -133,16 +155,28 @@ export function TiposPedidosDialog({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Tempo mín. estimado (min)</Label>
-                  <Input type="number" min="0" value={retiradaMin} onChange={(e) => setRetiradaMin(e.target.value)} />
+                  <Input
+                    type="number"
+                    min="0"
+                    value={retiradaMin}
+                    onChange={(e) => setRetiradaMin(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Tempo máx. estimado (min)</Label>
-                  <Input type="number" min="0" value={retiradaMax} onChange={(e) => setRetiradaMax(e.target.value)} />
+                  <Input
+                    type="number"
+                    min="0"
+                    value={retiradaMax}
+                    onChange={(e) => setRetiradaMax(e.target.value)}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
               </div>
             ) : null}
           </div>
-          <div className="col-span-2 flex items-center justify-between rounded-lg border p-3">
+          <div className="col-span-2 flex items-center justify-between rounded-xl border p-3">
             <div>
               <div className="text-sm font-medium">Consumo local</div>
               <div className="text-xs text-muted-foreground">Seus clientes poderão solicitar pedidos para consumir no seu local.</div>
@@ -150,8 +184,8 @@ export function TiposPedidosDialog({
             <Switch checked={localAtivo} onCheckedChange={setLocalAtivo} />
           </div>
         </div>
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

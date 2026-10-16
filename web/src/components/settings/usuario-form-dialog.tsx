@@ -26,6 +26,8 @@ export function UsuarioFormDialog({
   const [email, setEmail] = useState("");
   const [permissaoId, setPermissaoId] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const niveisItems: Record<string, string> = {};
+  for (const n of niveis) niveisItems[String(n.id)] = n.nome;
 
   useEffect(() => {
     if (!open) return;
@@ -63,23 +65,23 @@ export function UsuarioFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto sm:max-w-sm">
+      <DialogContent className="max-h-[90vh] max-w-sm overflow-y-auto rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{usuario ? "Editar usuário" : "Novo usuário"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1">
             <Label className="text-xs">Nome</Label>
-            <Input value={nome} onChange={(e) => setNome(e.target.value)} />
+            <Input value={nome} onChange={(e) => setNome(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">E-mail</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Nível de permissão</Label>
-            <Select value={permissaoId} onValueChange={(v) => v && setPermissaoId(v as string)}>
-              <SelectTrigger className="w-full">
+            <Select items={niveisItems} value={permissaoId} onValueChange={(v) => v && setPermissaoId(v as string)}>
+              <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
@@ -92,11 +94,11 @@ export function UsuarioFormDialog({
             </Select>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

@@ -50,7 +50,7 @@ export function ClubePontosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Clube de pontos</DialogTitle>
         </DialogHeader>
@@ -99,8 +99,8 @@ export function ClubePontosDialog({
           <div className="text-sm font-medium">Clube de pontos habilitado</div>
           <Switch checked={valor} onCheckedChange={setValor} />
         </div>
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

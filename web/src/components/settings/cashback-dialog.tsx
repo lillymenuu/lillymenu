@@ -71,7 +71,7 @@ export function CashbackDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-3xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Cashback</DialogTitle>
         </DialogHeader>
@@ -91,15 +91,38 @@ export function CashbackDialog({
           <div className="space-y-3 rounded-lg border p-3">
             <div className="space-y-1">
               <Label className="text-xs">O cashback deve expirar em quantos dias?</Label>
-              <Input type="number" min="1" step="1" value={expiraDias} onChange={(e) => setExpiraDias(e.target.value)} />
+              <Input
+                type="number"
+                min="1"
+                step="1"
+                value={expiraDias}
+                onChange={(e) => setExpiraDias(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Cashback fica disponível para uso após quantas horas da compra?</Label>
-              <Input type="number" min="0" step="1" placeholder="12" value={carenciaHoras} onChange={(e) => setCarenciaHoras(e.target.value)} />
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="12"
+                value={carenciaHoras}
+                onChange={(e) => setCarenciaHoras(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Porcentagem do cashback</Label>
-              <Input type="number" step="0.01" min="0" max="100" value={percentual} onChange={(e) => setPercentual(e.target.value)} />
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={percentual}
+                onChange={(e) => setPercentual(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
             <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
               <div>
@@ -113,8 +136,8 @@ export function CashbackDialog({
             </div>
           </div>
         ) : null}
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

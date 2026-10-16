@@ -97,11 +97,11 @@ export function UsuariosDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] max-w-lg sm:max-w-lg">
+        <DialogContent className="max-h-[90vh] max-w-lg rounded-3xl sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Usuários</DialogTitle>
           </DialogHeader>
-          <div className="max-h-[55vh] space-y-2 overflow-y-auto">
+          <div className="scrollbar-hidden max-h-[55vh] space-y-2 overflow-y-auto">
             {carregando ? (
               <div className="py-6 text-center text-sm text-muted-foreground">Carregando...</div>
             ) : !dados || dados.usuarios.length === 0 ? (
@@ -140,11 +140,11 @@ export function UsuariosDialog({ open, onOpenChange }: { open: boolean; onOpenCh
               ))
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="border-t-0 bg-transparent">
+            <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
               Fechar
             </Button>
-            <Button className="gap-1.5" onClick={abrirNovo}>
+            <Button className="gap-1.5 rounded-full" onClick={abrirNovo}>
               <Plus className="size-4" /> Novo usuário
             </Button>
           </DialogFooter>

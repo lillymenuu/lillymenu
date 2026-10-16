@@ -77,9 +77,9 @@ function GrupoBandeiras({
           onChange={(e) => setNovoNome(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), adicionar())}
           placeholder="Nome da bandeira"
-          className="h-7 text-xs"
+          className="h-7 rounded-full border-0 bg-muted/60 px-3 text-xs"
         />
-        <Button type="button" variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={adicionar}>
+        <Button type="button" variant="outline" size="sm" className="h-7 gap-1 rounded-full px-2 text-xs" onClick={adicionar}>
           <Plus className="size-3.5" /> Adicionar
         </Button>
       </div>
@@ -190,11 +190,11 @@ export function FormasPagamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
+      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Formas de pagamento</DialogTitle>
         </DialogHeader>
-        <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pr-1">
+        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto pr-1">
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="text-sm font-medium">Dinheiro</div>
             <Switch checked={dinheiro} onCheckedChange={setDinheiro} />
@@ -214,11 +214,11 @@ export function FormasPagamentoDialog({
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Chave Pix</Label>
-                  <Input value={pixChave} onChange={(e) => setPixChave(e.target.value)} />
+                  <Input value={pixChave} onChange={(e) => setPixChave(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Nome do titular</Label>
-                  <Input value={pixNome} onChange={(e) => setPixNome(e.target.value)} />
+                  <Input value={pixNome} onChange={(e) => setPixNome(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
                 </div>
               </div>
             ) : null}
@@ -248,7 +248,16 @@ export function FormasPagamentoDialog({
                   <Switch checked={creditoTaxaAtiva} onCheckedChange={setCreditoTaxaAtiva} />
                 </div>
                 {creditoTaxaAtiva ? (
-                  <Input type="number" step="0.01" min="0" max="100" value={creditoTaxa} onChange={(e) => setCreditoTaxa(e.target.value)} placeholder="Taxa (%)" />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={creditoTaxa}
+                    onChange={(e) => setCreditoTaxa(e.target.value)}
+                    placeholder="Taxa (%)"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 ) : null}
               </>
             ) : null}
@@ -273,14 +282,23 @@ export function FormasPagamentoDialog({
                   <Switch checked={debitoTaxaAtiva} onCheckedChange={setDebitoTaxaAtiva} />
                 </div>
                 {debitoTaxaAtiva ? (
-                  <Input type="number" step="0.01" min="0" max="100" value={debitoTaxa} onChange={(e) => setDebitoTaxa(e.target.value)} placeholder="Taxa (%)" />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={debitoTaxa}
+                    onChange={(e) => setDebitoTaxa(e.target.value)}
+                    placeholder="Taxa (%)"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 ) : null}
               </>
             ) : null}
           </div>
         </div>
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

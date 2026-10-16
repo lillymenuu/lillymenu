@@ -79,22 +79,32 @@ export function HorariosDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-lg rounded-3xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Horário de funcionamento</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
           Sua loja irá abrir e fechar automaticamente de acordo com os horários definidos. Dias sem horário configurado ficam fechados.
         </p>
-        <div className="max-h-[50vh] space-y-2 overflow-y-auto">
+        <div className="scrollbar-hidden max-h-[50vh] space-y-2 overflow-y-auto">
           {linhas.map((l) => (
-            <div key={l.dia} className="flex items-center gap-2 rounded-lg border p-2.5">
+            <div key={l.dia} className="flex items-center gap-2 rounded-xl border p-2.5">
               <div className="w-20 shrink-0 text-sm font-medium">{DIAS_SEMANA_LONGO[l.dia]}</div>
               {l.aberto ? (
                 <>
-                  <Input type="time" value={l.inicio} onChange={(e) => atualizar(l.dia, { inicio: e.target.value })} />
+                  <Input
+                    type="time"
+                    value={l.inicio}
+                    onChange={(e) => atualizar(l.dia, { inicio: e.target.value })}
+                    className="h-9 rounded-full border-0 bg-muted/60 pr-3 pl-3 text-sm"
+                  />
                   <span className="text-xs text-muted-foreground">até</span>
-                  <Input type="time" value={l.fim} onChange={(e) => atualizar(l.dia, { fim: e.target.value })} />
+                  <Input
+                    type="time"
+                    value={l.fim}
+                    onChange={(e) => atualizar(l.dia, { fim: e.target.value })}
+                    className="h-9 rounded-full border-0 bg-muted/60 pr-3 pl-3 text-sm"
+                  />
                   <Button variant="ghost" size="icon" className="shrink-0" onClick={() => atualizar(l.dia, { aberto: false })}>
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
@@ -103,7 +113,7 @@ export function HorariosDialog({
                 <button
                   type="button"
                   onClick={() => atualizar(l.dia, { aberto: true })}
-                  className="flex-1 rounded-md border border-dashed px-2 py-1 text-left text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  className="flex-1 rounded-full border border-dashed px-3 py-1.5 text-left text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground"
                 >
                   Loja fechada — clique para definir horário
                 </button>
@@ -111,8 +121,8 @@ export function HorariosDialog({
             </div>
           ))}
         </div>
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
