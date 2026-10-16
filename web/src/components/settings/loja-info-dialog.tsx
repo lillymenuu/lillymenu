@@ -121,6 +121,7 @@ export function LojaInfoDialog({
   const [salvando, setSalvando] = useState(false);
   const capaInputRef = useRef<HTMLInputElement>(null);
   const perfilInputRef = useRef<HTMLInputElement>(null);
+  const cepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -185,12 +186,7 @@ export function LojaInfoDialog({
     setPerfilRemover(true);
   }
 
-  async function buscarCep() {
-    const digitos = cep.replace(/\D/g, "");
-    if (digitos.length !== 8) {
-      toast.error("Informe um CEP válido.");
-      return;
-    }
+  async function buscarCep(digitos: string) {
     setBuscandoCep(true);
     try {
       const res = await fetch(`/api/nfce/cep?cep=${digitos}`);
@@ -210,6 +206,14 @@ export function LojaInfoDialog({
     } finally {
       setBuscandoCep(false);
     }
+  }
+
+  function handleCepChange(valor: string) {
+    setCep(valor);
+    if (cepTimer.current) clearTimeout(cepTimer.current);
+    const digitos = valor.replace(/\D/g, "");
+    if (digitos.length !== 8) return;
+    cepTimer.current = setTimeout(() => buscarCep(digitos), 400);
   }
 
   const linkCompleto = `${lojaLinkBase}${encodeURIComponent(linkSlug)}`;
@@ -283,7 +287,7 @@ export function LojaInfoDialog({
           <DialogTitle>Informações da loja</DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto pr-1">
         <div className="relative mb-9">
           <div className="relative h-28 w-full overflow-hidden rounded-lg border bg-muted">
             {capaPreview ? (
@@ -389,12 +393,8 @@ export function LojaInfoDialog({
           <div className="col-span-full mt-2 text-xs font-semibold tracking-wide text-primary uppercase">Endereço</div>
           <div className="space-y-1">
             <Label className="text-xs">CEP</Label>
-            <div className="flex gap-2">
-              <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" className={campoClasse} />
-              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={buscarCep} disabled={buscandoCep}>
-                {buscandoCep ? "Buscando…" : "Buscar"}
-              </Button>
-            </div>
+            <Input value={cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" className={campoClasse} />
+            {buscandoCep ? <p className="text-[11px] text-muted-foreground">Buscando endereço...</p> : null}
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Número</Label>
