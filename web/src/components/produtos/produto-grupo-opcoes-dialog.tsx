@@ -72,24 +72,29 @@ export function ProdutoGrupoOpcoesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] w-[520px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[520px]">
+      <DialogContent className="flex max-h-[80vh] w-[520px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[520px]">
         <DialogHeader className="flex-row items-start justify-between gap-2 pr-8">
           <DialogTitle className="sr-only">{grupo ? "Editar grupo de opções" : "Novo grupo de opções"}</DialogTitle>
           <div className="flex-1 space-y-2.5">
-            <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Escolha as coberturas" className="text-sm font-medium" />
+            <Input
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ex.: Escolha as coberturas"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm font-medium"
+            />
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex rounded-lg border p-0.5 text-xs">
+              <div className="flex rounded-full border p-0.5 text-xs">
                 <button
                   type="button"
                   onClick={() => setTipoSelecao("unica")}
-                  className={cn("rounded-md px-2.5 py-1 font-medium transition-colors", tipoSelecao === "unica" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
+                  className={cn("rounded-full px-2.5 py-1 font-medium transition-colors", tipoSelecao === "unica" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
                 >
                   Seleção única
                 </button>
                 <button
                   type="button"
                   onClick={() => setTipoSelecao("multipla")}
-                  className={cn("rounded-md px-2.5 py-1 font-medium transition-colors", tipoSelecao === "multipla" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
+                  className={cn("rounded-full px-2.5 py-1 font-medium transition-colors", tipoSelecao === "multipla" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
                 >
                   Seleção múltipla
                 </button>
@@ -108,7 +113,7 @@ export function ProdutoGrupoOpcoesDialog({
                   value={maxSelecao}
                   onChange={(e) => setMaxSelecao(e.target.value)}
                   placeholder="Sem limite"
-                  className="h-7 w-20 text-xs"
+                  className="h-7 w-20 rounded-full border-0 bg-muted/60 px-3 text-xs"
                 />
               </label>
             )}
@@ -131,11 +136,20 @@ export function ProdutoGrupoOpcoesDialog({
               <div key={idx} className="flex items-end gap-2 rounded-lg border p-2.5">
                 <div className="flex-1 space-y-1">
                   <label className="text-xs text-muted-foreground">Nome</label>
-                  <Input value={item.nome} onChange={(e) => atualizarLinha(idx, { nome: e.target.value })} placeholder="Ex.: Granola" />
+                  <Input
+                    value={item.nome}
+                    onChange={(e) => atualizarLinha(idx, { nome: e.target.value })}
+                    placeholder="Ex.: Granola"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <div className="w-28 space-y-1">
                   <label className="text-xs text-muted-foreground">Preço</label>
-                  <MoneyInput value={String(item.preco ?? "")} onChange={(v) => atualizarLinha(idx, { preco: v })} />
+                  <MoneyInput
+                    value={String(item.preco ?? "")}
+                    onChange={(v) => atualizarLinha(idx, { preco: v })}
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
                 </div>
                 <button
                   type="button"
@@ -150,8 +164,8 @@ export function ProdutoGrupoOpcoesDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button onClick={salvar} className="w-full sm:w-auto">
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button onClick={salvar} className="w-full rounded-full sm:w-auto">
             Salvar grupo
           </Button>
         </DialogFooter>
