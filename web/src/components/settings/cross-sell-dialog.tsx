@@ -62,13 +62,13 @@ export function CrossSellDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[776px]">
+      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[776px]">
         <DialogHeader>
           <DialogTitle>Configurações do Cross-sell</DialogTitle>
         </DialogHeader>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
-          <div className="flex items-center justify-between rounded-lg border p-3 sm:col-span-2">
+        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+          <div className="flex items-center justify-between rounded-xl border p-3 sm:col-span-2">
             <div>
               <div className="text-sm font-medium">Cross-sell</div>
               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -79,7 +79,7 @@ export function CrossSellDialog({
           </div>
 
           {status?.ativo ? (
-            <div className="space-y-1 rounded-lg border p-4 text-center sm:col-span-2">
+            <div className="space-y-1 rounded-xl border p-4 text-center sm:col-span-2">
               <div className="text-xs text-muted-foreground">Seu faturamento aumentou</div>
               <div className="text-2xl font-bold">{formatBRL(status.faturamento_extra)}</div>
               <div className="text-xs text-muted-foreground">a mais com o cross-sell</div>
@@ -89,7 +89,7 @@ export function CrossSellDialog({
             </div>
           ) : null}
 
-          <div className="flex gap-3 rounded-lg border p-3">
+          <div className="flex gap-3 rounded-xl border p-3">
             <Lightbulb className="mt-0.5 size-4.5 shrink-0 text-primary" />
             <div>
               <div className="text-sm font-medium">O que é o cross-sell?</div>
@@ -102,7 +102,7 @@ export function CrossSellDialog({
             </div>
           </div>
 
-          <div className="flex gap-3 rounded-lg border p-3">
+          <div className="flex gap-3 rounded-xl border p-3">
             <Settings2 className="mt-0.5 size-4.5 shrink-0 text-primary" />
             <div>
               <div className="text-sm font-medium">Como funciona?</div>
@@ -117,11 +117,11 @@ export function CrossSellDialog({
           </div>
 
           {status?.ativo && status.grupos.length > 0 ? (
-            <div className="rounded-lg border p-3 sm:col-span-2">
+            <div className="rounded-xl border p-3 sm:col-span-2">
               <div className="mb-2 text-sm font-medium">Grupos cross-sell</div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {status.grupos.map((g) => (
-                  <div key={g.categoria} className="rounded-md border p-2.5">
+                  <div key={g.categoria} className="rounded-xl border p-2.5">
                     <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background">
                       <Shuffle className="size-3" />
                       {g.categoria}
@@ -137,8 +137,8 @@ export function CrossSellDialog({
           ) : null}
         </div>
 
-        <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
