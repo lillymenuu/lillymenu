@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,15 +26,6 @@ const ETIQUETA_ITEMS: Record<string, string> = {
   edicao_limitada: "Edição limitada",
 };
 
-function lerComoBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
 export function PromoDialog({
   open,
   onOpenChange,
@@ -53,12 +44,8 @@ export function PromoDialog({
   const [dias, setDias] = useState("");
   const [etiqueta, setEtiqueta] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [imagemAtual, setImagemAtual] = useState<string | null>(null);
-  const [imagemBase64Nova, setImagemBase64Nova] = useState<string | null>(null);
-  const [imagemRemovida, setImagemRemovida] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!produto) return;
@@ -67,24 +54,8 @@ export function PromoDialog({
     setDias(produto.promo_dias ? String(produto.promo_dias) : "");
     setEtiqueta(produto.promo_etiqueta ?? "");
     setDescricao(produto.promo_descricao ?? "");
-    setImagemAtual(produto.promo_imagem ?? null);
-    setImagemBase64Nova(null);
-    setImagemRemovida(false);
     setErro("");
   }, [produto]);
-
-  async function handleArquivo(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const base64 = await lerComoBase64(file);
-    setImagemBase64Nova(base64);
-    setImagemRemovida(false);
-  }
-
-  function removerImagem() {
-    setImagemBase64Nova(null);
-    setImagemRemovida(true);
-  }
 
   async function salvar() {
     if (!produto) return;
@@ -105,8 +76,6 @@ export function PromoDialog({
           promo_dias: dias.trim(),
           promo_etiqueta: etiqueta,
           promo_descricao: descricao.trim(),
-          promo_imagem_base64: imagemBase64Nova ?? "",
-          promo_imagem_remover: imagemRemovida ? 1 : 0,
         }),
       });
       const data = await res.json();
@@ -129,14 +98,6 @@ export function PromoDialog({
       ? produto.imagem
       : `${phpAdminUrl}/${produto.imagem}`
     : null;
-
-  const previewPromoUrl = imagemBase64Nova
-    ? imagemBase64Nova
-    : imagemAtual && !imagemRemovida
-      ? imagemAtual.startsWith("http")
-        ? imagemAtual
-        : `${phpAdminUrl}/${imagemAtual}`
-      : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -216,37 +177,6 @@ export function PromoDialog({
                 placeholder="Alguma informação extra sobre essa promoção..."
                 className="rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
               />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label>Foto de propaganda (opcional)</Label>
-              <div className="flex items-center gap-3">
-                <div className="flex size-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed bg-muted text-muted-foreground">
-                  {previewPromoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={previewPromoUrl} alt="" className="size-full object-cover" />
-                  ) : (
-                    <ImageIcon size={20} />
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => fileInputRef.current?.click()}>
-                    Anexar foto
-                  </Button>
-                  {previewPromoUrl && (
-                    <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={removerImagem}>
-                      Remover
-                    </Button>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    hidden
-                    onChange={handleArquivo}
-                  />
-                </div>
-              </div>
             </div>
 
             {erro && <p className="text-xs font-semibold text-destructive">{erro}</p>}
