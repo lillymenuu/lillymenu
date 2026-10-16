@@ -26,7 +26,7 @@ export function LojaInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md gap-0 overflow-hidden p-0 sm:max-w-md">
+      <DialogContent className="max-w-md gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-md">
         <div className="p-4 pb-3">
           <DialogTitle>Informações da loja</DialogTitle>
         </div>
