@@ -10,6 +10,7 @@ import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { consumoDoCarrinho } from "@/components/store/estoque-carrinho";
 import { formatarPreco, maskValorDigitado, parseValorMascarado } from "@/lib/store/format";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreCartItem, StoreCategoria, StoreCombo, StoreProduto } from "@/lib/store/types";
 import type { MesaGarcom, PedidoAbertoGarcom, PerfilGarcomLoja } from "@/db/queries/modoGarcom";
 
@@ -389,14 +390,10 @@ function GarcomAppInterno({
                               </div>
                             </div>
                             <div className="relative size-[72px] shrink-0 overflow-hidden rounded-[10px] bg-neutral-100">
-                              {produto.imagem ? (
+                              {
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={produto.imagem} alt="" className="size-full object-cover" />
-                              ) : (
-                                <div className="flex size-full items-center justify-center text-neutral-300">
-                                  <ImageIcon size={22} />
-                                </div>
-                              )}
+                                <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                              }
                             </div>
                             {esgotado && (
                               <span className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-red-600 px-2 py-0.5 text-[.6rem] font-bold tracking-wide text-white uppercase">Esgotado</span>
@@ -473,14 +470,10 @@ function GarcomAppInterno({
             carrinho.map((item) => (
               <div key={item.key} className="flex items-start gap-3 border-b border-neutral-100 pb-3">
                 <div className="size-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
-                  {item.imagem ? (
+                  {
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imagem} alt="" className="size-full object-cover" />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-neutral-300">
-                      <ImageIcon size={18} />
-                    </div>
-                  )}
+                    <img src={item.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                  }
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[.86rem] font-semibold text-neutral-900">{item.nome}</p>

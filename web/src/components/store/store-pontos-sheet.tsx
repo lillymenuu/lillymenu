@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Gift, ImageIcon, Lock, Plus } from "lucide-react";
+import { Clock, Gift, Lock, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { useStoreTheme } from "@/components/store/store-theme";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreCartItem, StorePontosProduto, StorePontosProdutosResposta, StorePontosResgatarResposta } from "@/lib/store/types";
 
 /**
@@ -144,14 +145,10 @@ export function StorePontosSheet({
                 return (
                   <div key={p.id} className={pode ? "" : "opacity-75"}>
                     <div className="relative aspect-square overflow-hidden rounded-xl bg-neutral-100">
-                      {p.imagem ? (
+                      {
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.imagem} alt="" className="size-full object-cover" />
-                      ) : (
-                        <div className="flex size-full items-center justify-center text-neutral-300">
-                          <ImageIcon size={26} />
-                        </div>
-                      )}
+                        <img src={p.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                      }
                       <button
                         type="button"
                         disabled={!pode}
@@ -186,14 +183,10 @@ export function StorePontosSheet({
           <DialogTitle className="sr-only">Confirmar resgate</DialogTitle>
           <div className="flex items-start gap-3.5 px-5 pt-4 pb-2">
             <div className="size-[60px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
-              {confirmProduto?.imagem ? (
+              {
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={confirmProduto.imagem} alt="" className="size-full object-cover" />
-              ) : (
-                <div className="flex size-full items-center justify-center text-neutral-300">
-                  <Gift size={22} />
-                </div>
-              )}
+                <img src={confirmProduto?.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+              }
             </div>
             <div className="min-w-0 flex-1">
               <p className="mb-1 text-[.82rem] text-neutral-400">Deseja resgatar este produto?</p>

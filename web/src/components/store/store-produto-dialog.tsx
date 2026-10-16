@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Expand, ImageIcon, Plus, Shrink, X } from "lucide-react";
+import { Check, Expand, Plus, Shrink, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { PontosBadge } from "@/components/store/pontos-badge";
@@ -9,6 +9,7 @@ import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
 import { formatarPreco } from "@/lib/store/format";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreCartItem, StoreProduto, StoreProdutoVariacoes } from "@/lib/store/types";
 
 export function StoreProdutoDialog({
@@ -316,14 +317,10 @@ export function StoreProdutoDialog({
             <div className="flex flex-col min-[940px]:min-h-0 min-[940px]:flex-1 min-[940px]:flex-row min-[940px]:items-stretch">
               <div className="aspect-[16/11] w-full shrink-0 min-[940px]:aspect-auto min-[940px]:w-[380px] min-[940px]:py-6 min-[940px]:pl-6">
                 <div className="size-full overflow-hidden bg-neutral-100 min-[940px]:rounded-2xl">
-                  {produto.imagem ? (
+                  {
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={produto.imagem} alt="" className="size-full object-cover" />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-neutral-300">
-                      <ImageIcon size={48} />
-                    </div>
-                  )}
+                    <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                  }
                 </div>
               </div>
               <div className="min-w-0 px-[18px] pt-4 pb-1 min-[940px]:flex-1 min-[940px]:overflow-y-auto min-[940px]:px-8 min-[940px]:pt-7">
@@ -364,38 +361,30 @@ export function StoreProdutoDialog({
           }`}
           style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
         >
-          {produto.imagem ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setImagemAmpliada((v) => !v)}
-                className={`block size-full ${imagemAmpliada ? "cursor-zoom-out" : "cursor-zoom-in"}`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={produto.imagem}
-                  alt=""
-                  onLoad={(e) => {
-                    const img = e.currentTarget;
-                    if (img.naturalWidth && img.naturalHeight) setAspectRatio(img.naturalWidth / img.naturalHeight);
-                  }}
-                  className="size-full object-cover"
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => setImagemAmpliada((v) => !v)}
-                className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white"
-              >
-                {imagemAmpliada ? <Shrink size={12} /> : <Expand size={12} />}
-                {imagemAmpliada ? "Recolher" : "Ver maior"}
-              </button>
-            </>
-          ) : (
-            <div className="flex size-full items-center justify-center text-neutral-300">
-              <ImageIcon size={32} />
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => setImagemAmpliada((v) => !v)}
+            className={`block size-full ${imagemAmpliada ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={produto.imagem || PRODUTO_IMAGEM_PADRAO}
+              alt=""
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                if (img.naturalWidth && img.naturalHeight) setAspectRatio(img.naturalWidth / img.naturalHeight);
+              }}
+              className="size-full object-cover"
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setImagemAmpliada((v) => !v)}
+            className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white"
+          >
+            {imagemAmpliada ? <Shrink size={12} /> : <Expand size={12} />}
+            {imagemAmpliada ? "Recolher" : "Ver maior"}
+          </button>
           <button
             type="button"
             onClick={() => onOpenChange(false)}

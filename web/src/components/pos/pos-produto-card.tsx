@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Minus, Package, Plus } from "lucide-react";
 import { formatBRL } from "@/components/ordermanager/constants";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { PosProduto } from "@/lib/pos";
 
 export function PosProdutoCard({
@@ -46,14 +47,10 @@ export function PosProdutoCard({
       } ${semEstoque ? "opacity-50" : ""} ${produto.tem_variacoes && !semEstoque && restante > 0 ? "cursor-pointer" : ""}`}
     >
       <div className="relative h-[124px] shrink-0 bg-muted">
-        {produto.imagem ? (
+        {
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={produto.imagem} alt={produto.nome} className="size-full object-cover" />
-        ) : (
-          <div className="flex size-full items-center justify-center text-lg font-semibold text-muted-foreground/40">
-            {produto.nome.charAt(0)}
-          </div>
-        )}
+          <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt={produto.nome} className="size-full object-cover" />
+        }
         {emPromo ? (
           <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
             Promo

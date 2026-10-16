@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Categoria, Produto } from "@/lib/produtos";
 import { produtoProximoValidade } from "@/lib/produtoValidade";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { Combo } from "@/lib/combos";
 import { ProdutoFormDialog } from "./produto-form-dialog";
 import { ComboFormDialog } from "./combo-form-dialog";
@@ -361,14 +362,10 @@ export function ProdutosManager({
                       }`}
                     >
                       <div className="relative aspect-[4/3] w-full bg-muted">
-                        {imagemUrl ? (
+                        {
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={imagemUrl} alt={p.nome} className="size-full object-cover" />
-                        ) : (
-                          <div className="flex size-full items-center justify-center">
-                            <Package size={24} className="text-muted-foreground" />
-                          </div>
-                        )}
+                          <img src={imagemUrl || PRODUTO_IMAGEM_PADRAO} alt={p.nome} className="size-full object-cover" />
+                        }
                         <button
                           type="button"
                           onClick={(e) => {

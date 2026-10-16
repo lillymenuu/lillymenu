@@ -46,6 +46,7 @@ import { ProdutoVariacoesManageDialog } from "./produto-variacoes-manage-dialog"
 import { ProdutoGrupoOpcoesDialog } from "./produto-grupo-opcoes-dialog";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 import type { Categoria, Produto, ProdutoVariacaoItem, ProdutoGrupoOpcoes, ProdutoVariacoesDetalheResposta } from "@/lib/produtos";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 
 const DIAS_LABEL: Record<string, string> = {
   dom: "Dom",
@@ -457,12 +458,13 @@ export function ProdutoFormDialog({
                   className="relative flex size-32 items-center justify-center overflow-hidden rounded-lg border bg-muted"
                   title="Clique para escolher uma imagem"
                 >
-                  {imagemPreview ? (
+                  {
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={imagemPreview} alt="" className="size-full object-cover" />
-                  ) : (
-                    <ImagePlus size={26} className="text-muted-foreground" />
-                  )}
+                    <img src={imagemPreview || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                  }
+                  <span className="absolute right-1 bottom-1 flex size-6 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm">
+                    <ImagePlus size={13} />
+                  </span>
                 </button>
                 {imagemPreview && (
                   <button

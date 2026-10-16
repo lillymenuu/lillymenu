@@ -1,8 +1,9 @@
 "use client";
 
-import { ImageIcon, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { formatarPreco } from "@/lib/store/format";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreProduto } from "@/lib/store/types";
 
 const ETIQUETA_LABEL: Record<string, string> = {
@@ -87,14 +88,10 @@ export function StorePromoListaModal({
                       </div>
                     </div>
                     <div className="size-[92px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
-                      {p.imagem ? (
+                      {
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.imagem} alt="" className="size-full object-cover" />
-                      ) : (
-                        <div className="flex size-full items-center justify-center text-neutral-300">
-                          <ImageIcon size={20} />
-                        </div>
-                      )}
+                        <img src={p.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                      }
                     </div>
                   </button>
                 );

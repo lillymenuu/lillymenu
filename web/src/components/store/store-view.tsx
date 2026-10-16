@@ -6,7 +6,6 @@ import {
   Clock3,
   Coins,
   Gift,
-  ImageIcon,
   Layers,
   List,
   Percent,
@@ -17,6 +16,7 @@ import {
   Star,
 } from "lucide-react";
 import { formatarPreco } from "@/lib/store/format";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreCatalogo, StoreCombo, StoreCupomResultado, StorePedidoSnapshot, StorePedidosClienteResposta, StorePerfil, StoreProduto } from "@/lib/store/types";
 import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-theme";
 import { useStoreCart } from "@/components/store/use-store-cart";
@@ -429,12 +429,12 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                 className="w-[140px] shrink-0 cursor-pointer text-left"
               >
                 <div className="mb-1.5 h-[110px] w-[140px] overflow-hidden rounded-xl bg-neutral-100">
-                  {item.imagem ? (
+                  {item.imagem || !isCombo(item) ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imagem} alt="" className="size-full object-cover" />
+                    <img src={item.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
                   ) : (
                     <div className="flex size-full items-center justify-center text-neutral-300">
-                      {isCombo(item) ? <Layers size={26} /> : <ImageIcon size={26} />}
+                      <Layers size={26} />
                     </div>
                   )}
                 </div>
@@ -558,14 +558,10 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                     </div>
                     <div className="relative shrink-0">
                       <div className="size-[88px] overflow-hidden rounded-[10px] bg-neutral-100">
-                        {produto.imagem ? (
+                        {
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={produto.imagem} alt="" className="size-full object-cover" />
-                        ) : (
-                          <div className="flex size-full items-center justify-center text-neutral-300">
-                            <ImageIcon size={26} />
-                          </div>
-                        )}
+                          <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                        }
                       </div>
                       {produto.esgotado || restanteDoProduto(produto) <= 0 ? (
                         <span className="absolute -right-1.5 -bottom-1.5 rounded-full border-2 border-white bg-red-600 px-2.5 py-[5px] text-[.6rem] font-bold tracking-wide text-white uppercase whitespace-nowrap">

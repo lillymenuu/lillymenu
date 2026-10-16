@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CalendarCheck, ChevronDown, ImageIcon, Loader2, ShoppingBag, Ticket } from "lucide-react";
+import { AlertTriangle, CalendarCheck, ChevronDown, Loader2, ShoppingBag, Ticket } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { PontosBadge } from "@/components/store/pontos-badge";
 import { QtyStepper } from "@/components/store/qty-stepper";
@@ -9,6 +9,7 @@ import { useStoreTheme } from "@/components/store/store-theme";
 import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
 import { consumoDoCarrinho } from "@/components/store/estoque-carrinho";
 import { formatarPreco } from "@/lib/store/format";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreCartItem, StoreCrossSellProduto, StoreCupomResultado, StorePerfil } from "@/lib/store/types";
 
 /* Nome base do produto, sem a variacao/opcoes concatenadas no final (ex.: "Açaí - Tradicional + Creme de
@@ -331,14 +332,10 @@ export function StoreCartSheet({
                   <div key={item.key} className="border-b border-neutral-100 py-3 last:border-0">
                     <div className="flex gap-2.5">
                       <div className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-neutral-100">
-                        {item.imagem ? (
+                        {
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.imagem} alt="" className="size-full object-cover" />
-                        ) : (
-                          <div className="flex size-full items-center justify-center text-neutral-300">
-                            <ImageIcon size={16} />
-                          </div>
-                        )}
+                          <img src={item.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                        }
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
@@ -408,14 +405,10 @@ export function StoreCartSheet({
                   {sugestoes.map((p) => (
                     <div key={p.id} className="w-[110px] shrink-0 rounded-xl border border-neutral-100 p-2">
                       <div className="relative mb-1.5 h-[68px] w-full overflow-hidden rounded-lg bg-neutral-100">
-                        {p.imagem ? (
+                        {
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.imagem} alt="" className="size-full object-cover" />
-                        ) : (
-                          <div className="flex size-full items-center justify-center text-neutral-300">
-                            <ImageIcon size={16} />
-                          </div>
-                        )}
+                          <img src={p.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                        }
                         <button
                           type="button"
                           onClick={() => adicionarSugestao(p)}

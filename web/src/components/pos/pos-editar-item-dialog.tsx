@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Layers, Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { Layers, Minus, Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { formatBRL } from "@/components/ordermanager/constants";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { PosCartItem } from "@/lib/pos";
 
 const CABECALHO_COMBO = "[combo]";
@@ -74,12 +75,12 @@ export function PosEditarItemDialog({
         {/* Cabecalho */}
         <div className="flex shrink-0 items-start gap-3 px-4 pt-4 pb-3">
           <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-muted">
-            {item.imagem ? (
+            {item.imagem || !combo.ehCombo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.imagem} alt={item.nome} className="size-full object-cover" />
+              <img src={item.imagem || PRODUTO_IMAGEM_PADRAO} alt={item.nome} className="size-full object-cover" />
             ) : (
               <div className="flex size-full items-center justify-center text-muted-foreground/40">
-                {combo.ehCombo ? <Layers className="size-6" /> : <ShoppingBag className="size-5" />}
+                <Layers className="size-6" />
               </div>
             )}
           </div>

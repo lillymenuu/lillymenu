@@ -5,6 +5,7 @@ import { ImageIcon, Layers, Plus, Search, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
+import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreCategoria, StoreCombo, StoreProduto } from "@/lib/store/types";
 
 type CategoriaComItens = { cat: StoreCategoria; produtos: StoreProduto[]; combos: StoreCombo[] };
@@ -127,7 +128,7 @@ export function StoreBuscaModal({
                       key={`produto-${p.id}`}
                       nome={p.nome}
                       descricao={p.descricao}
-                      imagem={p.imagem}
+                      imagem={p.imagem || PRODUTO_IMAGEM_PADRAO}
                       preco={`${p.tem_variacoes === 1 && !p.em_promo ? "a partir de " : ""}${formatarPreco(p.preco_final)}`}
                       precoRiscado={p.em_promo ? formatarPreco(p.preco_base) : null}
                       pontos={mostrarPontos && (p.pontos_ganho ?? 0) > 0 ? (p.pontos_ganho ?? 0) : 0}
