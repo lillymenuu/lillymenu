@@ -696,7 +696,7 @@ export function ProdutoFormDialog({
                     min={1}
                     value={pontosGanho}
                     onChange={(e) => setPontosGanho(e.target.value)}
-                    className="max-w-32"
+                    className="h-10 max-w-32 rounded-full border-0 bg-muted/60 px-4 text-sm"
                   />
                 )}
               </div>
@@ -716,7 +716,7 @@ export function ProdutoFormDialog({
                     min={1}
                     value={pontosCusto}
                     onChange={(e) => setPontosCusto(e.target.value)}
-                    className="max-w-32"
+                    className="h-10 max-w-32 rounded-full border-0 bg-muted/60 px-4 text-sm"
                   />
                 )}
               </div>
@@ -822,7 +822,7 @@ export function ProdutoFormDialog({
                     type="date"
                     value={dataFabricacao}
                     onChange={(e) => setDataFabricacao(e.target.value)}
-                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -832,7 +832,7 @@ export function ProdutoFormDialog({
                     type="date"
                     value={dataValidade}
                     onChange={(e) => setDataValidade(e.target.value)}
-                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm"
                   />
                 </div>
               </div>

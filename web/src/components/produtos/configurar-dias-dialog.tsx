@@ -68,7 +68,7 @@ export function ConfigurarDiasDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-md">
+      <DialogContent className="max-w-md rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Dias específicos</DialogTitle>
         </DialogHeader>
@@ -99,7 +99,7 @@ export function ConfigurarDiasDialog({
                 type="time"
                 value={ini}
                 onChange={(e) => setIni(e.target.value)}
-                className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-primary/60"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -109,17 +109,17 @@ export function ConfigurarDiasDialog({
                 type="time"
                 value={fim}
                 onChange={(e) => setFim(e.target.value)}
-                className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 pr-5 pl-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-primary/60"
               />
             </div>
           </div>
           {erro && <p className="text-sm text-destructive">{erro}</p>}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={confirmar}>Salvar</Button>
+          <Button className="rounded-full" onClick={confirmar}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
