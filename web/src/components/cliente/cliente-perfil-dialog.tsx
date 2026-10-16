@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { User, Receipt, Star, Gift } from "lucide-react";
+import { User, Receipt, Star, Gift, MapPin } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -10,13 +10,14 @@ import { ClientePerfilTab } from "./cliente-perfil-tab";
 import { ClientePedidosTab } from "./cliente-pedidos-tab";
 import { ClienteAvaliacoesTab } from "./cliente-avaliacoes-tab";
 import { ClientePontosTab } from "./cliente-pontos-tab";
+import { ClienteMapaTab } from "./cliente-mapa-tab";
 import { ClienteEditarDialog } from "./cliente-editar-dialog";
 import { RegistrarFiadoDialog } from "./registrar-fiado-dialog";
 import { formatDataCurta, type ClienteStats } from "./types";
 import { cn } from "cn";
 
 const tabTriggerClass =
-  "rounded-full px-3 font-normal data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none";
+  "gap-1 rounded-full px-2 text-xs font-normal data-active:bg-primary data-active:text-primary-foreground data-active:shadow-none";
 
 export function ClientePerfilDialog({
   open,
@@ -92,6 +93,9 @@ export function ClientePerfilDialog({
                   <TabsTrigger value="pontos" className={cn(tabTriggerClass, "flex-1")}>
                     <Gift size={13} /> Pontos
                   </TabsTrigger>
+                  <TabsTrigger value="mapa" className={cn(tabTriggerClass, "flex-1")}>
+                    <MapPin size={13} /> Mapa
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="perfil" className="pt-3">
@@ -105,6 +109,9 @@ export function ClientePerfilDialog({
                 </TabsContent>
                 <TabsContent value="pontos" className="pt-3">
                   {clienteId && <ClientePontosTab clienteId={clienteId} />}
+                </TabsContent>
+                <TabsContent value="mapa" className="pt-3">
+                  {clienteId && <ClienteMapaTab clienteId={clienteId} />}
                 </TabsContent>
               </Tabs>
             )}
