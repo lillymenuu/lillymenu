@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { MoneyInput } from "@/components/produtos/money-input";
 import {
   Select,
   SelectContent,
@@ -50,7 +51,7 @@ export function PromoDialog({
   useEffect(() => {
     if (!produto) return;
     setAtivar(!!produto.em_promo);
-    setPreco(produto.preco_promocional ? String(produto.preco_promocional).replace(".", ",") : "");
+    setPreco(produto.preco_promocional ? String(produto.preco_promocional) : "");
     setDias(produto.promo_dias ? String(produto.promo_dias) : "");
     setEtiqueta(produto.promo_etiqueta ?? "");
     setDescricao(produto.promo_descricao ?? "");
@@ -131,11 +132,9 @@ export function PromoDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label>Preço promocional</Label>
-                <Input
+                <MoneyInput
                   value={preco}
-                  onChange={(e) => setPreco(e.target.value)}
-                  placeholder="R$ 0,00"
-                  inputMode="decimal"
+                  onChange={setPreco}
                   className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                 />
               </div>
