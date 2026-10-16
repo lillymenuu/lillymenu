@@ -44,15 +44,15 @@ export function AdicionarEstoqueDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-md">
+      <DialogContent className="max-w-md rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Escolha o item para criação de estoque</DialogTitle>
         </DialogHeader>
 
         <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" size={14} />
+          <Search className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground" size={14} />
           <Input
-            className="pl-8"
+            className="h-10 w-full rounded-full border-0 bg-muted/60 pl-9 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
             placeholder="Pesquise pelo nome do produto"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
@@ -78,8 +78,8 @@ export function AdicionarEstoqueDialog({
           ))}
         </div>
 
-        <DialogFooter>
-          <Button onClick={confirmar} disabled={!selecionadoId}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={confirmar} disabled={!selecionadoId}>
             Adicionar novo item de estoque
           </Button>
         </DialogFooter>
