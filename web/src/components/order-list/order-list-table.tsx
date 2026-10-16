@@ -63,6 +63,8 @@ const PAGAMENTO_CORES: Record<string, { bg: string; fg: string }> = {
 const TIPO_PILL: Record<string, { label: string; bg: string; fg: string }> = {
   entrega: { label: "Entrega", bg: "#fde68a", fg: "#92400e" },
   retirada: { label: "Retirada", bg: "#dbeafe", fg: "#2563eb" },
+  venda_rapida: { label: "Venda rápida", bg: "#dcfce7", fg: "#15803d" },
+  mesa: { label: "Comer no local", bg: "#ede9fe", fg: "#6d28d9" },
 };
 
 function hojeISO() {
@@ -172,13 +174,13 @@ export function OrderListTable({
           <p className="text-sm text-muted-foreground">Histórico completo de pedidos da loja.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setZerarOpen(true)}>
+          <Button variant="outline" size="sm" className="rounded-full" onClick={() => setZerarOpen(true)}>
             <RotateCcw size={14} /> Zerar sequência de pedidos
           </Button>
           <button
             type="button"
             onClick={() => abrirPos()}
-            className="inline-flex h-7 items-center gap-1 rounded-lg bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
+            className="inline-flex h-7 items-center gap-1 rounded-full bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
           >
             <Plus size={14} /> PDV - Lançar pedido
           </button>
@@ -411,6 +413,7 @@ export function OrderListTable({
         descricao="O próximo pedido criado passará a ser o #1. Essa ação não pode ser desfeita."
         confirmando={zerando}
         textoConfirmar="Zerar sequência"
+        ocultarVoltar
         onConfirmar={confirmarZerarSequencia}
       />
     </div>

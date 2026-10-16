@@ -10,6 +10,7 @@ export function ConfirmDialog({
   descricao,
   confirmando,
   textoConfirmar = "Confirmar",
+  ocultarVoltar = false,
   onConfirmar,
 }: {
   open: boolean;
@@ -18,20 +19,24 @@ export function ConfirmDialog({
   descricao: React.ReactNode;
   confirmando?: boolean;
   textoConfirmar?: string;
+  /** Esconde o botao "Voltar", deixando so a confirmacao no rodape. */
+  ocultarVoltar?: boolean;
   onConfirmar: () => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{titulo}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">{descricao}</p>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={confirmando}>
-            Voltar
-          </Button>
-          <Button variant="destructive" onClick={onConfirmar} disabled={confirmando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          {!ocultarVoltar && (
+            <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={confirmando}>
+              Voltar
+            </Button>
+          )}
+          <Button variant="destructive" className="rounded-full" onClick={onConfirmar} disabled={confirmando}>
             {confirmando ? "Aguarde..." : textoConfirmar}
           </Button>
         </DialogFooter>
