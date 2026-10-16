@@ -111,7 +111,7 @@ export function EstoqueDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md sm:max-w-md">
+        <DialogContent className="max-w-md rounded-3xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Editar item de estoque</DialogTitle>
           </DialogHeader>
@@ -128,6 +128,7 @@ export function EstoqueDialog({
                   min={0}
                   value={quantidade}
                   onChange={(e) => setQuantidade(e.target.value)}
+                  className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -138,6 +139,7 @@ export function EstoqueDialog({
                   min={0}
                   value={quantidadeMinima}
                   onChange={(e) => setQuantidadeMinima(e.target.value)}
+                  className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                 />
               </div>
 
@@ -168,11 +170,11 @@ export function EstoqueDialog({
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={excluir} disabled={excluindo}>
+          <DialogFooter className="border-t-0 bg-transparent">
+            <Button variant="outline" className="rounded-full" onClick={excluir} disabled={excluindo}>
               {excluindo ? "Excluindo..." : "Deletar estoque"}
             </Button>
-            <Button onClick={salvar} disabled={salvando || carregando}>
+            <Button className="rounded-full" onClick={salvar} disabled={salvando || carregando}>
               {salvando ? "Salvando..." : "Salvar estoque"}
             </Button>
           </DialogFooter>
