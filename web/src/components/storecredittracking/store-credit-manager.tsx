@@ -103,7 +103,7 @@ export function StoreCreditManager({
     <div className="flex h-full flex-col gap-4 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold">Controle de fiado</h1>
-        <Button className="gap-1.5 rounded-lg font-normal" onClick={() => setSelecionarOpen(true)}>
+        <Button className="gap-1.5 rounded-full font-normal" onClick={() => setSelecionarOpen(true)}>
           <Plus className="size-4" /> Registrar fiado
         </Button>
       </div>

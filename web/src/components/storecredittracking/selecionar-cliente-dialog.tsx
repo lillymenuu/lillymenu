@@ -95,7 +95,7 @@ export function SelecionarClienteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm sm:max-w-sm">
+      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Selecionar cliente</DialogTitle>
         </DialogHeader>
@@ -111,6 +111,7 @@ export function SelecionarClienteDialog({
                 placeholder="Busque por número ou nome"
                 value={busca}
                 onChange={(e) => handleBuscaChange(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 pr-8 pl-4 text-sm"
               />
               <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             </div>
@@ -150,20 +151,27 @@ export function SelecionarClienteDialog({
                 placeholder="Ex.: (11) 9 3232-5454"
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="fiado-novo-nome">
                 Nome do cliente <span className="text-destructive">*</span>
               </Label>
-              <Input id="fiado-novo-nome" placeholder="Ex.: Felipe" value={nome} onChange={(e) => setNome(e.target.value)} />
+              <Input
+                id="fiado-novo-nome"
+                placeholder="Ex.: Felipe"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
             </div>
             {erro && <p className="text-sm text-destructive">{erro}</p>}
           </div>
         </div>
 
-        <DialogFooter>
-          <Button className="rounded-lg font-normal" onClick={adicionarCliente} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button className="rounded-full font-normal" onClick={adicionarCliente} disabled={salvando}>
             {salvando ? "Adicionando..." : "Adicionar cliente"}
           </Button>
         </DialogFooter>
