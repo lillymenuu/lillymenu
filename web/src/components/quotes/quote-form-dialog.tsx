@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Search, Plus, Minus, X, MapPin } from "lucide-react";
+import { Search, Plus, Minus, X, MapPin, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MoneyInput } from "@/components/produtos/money-input";
+import { formatarTelefone } from "@/lib/store/format";
 import type { OrcamentoDescontoTipo, OrcamentoDetalheResposta, OrcamentoProduto, OrcamentoProdutosResposta } from "@/lib/orcamentos";
 import type { PosCepLookupResposta } from "@/lib/pos";
 
@@ -52,7 +53,13 @@ export function QuoteFormDialog({
   const [clienteDocumento, setClienteDocumento] = useState("");
   const [clienteWhatsapp, setClienteWhatsapp] = useState("");
   const [clienteEndereco, setClienteEndereco] = useState("");
-  const [cep, setCep] = useState("");
+  const [enderecoDialogOpen, setEnderecoDialogOpen] = useState(false);
+  const [enderecoCep, setEnderecoCep] = useState("");
+  const [enderecoRua, setEnderecoRua] = useState("");
+  const [enderecoNumero, setEnderecoNumero] = useState("");
+  const [enderecoComplemento, setEnderecoComplemento] = useState("");
+  const [enderecoBairro, setEnderecoBairro] = useState("");
+  const [enderecoCidade, setEnderecoCidade] = useState("");
   const [buscandoCep, setBuscandoCep] = useState(false);
 
   const [descontoTipo, setDescontoTipo] = useState<OrcamentoDescontoTipo>("valor");
@@ -82,6 +89,12 @@ export function QuoteFormDialog({
           setClienteDocumento(data.orcamento.cliente_documento ?? "");
           setClienteWhatsapp(data.orcamento.cliente_whatsapp ?? "");
           setClienteEndereco(data.orcamento.cliente_endereco ?? "");
+          setEnderecoCep("");
+          setEnderecoRua(data.orcamento.cliente_endereco ?? "");
+          setEnderecoNumero("");
+          setEnderecoComplemento("");
+          setEnderecoBairro("");
+          setEnderecoCidade("");
           setDescontoTipo(data.orcamento.desconto_tipo);
           setDescontoValor(String(data.orcamento.desconto_valor));
           setItens(
@@ -103,7 +116,12 @@ export function QuoteFormDialog({
       setClienteDocumento("");
       setClienteWhatsapp("");
       setClienteEndereco("");
-      setCep("");
+      setEnderecoCep("");
+      setEnderecoRua("");
+      setEnderecoNumero("");
+      setEnderecoComplemento("");
+      setEnderecoBairro("");
+      setEnderecoCidade("");
       setDescontoTipo("valor");
       setDescontoValor("0");
       setItens([]);
@@ -131,6 +149,16 @@ export function QuoteFormDialog({
     });
   }
 
+  function definirQtdProduto(p: OrcamentoProduto, novaQtdRaw: number) {
+    const novaQtd = Math.max(0, Math.floor(Number.isFinite(novaQtdRaw) ? novaQtdRaw : 0));
+    setItens((prev) => {
+      const existente = prev.find((i) => i.produtoId === p.id);
+      if (novaQtd <= 0) return existente ? prev.filter((i) => i.uid !== existente.uid) : prev;
+      if (!existente) return [...prev, { uid: `produto-${p.id}`, produtoId: p.id, nome: p.nome, preco: p.preco, qtd: novaQtd, observacoes: null }];
+      return prev.map((i) => (i.uid === existente.uid ? { ...i, qtd: novaQtd } : i));
+    });
+  }
+
   function adicionarAvulso() {
     const nome = avulsoNome.trim();
     const preco = Number(avulsoPreco || 0);
@@ -153,7 +181,7 @@ export function QuoteFormDialog({
   }
 
   async function buscarCep() {
-    const cepLimpo = cep.replace(/\D/g, "");
+    const cepLimpo = enderecoCep.replace(/\D/g, "");
     if (cepLimpo.length !== 8) {
       toast.error("CEP inválido.");
       return;
@@ -166,12 +194,26 @@ export function QuoteFormDialog({
         toast.error(data.msg ?? "CEP não encontrado.");
         return;
       }
-      setClienteEndereco(`${data.logradouro}, Bairro ${data.bairro}, ${data.cidade}/${data.estado}`);
+      setEnderecoRua(data.logradouro);
+      setEnderecoBairro(data.bairro);
+      setEnderecoCidade(`${data.cidade}/${data.estado}`);
     } catch {
       toast.error("Erro ao buscar CEP.");
     } finally {
       setBuscandoCep(false);
     }
+  }
+
+  function salvarEndereco() {
+    const ruaNumero = [enderecoRua.trim(), enderecoNumero.trim()].filter(Boolean).join(", ");
+    const partes = [
+      ruaNumero,
+      enderecoComplemento.trim(),
+      enderecoBairro.trim() ? `Bairro ${enderecoBairro.trim()}` : "",
+      enderecoCidade.trim(),
+    ].filter(Boolean);
+    setClienteEndereco(partes.join(", "));
+    setEnderecoDialogOpen(false);
   }
 
   const subtotal = itens.reduce((s, i) => s + i.preco * i.qtd, 0);
@@ -227,6 +269,7 @@ export function QuoteFormDialog({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[85vh] w-[960px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[960px]">
         <DialogHeader>
@@ -296,11 +339,17 @@ export function QuoteFormDialog({
                         </Button>
                       ) : (
                         <div className="flex items-center justify-between rounded-full border">
-                          <button type="button" className="flex h-7 w-7 items-center justify-center" onClick={() => alterarQtdProduto(p, -1)}>
+                          <button type="button" className="flex h-7 w-7 shrink-0 items-center justify-center" onClick={() => alterarQtdProduto(p, -1)}>
                             <Minus className="size-3" />
                           </button>
-                          <span className="text-xs font-medium">{qtd}</span>
-                          <button type="button" className="flex h-7 w-7 items-center justify-center" onClick={() => alterarQtdProduto(p, 1)}>
+                          <input
+                            type="number"
+                            min={0}
+                            value={qtd}
+                            onChange={(e) => definirQtdProduto(p, Number(e.target.value))}
+                            className="w-8 border-0 bg-transparent text-center text-xs font-medium outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                          />
+                          <button type="button" className="flex h-7 w-7 shrink-0 items-center justify-center" onClick={() => alterarQtdProduto(p, 1)}>
                             <Plus className="size-3" />
                           </button>
                         </div>
@@ -351,7 +400,7 @@ export function QuoteFormDialog({
               <Label className="text-xs">WhatsApp</Label>
               <Input
                 value={clienteWhatsapp}
-                onChange={(e) => setClienteWhatsapp(e.target.value)}
+                onChange={(e) => setClienteWhatsapp(formatarTelefone(e.target.value))}
                 placeholder="(00) 00000-0000"
                 className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
               />
@@ -359,31 +408,28 @@ export function QuoteFormDialog({
 
             <div className="space-y-1">
               <Label className="text-xs">Endereço</Label>
-              <div className="flex gap-1.5">
-                <Input
-                  value={cep}
-                  onChange={(e) => setCep(e.target.value)}
-                  placeholder="CEP"
-                  className="h-10 w-28 rounded-full border-0 bg-muted/60 px-4 text-sm"
-                />
+              {clienteEndereco ? (
+                <div className="flex items-center justify-between gap-2 rounded-full bg-muted/60 py-2.5 pr-2 pl-4 text-sm">
+                  <span className="truncate">{clienteEndereco}</span>
+                  <button
+                    type="button"
+                    onClick={() => setEnderecoDialogOpen(true)}
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
+                    title="Editar endereço"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                </div>
+              ) : (
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
-                  className="h-10 w-10 shrink-0 rounded-full"
-                  onClick={buscarCep}
-                  disabled={buscandoCep}
-                  title="Buscar CEP"
+                  className="h-10 w-full justify-start gap-2 rounded-full text-sm font-normal text-muted-foreground"
+                  onClick={() => setEnderecoDialogOpen(true)}
                 >
-                  <MapPin className="size-3.5" />
+                  <MapPin className="size-3.5" /> Adicionar endereço
                 </Button>
-              </div>
-              <Input
-                value={clienteEndereco}
-                onChange={(e) => setClienteEndereco(e.target.value)}
-                placeholder="Rua, número, bairro, cidade"
-                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
-              />
+              )}
             </div>
 
             <div className="mt-auto space-y-2 rounded-2xl border p-3">
@@ -444,5 +490,97 @@ export function QuoteFormDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={enderecoDialogOpen} onOpenChange={setEnderecoDialogOpen}>
+      <DialogContent className="w-[420px] max-w-[calc(100%-2rem)] rounded-3xl sm:max-w-[420px]">
+        <DialogHeader>
+          <DialogTitle>Endereço do cliente</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">CEP</Label>
+            <div className="flex gap-1.5">
+              <Input
+                value={enderecoCep}
+                onChange={(e) => setEnderecoCep(e.target.value)}
+                placeholder="00000-000"
+                className="h-10 flex-1 rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 shrink-0 rounded-full"
+                onClick={buscarCep}
+                disabled={buscandoCep}
+                title="Buscar CEP"
+              >
+                <Search className="size-3.5" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Rua</Label>
+            <Input
+              value={enderecoRua}
+              onChange={(e) => setEnderecoRua(e.target.value)}
+              placeholder="Nome da rua"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Número</Label>
+              <Input
+                value={enderecoNumero}
+                onChange={(e) => setEnderecoNumero(e.target.value)}
+                placeholder="Nº"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Complemento</Label>
+              <Input
+                value={enderecoComplemento}
+                onChange={(e) => setEnderecoComplemento(e.target.value)}
+                placeholder="Opcional"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Bairro</Label>
+            <Input
+              value={enderecoBairro}
+              onChange={(e) => setEnderecoBairro(e.target.value)}
+              placeholder="Bairro"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Cidade</Label>
+            <Input
+              value={enderecoCidade}
+              onChange={(e) => setEnderecoCidade(e.target.value)}
+              placeholder="Cidade/UF"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+            />
+          </div>
+        </div>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => setEnderecoDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button className="rounded-full" onClick={salvarEndereco}>
+            Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
