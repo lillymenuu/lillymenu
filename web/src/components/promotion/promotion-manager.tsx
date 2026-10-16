@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Images, Megaphone, Package } from "lucide-react";
+import { Images, Megaphone, Package, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { Produto } from "@/lib/produtos";
 import { PromoDialog } from "./promo-dialog";
@@ -35,6 +36,7 @@ export function PromotionManager({
   const [produtos, setProdutos] = useState(produtosIniciais);
   const [flyers, setFlyers] = useState(flyersIniciais);
   const [flyersAtivo, setFlyersAtivo] = useState(flyersAtivoInicial);
+  const [busca, setBusca] = useState("");
 
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
   const [flyersOpen, setFlyersOpen] = useState(false);
@@ -42,10 +44,16 @@ export function PromotionManager({
   const ativasCount = produtos.filter((p) => p.em_promo).length;
   const limiteAtingido = ativasCount >= limiteAtivas;
 
+  const produtosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return produtos;
+    return produtos.filter((p) => `${p.nome} ${p.codigo ?? ""}`.toLowerCase().includes(termo));
+  }, [produtos, busca]);
+
   const grupos = useMemo(() => {
     const porCategoria = new Map<number, Produto[]>();
     const semCategoria: Produto[] = [];
-    for (const p of produtos) {
+    for (const p of produtosFiltrados) {
       if (p.categoria_id && p.categoria) {
         if (!porCategoria.has(p.categoria_id)) porCategoria.set(p.categoria_id, []);
         porCategoria.get(p.categoria_id)!.push(p);
@@ -62,7 +70,7 @@ export function PromotionManager({
       lista.push({ id: SEM_CATEGORIA.id, nome: SEM_CATEGORIA.nome, produtos: semCategoria });
     }
     return lista;
-  }, [produtos]);
+  }, [produtosFiltrados]);
 
   async function recarregar() {
     try {
@@ -95,13 +103,26 @@ export function PromotionManager({
             {ativasCount}/{limiteAtivas} ativos)
           </p>
         </div>
-        <Button size="sm" className="rounded-full" onClick={() => setFlyersOpen(true)}>
-          <Images size={14} /> Gerenciar slides de loja
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="relative w-56">
+            <Search className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground" size={14} />
+            <Input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar por nome ou código do produto"
+              className="h-9 w-full rounded-full border-0 bg-muted/60 pl-9 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
+            />
+          </div>
+          <Button size="sm" className="rounded-full" onClick={() => setFlyersOpen(true)}>
+            <Images size={14} /> Gerenciar slides de loja
+          </Button>
+        </div>
       </div>
 
       {grupos.length === 0 && (
-        <p className="text-sm text-muted-foreground">Nenhum produto cadastrado ainda.</p>
+        <p className="text-sm text-muted-foreground">
+          {busca.trim() ? "Nenhum produto encontrado." : "Nenhum produto cadastrado ainda."}
+        </p>
       )}
 
       {grupos.map((grupo) => (
