@@ -233,7 +233,7 @@ export function QuoteFormDialog({
           <DialogTitle>{orcamentoId ? "Editar orçamento" : "Novo orçamento"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden md:grid-cols-[1fr_320px]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden p-1 md:grid-cols-[1fr_320px]">
           <div className="flex min-h-0 flex-col gap-3">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
