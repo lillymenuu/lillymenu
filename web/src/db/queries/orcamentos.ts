@@ -246,7 +246,7 @@ export async function produtosParaOrcamento(lojaId: number): Promise<ProdutoPara
     .from(produtos)
     .leftJoin(categorias, and(eq(categorias.id, produtos.categoria_id), eq(categorias.loja_id, produtos.loja_id)))
     .leftJoin(estoque, and(eq(estoque.produto_id, produtos.id), eq(estoque.loja_id, produtos.loja_id)))
-    .where(and(eq(produtos.ativo, true), eq(produtos.loja_id, lojaId)))
+    .where(and(eq(produtos.ativo, true), eq(produtos.disponivel_orcamento, true), eq(produtos.loja_id, lojaId)))
     .orderBy(sql`${categorias.ordem} is null`, asc(categorias.ordem), asc(categorias.nome), sql`${produtos.ordem} is null`, asc(produtos.ordem), asc(produtos.nome));
 
   return linhas.map((l) => ({ id: l.id, nome: l.nome, preco: Number(l.preco), estoque: l.estoque ?? 0, imagem: l.imagem }));

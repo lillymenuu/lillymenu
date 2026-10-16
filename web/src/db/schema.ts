@@ -1234,6 +1234,7 @@ export const produtos = pgTable(
     disponivel_mesa: boolean("disponivel_mesa").notNull().default(true),
     loja_id: integer("loja_id").notNull().default(1),
     apenas_agendamento: boolean("apenas_agendamento").notNull().default(false),
+    disponivel_orcamento: boolean("disponivel_orcamento").notNull().default(false),
     quantidade_minima: integer("quantidade_minima").notNull().default(0),
     dias_semana: text("dias_semana"),
     horario_ini: varchar("horario_ini", { length: 5 }),

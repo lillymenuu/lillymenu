@@ -1,0 +1,1 @@
+ALTER TABLE "produtos" ADD COLUMN "disponivel_orcamento" boolean DEFAULT false NOT NULL;

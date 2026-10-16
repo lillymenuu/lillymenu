@@ -85,6 +85,7 @@ export function ProdutoFormDialog({
   const [descricao, setDescricao] = useState("");
   const [categoriaId, setCategoriaId] = useState<string>("");
   const [apenasAgendamento, setApenasAgendamento] = useState(false);
+  const [disponivelOrcamento, setDisponivelOrcamento] = useState(false);
   const [qtdMinimaAtiva, setQtdMinimaAtiva] = useState(false);
   const [qtdMinima, setQtdMinima] = useState("1");
 
@@ -150,6 +151,7 @@ export function ProdutoFormDialog({
       setDescricao(produto.descricao ?? "");
       setCategoriaId(produto.categoria_id ? String(produto.categoria_id) : "");
       setApenasAgendamento(produto.apenas_agendamento === 1);
+      setDisponivelOrcamento(produto.disponivel_orcamento === 1);
       setQtdMinimaAtiva((produto.quantidade_minima ?? 0) > 0);
       setQtdMinima(String(produto.quantidade_minima || 1));
       setPreco(String(produto.preco_base));
@@ -209,6 +211,7 @@ export function ProdutoFormDialog({
       setDescricao("");
       setCategoriaId(categoriaPadrao ? String(categoriaPadrao) : "");
       setApenasAgendamento(false);
+      setDisponivelOrcamento(false);
       setQtdMinimaAtiva(false);
       setQtdMinima("1");
       setPreco("");
@@ -291,6 +294,7 @@ export function ProdutoFormDialog({
         promo_desativado: promoAtiva ? 0 : 1,
         ativo,
         apenas_agendamento: apenasAgendamento,
+        disponivel_orcamento: disponivelOrcamento,
         quantidade_minima: qtdMinimaAtiva ? Math.max(1, parseInt(qtdMinima, 10) || 1) : 0,
         pontos_ganho: pontosGanhoAtivo ? Math.max(1, parseInt(pontosGanho, 10) || 1) : 0,
         pontos_custo: pontosCustoAtivo ? Math.max(1, parseInt(pontosCusto, 10) || 1) : 0,
@@ -548,7 +552,7 @@ export function ProdutoFormDialog({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
                     <div>
                       <div className="text-sm font-medium">Produto apenas por agendamento</div>
@@ -578,6 +582,16 @@ export function ProdutoFormDialog({
                         className="h-10 max-w-32 rounded-full border-0 bg-muted/60 px-4 text-sm"
                       />
                     )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                    <div>
+                      <div className="text-sm font-medium">Produto disponível para Orçamento</div>
+                      <div className="text-xs text-muted-foreground">
+                        Ao habilitar, esse produto aparece no modal de Novo orçamento da tela de orçamentos.
+                      </div>
+                    </div>
+                    <Switch checked={disponivelOrcamento} onCheckedChange={(v) => setDisponivelOrcamento(v === true)} />
                   </div>
                 </div>
               </div>

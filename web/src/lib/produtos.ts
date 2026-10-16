@@ -35,6 +35,7 @@ export type Produto = {
   icms_situacao_tributaria?: string | null;
   descricao?: string | null;
   apenas_agendamento?: number;
+  disponivel_orcamento?: number;
   quantidade_minima?: number;
   pontos_ganho?: number;
   pontos_custo?: number;
@@ -115,6 +116,7 @@ export async function getProdutos(lojaId: number): Promise<{ ok: true; produtos:
       imagem: p.imagem,
       descricao: p.descricao,
       apenas_agendamento: p.apenasAgendamento ? 1 : 0,
+      disponivel_orcamento: p.disponivelOrcamento ? 1 : 0,
       quantidade_minima: p.quantidadeMinima,
       pontos_ganho: p.pontosGanho,
       pontos_custo: p.pontosCusto,

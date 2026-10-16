@@ -38,6 +38,7 @@ export type ProdutoAdmin = {
   imagem: string | null;
   descricao: string | null;
   apenasAgendamento: boolean;
+  disponivelOrcamento: boolean;
   quantidadeMinima: number;
   pontosGanho: number;
   pontosCusto: number;
@@ -74,6 +75,7 @@ export async function listarProdutosAdmin(lojaId: number): Promise<ProdutoAdmin[
       imagem: produtos.imagem,
       descricao: produtos.descricao,
       apenasAgendamento: produtos.apenas_agendamento,
+      disponivelOrcamento: produtos.disponivel_orcamento,
       quantidadeMinima: produtos.quantidade_minima,
       pontosGanho: produtos.pontos_ganho,
       pontosCusto: produtos.pontos_custo,
@@ -202,6 +204,7 @@ export type SalvarProdutoInput = {
   imagemBase64?: string;
   imagemRemover?: boolean;
   apenasAgendamento?: boolean;
+  disponivelOrcamento?: boolean;
   quantidadeMinima?: number;
   pontosGanho?: number;
   pontosCusto?: number;
@@ -257,6 +260,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     promo_dias: null,
     promo_inicio: null,
     apenas_agendamento: Boolean(input.apenasAgendamento),
+    disponivel_orcamento: Boolean(input.disponivelOrcamento),
     quantidade_minima: Math.max(0, Number(input.quantidadeMinima ?? 0)),
     pontos_ganho: Math.max(0, Number(input.pontosGanho ?? 0)),
     pontos_custo: Math.max(0, Number(input.pontosCusto ?? 0)),
