@@ -353,7 +353,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           logo sobrepondo o banner ao lado das informacoes (nome/horario/endereco) */}
       <div className="hidden lg:block">
         <div style={{ background: brown }}>
-          <div className="mx-auto flex max-w-[1200px] items-center justify-center gap-3 px-6 py-3">
+          <div className="mx-auto flex max-w-[1200px] items-center justify-center gap-8 px-6 py-3">
             <button
               type="button"
               className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold"
@@ -401,9 +401,13 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               Pedidos
             </button>
           </div>
+        </div>
 
-          <div className="mx-auto max-w-[1200px] px-6 pb-8">
-            <div className="relative h-[320px] w-full overflow-hidden rounded-3xl bg-neutral-100">
+        {/* A faixa colorida cobre so a metade superior da altura do banner (padding simetrico
+            em cima/embaixo faz o degrade bater exatamente no meio do banner). */}
+        <div style={{ background: `linear-gradient(to bottom, ${brown} 0%, ${brown} 50%, #fff 50%, #fff 100%)` }}>
+          <div className="mx-auto max-w-[1200px] px-6 py-8">
+            <div className="relative h-[320px] w-full overflow-hidden rounded-3xl border-[3px] border-white bg-neutral-100 shadow-sm">
               {perfil.capaLoja ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
