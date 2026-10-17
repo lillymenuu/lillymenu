@@ -356,7 +356,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           <div className="mx-auto flex max-w-[1400px] items-center justify-center gap-10 px-6 py-5">
             <button
               type="button"
-              className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold"
+              className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold"
               style={{ color: brown }}
             >
               <List size={18} />
@@ -369,8 +369,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                   setAuthDestino("pontos");
                   setAuthModalAberto(true);
                 }}
-                className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white/80 transition-colors hover:text-white ${
-                  (authModalAberto && authDestino === "pontos") || pontosSheetAberto ? "bg-white/15 text-white" : ""
+                className={`flex items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+                  (authModalAberto && authDestino === "pontos") || pontosSheetAberto ? "text-white" : ""
                 }`}
               >
                 <Coins size={18} />
@@ -380,8 +380,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             <button
               type="button"
               onClick={abrirPromoNav}
-              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white/80 transition-colors hover:text-white ${
-                promoListaAberta ? "bg-white/15 text-white" : ""
+              className={`flex items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+                promoListaAberta ? "text-white" : ""
               }`}
             >
               <Gift size={18} />
@@ -393,8 +393,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                 setAuthDestino("pedidos");
                 setAuthModalAberto(true);
               }}
-              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white/80 transition-colors hover:text-white ${
-                (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "bg-white/15 text-white" : ""
+              className={`flex items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+                (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "text-white" : ""
               }`}
             >
               <ShoppingBag size={18} />
@@ -406,8 +406,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         {/* A faixa colorida cobre so uma fatia menor da altura do banner (padding simetrico
             em cima/embaixo faz o degrade bater sempre no mesmo ponto do banner). */}
         <div style={{ background: `linear-gradient(to bottom, ${brown} 0%, ${brown} 35%, #fff 35%, #fff 100%)` }}>
-          <div className="mx-auto max-w-[1400px] px-6 pt-3 pb-8">
-            <div className="relative h-[320px] w-full overflow-hidden rounded-3xl border-[3px] border-white bg-neutral-100 shadow-sm">
+          <div className="mx-auto max-w-[1400px] px-6 pt-0 pb-8">
+            <div className="relative h-[333px] w-full overflow-hidden rounded-3xl border-[3px] border-white bg-neutral-100 shadow-sm">
               {perfil.capaLoja ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
