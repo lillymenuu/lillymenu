@@ -7,9 +7,23 @@ import { Button } from "@/components/ui/button";
 import { MoneyInput } from "@/components/produtos/money-input";
 import { Label } from "@/components/ui/label";
 
-export function PosCaixaGate({ onAberto }: { onAberto: () => void }) {
+function resolverUrl(caminho: string | null, phpAdminUrl: string): string | null {
+  if (!caminho) return null;
+  return caminho.startsWith("http") ? caminho : `${phpAdminUrl}/${caminho}`;
+}
+
+export function PosCaixaGate({
+  logo,
+  phpAdminUrl,
+  onAberto,
+}: {
+  logo: string | null;
+  phpAdminUrl: string;
+  onAberto: () => void;
+}) {
   const [saldoInicial, setSaldoInicial] = useState("");
   const [abrindo, setAbrindo] = useState(false);
+  const logoUrl = resolverUrl(logo, phpAdminUrl);
 
   async function abrirCaixa() {
     setAbrindo(true);
@@ -35,8 +49,13 @@ export function PosCaixaGate({ onAberto }: { onAberto: () => void }) {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-      <div className="flex size-14 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-        <Lock className="size-6" />
+      <div className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-amber-100 text-amber-700">
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt="" className="size-full object-cover" />
+        ) : (
+          <Lock className="size-6" />
+        )}
       </div>
       <div>
         <div className="text-base font-semibold">Caixa fechado</div>
@@ -44,9 +63,9 @@ export function PosCaixaGate({ onAberto }: { onAberto: () => void }) {
       </div>
       <div className="w-full max-w-[200px] space-y-1.5 text-left">
         <Label className="text-xs">Saldo inicial</Label>
-        <MoneyInput value={saldoInicial} onChange={setSaldoInicial} />
+        <MoneyInput value={saldoInicial} onChange={setSaldoInicial} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
       </div>
-      <Button onClick={abrirCaixa} disabled={abrindo}>
+      <Button className="rounded-full" onClick={abrirCaixa} disabled={abrindo}>
         {abrindo ? "Abrindo..." : "Abrir caixa"}
       </Button>
     </div>

@@ -116,6 +116,7 @@ export function PosOverlay({
 
   const [lojaLink, setLojaLink] = useState<string | null>(null);
   const [lojaNome, setLojaNome] = useState("");
+  const [lojaLogo, setLojaLogo] = useState<string | null>(null);
 
   const [pedidoEditandoCodigo, setPedidoEditandoCodigo] = useState<number | null>(null);
   const [temItemComboNaEdicao, setTemItemComboNaEdicao] = useState(false);
@@ -155,6 +156,7 @@ export function PosOverlay({
             setLojaLink(`${cfg.loja_link_base}${encodeURIComponent(cfg.loja.link_slug)}`);
           }
           if (cfg.loja?.nome) setLojaNome(cfg.loja.nome);
+          if (cfg.loja?.perfil) setLojaLogo(cfg.loja.perfil);
         }
         if (cup.ok) {
           // Mesma regra do legado: cupom so aparece se houver pelo menos um
@@ -531,7 +533,11 @@ export function PosOverlay({
         {carregandoInicial ? (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Carregando...</div>
         ) : !caixaAberto ? (
-          <PosCaixaGate onAberto={() => fetch("/api/cashcontrol/resumo").then((r) => r.json()).then((d) => d.ok && setCaixa(d))} />
+          <PosCaixaGate
+            logo={lojaLogo}
+            phpAdminUrl={phpAdminUrl}
+            onAberto={() => fetch("/api/cashcontrol/resumo").then((r) => r.json()).then((d) => d.ok && setCaixa(d))}
+          />
         ) : (
           <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
             <div className="min-h-0 min-w-0 border-b bg-muted/60 p-4 lg:border-b-0 lg:border-r">
