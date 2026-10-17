@@ -245,7 +245,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const instagramHandle = perfil.lojaInstagram.replace(/^@/, "");
 
   return (
-    <div className="min-h-screen bg-white pb-[86px]" style={{ ["--store-pink" as string]: "#e63770" }}>
+    <div className="min-h-screen bg-white pb-[86px] lg:pb-10" style={{ ["--store-pink" as string]: "#e63770" }}>
       {catalogoAtualizadoVisivel && (
         <button
           type="button"
@@ -257,94 +257,239 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           Cardapio atualizado! Toque para ver as novidades.
         </button>
       )}
-      {/* Banner */}
-      <div className="relative mx-auto max-w-[901px]">
-        <div className="h-[210px] w-full bg-neutral-100">
-          {perfil.capaLoja ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
-          ) : (
-            <div className="size-full" style={{ background: `linear-gradient(135deg, ${brown}, #a07050)` }} />
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            if (typeof navigator !== "undefined" && navigator.share) {
-              navigator.share({ title: perfil.nomeLoja, url: window.location.href }).catch(() => {});
-            } else if (typeof navigator !== "undefined") {
-              navigator.clipboard?.writeText(window.location.href);
-            }
-          }}
-          className="absolute top-3 right-3 flex size-[38px] items-center justify-center rounded-full bg-white/90 text-neutral-700 shadow-md"
-        >
-          <Share2 size={15} />
-        </button>
-      </div>
-
-      {/* Header row */}
-      <div className="relative mx-auto flex max-w-[901px] items-start justify-between px-4" style={{ marginTop: -34 }}>
-        <div className="relative inline-flex shrink-0">
-          <span
-            className="absolute inset-0 animate-ping rounded-full opacity-30"
-            style={{ background: brown, animationDuration: "2.4s" }}
-          />
+      {/* Banner + header + meta — versao mobile (desktop usa o bloco "Desktop header" abaixo) */}
+      <div className="lg:hidden">
+        <div className="relative mx-auto max-w-[901px]">
+          <div className="h-[210px] w-full bg-neutral-100">
+            {perfil.capaLoja ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
+            ) : (
+              <div className="size-full" style={{ background: `linear-gradient(135deg, ${brown}, #a07050)` }} />
+            )}
+          </div>
           <button
             type="button"
-            onClick={() => setInfoAberto(true)}
-            className="relative inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
-            style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
+            onClick={() => {
+              if (typeof navigator !== "undefined" && navigator.share) {
+                navigator.share({ title: perfil.nomeLoja, url: window.location.href }).catch(() => {});
+              } else if (typeof navigator !== "undefined") {
+                navigator.clipboard?.writeText(window.location.href);
+              }
+            }}
+            className="absolute top-3 right-3 flex size-[38px] items-center justify-center rounded-full bg-white/90 text-neutral-700 shadow-md"
           >
-            <div className="size-[88px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-md">
-              {perfil.perfilLoja ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={perfil.perfilLoja} alt={perfil.nomeLoja} className="size-full object-cover" />
-              ) : (
-                <div
-                  className="flex size-full items-center justify-center text-2xl font-extrabold text-white"
-                  style={{ background: brown }}
-                >
-                  {perfil.nomeLoja.charAt(0)}
-                </div>
-              )}
-            </div>
+            <Share2 size={15} />
           </button>
         </div>
-        <div className="flex flex-col items-end gap-1 pt-[52px]">
-          {perfil.avaliacaoMedia > 0 && (
-            <span className="flex items-center gap-1 text-[.82rem] font-bold text-neutral-900">
-              <Star size={13} className="fill-amber-500 text-amber-500" />
-              {perfil.avaliacaoMedia.toLocaleString("pt-BR")}
-            </span>
+
+        {/* Header row */}
+        <div className="relative mx-auto flex max-w-[901px] items-start justify-between px-4" style={{ marginTop: -34 }}>
+          <div className="relative inline-flex shrink-0">
+            <span
+              className="absolute inset-0 animate-ping rounded-full opacity-30"
+              style={{ background: brown, animationDuration: "2.4s" }}
+            />
+            <button
+              type="button"
+              onClick={() => setInfoAberto(true)}
+              className="relative inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
+              style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
+            >
+              <div className="size-[88px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-md">
+                {perfil.perfilLoja ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={perfil.perfilLoja} alt={perfil.nomeLoja} className="size-full object-cover" />
+                ) : (
+                  <div
+                    className="flex size-full items-center justify-center text-2xl font-extrabold text-white"
+                    style={{ background: brown }}
+                  >
+                    {perfil.nomeLoja.charAt(0)}
+                  </div>
+                )}
+              </div>
+            </button>
+          </div>
+          <div className="flex flex-col items-end gap-1 pt-[52px]">
+            {perfil.avaliacaoMedia > 0 && (
+              <span className="flex items-center gap-1 text-[.82rem] font-bold text-neutral-900">
+                <Star size={13} className="fill-amber-500 text-amber-500" />
+                {perfil.avaliacaoMedia.toLocaleString("pt-BR")}
+              </span>
+            )}
+            {instagramHandle && (
+              <span className="flex items-center gap-1 text-[.78rem] text-neutral-600">
+                <AtSign size={14} className="text-[#c13584]" />
+                {instagramHandle}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Meta */}
+        <div className="mx-auto max-w-[901px] px-4 pt-2.5">
+          <div className="mb-0.5 flex items-center gap-1.5 text-[1.15rem] font-extrabold text-neutral-900">
+            {perfil.nomeLoja}
+            {perfil.lojaVerificada && (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6" className="shrink-0">
+                <path d="M12 2l2.4 1.6 2.8-.6 1.4 2.5 2.5 1.4-.6 2.8L22 12l-1.6 2.4.6 2.8-2.5 1.4-1.4 2.5-2.8-.6L12 22l-2.4-1.6-2.8.6-1.4-2.5-2.5-1.4.6-2.8L2 12l1.6-2.4-.6-2.8 2.5-1.4 1.4-2.5 2.8.6z" />
+                <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </div>
+          {(perfil.lojaBairro || perfil.lojaCidade) && (
+            <p className="mb-1 text-[.78rem] text-neutral-500">
+              {[perfil.lojaCidade, perfil.lojaBairro].filter(Boolean).join(", ")}
+            </p>
           )}
-          {instagramHandle && (
-            <span className="flex items-center gap-1 text-[.78rem] text-neutral-600">
-              <AtSign size={14} className="text-[#c13584]" />
-              {instagramHandle}
-            </span>
-          )}
+          <p className={`text-[.82rem] font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`} style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}>
+            {perfil.lojaAberta ? "Aberto agora" : `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`}
+          </p>
         </div>
       </div>
 
-      {/* Meta */}
-      <div className="mx-auto max-w-[901px] px-4 pt-2.5">
-        <div className="mb-0.5 flex items-center gap-1.5 text-[1.15rem] font-extrabold text-neutral-900">
-          {perfil.nomeLoja}
-          {perfil.lojaVerificada && (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6" className="shrink-0">
-              <path d="M12 2l2.4 1.6 2.8-.6 1.4 2.5 2.5 1.4-.6 2.8L22 12l-1.6 2.4.6 2.8-2.5 1.4-1.4 2.5-2.8-.6L12 22l-2.4-1.6-2.8.6-1.4-2.5-2.5-1.4.6-2.8L2 12l1.6-2.4-.6-2.8 2.5-1.4 1.4-2.5 2.8.6z" />
-              <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
+      {/* Desktop header: nav no topo, banner arredondado com fundo na cor do tema da loja,
+          logo sobrepondo o banner ao lado das informacoes (nome/horario/endereco) */}
+      <div className="hidden lg:block">
+        <div style={{ background: brown }}>
+          <div className="mx-auto flex max-w-[1200px] items-center justify-center gap-3 px-6 py-3">
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold"
+              style={{ color: brown }}
+            >
+              <List size={18} />
+              Menu
+            </button>
+            {perfil.clubePontosAtivo && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthDestino("pontos");
+                  setAuthModalAberto(true);
+                }}
+                className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+                  (authModalAberto && authDestino === "pontos") || pontosSheetAberto ? "bg-white/15 text-white" : ""
+                }`}
+              >
+                <Coins size={18} />
+                Pontos
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={abrirPromoNav}
+              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+                promoListaAberta ? "bg-white/15 text-white" : ""
+              }`}
+            >
+              <Gift size={18} />
+              Promo
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthDestino("pedidos");
+                setAuthModalAberto(true);
+              }}
+              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+                (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "bg-white/15 text-white" : ""
+              }`}
+            >
+              <ShoppingBag size={18} />
+              Pedidos
+            </button>
+          </div>
+
+          <div className="mx-auto max-w-[1200px] px-6 pb-8">
+            <div className="relative h-[320px] w-full overflow-hidden rounded-3xl bg-neutral-100">
+              {perfil.capaLoja ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
+              ) : (
+                <div className="size-full" style={{ background: `linear-gradient(135deg, ${brown}, #a07050)` }} />
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof navigator !== "undefined" && navigator.share) {
+                    navigator.share({ title: perfil.nomeLoja, url: window.location.href }).catch(() => {});
+                  } else if (typeof navigator !== "undefined") {
+                    navigator.clipboard?.writeText(window.location.href);
+                  }
+                }}
+                className="absolute top-4 right-4 flex size-10 items-center justify-center rounded-full bg-white/90 text-neutral-700 shadow-md"
+              >
+                <Share2 size={16} />
+              </button>
+            </div>
+          </div>
         </div>
-        {(perfil.lojaBairro || perfil.lojaCidade) && (
-          <p className="mb-1 text-[.78rem] text-neutral-500">
-            {[perfil.lojaCidade, perfil.lojaBairro].filter(Boolean).join(", ")}
-          </p>
-        )}
-        <p className={`text-[.82rem] font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`} style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}>
-          {perfil.lojaAberta ? "Aberto agora" : `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`}
-        </p>
+
+        <div className="mx-auto flex max-w-[1200px] items-center gap-5 px-6" style={{ marginTop: -56 }}>
+          <div className="relative inline-flex shrink-0">
+            <span
+              className="absolute inset-0 animate-ping rounded-2xl opacity-30"
+              style={{ background: brown, animationDuration: "2.4s" }}
+            />
+            <button
+              type="button"
+              onClick={() => setInfoAberto(true)}
+              className="relative inline-flex shrink-0 items-center justify-center rounded-2xl p-[3px]"
+              style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
+            >
+              <div className="size-[112px] overflow-hidden rounded-2xl border-[3px] border-white bg-white shadow-md">
+                {perfil.perfilLoja ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={perfil.perfilLoja} alt={perfil.nomeLoja} className="size-full object-cover" />
+                ) : (
+                  <div
+                    className="flex size-full items-center justify-center text-3xl font-extrabold text-white"
+                    style={{ background: brown }}
+                  >
+                    {perfil.nomeLoja.charAt(0)}
+                  </div>
+                )}
+              </div>
+            </button>
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-1 pb-2">
+            <div className="flex items-center gap-1.5 text-2xl font-extrabold text-neutral-900">
+              {perfil.nomeLoja}
+              {perfil.lojaVerificada && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#3b82f6" className="shrink-0">
+                  <path d="M12 2l2.4 1.6 2.8-.6 1.4 2.5 2.5 1.4-.6 2.8L22 12l-1.6 2.4.6 2.8-2.5 1.4-1.4 2.5-2.8-.6L12 22l-2.4-1.6-2.8.6-1.4-2.5-2.5-1.4.6-2.8L2 12l1.6-2.4-.6-2.8 2.5-1.4 1.4-2.5 2.8.6z" />
+                  <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 text-[.9rem]">
+              <span
+                className={`font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`}
+                style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}
+              >
+                {perfil.lojaAberta ? "Aberto agora" : `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`}
+              </span>
+              {(perfil.lojaBairro || perfil.lojaCidade) && (
+                <>
+                  <span className="text-neutral-300">•</span>
+                  <span className="text-neutral-500">{[perfil.lojaCidade, perfil.lojaBairro].filter(Boolean).join(", ")}</span>
+                </>
+              )}
+              <span className="text-neutral-300">•</span>
+              <button
+                type="button"
+                onClick={() => setInfoAberto(true)}
+                className="font-semibold underline-offset-2 hover:underline"
+                style={{ color: brown }}
+              >
+                Mais informações
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Chips */}
@@ -623,8 +768,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         </div>
       )}
 
-      {/* Bottom nav */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-neutral-200 bg-white shadow-[0_-6px_20px_rgba(0,0,0,.07)]">
+      {/* Bottom nav — so mobile, no desktop esses itens ja estao no topo */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-neutral-200 bg-white shadow-[0_-6px_20px_rgba(0,0,0,.07)] lg:hidden">
         <div className="flex w-full max-w-[901px]">
           <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide" style={{ color: brown }}>
             <List size={20} />
