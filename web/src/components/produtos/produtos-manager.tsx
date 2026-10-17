@@ -388,7 +388,7 @@ export function ProdutosManager({
                         setCategoriaParaNovoProduto(null);
                         setFormOpen(true);
                       }}
-                      className={`flex cursor-pointer flex-col overflow-hidden rounded-xl border transition-shadow hover:shadow-md ${
+                      className={`flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition-shadow hover:shadow-md ${
                         proximoValidade ? "border-red-600" : ""
                       }`}
                     >

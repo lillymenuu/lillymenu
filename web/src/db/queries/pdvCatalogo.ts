@@ -62,7 +62,9 @@ export async function catalogoPdv(lojaId: number): Promise<CatalogoPdvResultado>
     .from(produtos)
     .leftJoin(estoque, and(eq(estoque.produto_id, produtos.id), eq(estoque.loja_id, produtos.loja_id)))
     .leftJoin(estoqueGrupoMembros, and(eq(estoqueGrupoMembros.produto_id, produtos.id), eq(estoqueGrupoMembros.loja_id, produtos.loja_id)))
-    .where(and(eq(produtos.loja_id, lojaId), eq(produtos.ativo, true), eq(produtos.disponivel_catalogo, true)))
+    /* Nao filtra por "ativo" aqui: um produto marcado como "indisponivel" (ativo=false) deve
+       sumir do catalogo da loja pro cliente (ver catalogo.ts), mas continuar vendavel no balcao. */
+    .where(and(eq(produtos.loja_id, lojaId), eq(produtos.disponivel_catalogo, true)))
     .orderBy(sql`${produtos.ordem} is null`, asc(produtos.ordem), asc(produtos.nome));
 
   const produtosResultado: ProdutoPdv[] = produtosRaw.map((p) => {
