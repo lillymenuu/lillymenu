@@ -49,6 +49,9 @@ export type DashboardGrafico = {
   labels: string[];
   seriePedidos: number[];
   serieValores: number[];
+  serieBalcao: number[];
+  serieCardapio: number[];
+  serieAcessos: number[];
 };
 
 export type DashboardTopProduto = { nome: string; valor: number; saidas: number; estoque: number };
@@ -111,13 +114,21 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
         lte(lojaEventos.criado_em, `${fimMesStr} 23:59:59`)
       )
     );
-  /* pedidos finalizados no periodo, por origem (balcao = PDV, loja = cardapio online) */
-  const origemP = db
-    .select({ origem: pedidos.origem, n: sql<number>`count(*)` })
+  /* pedidos finalizados no periodo, por dia e origem (balcao = PDV, loja = cardapio online) —
+     alimenta tanto o total do card "Pedidos por canal" quanto seu sparkline */
+  const origemDiaP = db
+    .select({ dia: dataCompetencia, origem: pedidos.origem, n: sql<number>`count(*)` })
     .from(pedidos)
     .leftJoin(caixaTurnos, and(eq(caixaTurnos.id, pedidos.caixa_id), eq(caixaTurnos.loja_id, pedidos.loja_id)))
     .where(and(eq(pedidos.loja_id, lojaId), eq(pedidos.status, "finalizado"), gte(dataCompetencia, inicioPeriodoStr)))
-    .groupBy(pedidos.origem);
+    .groupBy(dataCompetencia, pedidos.origem);
+
+  /* acessos ao cardapio por dia no periodo (janela diferente do total mensal do KPI), pro sparkline */
+  const acessosDiaP = db
+    .select({ dia: sql<string>`to_char(${lojaEventos.criado_em}, 'YYYY-MM-DD')`, n: sql<number>`count(*)` })
+    .from(lojaEventos)
+    .where(and(eq(lojaEventos.loja_id, lojaId), eq(lojaEventos.tipo, "visita"), gte(lojaEventos.criado_em, `${inicioPeriodoStr} 00:00:00`)))
+    .groupBy(sql`to_char(${lojaEventos.criado_em}, 'YYYY-MM-DD')`);
 
   /* top 5 produtos por saidas (soma de pedido_itens.quantidade em pedidos finalizados) */
   const topP = db
@@ -143,19 +154,37 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
     .orderBy(sql`sum(${pedidoItens.quantidade}) desc`)
     .limit(5);
 
-  const [serieRaw, receitaMesLinhas, acessosLinhas, origemRaw, topRaw, cfgLoja] = await Promise.all([serieP, receitaMesP, acessosP, origemP, topP, getConfigs(lojaId, ["nome_loja", "loja_verificada"])]);
+  const [serieRaw, receitaMesLinhas, acessosLinhas, origemDiaRaw, acessosDiaRaw, topRaw, cfgLoja] = await Promise.all([
+    serieP,
+    receitaMesP,
+    acessosP,
+    origemDiaP,
+    acessosDiaP,
+    topP,
+    getConfigs(lojaId, ["nome_loja", "loja_verificada"]),
+  ]);
 
   const receitaMesAtual = Math.round(Number(receitaMesLinhas[0]?.total ?? 0) * 100) / 100;
   const acessosMenu = Number(acessosLinhas[0]?.n ?? 0);
-  const pedidosBalcao = Number(origemRaw.find((o) => o.origem === "balcao")?.n ?? 0);
-  const pedidosCardapio = Number(origemRaw.find((o) => o.origem === "loja")?.n ?? 0);
+  const pedidosBalcao = origemDiaRaw.filter((o) => o.origem === "balcao").reduce((s, o) => s + Number(o.n), 0);
+  const pedidosCardapio = origemDiaRaw.filter((o) => o.origem === "loja").reduce((s, o) => s + Number(o.n), 0);
 
   const mapPedidos = new Map(serieRaw.map((r) => [r.dia, Number(r.totalPedidos)]));
   const mapValores = new Map(serieRaw.map((r) => [r.dia, Number(r.totalValor)]));
+  const mapBalcao = new Map<string, number>();
+  const mapCardapio = new Map<string, number>();
+  for (const o of origemDiaRaw) {
+    if (o.origem === "balcao") mapBalcao.set(o.dia, Number(o.n));
+    else if (o.origem === "loja") mapCardapio.set(o.dia, Number(o.n));
+  }
+  const mapAcessos = new Map(acessosDiaRaw.map((r) => [r.dia, Number(r.n)]));
 
   const labels: string[] = [];
   const seriePedidos: number[] = [];
   const serieValores: number[] = [];
+  const serieBalcao: number[] = [];
+  const serieCardapio: number[] = [];
+  const serieAcessos: number[] = [];
   let pedidosPeriodo = 0;
   let receitaPeriodo = 0;
   const cursor = new Date(inicioPeriodo);
@@ -166,6 +195,9 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
     const valor = Math.round((mapValores.get(diaStr) ?? 0) * 100) / 100;
     seriePedidos.push(qtd);
     serieValores.push(valor);
+    serieBalcao.push(mapBalcao.get(diaStr) ?? 0);
+    serieCardapio.push(mapCardapio.get(diaStr) ?? 0);
+    serieAcessos.push(mapAcessos.get(diaStr) ?? 0);
     pedidosPeriodo += qtd;
     receitaPeriodo += valor;
     cursor.setDate(cursor.getDate() + 1);
@@ -194,7 +226,7 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
       pedidosCardapio,
       acessosMenu,
     },
-    grafico: { labels, seriePedidos, serieValores },
+    grafico: { labels, seriePedidos, serieValores, serieBalcao, serieCardapio, serieAcessos },
     topProdutos,
   };
 }

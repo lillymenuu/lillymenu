@@ -8,6 +8,7 @@ import { ConversionFunnel } from "@/components/conversion-funnel";
 import { DashboardSearch } from "@/components/dashboard-search";
 import { StoreLinkField } from "@/components/store-link-field";
 import { VerseOfDay } from "@/components/verse-of-day";
+import { DashboardSparkline } from "@/components/dashboard-sparkline";
 import { getSessaoAdmin } from "@/lib/session";
 import { getSidebarDataNeon } from "@/db/queries/sidebar";
 import { montarDashboard } from "@/db/queries/dashboard";
@@ -106,7 +107,7 @@ export default async function DashboardPage({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card>
+        <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <span className="text-xs text-muted-foreground">Receita do mês atual</span>
             <Banknote className="text-primary" size={18} />
@@ -114,9 +115,10 @@ export default async function DashboardPage({
           <CardContent>
             <div className="text-xl font-bold">{formatBRLMilhar(data.kpis.receitaMesAtual)}</div>
             <div className="text-xs text-muted-foreground">{data.kpis.faixaReceitaMes}</div>
+            <DashboardSparkline className="mt-2" series={[{ data: data.grafico.serieValores, color: "#9c5523" }]} />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <span className="text-xs text-muted-foreground">Pedidos finalizados</span>
             <ShoppingBag className="text-primary" size={18} />
@@ -124,9 +126,10 @@ export default async function DashboardPage({
           <CardContent>
             <div className="text-xl font-bold">{data.kpis.pedidosPeriodo}</div>
             <div className="text-xs text-muted-foreground">nos últimos {data.periodo} dias</div>
+            <DashboardSparkline className="mt-2" series={[{ data: data.grafico.seriePedidos, color: "#9c5523" }]} />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <span className="text-xs text-muted-foreground">Pedidos por canal</span>
             <Store className="text-primary" size={18} />
@@ -144,9 +147,16 @@ export default async function DashboardPage({
               </div>
             </div>
             <div className="mt-1 text-xs text-muted-foreground">nos últimos {data.periodo} dias</div>
+            <DashboardSparkline
+              className="mt-2"
+              series={[
+                { data: data.grafico.serieBalcao, color: "#9c5523" },
+                { data: data.grafico.serieCardapio, color: "#2563eb" },
+              ]}
+            />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <span className="text-xs text-muted-foreground">Acessos ao cardápio</span>
             <TrendingUp className="text-primary" size={18} />
@@ -154,6 +164,7 @@ export default async function DashboardPage({
           <CardContent>
             <div className="text-xl font-bold">{data.kpis.acessosMenu}</div>
             <div className="text-xs text-muted-foreground">este mês</div>
+            <DashboardSparkline className="mt-2" series={[{ data: data.grafico.serieAcessos, color: "#9c5523" }]} />
           </CardContent>
         </Card>
       </div>
