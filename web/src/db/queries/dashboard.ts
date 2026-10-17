@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { pedidos, caixaTurnos, clientes, lojaEventos, pedidoItens, produtos, estoque } from "@/db/schema";
+import { pedidos, caixaTurnos, lojaEventos, pedidoItens, produtos, estoque } from "@/db/schema";
 import { getConfigs } from "@/db/queries/config";
 
 /*
@@ -40,7 +40,8 @@ export type DashboardKpis = {
   faixaReceitaMes: string;
   pedidosPeriodo: number;
   receitaPeriodo: number;
-  clientesCadastrados: number;
+  pedidosBalcao: number;
+  pedidosCardapio: number;
   acessosMenu: number;
 };
 
@@ -110,7 +111,13 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
         lte(lojaEventos.criado_em, `${fimMesStr} 23:59:59`)
       )
     );
-  const clientesP = db.select({ n: sql<number>`count(*)` }).from(clientes).where(eq(clientes.loja_id, lojaId));
+  /* pedidos finalizados no periodo, por origem (balcao = PDV, loja = cardapio online) */
+  const origemP = db
+    .select({ origem: pedidos.origem, n: sql<number>`count(*)` })
+    .from(pedidos)
+    .leftJoin(caixaTurnos, and(eq(caixaTurnos.id, pedidos.caixa_id), eq(caixaTurnos.loja_id, pedidos.loja_id)))
+    .where(and(eq(pedidos.loja_id, lojaId), eq(pedidos.status, "finalizado"), gte(dataCompetencia, inicioPeriodoStr)))
+    .groupBy(pedidos.origem);
 
   /* top 5 produtos por saidas (soma de pedido_itens.quantidade em pedidos finalizados) */
   const topP = db
@@ -136,11 +143,12 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
     .orderBy(sql`sum(${pedidoItens.quantidade}) desc`)
     .limit(5);
 
-  const [serieRaw, receitaMesLinhas, acessosLinhas, clientesLinhas, topRaw, cfgLoja] = await Promise.all([serieP, receitaMesP, acessosP, clientesP, topP, getConfigs(lojaId, ["nome_loja", "loja_verificada"])]);
+  const [serieRaw, receitaMesLinhas, acessosLinhas, origemRaw, topRaw, cfgLoja] = await Promise.all([serieP, receitaMesP, acessosP, origemP, topP, getConfigs(lojaId, ["nome_loja", "loja_verificada"])]);
 
   const receitaMesAtual = Math.round(Number(receitaMesLinhas[0]?.total ?? 0) * 100) / 100;
   const acessosMenu = Number(acessosLinhas[0]?.n ?? 0);
-  const clientesCadastrados = Number(clientesLinhas[0]?.n ?? 0);
+  const pedidosBalcao = Number(origemRaw.find((o) => o.origem === "balcao")?.n ?? 0);
+  const pedidosCardapio = Number(origemRaw.find((o) => o.origem === "loja")?.n ?? 0);
 
   const mapPedidos = new Map(serieRaw.map((r) => [r.dia, Number(r.totalPedidos)]));
   const mapValores = new Map(serieRaw.map((r) => [r.dia, Number(r.totalValor)]));
@@ -182,7 +190,8 @@ export async function montarDashboard(lojaId: number, periodoBruto: number): Pro
       faixaReceitaMes: `${formatarDiaMes(inicioMes)} a ${formatarDiaMes(fimMes)}`,
       pedidosPeriodo,
       receitaPeriodo,
-      clientesCadastrados,
+      pedidosBalcao,
+      pedidosCardapio,
       acessosMenu,
     },
     grafico: { labels, seriePedidos, serieValores },

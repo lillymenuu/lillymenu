@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { BadgeCheck, Banknote, ShoppingBag, TrendingUp, Users } from "lucide-react";
+import { BadgeCheck, Banknote, ShoppingBag, TrendingUp, Store } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { TopProdutosChart } from "@/components/top-produtos-chart";
 import { DashboardChart } from "@/components/dashboard-chart";
@@ -128,11 +128,22 @@ export default async function DashboardPage({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <span className="text-xs text-muted-foreground">Clientes cadastrados</span>
-            <Users className="text-primary" size={18} />
+            <span className="text-xs text-muted-foreground">Pedidos por canal</span>
+            <Store className="text-primary" size={18} />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">{data.kpis.clientesCadastrados}</div>
+            <div className="flex items-center gap-4">
+              <div>
+                <div className="text-xl font-bold">{data.kpis.pedidosBalcao}</div>
+                <div className="text-xs text-muted-foreground">Balcão</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div>
+                <div className="text-xl font-bold">{data.kpis.pedidosCardapio}</div>
+                <div className="text-xs text-muted-foreground">Cardápio</div>
+              </div>
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">nos últimos {data.periodo} dias</div>
           </CardContent>
         </Card>
         <Card>
