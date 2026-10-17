@@ -13,6 +13,11 @@ import {
   PhoneCall,
   MapPin,
   Wallet,
+  FastForward,
+  Bike,
+  ShoppingBasket,
+  UtensilsCrossed,
+  type LucideIcon,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -27,6 +32,13 @@ const ORIGEM_LABELS: Record<string, string> = {
   online: "online",
   site: "pelo site",
   whatsapp: "pelo WhatsApp",
+};
+
+const TIPO_ICONES: Record<string, LucideIcon> = {
+  venda_rapida: FastForward,
+  entrega: Bike,
+  retirada: ShoppingBasket,
+  mesa: UtensilsCrossed,
 };
 import { ClientePerfilDialog } from "@/components/cliente/cliente-perfil-dialog";
 import type { Motoboy } from "@/lib/pedidos";
@@ -460,12 +472,16 @@ export function OrderDetailDialog({
 
                 <div className="flex flex-col gap-2.5 pt-1">
                   <div className="flex items-center gap-1.5 text-[10px] font-medium tracking-wide uppercase">
+                    {(() => {
+                      const TipoIcon = TIPO_ICONES[pedido.tipo];
+                      return TipoIcon ? <TipoIcon size={12} style={{ color: TIPO_CORES[pedido.tipo] ?? undefined }} /> : null;
+                    })()}
                     <span style={{ color: TIPO_CORES[pedido.tipo] ?? undefined }}>
                       {TIPO_LABELS[pedido.tipo] ?? pedido.tipo}
                     </span>
                     {pedido.origem && (
                       <span className="font-normal tracking-normal text-muted-foreground normal-case">
-                        · pedido {ORIGEM_LABELS[pedido.origem] ?? pedido.origem}
+                        - Pedido feito {ORIGEM_LABELS[pedido.origem] ?? pedido.origem}
                       </span>
                     )}
                   </div>

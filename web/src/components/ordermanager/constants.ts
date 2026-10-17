@@ -28,13 +28,15 @@ export const STATUS_CORES: Record<string, { bg: string; fg: string }> = {
 export const TIPO_LABELS: Record<string, string> = {
   entrega: "ENTREGA",
   retirada: "RETIRADA",
-  mesa: "MESA",
+  mesa: "COMER NO LOCAL",
+  venda_rapida: "VENDA RÁPIDA",
 };
 
 export const TIPO_CORES: Record<string, string> = {
   entrega: "#ea580c",
   retirada: "#2563eb",
   mesa: "#7c3aed",
+  venda_rapida: "#15803d",
 };
 
 /** Próxima etapa a partir de cada status do quadro; "entrega" avança via
