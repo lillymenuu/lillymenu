@@ -34,13 +34,16 @@ export function StorePromoListaModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="flex max-h-[92vh] max-w-[420px] flex-col gap-0 overflow-hidden rounded-[22px] p-0 sm:max-w-[420px]">
-        <div className="flex shrink-0 items-center justify-between px-[18px] pt-[18px] pb-1">
-          <DialogTitle className="text-[1.05rem] font-bold text-neutral-900">Promoções</DialogTitle>
+      <DialogContent
+        showCloseButton={false}
+        className="flex max-h-[92vh] max-w-[420px] flex-col gap-0 overflow-hidden rounded-[22px] p-0 sm:max-w-[420px] lg:max-h-[85vh] lg:max-w-[1200px] lg:rounded-3xl"
+      >
+        <div className="flex shrink-0 items-center justify-between px-[18px] pt-[18px] pb-1 lg:px-8 lg:pt-7 lg:pb-4">
+          <DialogTitle className="text-[1.05rem] font-bold text-neutral-900 lg:text-[1.4rem]">Promoções</DialogTitle>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
+            className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 lg:size-9 lg:bg-transparent lg:text-neutral-400"
           >
             <X size={15} />
           </button>
@@ -59,44 +62,87 @@ export function StorePromoListaModal({
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5 px-3.5 py-3">
-              {produtos.map((p) => {
-                const etiqueta = p.promo_etiqueta ? ETIQUETA_LABEL[p.promo_etiqueta] : null;
-                const cor = p.promo_etiqueta ? ETIQUETA_CORES[p.promo_etiqueta] : null;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => onSelecionar(p)}
-                    className="flex items-start gap-3 rounded-2xl border border-neutral-100 p-3 text-left transition-colors hover:border-neutral-200 hover:bg-neutral-50"
-                  >
-                    <div className="min-w-0 flex-1">
-                      {etiqueta && cor && (
-                        <span
-                          className="mb-1.5 inline-block animate-pulse rounded-full px-2 py-[3px] text-[.6rem] font-bold tracking-wide uppercase"
-                          style={{ background: cor.bg, color: cor.texto }}
-                        >
-                          {etiqueta}
-                        </span>
-                      )}
-                      <p className="mb-0.5 text-[.86rem] leading-tight font-bold text-neutral-900">{p.nome}</p>
-                      {p.descricao && <p className="mb-2 line-clamp-2 text-[.72rem] leading-snug text-neutral-400">{p.descricao}</p>}
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-[.74rem] text-neutral-300 line-through">{formatarPreco(p.preco_base)}</span>
-                        <span className="text-[.92rem] font-bold text-neutral-900">{formatarPreco(p.preco_final)}</span>
-                        <span className="rounded-full bg-emerald-600 px-1.5 py-[2px] text-[.68rem] font-bold text-white">-{p.desc_pct}%</span>
+            <>
+              {/* Lista — versao mobile */}
+              <div className="flex flex-col gap-2.5 px-3.5 py-3 lg:hidden">
+                {produtos.map((p) => {
+                  const etiqueta = p.promo_etiqueta ? ETIQUETA_LABEL[p.promo_etiqueta] : null;
+                  const cor = p.promo_etiqueta ? ETIQUETA_CORES[p.promo_etiqueta] : null;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => onSelecionar(p)}
+                      className="flex items-start gap-3 rounded-2xl border border-neutral-100 p-3 text-left transition-colors hover:border-neutral-200 hover:bg-neutral-50"
+                    >
+                      <div className="min-w-0 flex-1">
+                        {etiqueta && cor && (
+                          <span
+                            className="mb-1.5 inline-block animate-pulse rounded-full px-2 py-[3px] text-[.6rem] font-bold tracking-wide uppercase"
+                            style={{ background: cor.bg, color: cor.texto }}
+                          >
+                            {etiqueta}
+                          </span>
+                        )}
+                        <p className="mb-0.5 text-[.86rem] leading-tight font-bold text-neutral-900">{p.nome}</p>
+                        {p.descricao && <p className="mb-2 line-clamp-2 text-[.72rem] leading-snug text-neutral-400">{p.descricao}</p>}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[.74rem] text-neutral-300 line-through">{formatarPreco(p.preco_base)}</span>
+                          <span className="text-[.92rem] font-bold text-neutral-900">{formatarPreco(p.preco_final)}</span>
+                          <span className="rounded-full bg-emerald-600 px-1.5 py-[2px] text-[.68rem] font-bold text-white">-{p.desc_pct}%</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="size-[92px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
-                      {
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
-                      }
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                      <div className="size-[92px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+                        {
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                        }
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Grade — versao desktop */}
+              <div className="hidden lg:grid lg:grid-cols-3 lg:gap-5 lg:px-8 lg:py-6">
+                {produtos.map((p) => {
+                  const etiqueta = p.promo_etiqueta ? ETIQUETA_LABEL[p.promo_etiqueta] : null;
+                  const cor = p.promo_etiqueta ? ETIQUETA_CORES[p.promo_etiqueta] : null;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => onSelecionar(p)}
+                      className="flex items-start gap-3 rounded-2xl border border-neutral-200 p-3.5 text-left transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+                    >
+                      <div className="min-w-0 flex-1">
+                        {etiqueta && cor && (
+                          <span
+                            className="mb-1.5 inline-block animate-pulse rounded-full px-2 py-[3px] text-[.6rem] font-bold tracking-wide uppercase"
+                            style={{ background: cor.bg, color: cor.texto }}
+                          >
+                            {etiqueta}
+                          </span>
+                        )}
+                        <p className="mb-1 text-[.92rem] leading-tight font-bold text-neutral-900">{p.nome}</p>
+                        {p.descricao && <p className="mb-2 line-clamp-2 text-[.76rem] leading-snug text-neutral-400">{p.descricao}</p>}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[.9rem] font-bold text-emerald-600">{formatarPreco(p.preco_final)}</span>
+                          <span className="text-[.74rem] text-neutral-300 line-through">{formatarPreco(p.preco_base)}</span>
+                          <span className="rounded-full bg-emerald-50 px-1.5 py-[2px] text-[.68rem] font-bold text-emerald-700">-{p.desc_pct}%</span>
+                        </div>
+                      </div>
+                      <div className="size-[92px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+                        {
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                        }
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </DialogContent>
