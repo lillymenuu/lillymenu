@@ -459,7 +459,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             </button>
           </div>
 
-          <div className="ml-[240px] flex min-w-0 flex-col gap-1 pb-2">
+          <div className="flex min-w-0 flex-col gap-1 pb-2">
             <div className="flex items-center gap-1.5 text-2xl font-extrabold text-neutral-900">
               {perfil.nomeLoja}
               {perfil.lojaVerificada && (
