@@ -431,7 +431,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           </div>
         </div>
 
-        <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6" style={{ marginTop: -56 }}>
+        <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6" style={{ marginTop: -56, marginLeft: 240 }}>
           <div className="relative inline-flex shrink-0">
             <span
               className="absolute inset-0 animate-ping rounded-full opacity-30"
