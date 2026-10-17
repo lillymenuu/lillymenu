@@ -406,7 +406,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         {/* A faixa colorida cobre so uma fatia menor da altura do banner (padding simetrico
             em cima/embaixo faz o degrade bater sempre no mesmo ponto do banner). */}
         <div style={{ background: `linear-gradient(to bottom, ${brown} 0%, ${brown} 35%, #fff 35%, #fff 100%)` }}>
-          <div className="mx-auto max-w-[1400px] px-6 py-8">
+          <div className="mx-auto max-w-[1400px] px-6 pt-3 pb-8">
             <div className="relative h-[320px] w-full overflow-hidden rounded-3xl border-[3px] border-white bg-neutral-100 shadow-sm">
               {perfil.capaLoja ? (
                 // eslint-disable-next-line @next/next/no-img-element
