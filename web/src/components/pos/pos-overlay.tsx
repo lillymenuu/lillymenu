@@ -508,7 +508,7 @@ export function PosOverlay({
   return (
     <div
       ref={overlayRef}
-      onKeyDown={(e) => e.key === "Escape" && onFechar()}
+      onKeyDown={(e) => e.key === "Escape" && !document.fullscreenElement && onFechar()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-4"
     >
       <div className="flex h-full w-full max-w-[1680px] flex-col overflow-hidden rounded-3xl bg-background shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 duration-200">
