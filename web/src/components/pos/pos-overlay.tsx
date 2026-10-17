@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { X, ShoppingBag, Copy, Coins } from "lucide-react";
+import { X, ShoppingBag, Copy, Coins, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
@@ -117,6 +117,25 @@ export function PosOverlay({
   const [lojaLink, setLojaLink] = useState<string | null>(null);
   const [lojaNome, setLojaNome] = useState("");
   const [lojaLogo, setLojaLogo] = useState<string | null>(null);
+
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [telaCheia, setTelaCheia] = useState(false);
+
+  useEffect(() => {
+    function onFullscreenChange() {
+      setTelaCheia(document.fullscreenElement === overlayRef.current);
+    }
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  function alternarTelaCheia() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      overlayRef.current?.requestFullscreen();
+    }
+  }
 
   const [pedidoEditandoCodigo, setPedidoEditandoCodigo] = useState<number | null>(null);
   const [temItemComboNaEdicao, setTemItemComboNaEdicao] = useState(false);
@@ -488,6 +507,7 @@ export function PosOverlay({
 
   return (
     <div
+      ref={overlayRef}
       onKeyDown={(e) => e.key === "Escape" && onFechar()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-4"
     >
@@ -524,6 +544,15 @@ export function PosOverlay({
               </div>
             ) : null}
             <PosImpressaoToggle phpAdminUrl={phpAdminUrl} />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={alternarTelaCheia}
+              aria-label={telaCheia ? "Sair da tela cheia" : "Tela cheia"}
+              title={telaCheia ? "Sair da tela cheia" : "Tela cheia"}
+            >
+              {telaCheia ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            </Button>
             <Button variant="ghost" size="icon" onClick={onFechar}>
               <X className="size-4.5" />
             </Button>
