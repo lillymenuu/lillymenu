@@ -118,12 +118,14 @@ export function PosOverlay({
   const [lojaNome, setLojaNome] = useState("");
   const [lojaLogo, setLojaLogo] = useState<string | null>(null);
 
-  const overlayRef = useRef<HTMLDivElement>(null);
   const [telaCheia, setTelaCheia] = useState(false);
 
+  /* Tela cheia no <html>, nao so no overlay: os modais do PDV (Dialog/base-ui) sao
+     renderizados via portal em document.body — se so o overlay entrasse em tela cheia,
+     esses modais (fora da subarvore do elemento em fullscreen) ficariam escondidos atras dele. */
   useEffect(() => {
     function onFullscreenChange() {
-      setTelaCheia(document.fullscreenElement === overlayRef.current);
+      setTelaCheia(document.fullscreenElement !== null);
     }
     document.addEventListener("fullscreenchange", onFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
@@ -133,7 +135,7 @@ export function PosOverlay({
     if (document.fullscreenElement) {
       document.exitFullscreen();
     } else {
-      overlayRef.current?.requestFullscreen();
+      document.documentElement.requestFullscreen();
     }
   }
 
@@ -507,7 +509,6 @@ export function PosOverlay({
 
   return (
     <div
-      ref={overlayRef}
       onKeyDown={(e) => e.key === "Escape" && !document.fullscreenElement && onFechar()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-4"
     >
