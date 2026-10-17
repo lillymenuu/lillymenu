@@ -407,7 +407,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             em cima/embaixo faz o degrade bater sempre no mesmo ponto do banner). */}
         <div style={{ background: `linear-gradient(to bottom, ${brown} 0%, ${brown} 35%, #fff 35%, #fff 100%)` }}>
           <div className="mx-auto max-w-[1400px] px-6 pt-0 pb-8">
-            <div className="relative h-[333px] w-full overflow-hidden rounded-3xl border-[3px] border-white bg-neutral-100 shadow-sm">
+            <div className="relative h-[333px] w-full overflow-hidden rounded-xl border-[5px] border-white bg-neutral-100 shadow-sm">
               {perfil.capaLoja ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
@@ -431,7 +431,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           </div>
         </div>
 
-        <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6" style={{ marginTop: -56, marginLeft: 240 }}>
+        <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6" style={{ marginTop: -70, marginLeft: 240 }}>
           <div className="relative inline-flex shrink-0">
             <span
               className="absolute inset-0 animate-ping rounded-full opacity-30"
@@ -443,7 +443,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               className="relative inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
               style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
             >
-              <div className="size-[112px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-md">
+              <div className="size-[136px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-md">
                 {perfil.perfilLoja ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={perfil.perfilLoja} alt={perfil.nomeLoja} className="size-full object-cover" />
@@ -459,7 +459,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             </button>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-1 pb-2">
+          <div className="flex min-w-0 flex-col gap-1 pt-5 pb-2">
             <div className="flex items-center gap-1.5 text-2xl font-extrabold text-neutral-900">
               {perfil.nomeLoja}
               {perfil.lojaVerificada && (
