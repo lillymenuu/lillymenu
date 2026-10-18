@@ -356,7 +356,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           <div className="mx-auto flex max-w-[1400px] items-center justify-center gap-10 px-6 py-5">
             <button
               type="button"
-              className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold"
+              className="flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold"
               style={{ color: brown }}
             >
               <List size={18} />
@@ -369,7 +369,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                   setAuthDestino("pontos");
                   setAuthModalAberto(true);
                 }}
-                className={`flex items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+                className={`flex cursor-pointer items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
                   (authModalAberto && authDestino === "pontos") || pontosSheetAberto ? "text-white" : ""
                 }`}
               >
@@ -380,7 +380,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             <button
               type="button"
               onClick={abrirPromoNav}
-              className={`flex items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+              className={`flex cursor-pointer items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
                 promoListaAberta ? "text-white" : ""
               }`}
             >
@@ -393,7 +393,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                 setAuthDestino("pedidos");
                 setAuthModalAberto(true);
               }}
-              className={`flex items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+              className={`flex cursor-pointer items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
                 (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "text-white" : ""
               }`}
             >
@@ -423,7 +423,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                     navigator.clipboard?.writeText(window.location.href);
                   }
                 }}
-                className="absolute top-4 right-4 flex size-10 items-center justify-center rounded-full bg-white/90 text-neutral-700 shadow-md"
+                className="absolute top-4 right-4 flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/90 text-neutral-700 shadow-md"
               >
                 <Share2 size={16} />
               </button>
@@ -431,7 +431,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           </div>
         </div>
 
-        <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6" style={{ marginTop: -70 }}>
+        <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6" style={{ marginTop: -70, marginLeft: 56 }}>
           <div className="relative inline-flex shrink-0">
             <span
               className="absolute inset-0 animate-ping rounded-full opacity-30"
@@ -440,7 +440,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             <button
               type="button"
               onClick={() => setInfoAberto(true)}
-              className="relative inline-flex shrink-0 items-center justify-center rounded-full p-[3px]"
+              className="relative inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full p-[3px]"
               style={{ background: "conic-gradient(from -90deg, #e8c9a0, #d9a66c, #f0d9b8, #e8c9a0)" }}
             >
               <div className="size-[136px] overflow-hidden rounded-full border-[3px] border-white bg-white shadow-md">
@@ -486,7 +486,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               <button
                 type="button"
                 onClick={() => setInfoAberto(true)}
-                className="font-semibold underline-offset-2 hover:underline"
+                className="cursor-pointer font-semibold underline-offset-2 hover:underline"
                 style={{ color: brown }}
               >
                 Mais informações
