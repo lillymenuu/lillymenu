@@ -196,6 +196,21 @@ export function StoreProdutoDialog({
     </div>
   );
 
+  /* Mesmo campo de observacao, so que achatado — usado so na versao desktop do modal sem
+     variacoes (no mobile o campo acima continua igual, no rodape fixo). */
+  const obsFieldCompacto = (
+    <div>
+      <label className="mb-1 block text-[.78rem] font-semibold text-neutral-900">Alguma observação?</label>
+      <textarea
+        value={obs}
+        onChange={(e) => setObs(e.target.value)}
+        placeholder="Observações do cliente"
+        rows={1}
+        className="w-full resize-none rounded-2xl border-[1.5px] border-neutral-200 px-3 py-1.5 text-[.88rem] outline-none"
+      />
+    </div>
+  );
+
   const footer = (
     <div>
       {!temVariacoes && <div className="min-[940px]:hidden">{obsField}</div>}
@@ -335,14 +350,14 @@ export function StoreProdutoDialog({
                 {opcoesConteudo}
               </div>
             </div>
-            <div className="border-t border-neutral-100 px-4 pt-1.5 pb-2">
-              <label className="mb-1 block text-[.78rem] font-semibold text-neutral-900">Alguma observação?</label>
+            <div className="border-t border-neutral-100 px-4 pt-2 pb-2.5">
+              <label className="mb-1.5 block text-[.82rem] font-semibold text-neutral-900">Alguma observação?</label>
               <textarea
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
                 placeholder="Observações do cliente"
                 rows={1}
-                className="w-full resize-none rounded-2xl border-[1.5px] border-neutral-200 px-3 py-1.5 text-[.88rem] outline-none"
+                className="w-full resize-none rounded-2xl border-[1.5px] border-neutral-200 px-3 py-2 text-base outline-none"
               />
             </div>
           </div>
@@ -428,8 +443,8 @@ export function StoreProdutoDialog({
             {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
           </div>
         </div>
-        <div className="hidden min-[940px]:mt-4 min-[940px]:block min-[940px]:border-t min-[940px]:border-neutral-100 min-[940px]:pt-3">
-          {obsField}
+        <div className="hidden min-[940px]:mt-2 min-[940px]:block min-[940px]:border-t min-[940px]:border-neutral-100 min-[940px]:pt-2">
+          {obsFieldCompacto}
         </div>
       </div>
     </StoreSheet>
