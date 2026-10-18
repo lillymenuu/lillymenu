@@ -198,7 +198,7 @@ export function StoreProdutoDialog({
 
   const footer = (
     <div>
-      {!temVariacoes && obsField}
+      {!temVariacoes && <div className="min-[940px]:hidden">{obsField}</div>}
       <div className="flex items-center justify-between gap-3">
         <QtyStepper
           value={qtd}
@@ -363,7 +363,7 @@ export function StoreProdutoDialog({
       {/* No mobile continua o mesmo "sheet" de tela cheia de sempre. No desktop (min-[940px]),
           via contentClassName acima, o modal vira um cartao flutuante centralizado — foto numa
           coluna fixa a esquerda, informacoes numa coluna flexivel a direita. */}
-      <div className="relative p-4 min-[940px]:flex min-[940px]:min-h-0 min-[940px]:items-stretch min-[940px]:gap-6 min-[940px]:p-6">
+      <div className="relative p-4 min-[940px]:flex min-[940px]:h-full min-[940px]:flex-col min-[940px]:p-6">
         <button
           type="button"
           onClick={() => onOpenChange(false)}
@@ -372,59 +372,64 @@ export function StoreProdutoDialog({
         >
           <X size={15} />
         </button>
-        <div
-          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] min-[940px]:mb-0 min-[940px]:aspect-auto! min-[940px]:h-[385px] min-[940px]:w-[357px] min-[940px]:max-h-none min-[940px]:shrink-0 min-[940px]:rounded-2xl ${
-            imagemAmpliada ? "" : "h-[190px]"
-          }`}
-          style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
-        >
-          <button
-            type="button"
-            onClick={() => setImagemAmpliada((v) => !v)}
-            className={`block size-full ${imagemAmpliada ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+        <div className="min-[940px]:flex min-[940px]:min-h-0 min-[940px]:flex-1 min-[940px]:items-stretch min-[940px]:gap-6">
+          <div
+            className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] min-[940px]:mb-0 min-[940px]:aspect-auto! min-[940px]:h-[385px] min-[940px]:w-[357px] min-[940px]:max-h-none min-[940px]:shrink-0 min-[940px]:rounded-2xl ${
+              imagemAmpliada ? "" : "h-[190px]"
+            }`}
+            style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={produto.imagem || PRODUTO_IMAGEM_PADRAO}
-              alt=""
-              onLoad={(e) => {
-                const img = e.currentTarget;
-                if (img.naturalWidth && img.naturalHeight) setAspectRatio(img.naturalWidth / img.naturalHeight);
-              }}
-              className="size-full object-cover"
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => setImagemAmpliada((v) => !v)}
-            className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white min-[940px]:hidden"
-          >
-            {imagemAmpliada ? <Shrink size={12} /> : <Expand size={12} />}
-            {imagemAmpliada ? "Recolher" : "Ver maior"}
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600 min-[940px]:hidden"
-          >
-            <X size={14} />
-          </button>
-        </div>
-        <div className="min-w-0 min-[940px]:flex-1 min-[940px]:overflow-y-auto min-[940px]:pt-1">
-          <h2 className="mb-1.5 text-[1rem] font-bold text-neutral-900 min-[940px]:text-[1.15rem]">{produto.nome}</h2>
-          {produto.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
-          <div className="mb-3.5 flex flex-wrap items-center gap-2">
-            {produto.em_promo ? (
-              <div className="flex items-center gap-2">
-                <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
-                <span className="text-[1.05rem] font-bold text-emerald-600">{formatarPreco(produto.preco_final)}</span>
-              </div>
-            ) : (
-              <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
-            )}
-            <PontosBadge pontos={pontosTotal} />
+            <button
+              type="button"
+              onClick={() => setImagemAmpliada((v) => !v)}
+              className={`block size-full ${imagemAmpliada ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={produto.imagem || PRODUTO_IMAGEM_PADRAO}
+                alt=""
+                onLoad={(e) => {
+                  const img = e.currentTarget;
+                  if (img.naturalWidth && img.naturalHeight) setAspectRatio(img.naturalWidth / img.naturalHeight);
+                }}
+                className="size-full object-cover"
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => setImagemAmpliada((v) => !v)}
+              className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white min-[940px]:hidden"
+            >
+              {imagemAmpliada ? <Shrink size={12} /> : <Expand size={12} />}
+              {imagemAmpliada ? "Recolher" : "Ver maior"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600 min-[940px]:hidden"
+            >
+              <X size={14} />
+            </button>
           </div>
-          {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
+          <div className="min-w-0 min-[940px]:flex-1 min-[940px]:overflow-y-auto min-[940px]:pt-1">
+            <h2 className="mb-1.5 text-[1rem] font-bold text-neutral-900 min-[940px]:text-[1.15rem]">{produto.nome}</h2>
+            {produto.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
+            <div className="mb-3.5 flex flex-wrap items-center gap-2">
+              {produto.em_promo ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
+                  <span className="text-[1.05rem] font-bold text-emerald-600">{formatarPreco(produto.preco_final)}</span>
+                </div>
+              ) : (
+                <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
+              )}
+              <PontosBadge pontos={pontosTotal} />
+            </div>
+            {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
+          </div>
+        </div>
+        <div className="hidden min-[940px]:mt-4 min-[940px]:block min-[940px]:border-t min-[940px]:border-neutral-100 min-[940px]:pt-3">
+          {obsField}
         </div>
       </div>
     </StoreSheet>
