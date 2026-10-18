@@ -82,6 +82,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
 
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const catNavRef = useRef<HTMLDivElement>(null);
+  const navFixoRef = useRef<HTMLDivElement>(null);
   const destaquesScrollRef = useRef<HTMLDivElement>(null);
   const catalogoVersaoRef = useRef(perfilInicial.catalogoVersao);
   const catalogoBannerMostradoRef = useRef(false);
@@ -177,9 +178,16 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perfil.loja_id]);
 
+  /* scrollIntoView sozinho para o titulo da categoria embaixo da barra fixa (nav de
+     categorias sticky e, quando visivel, a barra de vidro) — desconta a altura de
+     quem estiver cobrindo o topo nesse momento pra o nome da categoria ficar visivel. */
   function irParaCategoria(id: number) {
     setCategoriaAtiva(id);
-    sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = sectionRefs.current[id];
+    if (!el) return;
+    const alturaBarra = navFixoVisivel ? (navFixoRef.current?.offsetHeight ?? 0) : (catNavRef.current?.offsetHeight ?? 0);
+    const top = el.getBoundingClientRect().top + window.scrollY - alturaBarra - 12;
+    window.scrollTo({ top, behavior: "smooth" });
   }
 
   /* Seta da direita dos Destaques: so aparece (desktop) enquanto da pra rolar mais pra direita. */
@@ -531,6 +539,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           com efeito de vidro (fundo translucido + blur). So aparece depois que a pagina rola
           alem do cabecalho (banner+logo). */}
       <div
+        ref={navFixoRef}
         className={`fixed inset-x-0 top-0 z-40 hidden border-b border-white/40 bg-white/75 shadow-sm backdrop-blur-md transition-all duration-200 lg:flex ${
           navFixoVisivel ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"
         }`}
