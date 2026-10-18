@@ -185,13 +185,13 @@ export function StoreProdutoDialog({
 
   const obsField = (
     <div className="mb-3">
-      <label className="mb-1.5 block text-[.86rem] font-bold text-neutral-900">Alguma observacao?</label>
+      <label className="mb-1.5 block text-[.86rem] font-bold text-neutral-900">Alguma observação?</label>
       <textarea
         value={obs}
         onChange={(e) => setObs(e.target.value)}
-        placeholder="Observacoes do cliente"
+        placeholder="Observações do cliente"
         rows={2}
-        className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-base outline-none"
+        className="w-full resize-none rounded-2xl border-[1.5px] border-neutral-200 p-2.5 text-base outline-none"
       />
     </div>
   );
@@ -211,7 +211,7 @@ export function StoreProdutoDialog({
           type="button"
           disabled={!podeAdicionar}
           onClick={adicionar}
-          className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+          className="flex-1 rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
           style={{ background: podeAdicionar ? brown : temVariacoes ? "#a3a3a3" : "#c0a88a" }}
         >
           {produto.esgotado
@@ -342,7 +342,7 @@ export function StoreProdutoDialog({
                 onChange={(e) => setObs(e.target.value)}
                 placeholder="Observações do cliente"
                 rows={1}
-                className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 px-3 py-2 text-base outline-none"
+                className="w-full resize-none rounded-2xl border-[1.5px] border-neutral-200 px-3 py-2 text-base outline-none"
               />
             </div>
           </div>
@@ -363,7 +363,7 @@ export function StoreProdutoDialog({
       {/* No mobile continua o mesmo "sheet" de tela cheia de sempre. No desktop (min-[940px]),
           via contentClassName acima, o modal vira um cartao flutuante centralizado — foto numa
           coluna fixa a esquerda, informacoes numa coluna flexivel a direita. */}
-      <div className="relative p-4 min-[940px]:flex min-[940px]:items-start min-[940px]:gap-6 min-[940px]:p-6">
+      <div className="relative p-4 min-[940px]:flex min-[940px]:min-h-0 min-[940px]:items-stretch min-[940px]:gap-6 min-[940px]:p-6">
         <button
           type="button"
           onClick={() => onOpenChange(false)}
@@ -373,7 +373,7 @@ export function StoreProdutoDialog({
           <X size={15} />
         </button>
         <div
-          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] min-[940px]:mb-0 min-[940px]:aspect-auto! min-[940px]:h-[420px] min-[940px]:w-[320px] min-[940px]:max-h-none min-[940px]:shrink-0 ${
+          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] min-[940px]:mb-0 min-[940px]:aspect-auto! min-[940px]:w-[380px] min-[940px]:max-h-none min-[940px]:shrink-0 min-[940px]:rounded-2xl ${
             imagemAmpliada ? "" : "h-[190px]"
           }`}
           style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
@@ -410,7 +410,7 @@ export function StoreProdutoDialog({
             <X size={14} />
           </button>
         </div>
-        <div className="min-w-0 min-[940px]:flex-1 min-[940px]:pt-1">
+        <div className="min-w-0 min-[940px]:flex-1 min-[940px]:overflow-y-auto min-[940px]:pt-1">
           <h2 className="mb-1.5 text-[1rem] font-bold text-neutral-900 min-[940px]:text-[1.15rem]">{produto.nome}</h2>
           {produto.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
           <div className="mb-3.5 flex flex-wrap items-center gap-2">
