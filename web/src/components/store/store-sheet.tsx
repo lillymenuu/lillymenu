@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { ChevronLeft, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "cn";
 
 /**
  * Chrome de "sheet" usado por todos os modais da loja publica (produto,
@@ -19,6 +20,7 @@ export function StoreSheet({
   footer,
   children,
   maxWidth = 901,
+  contentClassName,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -36,13 +38,21 @@ export function StoreSheet({
    * por especificidade, sem depender de o Tailwind "ver" a classe.
    */
   maxWidth?: number;
+  /**
+   * Classes extras pro DialogContent — pensado pra variantes desktop (ex.:
+   * `min-[940px]:rounded-[20px]!`) escritas como literal no call site, pra o
+   * scanner estatico do Tailwind conseguir enxergar e gerar o CSS. Usa `!`
+   * (important) nos breakpoints que precisam vencer o `style={{maxWidth}}`
+   * acima (ex.: `min-[940px]:max-w-[900px]!`).
+   */
+  contentClassName?: string;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
         style={{ maxWidth }}
-        className="top-0 left-1/2 h-dvh w-full translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0"
+        className={cn("top-0 left-1/2 h-dvh w-full translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0", contentClassName)}
       >
         <div className="flex h-full min-h-0 flex-col">
           {(title || onBack || rightAction) && (

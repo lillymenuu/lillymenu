@@ -353,11 +353,25 @@ export function StoreProdutoDialog({
   }
 
   return (
-    <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={900}>
-      {/* No desktop (min-[940px]) a foto fica numa coluna fixa a esquerda e as informacoes numa
-          coluna flexivel a direita, dentro do mesmo "sheet" de tela cheia usado no mobile —
-          so a disposicao do conteudo muda, nao o formato do modal. */}
-      <div className="p-4 min-[940px]:flex min-[940px]:items-start min-[940px]:gap-6 min-[940px]:p-6">
+    <StoreSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      footer={footer}
+      maxWidth={900}
+      contentClassName="min-[940px]:top-1/2! min-[940px]:-translate-y-1/2! min-[940px]:h-[min(597px,calc(100dvh-24px))]! min-[940px]:max-h-[597px]! min-[940px]:w-[900px]! min-[940px]:max-w-[900px]! min-[940px]:rounded-[20px]! min-[940px]:shadow-[0_24px_60px_rgba(0,0,0,.3)]!"
+    >
+      {/* No mobile continua o mesmo "sheet" de tela cheia de sempre. No desktop (min-[940px]),
+          via contentClassName acima, o modal vira um cartao flutuante centralizado — foto numa
+          coluna fixa a esquerda, informacoes numa coluna flexivel a direita. */}
+      <div className="relative p-4 min-[940px]:flex min-[940px]:items-start min-[940px]:gap-6 min-[940px]:p-6">
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          aria-label="Fechar"
+          className="absolute top-3 right-3 z-10 hidden size-7 items-center justify-center rounded-full bg-black/25 text-white hover:bg-black/35 min-[940px]:flex"
+        >
+          <X size={15} />
+        </button>
         <div
           className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] min-[940px]:mb-0 min-[940px]:aspect-auto! min-[940px]:h-[420px] min-[940px]:w-[320px] min-[940px]:max-h-none min-[940px]:shrink-0 ${
             imagemAmpliada ? "" : "h-[190px]"
@@ -391,7 +405,7 @@ export function StoreProdutoDialog({
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600"
+            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600 min-[940px]:hidden"
           >
             <X size={14} />
           </button>
