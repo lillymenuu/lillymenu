@@ -610,6 +610,22 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               <Home size={18} />
               Início
             </button>
+            {perfil.clubePontosAtivo && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthDestino("pontos");
+                  setAuthModalAberto(true);
+                }}
+                className={`flex cursor-pointer flex-col items-center gap-0.5 text-[.68rem] font-bold ${
+                  (authModalAberto && authDestino === "pontos") || pontosSheetAberto ? "" : "text-neutral-400"
+                }`}
+                style={(authModalAberto && authDestino === "pontos") || pontosSheetAberto ? { color: brown } : undefined}
+              >
+                <Coins size={18} />
+                Pontos
+              </button>
+            )}
             <button
               type="button"
               onClick={abrirPromoNav}
