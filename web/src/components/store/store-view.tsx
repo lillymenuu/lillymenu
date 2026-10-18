@@ -392,14 +392,14 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           logo sobrepondo o banner ao lado das informacoes (nome/horario/endereco) */}
       <div className="hidden lg:block">
         <div style={{ background: brown }}>
-          <div className="mx-auto flex max-w-[1400px] items-center justify-center gap-10 px-6 py-5">
+          <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-10 px-6 py-5">
             <button
               type="button"
-              className="flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold"
+              className="flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-base font-bold"
               style={{ color: brown }}
             >
-              <List size={18} />
-              Menu
+              <Home size={20} />
+              Início
             </button>
             {perfil.clubePontosAtivo && (
               <button
@@ -408,22 +408,22 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                   setAuthDestino("pontos");
                   setAuthModalAberto(true);
                 }}
-                className={`flex cursor-pointer items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+                className={`flex cursor-pointer items-center gap-2 px-1 text-base font-bold text-white/80 transition-colors hover:text-white ${
                   (authModalAberto && authDestino === "pontos") || pontosSheetAberto ? "text-white" : ""
                 }`}
               >
-                <Coins size={18} />
+                <Coins size={20} />
                 Pontos
               </button>
             )}
             <button
               type="button"
               onClick={abrirPromoNav}
-              className={`flex cursor-pointer items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+              className={`flex cursor-pointer items-center gap-2 px-1 text-base font-bold text-white/80 transition-colors hover:text-white ${
                 promoListaAberta ? "text-white" : ""
               }`}
             >
-              <Gift size={18} />
+              <Gift size={20} />
               Promo
             </button>
             <button
@@ -432,11 +432,11 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                 setAuthDestino("pedidos");
                 setAuthModalAberto(true);
               }}
-              className={`flex cursor-pointer items-center gap-2 px-1 text-sm font-bold text-white/80 transition-colors hover:text-white ${
+              className={`flex cursor-pointer items-center gap-2 px-1 text-base font-bold text-white/80 transition-colors hover:text-white ${
                 (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "text-white" : ""
               }`}
             >
-              <ShoppingBag size={18} />
+              <ShoppingBag size={20} />
               Pedidos
             </button>
           </div>
