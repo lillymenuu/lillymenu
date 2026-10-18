@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   AtSign,
+  ChevronDown,
   Clock3,
   Coins,
   Gift,
+  Home,
   Layers,
   List,
   Percent,
@@ -73,6 +75,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [pontosSheetAberto, setPontosSheetAberto] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(catalogo.categorias[0]?.id ?? null);
   const [catalogoAtualizadoVisivel, setCatalogoAtualizadoVisivel] = useState(false);
+  const [navFixoVisivel, setNavFixoVisivel] = useState(false);
+  const [categoriaMenuAberto, setCategoriaMenuAberto] = useState(false);
 
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const catNavRef = useRef<HTMLDivElement>(null);
@@ -92,6 +96,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         }
       }
       if (closest) setCategoriaAtiva(closest.id);
+      setNavFixoVisivel(window.scrollY > 260);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -492,6 +497,107 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                 Mais informações
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav fixa no topo ao rolar a pagina (desktop): logo, categoria atual, busca e atalhos,
+          com efeito de vidro (fundo translucido + blur). So aparece depois que a pagina rola
+          alem do cabecalho (banner+logo). */}
+      <div
+        className={`fixed inset-x-0 top-0 z-40 hidden border-b border-white/40 bg-white/75 shadow-sm backdrop-blur-md transition-all duration-200 lg:flex ${
+          navFixoVisivel ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"
+        }`}
+      >
+        <div className="mx-auto flex w-full max-w-[1400px] items-center gap-4 px-6 py-2.5">
+          <button
+            type="button"
+            onClick={() => setInfoAberto(true)}
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-neutral-200 bg-white"
+          >
+            {perfil.perfilLoja ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={perfil.perfilLoja} alt={perfil.nomeLoja} className="size-full object-cover" />
+            ) : (
+              <div className="flex size-full items-center justify-center text-sm font-extrabold text-white" style={{ background: brown }}>
+                {perfil.nomeLoja.charAt(0)}
+              </div>
+            )}
+          </button>
+
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setCategoriaMenuAberto((v) => !v)}
+              className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-sm font-semibold text-neutral-800"
+            >
+              {catalogo.categorias.find((c) => c.id === categoriaAtiva)?.nome ?? "Categorias"}
+              <ChevronDown size={15} className={`text-neutral-400 transition-transform ${categoriaMenuAberto ? "rotate-180" : ""}`} />
+            </button>
+            {categoriaMenuAberto && (
+              <div className="absolute top-full left-0 z-10 mt-1.5 max-h-72 w-56 overflow-y-auto rounded-xl border border-neutral-200 bg-white py-1.5 shadow-lg">
+                {catalogo.categorias.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      irParaCategoria(cat.id);
+                      setCategoriaMenuAberto(false);
+                    }}
+                    className={`flex w-full cursor-pointer items-center px-3.5 py-2 text-left text-sm font-medium ${
+                      categoriaAtiva === cat.id ? "text-white" : "text-neutral-700 hover:bg-neutral-50"
+                    }`}
+                    style={categoriaAtiva === cat.id ? { background: brown } : undefined}
+                  >
+                    {cat.nome}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setBuscaAberta(true)}
+            className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 text-left text-sm text-neutral-400"
+          >
+            <Search size={16} className="shrink-0" />
+            Busque por um produto
+          </button>
+
+          <div className="flex shrink-0 items-center gap-6">
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="flex cursor-pointer flex-col items-center gap-0.5 text-[.68rem] font-bold"
+              style={{ color: brown }}
+            >
+              <Home size={18} />
+              Início
+            </button>
+            <button
+              type="button"
+              onClick={abrirPromoNav}
+              className={`flex cursor-pointer flex-col items-center gap-0.5 text-[.68rem] font-bold ${promoListaAberta ? "" : "text-neutral-400"}`}
+              style={promoListaAberta ? { color: brown } : undefined}
+            >
+              <Gift size={18} />
+              Promoções
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthDestino("pedidos");
+                setAuthModalAberto(true);
+              }}
+              className={`flex cursor-pointer flex-col items-center gap-0.5 text-[.68rem] font-bold ${
+                (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "" : "text-neutral-400"
+              }`}
+              style={(authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? { color: brown } : undefined}
+            >
+              <ShoppingBag size={18} />
+              Pedidos
+            </button>
           </div>
         </div>
       </div>
