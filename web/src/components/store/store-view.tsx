@@ -1026,7 +1026,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
 
       {/* Cart bar */}
       {cart.totalItens > 0 && (
-        <div className="fixed inset-x-0 bottom-[60px] z-40 flex justify-center border-t border-neutral-100 bg-white px-4 py-2.5">
+        <div className="fixed inset-x-0 bottom-[60px] z-40 flex justify-center border-t border-neutral-100 bg-white px-4 py-2.5 shadow-[0_-6px_20px_rgba(0,0,0,.07)] lg:bottom-0">
           <div className="flex w-full max-w-[901px] items-center justify-between gap-3">
             <div>
               <p className="text-[.72rem] text-neutral-500">Subtotal</p>
