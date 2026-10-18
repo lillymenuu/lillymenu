@@ -96,7 +96,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         }
       }
       if (closest) setCategoriaAtiva(closest.id);
-      setNavFixoVisivel(window.scrollY > 260);
+      setNavFixoVisivel((catNavRef.current?.getBoundingClientRect().top ?? Infinity) <= 0);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -643,7 +643,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
 
       {/* Category nav */}
       <div ref={catNavRef} className="sticky top-0 z-30 mt-4 border-b border-neutral-100 bg-white">
-        <div className="mx-auto flex max-w-[901px] items-center px-2">
+        <div className="mx-auto flex max-w-[901px] items-center px-2 lg:max-w-[1400px] lg:px-6">
           <div className="flex flex-1 gap-2 overflow-x-auto px-1 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {catalogo.categorias.map((cat) => {
               const ativa = categoriaAtiva === cat.id;
@@ -673,17 +673,17 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
 
       {/* Destaques */}
       {catalogo.destaques.length > 0 && (
-        <div className="mx-auto max-w-[901px]">
-          <h2 className="px-4 pt-4 pb-2 text-[.95rem] font-bold text-neutral-900">Destaques</h2>
-          <div className="flex gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mx-auto max-w-[901px] lg:max-w-[1400px]">
+          <h2 className="px-4 pt-4 pb-2 text-[.95rem] font-bold text-neutral-900 lg:px-6">Destaques</h2>
+          <div className="flex gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] lg:gap-4 lg:px-6 [&::-webkit-scrollbar]:hidden">
             {catalogo.destaques.map((item) => (
               <button
                 key={`${isCombo(item) ? "combo" : "produto"}-${item.id}`}
                 type="button"
                 onClick={() => abrirItem(item)}
-                className="w-[140px] shrink-0 cursor-pointer text-left"
+                className="w-[140px] shrink-0 cursor-pointer text-left lg:w-[190px]"
               >
-                <div className="mb-1.5 h-[110px] w-[140px] overflow-hidden rounded-xl bg-neutral-100">
+                <div className="mb-1.5 h-[110px] w-[140px] overflow-hidden rounded-xl bg-neutral-100 lg:h-[160px] lg:w-[190px]">
                   {item.imagem || !isCombo(item) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
