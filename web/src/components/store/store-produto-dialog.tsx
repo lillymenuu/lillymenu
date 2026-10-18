@@ -374,7 +374,7 @@ export function StoreProdutoDialog({
         </button>
         <div className="min-[940px]:flex min-[940px]:min-h-0 min-[940px]:flex-1 min-[940px]:items-stretch min-[940px]:gap-6">
           <div
-            className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] min-[940px]:mb-0 min-[940px]:aspect-auto! min-[940px]:h-[385px] min-[940px]:w-[357px] min-[940px]:max-h-none min-[940px]:shrink-0 min-[940px]:rounded-2xl ${
+            className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] min-[940px]:mb-0 min-[940px]:aspect-auto! min-[940px]:h-[385px]! min-[940px]:w-[357px] min-[940px]:max-h-none! min-[940px]:shrink-0 min-[940px]:rounded-2xl ${
               imagemAmpliada ? "" : "h-[190px]"
             }`}
             style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
