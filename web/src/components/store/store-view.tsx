@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AtSign,
   ChevronDown,
+  ChevronRight,
   Clock3,
   Coins,
   Gift,
@@ -77,9 +78,11 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [catalogoAtualizadoVisivel, setCatalogoAtualizadoVisivel] = useState(false);
   const [navFixoVisivel, setNavFixoVisivel] = useState(false);
   const [categoriaMenuAberto, setCategoriaMenuAberto] = useState(false);
+  const [destaquesTemMais, setDestaquesTemMais] = useState(false);
 
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const catNavRef = useRef<HTMLDivElement>(null);
+  const destaquesScrollRef = useRef<HTMLDivElement>(null);
   const catalogoVersaoRef = useRef(perfilInicial.catalogoVersao);
   const catalogoBannerMostradoRef = useRef(false);
   const interacaoRef = useRef(false);
@@ -177,6 +180,29 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   function irParaCategoria(id: number) {
     setCategoriaAtiva(id);
     sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /* Seta da direita dos Destaques: so aparece (desktop) enquanto da pra rolar mais pra direita. */
+  function checarDestaquesOverflow() {
+    const el = destaquesScrollRef.current;
+    if (!el) return;
+    setDestaquesTemMais(el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+  }
+
+  useEffect(() => {
+    checarDestaquesOverflow();
+    const el = destaquesScrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checarDestaquesOverflow, { passive: true });
+    window.addEventListener("resize", checarDestaquesOverflow);
+    return () => {
+      el.removeEventListener("scroll", checarDestaquesOverflow);
+      window.removeEventListener("resize", checarDestaquesOverflow);
+    };
+  }, [catalogo.destaques.length]);
+
+  function rolarDestaques() {
+    destaquesScrollRef.current?.scrollBy({ left: 400, behavior: "smooth" });
   }
 
   /* Estoque que o carrinho ja consome: produto ja no limite do estoque nao abre de novo (ficaria "comprar o que acabou"). */
@@ -642,7 +668,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       {perfil.flyersAtivo && perfil.lojaFlyers?.length > 0 && <StoreFlyerSlider flyers={perfil.lojaFlyers} />}
 
       {/* Category nav */}
-      <div ref={catNavRef} className="sticky top-0 z-30 mt-4 border-b border-neutral-100 bg-white">
+      <div ref={catNavRef} className="sticky top-0 z-30 mt-4 border-b border-neutral-100 bg-white lg:border-b-0">
         <div className="mx-auto flex max-w-[901px] items-center px-2 lg:max-w-[1400px] lg:px-6">
           <div className="flex flex-1 gap-2 overflow-x-auto px-1 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {catalogo.categorias.map((cat) => {
@@ -673,9 +699,12 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
 
       {/* Destaques */}
       {catalogo.destaques.length > 0 && (
-        <div className="mx-auto max-w-[901px] lg:max-w-[1400px]">
+        <div className="relative mx-auto max-w-[901px] lg:max-w-[1400px]">
           <h2 className="px-4 pt-4 pb-2 text-[.95rem] font-bold text-neutral-900 lg:px-6">Destaques</h2>
-          <div className="flex gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] lg:gap-4 lg:px-6 [&::-webkit-scrollbar]:hidden">
+          <div
+            ref={destaquesScrollRef}
+            className="flex gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] lg:gap-4 lg:px-6 [&::-webkit-scrollbar]:hidden"
+          >
             {catalogo.destaques.map((item) => (
               <button
                 key={`${isCombo(item) ? "combo" : "produto"}-${item.id}`}
@@ -720,6 +749,17 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               </button>
             ))}
           </div>
+
+          {destaquesTemMais && (
+            <button
+              type="button"
+              onClick={rolarDestaques}
+              aria-label="Ver mais destaques"
+              className="absolute top-1/2 right-2 hidden size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-neutral-700 shadow-md ring-1 ring-neutral-200 transition-colors hover:bg-neutral-50 lg:flex"
+            >
+              <ChevronRight size={18} />
+            </button>
+          )}
         </div>
       )}
 
