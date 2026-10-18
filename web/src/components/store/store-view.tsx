@@ -446,7 +446,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             em cima/embaixo faz o degrade bater sempre no mesmo ponto do banner). */}
         <div style={{ background: `linear-gradient(to bottom, ${brown} 0%, ${brown} 35%, #fff 35%, #fff 100%)` }}>
           <div className="mx-auto max-w-[1400px] px-6 pt-0 pb-8">
-            <div className="relative h-[333px] w-full overflow-hidden rounded-xl border-[5px] border-white bg-neutral-100 shadow-sm">
+            <div className="relative h-[333px] w-full overflow-hidden rounded-2xl border-[5px] border-white bg-neutral-100 shadow-sm">
               {perfil.capaLoja ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={perfil.capaLoja} alt="" className="size-full object-cover" />
