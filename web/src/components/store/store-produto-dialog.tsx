@@ -335,14 +335,14 @@ export function StoreProdutoDialog({
                 {opcoesConteudo}
               </div>
             </div>
-            <div className="border-t border-neutral-100 px-4 pt-2 pb-2.5">
-              <label className="mb-1.5 block text-[.82rem] font-semibold text-neutral-900">Alguma observação?</label>
+            <div className="border-t border-neutral-100 px-4 pt-1.5 pb-2">
+              <label className="mb-1 block text-[.78rem] font-semibold text-neutral-900">Alguma observação?</label>
               <textarea
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
                 placeholder="Observações do cliente"
                 rows={1}
-                className="w-full resize-none rounded-2xl border-[1.5px] border-neutral-200 px-3 py-2 text-base outline-none"
+                className="w-full resize-none rounded-2xl border-[1.5px] border-neutral-200 px-3 py-1.5 text-[.88rem] outline-none"
               />
             </div>
           </div>
