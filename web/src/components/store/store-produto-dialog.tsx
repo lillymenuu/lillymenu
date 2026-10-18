@@ -353,10 +353,13 @@ export function StoreProdutoDialog({
   }
 
   return (
-    <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={615}>
-      <div className="p-4">
+    <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={900}>
+      {/* No desktop (min-[940px]) a foto fica numa coluna fixa a esquerda e as informacoes numa
+          coluna flexivel a direita, dentro do mesmo "sheet" de tela cheia usado no mobile —
+          so a disposicao do conteudo muda, nao o formato do modal. */}
+      <div className="p-4 min-[940px]:flex min-[940px]:items-start min-[940px]:gap-6 min-[940px]:p-6">
         <div
-          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] ${
+          className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] min-[940px]:mb-0 min-[940px]:aspect-auto! min-[940px]:h-[420px] min-[940px]:w-[320px] min-[940px]:max-h-none min-[940px]:shrink-0 ${
             imagemAmpliada ? "" : "h-[190px]"
           }`}
           style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
@@ -380,7 +383,7 @@ export function StoreProdutoDialog({
           <button
             type="button"
             onClick={() => setImagemAmpliada((v) => !v)}
-            className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white"
+            className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white min-[940px]:hidden"
           >
             {imagemAmpliada ? <Shrink size={12} /> : <Expand size={12} />}
             {imagemAmpliada ? "Recolher" : "Ver maior"}
@@ -393,20 +396,22 @@ export function StoreProdutoDialog({
             <X size={14} />
           </button>
         </div>
-        <h2 className="mb-1.5 text-[1rem] font-bold text-neutral-900">{produto.nome}</h2>
-        {produto.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
-        <div className="mb-3.5 flex flex-wrap items-center gap-2">
-          {produto.em_promo ? (
-            <div className="flex items-center gap-2">
-              <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
-              <span className="text-[1.05rem] font-bold text-emerald-600">{formatarPreco(produto.preco_final)}</span>
-            </div>
-          ) : (
-            <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
-          )}
-          <PontosBadge pontos={pontosTotal} />
+        <div className="min-w-0 min-[940px]:flex-1 min-[940px]:pt-1">
+          <h2 className="mb-1.5 text-[1rem] font-bold text-neutral-900 min-[940px]:text-[1.15rem]">{produto.nome}</h2>
+          {produto.descricao && <p className="mb-2.5 text-[.8rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
+          <div className="mb-3.5 flex flex-wrap items-center gap-2">
+            {produto.em_promo ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[.85rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
+                <span className="text-[1.05rem] font-bold text-emerald-600">{formatarPreco(produto.preco_final)}</span>
+              </div>
+            ) : (
+              <span className="text-[1.05rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
+            )}
+            <PontosBadge pontos={pontosTotal} />
+          </div>
+          {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
         </div>
-        {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
       </div>
     </StoreSheet>
   );
