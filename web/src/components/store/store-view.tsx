@@ -392,7 +392,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           logo sobrepondo o banner ao lado das informacoes (nome/horario/endereco) */}
       <div className="hidden lg:block">
         <div style={{ background: brown }}>
-          <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-10 px-6 py-5">
+          <div className="mx-auto flex max-w-[1400px] items-center justify-center gap-[135px] px-6 py-5">
             <button
               type="button"
               className="flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-base font-bold"
