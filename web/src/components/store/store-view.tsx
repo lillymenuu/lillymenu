@@ -764,7 +764,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       )}
 
       {/* Categorias / produtos */}
-      <div className="mx-auto max-w-[901px]">
+      <div className="mx-auto max-w-[901px] lg:max-w-[1300px]">
         {categoriasFiltradas.map(({ cat, produtos, combos }) => {
           if (produtos.length === 0 && combos.length === 0) return null;
           return (
@@ -774,8 +774,9 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                 sectionRefs.current[cat.id] = el;
               }}
             >
-              <h2 className="px-4 pt-3.5 pb-1 text-[.95rem] font-bold text-neutral-900">{cat.nome}</h2>
-              <div>
+              <h2 className="px-4 pt-3.5 pb-1 text-[.95rem] font-bold text-neutral-900 lg:px-6 lg:pt-7 lg:pb-3 lg:text-xl">{cat.nome}</h2>
+              {/* Lista — versao mobile */}
+              <div className="lg:hidden">
                 {combos.map((combo) => (
                   <button
                     key={`combo-${combo.id}`}
@@ -868,6 +869,109 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                           style={{ background: brown }}
                         >
                           +
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Grade de cards — versao desktop */}
+              <div className="hidden grid-cols-3 gap-4 px-6 pb-4 lg:grid">
+                {combos.map((combo) => (
+                  <button
+                    key={`combo-${combo.id}`}
+                    type="button"
+                    onClick={() => abrirItem(combo)}
+                    className="flex cursor-pointer flex-col rounded-2xl border border-neutral-200 p-4 text-left transition-shadow hover:shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center gap-1.5">
+                          <span className="text-[.95rem] font-bold text-neutral-900">{combo.nome}</span>
+                          <span className="rounded bg-amber-500 px-1.5 py-px text-[.6rem] font-bold tracking-wide text-white uppercase">
+                            Combo
+                          </span>
+                        </div>
+                        {combo.descricao && (
+                          <p className="line-clamp-3 text-[.8rem] leading-snug text-neutral-500">{combo.descricao}</p>
+                        )}
+                      </div>
+                      <div className="relative shrink-0">
+                        <div className="size-[92px] overflow-hidden rounded-xl bg-neutral-100">
+                          {combo.imagem ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={combo.imagem} alt="" className="size-full object-cover" />
+                          ) : (
+                            <div className="flex size-full items-center justify-center text-neutral-300">
+                              <Layers size={26} />
+                            </div>
+                          )}
+                        </div>
+                        <span
+                          className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                          style={{ background: brown }}
+                        >
+                          +
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center gap-1.5">
+                      {combo.em_promo && (
+                        <span className="text-[.74rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
+                      )}
+                      <span className="text-[.9rem] font-bold" style={{ color: brown }}>
+                        {formatarPreco(combo.preco_final)}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+                {produtos.map((produto) => (
+                  <button
+                    key={`produto-${produto.id}`}
+                    type="button"
+                    onClick={() => abrirItem(produto)}
+                    className={`flex cursor-pointer flex-col rounded-2xl border border-neutral-200 p-4 text-left transition-shadow hover:shadow-sm ${produto.esgotado || restanteDoProduto(produto) <= 0 ? "opacity-65" : ""}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 text-[.95rem] font-bold text-neutral-900">{produto.nome}</div>
+                        {produto.descricao && (
+                          <p className="line-clamp-3 text-[.8rem] leading-snug text-neutral-500">{produto.descricao}</p>
+                        )}
+                      </div>
+                      <div className="relative shrink-0">
+                        <div className="size-[92px] overflow-hidden rounded-xl bg-neutral-100">
+                          {
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                          }
+                        </div>
+                        {produto.esgotado || restanteDoProduto(produto) <= 0 ? (
+                          <span className="absolute -right-1.5 -bottom-1.5 rounded-full border-2 border-white bg-red-600 px-2.5 py-[5px] text-[.6rem] font-bold tracking-wide text-white uppercase whitespace-nowrap">
+                            Esgotado
+                          </span>
+                        ) : (
+                          <span
+                            className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                            style={{ background: brown }}
+                          >
+                            +
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                      {produto.em_promo && (
+                        <span className="text-[.74rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
+                      )}
+                      <span className="text-[.9rem] font-bold" style={{ color: brown }}>
+                        {produto.tem_variacoes === 1 && !produto.em_promo ? "A partir de " : ""}
+                        {formatarPreco(produto.preco_final)}
+                      </span>
+                      {perfil.clubePontosAtivo && (produto.pontos_ganho ?? 0) > 0 && (
+                        <span className="rounded-full bg-purple-700 px-1.5 py-px text-[.66rem] font-bold text-white">
+                          +{produto.pontos_ganho} pts
                         </span>
                       )}
                     </div>
