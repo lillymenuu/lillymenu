@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { AtSign, Banknote, CreditCard, Map, MessageCircle, QrCode, X } from "lucide-react";
+import { Banknote, CreditCard, Map, QrCode, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { InstagramIcon } from "@/components/icons/instagram-icon";
 import type { StorePerfil } from "@/lib/store/types";
 
 type Aba = "info" | "horario" | "pagamento";
@@ -42,7 +44,7 @@ export function StoreInfoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="flex max-h-[88dvh] w-[calc(100%-24px)] max-w-[420px] flex-col gap-0 overflow-hidden rounded-[20px] p-0 sm:max-w-[420px]">
         <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 px-[18px] py-3.5">
-          <DialogTitle className="text-[.92rem] font-bold text-neutral-900">Informacoes da loja</DialogTitle>
+          <DialogTitle className="text-[.92rem] font-bold text-neutral-900">Informações da loja</DialogTitle>
           <button type="button" onClick={() => onOpenChange(false)} className="flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
             <X size={14} />
           </button>
@@ -52,7 +54,7 @@ export function StoreInfoDialog({
           <div className="mb-4 flex gap-1 rounded-xl bg-neutral-100 p-1">
             {(
               [
-                ["info", "Informacoes"],
+                ["info", "Informações"],
                 ["horario", "Horario"],
                 ["pagamento", "Pagamento"],
               ] as const
@@ -87,7 +89,7 @@ export function StoreInfoDialog({
 
               {perfil.enderecoLoja && (
                 <>
-                  <p className="mb-1.5 text-[.68rem] font-bold tracking-wide text-neutral-300 uppercase">Endereco</p>
+                  <p className="mb-1.5 text-[.68rem] font-bold tracking-wide text-neutral-300 uppercase">Endereço</p>
                   <div className="flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3.5 py-3">
                     <span className="flex-1 text-[.84rem] leading-relaxed text-neutral-700">{perfil.enderecoLoja}</span>
                     <button
@@ -114,7 +116,7 @@ export function StoreInfoDialog({
                         onClick={() => window.open(`https://wa.me/55${wppNum}`, "_blank")}
                         className="flex size-[42px] items-center justify-center rounded-full border-[1.5px] border-neutral-200 text-neutral-600"
                       >
-                        <MessageCircle size={18} />
+                        <WhatsAppIcon size={18} />
                       </button>
                     )}
                     {instagramHandle && (
@@ -124,7 +126,7 @@ export function StoreInfoDialog({
                         onClick={() => window.open(`https://instagram.com/${encodeURIComponent(instagramHandle)}`, "_blank")}
                         className="flex size-[42px] items-center justify-center rounded-full border-[1.5px] border-neutral-200 text-neutral-600"
                       >
-                        <AtSign size={18} />
+                        <InstagramIcon size={18} />
                       </button>
                     )}
                   </div>
