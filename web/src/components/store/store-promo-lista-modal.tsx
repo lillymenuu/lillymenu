@@ -118,7 +118,7 @@ export function StorePromoListaModal({
                       <div className="flex h-full min-w-0 flex-1 flex-col">
                         {etiqueta && cor && (
                           <span
-                            className="mb-1.5 inline-block animate-pulse rounded-full px-2 py-[3px] text-[.6rem] font-bold tracking-wide uppercase"
+                            className="mb-1.5 inline-block w-fit shrink-0 animate-pulse self-start rounded-full px-2 py-[3px] text-[.6rem] font-bold tracking-wide uppercase"
                             style={{ background: cor.bg, color: cor.texto }}
                           >
                             {etiqueta}
