@@ -24,30 +24,33 @@ export async function variacoesProdutoPdv(
     return { ok: false, msg: "Produto invalido.", variacoes: [], variacaoTitulo: null, variacaoObrigatorio: true, gruposOpcoes: [] };
   }
 
-  const [produto] = await db
-    .select({ variacaoTitulo: produtos.variacoes_titulo, variacaoObrigatorio: produtos.variacoes_obrigatorio })
-    .from(produtos)
-    .where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId)))
-    .limit(1);
-
-  const variacoesRaw = await db
-    .select({ id: produtoVariacoes.id, tamanho: produtoVariacoes.tamanho, cor: produtoVariacoes.cor, preco: produtoVariacoes.preco })
-    .from(produtoVariacoes)
-    .where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.ativo, true), eq(produtoVariacoes.loja_id, lojaId)))
-    .orderBy(asc(produtoVariacoes.ordem), asc(produtoVariacoes.id));
+  /* As 3 consultas abaixo sao independentes entre si — rodar em paralelo (em vez de uma
+     esperando a outra) corta a latencia de rede do Neon de ~3-4 idas-e-voltas sequenciais
+     pra so 1, que era a causa do carregamento lento ao abrir um produto com variacoes. */
+  const [[produto], variacoesRaw, gruposRaw] = await Promise.all([
+    db
+      .select({ variacaoTitulo: produtos.variacoes_titulo, variacaoObrigatorio: produtos.variacoes_obrigatorio })
+      .from(produtos)
+      .where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId)))
+      .limit(1),
+    db
+      .select({ id: produtoVariacoes.id, tamanho: produtoVariacoes.tamanho, cor: produtoVariacoes.cor, preco: produtoVariacoes.preco })
+      .from(produtoVariacoes)
+      .where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.ativo, true), eq(produtoVariacoes.loja_id, lojaId)))
+      .orderBy(asc(produtoVariacoes.ordem), asc(produtoVariacoes.id)),
+    db
+      .select({
+        id: produtoOpcoesGrupos.id,
+        titulo: produtoOpcoesGrupos.titulo,
+        tipoSelecao: produtoOpcoesGrupos.tipo_selecao,
+        obrigatorio: produtoOpcoesGrupos.obrigatorio,
+        maxSelecao: produtoOpcoesGrupos.max_selecao,
+      })
+      .from(produtoOpcoesGrupos)
+      .where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)))
+      .orderBy(asc(produtoOpcoesGrupos.ordem), asc(produtoOpcoesGrupos.id)),
+  ]);
   const variacoes = variacoesRaw.map((v) => ({ ...v, preco: Number(v.preco ?? 0) }));
-
-  const gruposRaw = await db
-    .select({
-      id: produtoOpcoesGrupos.id,
-      titulo: produtoOpcoesGrupos.titulo,
-      tipoSelecao: produtoOpcoesGrupos.tipo_selecao,
-      obrigatorio: produtoOpcoesGrupos.obrigatorio,
-      maxSelecao: produtoOpcoesGrupos.max_selecao,
-    })
-    .from(produtoOpcoesGrupos)
-    .where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)))
-    .orderBy(asc(produtoOpcoesGrupos.ordem), asc(produtoOpcoesGrupos.id));
 
   const itensRaw = gruposRaw.length
     ? await db
