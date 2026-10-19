@@ -424,7 +424,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               }`}
             >
               <Gift size={20} />
-              Promo
+              Promoção
             </button>
             <button
               type="button"
@@ -923,7 +923,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                         )}
                       </div>
                       <div className="relative shrink-0">
-                        <div className="size-[92px] overflow-hidden rounded-xl bg-neutral-100">
+                        <div className="size-[110px] overflow-hidden rounded-xl bg-neutral-100">
                           {combo.imagem ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={combo.imagem} alt="" className="size-full object-cover" />
@@ -941,7 +941,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                         </span>
                       </div>
                     </div>
-                    <div className="mt-3 flex items-center gap-1.5">
+                    <div className="mt-auto flex items-center gap-1.5 pt-3">
                       {combo.em_promo && (
                         <span className="text-[.74rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
                       )}
@@ -966,7 +966,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                         )}
                       </div>
                       <div className="relative shrink-0">
-                        <div className="size-[92px] overflow-hidden rounded-xl bg-neutral-100">
+                        <div className="size-[110px] overflow-hidden rounded-xl bg-neutral-100">
                           {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
@@ -986,7 +986,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                         )}
                       </div>
                     </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
                       {produto.em_promo && (
                         <span className="text-[.74rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
                       )}
@@ -1077,7 +1077,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             style={promoListaAberta ? { color: brown } : undefined}
           >
             <Gift size={20} />
-            Promo
+            Promoção
           </button>
           <button
             type="button"
