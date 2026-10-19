@@ -113,9 +113,9 @@ export function StorePromoListaModal({
                       key={p.id}
                       type="button"
                       onClick={() => onSelecionar(p)}
-                      className="flex items-start gap-3 rounded-2xl border border-neutral-200 p-3.5 text-left transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+                      className="flex items-stretch gap-3 rounded-2xl border border-neutral-200 p-3.5 text-left transition-colors hover:border-neutral-300 hover:bg-neutral-50"
                     >
-                      <div className="min-w-0 flex-1">
+                      <div className="flex h-full min-w-0 flex-1 flex-col">
                         {etiqueta && cor && (
                           <span
                             className="mb-1.5 inline-block animate-pulse rounded-full px-2 py-[3px] text-[.6rem] font-bold tracking-wide uppercase"
@@ -126,7 +126,7 @@ export function StorePromoListaModal({
                         )}
                         <p className="mb-1 text-[.92rem] leading-tight font-bold text-neutral-900">{p.nome}</p>
                         {p.descricao && <p className="mb-2 line-clamp-2 text-[.76rem] leading-snug text-neutral-400">{p.descricao}</p>}
-                        <div className="flex flex-wrap items-center gap-1.5">
+                        <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-2">
                           <span className="text-[.9rem] font-bold text-emerald-600">{formatarPreco(p.preco_final)}</span>
                           <span className="text-[.74rem] text-neutral-300 line-through">{formatarPreco(p.preco_base)}</span>
                           <span className="rounded-full bg-emerald-50 px-1.5 py-[2px] text-[.68rem] font-bold text-emerald-700">-{p.desc_pct}%</span>
