@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ImageIcon, Layers, Minus, Plus, X } from "lucide-react";
+import { ImageIcon, LayoutGrid, Layers, List, Minus, Plus, Search, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
 import { toast } from "sonner";
 import { cn } from "cn";
@@ -73,6 +74,8 @@ export function PosComboDialog({
   const [selecoes, setSelecoes] = useState<Selecoes>({});
   const [qtd, setQtd] = useState(1);
   const [obs, setObs] = useState("");
+  const [busca, setBusca] = useState("");
+  const [visualizacaoGrade, setVisualizacaoGrade] = useState(true);
 
   useEffect(() => {
     if (!combo) return;
@@ -82,6 +85,7 @@ export function PosComboDialog({
     setSelecoes({});
     setQtd(itemEditando?.qtd ?? 1);
     setObs(itemEditando ? obsDoItem(itemEditando) : "");
+    setBusca("");
     fetch(`/api/pos/combo-detalhe?id=${combo.id}`)
       .then((r) => r.json())
       .then((data: PosComboDetalheResposta) => {
@@ -109,6 +113,16 @@ export function PosComboDialog({
       })),
     [passosBrutos, consumoCarrinho]
   );
+
+  /* Lista exibida na coluna de opcoes, filtrada pela busca — a validacao/estoque continua
+     usando `passos` (sem filtro), so a renderizacao dos cards e das secoes muda. */
+  const passosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return passos;
+    return passos
+      .map((p) => ({ ...p, opcoes: p.opcoes.filter((o) => o.nome.toLowerCase().includes(termo)) }))
+      .filter((p) => p.opcoes.length > 0);
+  }, [passos, busca]);
 
   const totalPorPasso = useMemo(() => {
     const map: Record<number, number> = {};
@@ -217,195 +231,210 @@ export function PosComboDialog({
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[92vh] w-[520px] max-w-[calc(100%-1.5rem)] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-[520px]"
+        className="flex h-[min(650px,calc(100vh-24px))] w-[1040px] max-w-[calc(100%-1.5rem)] gap-0 overflow-hidden rounded-[20px] p-0 sm:max-w-[1040px]"
       >
-        {/* Cabecalho */}
-        <div className="flex shrink-0 items-start gap-3 px-4 pt-4 pb-3">
-          <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+        <DialogTitle className="sr-only">{combo.nome}</DialogTitle>
+
+        {/* Coluna fixa: imagem, nome, preco e descricao do combo */}
+        <div className="flex w-[320px] shrink-0 flex-col overflow-y-auto border-r px-6 py-6">
+          <div className="aspect-square w-full shrink-0 overflow-hidden rounded-2xl bg-muted">
             {combo.imagem ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={combo.imagem} alt="" className="size-full object-cover" />
             ) : (
               <div className="flex size-full items-center justify-center text-muted-foreground/40">
-                <Layers className="size-6" />
+                <Layers className="size-10" />
               </div>
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <DialogTitle className="text-base leading-tight font-semibold">{combo.nome}</DialogTitle>
-            {descricao && <p className="mt-0.5 line-clamp-2 text-sm leading-snug text-muted-foreground">{descricao}</p>}
-            <div className="mt-1 flex items-baseline gap-1.5 text-sm">
-              {combo.tipo_preco === "por_item" ? (
-                <span className="font-semibold">Soma dos itens escolhidos</span>
-              ) : (
-                <>
-                  {emPromo && <span className="text-xs text-muted-foreground line-through">{formatBRL(combo.preco)}</span>}
-                  <span className="font-semibold">{formatBRL(precoFixo)}</span>
-                </>
-              )}
-            </div>
+          <h2 className="mt-4 text-base leading-tight font-bold">{combo.nome}</h2>
+          <div className="mt-1.5 flex items-baseline gap-1.5 text-sm">
+            {combo.tipo_preco === "por_item" ? (
+              <span className="font-semibold">Soma dos itens escolhidos</span>
+            ) : (
+              <>
+                {emPromo && <span className="text-muted-foreground line-through">{formatBRL(combo.preco)}</span>}
+                <span className="text-base font-bold text-primary">{formatBRL(precoFixo)}</span>
+              </>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            aria-label="Fechar"
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
-          >
-            <X className="size-4" />
-          </button>
+          {descricao && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{descricao}</p>}
         </div>
 
-        {/* Passos */}
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-3">
-          {carregando ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">Carregando combo...</div>
-          ) : (
-            passos.map((passo) => {
-              const total = totalPorPasso[passo.id] ?? 0;
-              const cheio = passo.max_itens > 0 && total >= passo.max_itens;
-              const faltando = passo.obrigatorio && total < Math.max(1, passo.min_itens);
-              return (
-                <section key={passo.id} className="overflow-hidden rounded-xl border">
-                  <div className="flex items-start justify-between gap-3 bg-muted/60 px-4 py-3">
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-semibold">{passo.nome}</h3>
-                      {passo.descricao && <p className="mt-0.5 text-xs text-muted-foreground">{passo.descricao}</p>}
-                      <p className="mt-1 text-xs text-muted-foreground">{dicaDoPasso(passo)}</p>
-                    </div>
-                    {passo.obrigatorio && (
-                      <span
-                        className={cn(
-                          "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                          faltando ? "bg-destructive/10 text-destructive" : "bg-emerald-500/15 text-emerald-700"
-                        )}
-                      >
-                        {faltando ? "Obrigatório" : "Ok"}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="divide-y bg-background">
-                    {passo.opcoes.map((opcao) => {
-                      const q = selecoes[passo.id]?.[opcao.id] ?? 0;
-                      const limiteEstoque = opcao.estoque !== null && (q + 1) * qtdEfetiva > opcao.estoque;
-                      const tentarAdd = () => {
-                        if (podeAdd) alterarQtdOpcao(passo, opcao.id, 1);
-                        else if (!opcao.esgotado && limiteEstoque) avisarEstoque();
-                      };
-                      const podeAdd = !opcao.esgotado && !limiteEstoque && (passo.max_itens === 1 || !cheio) && (passo.permite_repetir || q === 0);
-                      return (
-                        <div
-                          key={opcao.id}
-                          className={cn(
-                            "flex items-center gap-3 px-4 py-2.5 transition-colors",
-                            opcao.esgotado && "opacity-50",
-                            q > 0 && "bg-primary/5"
-                          )}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm leading-tight font-medium">{opcao.nome}</div>
-                            {opcao.esgotado ? (
-                              <div className="mt-0.5 text-xs text-destructive">Esgotado</div>
-                            ) : combo.tipo_preco === "por_item" && opcao.preco > 0 ? (
-                              <div className="mt-0.5 text-xs text-muted-foreground">{formatBRL(opcao.preco)}</div>
-                            ) : null}
-                          </div>
-
-                          <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-muted">
-                            {opcao.imagem ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={opcao.imagem} alt="" className="size-full object-cover" />
-                            ) : (
-                              <div className="flex size-full items-center justify-center text-muted-foreground/40">
-                                <ImageIcon className="size-5" />
-                              </div>
-                            )}
-                          </div>
-
-                          {q === 0 ? (
-                            <button
-                              type="button"
-                              aria-disabled={!podeAdd}
-                              onClick={tentarAdd}
-                              aria-label={`Adicionar ${opcao.nome}`}
-                              className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95", !podeAdd && "cursor-not-allowed opacity-40")}
-                            >
-                              <Plus className="size-4" />
-                            </button>
-                          ) : (
-                            <div className="flex shrink-0 items-center gap-1 rounded-xl bg-primary/10 p-1">
-                              <button
-                                type="button"
-                                onClick={() => alterarQtdOpcao(passo, opcao.id, -1)}
-                                aria-label={`Remover ${opcao.nome}`}
-                                className="flex size-8 items-center justify-center rounded-lg bg-background text-foreground shadow-sm transition-transform active:scale-95"
-                              >
-                                <Minus className="size-3.5" />
-                              </button>
-                              <span className="w-5 text-center text-sm font-semibold tabular-nums">{q}</span>
-                              <button
-                                type="button"
-                                aria-disabled={!podeAdd}
-                                onClick={tentarAdd}
-                                aria-label={`Adicionar mais ${opcao.nome}`}
-                                className={cn("flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", !podeAdd && "cursor-not-allowed opacity-40")}
-                              >
-                                <Plus className="size-3.5" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
-            })
-          )}
-        </div>
-
-        {/* Rodape: observacoes, quantidade e confirmar */}
-        <div className="shrink-0 space-y-2 border-t bg-background px-4 pt-3 pb-4">
-          <label className="block rounded-xl bg-muted/60 px-3 py-2">
-            <span className="block text-[11px] text-muted-foreground">Observações do cliente</span>
-            <input
-              value={obs}
-              onChange={(e) => setObs(e.target.value)}
-              placeholder="Ex: retirar cebola, molho à parte..."
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/70"
-            />
-          </label>
-          <p className="text-[11px] text-muted-foreground/80">Quantidade mínima 1x</p>
-          <div className="flex items-center gap-3">
-            <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted p-1">
-              <button
-                type="button"
-                disabled={qtd <= 1}
-                onClick={() => setQtd((q) => Math.max(1, q - 1))}
-                aria-label="Diminuir quantidade"
-                className="flex size-9 items-center justify-center rounded-full bg-background shadow-sm transition-transform active:scale-95 disabled:opacity-40"
-              >
-                <Minus className="size-4" />
-              </button>
-              <span className="w-8 text-center text-sm font-semibold tabular-nums">{qtdEfetiva}</span>
-              <button
-                type="button"
-                aria-disabled={qtdEfetiva >= maxQtd}
-                onClick={() => (qtdEfetiva >= maxQtd ? avisarEstoque() : setQtd((q) => Math.min(maxQtd, q + 1)))}
-                aria-label="Aumentar quantidade"
-                className={cn("flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", qtdEfetiva >= maxQtd && "opacity-40")}
-              >
-                <Plus className="size-4" />
-              </button>
+        {/* Coluna rolavel: busca, passos e rodape */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex shrink-0 items-center gap-2 px-4 pt-4 pb-3">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar item do combo"
+                className="pl-8"
+              />
             </div>
             <button
               type="button"
-              onClick={confirmar}
-              disabled={carregando || !valido}
-              className="h-11 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => setVisualizacaoGrade((v) => !v)}
+              aria-label={visualizacaoGrade ? "Ver em lista" : "Ver em grade"}
+              aria-pressed={visualizacaoGrade}
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
             >
-              {itemEditando ? "Salvar" : "Adicionar"} {formatBRL(precoUnit * qtdEfetiva)}
+              {visualizacaoGrade ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
             </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Fechar"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+
+          {/* Passos */}
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-3">
+            {carregando ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Carregando combo...</div>
+            ) : passosFiltrados.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Nenhum item encontrado para &quot;{busca}&quot;.</div>
+            ) : (
+              passosFiltrados.map((passo) => {
+                const total = totalPorPasso[passo.id] ?? 0;
+                const cheio = passo.max_itens > 0 && total >= passo.max_itens;
+                const faltando = passo.obrigatorio && total < Math.max(1, passo.min_itens);
+                return (
+                  <section key={passo.id}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-bold">{passo.nome}</h3>
+                        {passo.descricao && <p className="mt-0.5 text-xs text-muted-foreground">{passo.descricao}</p>}
+                      </div>
+                      {passo.obrigatorio && (
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                            faltando ? "bg-destructive/10 text-destructive" : "bg-emerald-500/15 text-emerald-700"
+                          )}
+                        >
+                          {faltando ? "Obrigatório" : "Ok"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 mb-2.5 text-xs text-muted-foreground">{dicaDoPasso(passo)}</p>
+
+                    <div className={cn("grid gap-3", visualizacaoGrade ? "grid-cols-2" : "grid-cols-1")}>
+                      {passo.opcoes.map((opcao) => {
+                        const q = selecoes[passo.id]?.[opcao.id] ?? 0;
+                        const limiteEstoque = opcao.estoque !== null && (q + 1) * qtdEfetiva > opcao.estoque;
+                        const tentarAdd = () => {
+                          if (podeAdd) alterarQtdOpcao(passo, opcao.id, 1);
+                          else if (!opcao.esgotado && limiteEstoque) avisarEstoque();
+                        };
+                        const podeAdd = !opcao.esgotado && !limiteEstoque && (passo.max_itens === 1 || !cheio) && (passo.permite_repetir || q === 0);
+                        return (
+                          <div
+                            key={opcao.id}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl border p-3 transition-colors",
+                              opcao.esgotado && "opacity-50",
+                              q > 0 && "border-primary/30 bg-primary/5"
+                            )}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm leading-tight font-medium">{opcao.nome}</div>
+                              {opcao.esgotado ? (
+                                <div className="mt-0.5 text-xs text-destructive">Esgotado</div>
+                              ) : combo.tipo_preco === "por_item" && opcao.preco > 0 ? (
+                                <div className="mt-0.5 text-xs text-muted-foreground">{formatBRL(opcao.preco)}</div>
+                              ) : null}
+
+                              <div className="mt-2.5 flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  disabled={q === 0}
+                                  onClick={() => alterarQtdOpcao(passo, opcao.id, -1)}
+                                  aria-label={`Remover ${opcao.nome}`}
+                                  className="flex size-7 items-center justify-center rounded-full bg-muted text-foreground transition-transform active:scale-95 disabled:opacity-40"
+                                >
+                                  <Minus className="size-3.5" />
+                                </button>
+                                <span className="w-4 text-center text-sm font-semibold tabular-nums">{q}</span>
+                                <button
+                                  type="button"
+                                  aria-disabled={!podeAdd}
+                                  onClick={tentarAdd}
+                                  aria-label={`Adicionar ${opcao.nome}`}
+                                  className={cn("flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", !podeAdd && "cursor-not-allowed opacity-40")}
+                                >
+                                  <Plus className="size-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
+                              {opcao.imagem ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={opcao.imagem} alt="" className="size-full object-cover" />
+                              ) : (
+                                <div className="flex size-full items-center justify-center text-muted-foreground/40">
+                                  <ImageIcon className="size-4" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })
+            )}
+          </div>
+
+          {/* Rodape: observacoes, quantidade e confirmar */}
+          <div className="shrink-0 space-y-2.5 border-t bg-background px-4 pt-3 pb-4">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold">Observações do cliente</span>
+              <input
+                value={obs}
+                onChange={(e) => setObs(e.target.value)}
+                placeholder="Ex.: sem cebola, molho à parte..."
+                className="w-full rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring/50"
+              />
+            </label>
+            <p className="text-[11px] text-muted-foreground/80">Quantidade mínima 1x</p>
+            <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted p-1">
+                <button
+                  type="button"
+                  disabled={qtd <= 1}
+                  onClick={() => setQtd((q) => Math.max(1, q - 1))}
+                  aria-label="Diminuir quantidade"
+                  className="flex size-9 items-center justify-center rounded-full bg-background shadow-sm transition-transform active:scale-95 disabled:opacity-40"
+                >
+                  <Minus className="size-4" />
+                </button>
+                <span className="w-8 text-center text-sm font-semibold tabular-nums">{qtdEfetiva}</span>
+                <button
+                  type="button"
+                  aria-disabled={qtdEfetiva >= maxQtd}
+                  onClick={() => (qtdEfetiva >= maxQtd ? avisarEstoque() : setQtd((q) => Math.min(maxQtd, q + 1)))}
+                  aria-label="Aumentar quantidade"
+                  className={cn("flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", qtdEfetiva >= maxQtd && "opacity-40")}
+                >
+                  <Plus className="size-4" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={confirmar}
+                disabled={carregando || !valido}
+                className="h-11 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {itemEditando ? "Salvar" : "Adicionar"} {formatBRL(precoUnit * qtdEfetiva)}
+              </button>
+            </div>
           </div>
         </div>
       </DialogContent>
