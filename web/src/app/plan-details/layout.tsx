@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { getSessaoAdminParaCobranca } from "@/lib/session";
 import { getSidebarDataNeon } from "@/db/queries/sidebar";
+import { getLandingConfig, lc } from "@/db/queries/landingConfig";
 
 /**
  * Layout proprio (fora do grupo (app)) porque essa e a UNICA tela do admin que precisa continuar
@@ -13,12 +14,20 @@ export default async function PlanDetailsLayout({ children }: { children: React.
   const sessao = await getSessaoAdminParaCobranca();
   if (!sessao) redirect("/login");
 
-  const sidebarData = await getSidebarDataNeon(sessao.id, sessao.lojaId, sessao.perfil);
+  const [sidebarData, landingCfg] = await Promise.all([
+    getSidebarDataNeon(sessao.id, sessao.lojaId, sessao.perfil),
+    getLandingConfig(),
+  ]);
 
   const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
 
   return (
-    <AppShell sidebarData={sidebarData} phpAdminUrl={phpAdminUrl} bloqueado={!sessao.lojaAtiva}>
+    <AppShell
+      sidebarData={sidebarData}
+      phpAdminUrl={phpAdminUrl}
+      bloqueado={!sessao.lojaAtiva}
+      logoPlataforma={lc(landingCfg, "logo_image")}
+    >
       {children}
     </AppShell>
   );

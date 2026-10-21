@@ -19,7 +19,13 @@ const COLLAPSE_KEY = "sidebarCollapsed";
 const SIDEBAR_BRAND_BG =
   "radial-gradient(130% 55% at 12% 0%, rgba(255,255,255,.16), transparent 60%), linear-gradient(190deg, #9c5523 0%, #7a3f10 100%)";
 
-export function AppShell(props: { sidebarData: SidebarData; phpAdminUrl: string; bloqueado?: boolean; children: React.ReactNode }) {
+export function AppShell(props: {
+  sidebarData: SidebarData;
+  phpAdminUrl: string;
+  bloqueado?: boolean;
+  logoPlataforma?: string;
+  children: React.ReactNode;
+}) {
   return (
     <PosOverlayProvider adminPerfil={props.sidebarData.admin.perfil} phpAdminUrl={props.phpAdminUrl}>
       <AppShellInner {...props} />
@@ -31,11 +37,13 @@ function AppShellInner({
   sidebarData,
   phpAdminUrl,
   bloqueado = false,
+  logoPlataforma,
   children,
 }: {
   sidebarData: SidebarData;
   phpAdminUrl: string;
   bloqueado?: boolean;
+  logoPlataforma?: string;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -177,7 +185,7 @@ function AppShellInner({
               <div className="flex min-w-0 items-center gap-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/favicon_store.png"
+                  src={logoPlataforma || "/favicon_store.png"}
                   alt=""
                   className="size-6 shrink-0 rounded-md object-contain"
                 />
