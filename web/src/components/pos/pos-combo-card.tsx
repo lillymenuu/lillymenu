@@ -10,7 +10,16 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
 
   return (
     <div
-      className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card transition-colors ${
+      role="button"
+      tabIndex={0}
+      onClick={() => onAbrir(combo)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onAbrir(combo);
+        }
+      }}
+      className={`flex h-[246px] w-[182px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/40 ${
         qtd > 0 ? "border-primary bg-primary/5" : ""
       }`}
     >
@@ -41,15 +50,18 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
         <button
           type="button"
           disabled
-          className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground opacity-40"
+          className="flex size-8 shrink-0 cursor-not-allowed items-center justify-center rounded-full border text-muted-foreground opacity-40"
         >
           <Minus className="size-4" />
         </button>
         <span className="w-7 shrink-0 text-center text-sm font-semibold tabular-nums">{qtd}</span>
         <button
           type="button"
-          onClick={() => onAbrir(combo)}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAbrir(combo);
+          }}
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus className="size-4" />
         </button>
