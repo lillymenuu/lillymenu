@@ -106,7 +106,14 @@ export function StorePontosSheet({
 
   return (
     <>
-      <StoreSheet open={open} onOpenChange={onOpenChange} title="Clube de Pontos" onBack={() => onOpenChange(false)}>
+      <StoreSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Clube de Pontos"
+        onBack={() => onOpenChange(false)}
+        maxWidth={760}
+        contentClassName="min-[940px]:top-1/2! min-[940px]:-translate-y-1/2! min-[940px]:h-[min(680px,calc(100dvh-48px))]! min-[940px]:max-h-[680px]! min-[940px]:rounded-[20px]! min-[940px]:shadow-[0_24px_60px_rgba(0,0,0,.3)]!"
+      >
         <div className="p-4">
           <div className="mb-5 rounded-2xl border-[1.5px] border-neutral-200 p-4.5" style={{ borderLeft: `4px solid ${brown}` }}>
             <div className="mb-4 flex items-start gap-3">
