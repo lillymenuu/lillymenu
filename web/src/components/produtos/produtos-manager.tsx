@@ -291,17 +291,17 @@ export function ProdutosManager({
               </div>
               {!isSemCategoria && (
                 <div className="flex items-center gap-1.5">
-                  <Button size="sm" className="rounded-full" onClick={() => abrirNovoProduto(categoria.id)}>
-                    <Plus size={14} /> Adicionar
+                  <Button className="cursor-pointer rounded-full" onClick={() => abrirNovoProduto(categoria.id)}>
+                    <Plus size={16} /> Adicionar
                   </Button>
-                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => abrirNovoCombo(categoria.id)}>
-                    <Layers size={14} /> Combo
+                  <Button variant="outline" className="cursor-pointer rounded-full" onClick={() => abrirNovoCombo(categoria.id)}>
+                    <Layers size={16} /> Combo
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       render={
-                        <Button variant="outline" size="sm" className="rounded-full">
-                          <MoreVertical size={14} /> Opções
+                        <Button variant="outline" className="cursor-pointer rounded-full">
+                          <MoreVertical size={16} /> Opções
                         </Button>
                       }
                     />
@@ -318,10 +318,10 @@ export function ProdutosManager({
                   </DropdownMenu>
                   <button
                     onClick={() => setCategoriaParaExcluir(categoria)}
-                    className="rounded-full border p-2 text-muted-foreground hover:bg-muted hover:text-destructive"
+                    className="cursor-pointer rounded-full border p-2.5 text-muted-foreground hover:bg-muted hover:text-destructive"
                     aria-label="Excluir categoria"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               )}
