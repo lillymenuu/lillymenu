@@ -283,6 +283,54 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
 
   const instagramHandle = perfil.lojaInstagram.replace(/^@/, "");
 
+  /* Card compacto do mobile (imagem em cima, info embaixo) — usado pelos modos de exibicao
+     "horizontal" (linha com scroll lateral) e "grid" (grade), definidos por categoria em
+     cat.modo_exibicao. O modo "vertical" (padrao) continua usando o card antigo, maior. */
+  function cardMobileCompacto(item: StoreProduto | StoreCombo, variante: "horizontal" | "grid") {
+    const combo = isCombo(item);
+    const esgotado = !combo && (item.esgotado || restanteDoProduto(item) <= 0);
+    return (
+      <button
+        key={`${combo ? "combo" : "produto"}-${item.id}`}
+        type="button"
+        onClick={() => abrirItem(item)}
+        className={`cursor-pointer text-left ${variante === "horizontal" ? "w-[140px] shrink-0" : "w-full"} ${esgotado ? "opacity-65" : ""}`}
+      >
+        <div className="relative mb-1.5 h-[110px] w-full overflow-hidden rounded-xl bg-neutral-100">
+          {item.imagem || !combo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+          ) : (
+            <div className="flex size-full items-center justify-center text-neutral-300">
+              <Layers size={26} />
+            </div>
+          )}
+          {esgotado && (
+            <span className="absolute right-1.5 bottom-1.5 rounded-full bg-red-600 px-2 py-[3px] text-[.58rem] font-bold tracking-wide text-white uppercase">
+              Esgotado
+            </span>
+          )}
+        </div>
+        {(combo || item.em_promo) && (
+          <div className="mb-0.5 flex gap-1">
+            {combo && (
+              <span className="rounded bg-amber-500 px-1.5 py-px text-[.62rem] font-bold tracking-wide text-white uppercase">Combo</span>
+            )}
+            {item.em_promo && <span className="rounded bg-emerald-600 px-1.5 py-px text-[.62rem] font-bold text-white">Promo</span>}
+          </div>
+        )}
+        <p className="truncate text-[.82rem] font-semibold text-neutral-900">{item.nome}</p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {item.em_promo && <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(item.preco_base)}</span>}
+          <span className="text-[.86rem] font-bold" style={{ color: brown }}>
+            {!combo && item.tem_variacoes === 1 && !item.em_promo ? "a partir de " : ""}
+            {formatarPreco(item.preco_final)}
+          </span>
+        </div>
+      </button>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white pb-[86px] lg:pb-10" style={{ ["--store-pink" as string]: "#e63770" }}>
       {catalogoAtualizadoVisivel && (
@@ -800,105 +848,119 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               }}
             >
               <h2 className="px-4 pt-3.5 pb-1 text-[.95rem] font-bold text-neutral-900 lg:px-6 lg:pt-7 lg:pb-3 lg:text-xl">{cat.nome}</h2>
-              {/* Lista — versao mobile */}
+              {/* Mobile — layout por categoria, conforme cat.modo_exibicao (desktop sempre usa a grade abaixo) */}
               <div className="lg:hidden">
-                {combos.map((combo) => (
-                  <button
-                    key={`combo-${combo.id}`}
-                    type="button"
-                    onClick={() => abrirItem(combo)}
-                    className="mx-3 mb-2 flex w-[calc(100%-24px)] items-center gap-3 rounded-xl border border-neutral-100 p-3.5 text-left transition-shadow hover:border-neutral-200 hover:shadow-sm"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-0.5 flex items-center gap-1.5">
-                        <span className="text-[.88rem] font-semibold text-neutral-900">{combo.nome}</span>
-                        <span className="rounded bg-amber-500 px-1.5 py-px text-[.6rem] font-bold tracking-wide text-white uppercase">
-                          Combo
-                        </span>
-                      </div>
-                      {combo.descricao && (
-                        <p className="mb-1.5 line-clamp-2 text-[.76rem] leading-snug text-neutral-500">{combo.descricao}</p>
-                      )}
-                      <div className="flex items-center gap-1.5">
-                        {combo.em_promo && (
-                          <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
-                        )}
-                        <span className="text-[.88rem] font-bold" style={{ color: brown }}>
-                          {formatarPreco(combo.preco_final)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="relative shrink-0">
-                      <div className="size-[88px] overflow-hidden rounded-[10px] bg-neutral-100">
-                        {combo.imagem ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={combo.imagem} alt="" className="size-full object-cover" />
-                        ) : (
-                          <div className="flex size-full items-center justify-center text-neutral-300">
-                            <Layers size={26} />
-                          </div>
-                        )}
-                      </div>
-                      <span
-                        className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
-                        style={{ background: brown }}
+                {cat.modo_exibicao === "horizontal" ? (
+                  <div className="flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {combos.map((combo) => cardMobileCompacto(combo, "horizontal"))}
+                    {produtos.map((produto) => cardMobileCompacto(produto, "horizontal"))}
+                  </div>
+                ) : cat.modo_exibicao === "grid" ? (
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-4 px-4 pb-1">
+                    {combos.map((combo) => cardMobileCompacto(combo, "grid"))}
+                    {produtos.map((produto) => cardMobileCompacto(produto, "grid"))}
+                  </div>
+                ) : (
+                  <>
+                    {combos.map((combo) => (
+                      <button
+                        key={`combo-${combo.id}`}
+                        type="button"
+                        onClick={() => abrirItem(combo)}
+                        className="mx-3 mb-2 flex w-[calc(100%-24px)] items-center gap-3 rounded-xl border border-neutral-100 p-3.5 text-left transition-shadow hover:border-neutral-200 hover:shadow-sm"
                       >
-                        +
-                      </span>
-                    </div>
-                  </button>
-                ))}
-                {produtos.map((produto) => (
-                  <button
-                    key={`produto-${produto.id}`}
-                    type="button"
-                    onClick={() => abrirItem(produto)}
-                    className={`mx-3 mb-2 flex w-[calc(100%-24px)] items-center gap-3 rounded-xl border border-neutral-100 p-3.5 text-left transition-shadow hover:border-neutral-200 hover:shadow-sm ${produto.esgotado || restanteDoProduto(produto) <= 0 ? "opacity-65" : ""}`}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-0.5 text-[.88rem] font-semibold text-neutral-900">{produto.nome}</div>
-                      {produto.descricao && (
-                        <p className="mb-1.5 line-clamp-2 text-[.76rem] leading-snug text-neutral-500">{produto.descricao}</p>
-                      )}
-                      <div className="flex items-center gap-1.5">
-                        {produto.em_promo && (
-                          <span className="text-[.72rem] text-neutral-400 line-through">
-                            {formatarPreco(produto.preco_base)}
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-0.5 flex items-center gap-1.5">
+                            <span className="text-[.88rem] font-semibold text-neutral-900">{combo.nome}</span>
+                            <span className="rounded bg-amber-500 px-1.5 py-px text-[.6rem] font-bold tracking-wide text-white uppercase">
+                              Combo
+                            </span>
+                          </div>
+                          {combo.descricao && (
+                            <p className="mb-1.5 line-clamp-2 text-[.76rem] leading-snug text-neutral-500">{combo.descricao}</p>
+                          )}
+                          <div className="flex items-center gap-1.5">
+                            {combo.em_promo && (
+                              <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
+                            )}
+                            <span className="text-[.88rem] font-bold" style={{ color: brown }}>
+                              {formatarPreco(combo.preco_final)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="relative shrink-0">
+                          <div className="size-[88px] overflow-hidden rounded-[10px] bg-neutral-100">
+                            {combo.imagem ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={combo.imagem} alt="" className="size-full object-cover" />
+                            ) : (
+                              <div className="flex size-full items-center justify-center text-neutral-300">
+                                <Layers size={26} />
+                              </div>
+                            )}
+                          </div>
+                          <span
+                            className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                            style={{ background: brown }}
+                          >
+                            +
                           </span>
-                        )}
-                        <span className="text-[.88rem] font-bold" style={{ color: brown }}>
-                          {produto.tem_variacoes === 1 && !produto.em_promo ? "a partir de " : ""}
-                          {formatarPreco(produto.preco_final)}
-                        </span>
-                        {perfil.clubePontosAtivo && (produto.pontos_ganho ?? 0) > 0 && (
-                          <span className="rounded-full bg-purple-700 px-1.5 py-px text-[.66rem] font-bold text-white">
-                            +{produto.pontos_ganho} pts
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="relative shrink-0">
-                      <div className="size-[88px] overflow-hidden rounded-[10px] bg-neutral-100">
-                        {
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
-                        }
-                      </div>
-                      {produto.esgotado || restanteDoProduto(produto) <= 0 ? (
-                        <span className="absolute -right-1.5 -bottom-1.5 rounded-full border-2 border-white bg-red-600 px-2.5 py-[5px] text-[.6rem] font-bold tracking-wide text-white uppercase whitespace-nowrap">
-                          Esgotado
-                        </span>
-                      ) : (
-                        <span
-                          className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
-                          style={{ background: brown }}
-                        >
-                          +
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                        </div>
+                      </button>
+                    ))}
+                    {produtos.map((produto) => (
+                      <button
+                        key={`produto-${produto.id}`}
+                        type="button"
+                        onClick={() => abrirItem(produto)}
+                        className={`mx-3 mb-2 flex w-[calc(100%-24px)] items-center gap-3 rounded-xl border border-neutral-100 p-3.5 text-left transition-shadow hover:border-neutral-200 hover:shadow-sm ${produto.esgotado || restanteDoProduto(produto) <= 0 ? "opacity-65" : ""}`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-0.5 text-[.88rem] font-semibold text-neutral-900">{produto.nome}</div>
+                          {produto.descricao && (
+                            <p className="mb-1.5 line-clamp-2 text-[.76rem] leading-snug text-neutral-500">{produto.descricao}</p>
+                          )}
+                          <div className="flex items-center gap-1.5">
+                            {produto.em_promo && (
+                              <span className="text-[.72rem] text-neutral-400 line-through">
+                                {formatarPreco(produto.preco_base)}
+                              </span>
+                            )}
+                            <span className="text-[.88rem] font-bold" style={{ color: brown }}>
+                              {produto.tem_variacoes === 1 && !produto.em_promo ? "a partir de " : ""}
+                              {formatarPreco(produto.preco_final)}
+                            </span>
+                            {perfil.clubePontosAtivo && (produto.pontos_ganho ?? 0) > 0 && (
+                              <span className="rounded-full bg-purple-700 px-1.5 py-px text-[.66rem] font-bold text-white">
+                                +{produto.pontos_ganho} pts
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="relative shrink-0">
+                          <div className="size-[88px] overflow-hidden rounded-[10px] bg-neutral-100">
+                            {
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                            }
+                          </div>
+                          {produto.esgotado || restanteDoProduto(produto) <= 0 ? (
+                            <span className="absolute -right-1.5 -bottom-1.5 rounded-full border-2 border-white bg-red-600 px-2.5 py-[5px] text-[.6rem] font-bold tracking-wide text-white uppercase whitespace-nowrap">
+                              Esgotado
+                            </span>
+                          ) : (
+                            <span
+                              className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                              style={{ background: brown }}
+                            >
+                              +
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
               </div>
 
               {/* Grade de cards — versao desktop */}
