@@ -78,7 +78,7 @@ export function StoreSheet({
               </div>
             </div>
           )}
-          <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+          <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto">{children}</div>
           {footer && <div className="shrink-0 border-t border-neutral-100 px-4 py-3">{footer}</div>}
         </div>
       </DialogContent>

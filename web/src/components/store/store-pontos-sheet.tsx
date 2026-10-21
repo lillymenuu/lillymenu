@@ -111,7 +111,7 @@ export function StorePontosSheet({
         onOpenChange={onOpenChange}
         title="Clube de Pontos"
         onBack={() => onOpenChange(false)}
-        maxWidth={760}
+        maxWidth={900}
         contentClassName="min-[940px]:top-1/2! min-[940px]:-translate-y-1/2! min-[940px]:h-[min(680px,calc(100dvh-48px))]! min-[940px]:max-h-[680px]! min-[940px]:rounded-[20px]! min-[940px]:shadow-[0_24px_60px_rgba(0,0,0,.3)]!"
       >
         <div className="p-4">
@@ -145,7 +145,7 @@ export function StorePontosSheet({
               <p className="text-[.84rem] text-neutral-400">Nenhum produto disponivel para resgate no momento.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-x-2.5 gap-y-4">
+            <div className="grid grid-cols-3 gap-x-2.5 gap-y-4 min-[940px]:grid-cols-4">
               {produtosOrdenados.map((p) => {
                 const pode = saldo >= p.pontos_custo;
                 const falta = p.pontos_custo - saldo;
