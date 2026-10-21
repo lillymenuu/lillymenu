@@ -1,10 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { Check, LayoutGrid, List, Minus, Plus, Search, ShoppingBag, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
+import { cn } from "cn";
 import type { PosCartItem, PosGrupoOpcoes, PosProduto, PosVariacao, PosVariacoesResposta } from "@/lib/pos";
+
+/** Bolinha de selecao unica (variacao ou grupo "unica") — so o indicador visual, o <input> real fica sr-only. */
+function Marcador({ marcado }: { marcado: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+        marcado ? "border-primary" : "border-muted-foreground/25"
+      )}
+    >
+      {marcado && <span className="size-2.5 rounded-full bg-primary" />}
+    </span>
+  );
+}
 
 export function PosVariacaoDialog({
   produto,
@@ -32,8 +48,10 @@ export function PosVariacaoDialog({
   const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
   const [qtd, setQtd] = useState(1);
   const [observacoes, setObservacoes] = useState("");
+  const [busca, setBusca] = useState("");
+  const [visualizacaoGrade, setVisualizacaoGrade] = useState(true);
   /** Refs das secoes (variacao + cada grupo), na ordem exibida — usadas pra rolar ate a proxima quando uma secao e concluida. */
-  const secaoRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const secaoRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
     if (!produto) return;
@@ -46,6 +64,7 @@ export function PosVariacaoDialog({
     setSelecoesGrupos(itemEditando?.selecoesGrupos ?? {});
     setQtd(itemEditando?.qtd ?? 1);
     setObservacoes(itemEditando?.observacoes ?? "");
+    setBusca("");
     fetch(`/api/pos/produto-variacoes?id=${produto.id}`)
       .then((r) => r.json())
       .then((data: PosVariacoesResposta) => {
@@ -97,6 +116,18 @@ export function PosVariacaoDialog({
   const gruposSelecionados = gruposOpcoes.map((g) => ({ grupo: g, itens: g.itens.filter((it) => selecoesGrupos[g.id]?.includes(it.id)) }));
   const gruposTotal = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
   const precoUnitario = precoBase + gruposTotal;
+
+  const emPromo = produto.preco_promocional !== null;
+
+  /* Lista exibida, filtrada pela busca — a validacao continua usando as listas sem filtro. */
+  const termo = busca.trim().toLowerCase();
+  const variacoesFiltradas = termo
+    ? variacoes.filter((v) => ([v.tamanho, v.cor].filter(Boolean).join(" - ") || `Opção #${v.id}`).toLowerCase().includes(termo))
+    : variacoes;
+  const gruposFiltrados = termo
+    ? gruposOpcoes.map((g) => ({ ...g, itens: g.itens.filter((it) => it.nome.toLowerCase().includes(termo)) })).filter((g) => g.itens.length > 0)
+    : gruposOpcoes;
+  const semResultado = termo && variacoesFiltradas.length === 0 && gruposFiltrados.length === 0;
 
   /* Ordem das secoes exibidas (variacao, depois cada grupo) — define pra onde rolar ao concluir uma. */
   const secaoOrder = [...(variacoes.length > 0 ? ["variacao"] : []), ...gruposOpcoes.map((g) => `grupo-${g.id}`)];
@@ -165,156 +196,257 @@ export function PosVariacaoDialog({
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] w-[420px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[420px]" showCloseButton={false}>
+      <DialogContent
+        showCloseButton={false}
+        className="flex h-[min(650px,calc(100vh-24px))] w-[1040px] max-w-[calc(100%-1.5rem)] gap-0 overflow-hidden rounded-[20px] p-0 sm:max-w-[1040px]"
+      >
         <DialogTitle className="sr-only">{produto.nome}</DialogTitle>
 
-        <div className="flex shrink-0 items-start gap-3">
-          <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-muted">
+        {/* Coluna fixa: imagem, nome, preco e descricao do produto */}
+        <div className="flex w-[320px] shrink-0 flex-col overflow-y-auto px-6 py-6">
+          <div className="aspect-square w-full shrink-0 overflow-hidden rounded-2xl bg-muted">
             {produto.imagem ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={produto.imagem} alt={produto.nome} className="size-full object-cover" />
+              <img src={produto.imagem} alt="" className="size-full object-cover" />
             ) : (
               <div className="flex size-full items-center justify-center text-muted-foreground/40">
-                <ShoppingBag className="size-5" />
+                <ShoppingBag className="size-10" />
               </div>
             )}
           </div>
-          <div className="min-w-0 flex-1 pt-1">
-            <div className="line-clamp-2 text-sm leading-tight font-semibold">{produto.nome}</div>
-            {produto.descricao ? (
-              <div className="mt-0.5 line-clamp-2 text-xs leading-tight text-muted-foreground">{produto.descricao}</div>
-            ) : null}
+          <h2 className="mt-4 text-base leading-tight font-bold">{produto.nome}</h2>
+          <div className="mt-1.5 flex items-baseline gap-1.5 text-sm">
+            {emPromo && <span className="text-muted-foreground line-through">{formatBRL(produto.preco)}</span>}
+            <span className="text-base font-bold text-primary">{formatBRL(produto.preco_promocional ?? produto.preco)}</span>
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70"
-            aria-label="Fechar"
-          >
-            <X className="size-3.5" />
-          </button>
+          {produto.descricao && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{produto.descricao}</p>}
         </div>
 
-        {carregando ? (
-          <div className="py-6 text-center text-sm text-muted-foreground">Carregando opções...</div>
-        ) : (
-          <div className="scrollbar-hidden min-h-0 flex-1 space-y-4 overflow-y-auto px-1">
-            <div ref={(el) => { secaoRefs.current["variacao"] = el; }}>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-primary">{variacaoTitulo ?? "Escolha uma das opções"}</span>
-                {variacaoObrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
-              </div>
-              <div className="mt-2 space-y-1.5">
-                {variacoes.map((v) => {
-                  const label = [v.tamanho, v.cor].filter(Boolean).join(" - ") || `Opção #${v.id}`;
-                  return (
-                    <label
-                      key={v.id}
-                      className={`flex cursor-pointer items-center justify-between rounded-lg p-2.5 text-sm transition-colors ${
-                        variacaoId === v.id ? "bg-primary/5" : "hover:bg-muted/40"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="variacao"
-                          checked={variacaoId === v.id}
-                          onChange={() => selecionarVariacao(v.id)}
-                          className="accent-primary"
-                        />
-                        {label}
-                      </span>
-                      <span className="font-medium">{formatBRL(v.preco)}</span>
-                    </label>
-                  );
-                })}
-              </div>
+        {/* Coluna rolavel: busca, variacao/grupos e rodape */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex shrink-0 items-center gap-2 px-4 pt-4 pb-3">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar complemento"
+                className="rounded-full pl-8"
+              />
             </div>
+            <button
+              type="button"
+              onClick={() => setVisualizacaoGrade((v) => !v)}
+              aria-label={visualizacaoGrade ? "Ver em lista" : "Ver em grade"}
+              aria-pressed={visualizacaoGrade}
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+            >
+              {visualizacaoGrade ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Fechar"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
 
-            {gruposOpcoes.map((grupo) => {
-              const selecionados = selecoesGrupos[grupo.id] ?? [];
-              const atingiuMax = grupo.tipo_selecao === "multipla" && grupo.max_selecao > 0 && selecionados.length >= grupo.max_selecao;
-              return (
-                <div key={grupo.id} ref={(el) => { secaoRefs.current[`grupo-${grupo.id}`] = el; }}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-primary uppercase">{grupo.titulo}</span>
-                    {grupo.obrigatorio ? <span className="text-xs font-semibold text-destructive">Obrigatório</span> : null}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {grupo.tipo_selecao === "multipla"
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-3">
+            {carregando ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Carregando opções...</div>
+            ) : semResultado ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Nenhum item encontrado para &quot;{busca}&quot;.</div>
+            ) : (
+              <>
+                {variacoesFiltradas.length > 0 && (
+                  <section
+                    ref={(el) => {
+                      secaoRefs.current["variacao"] = el;
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-sm font-bold">{variacaoTitulo ?? "Escolha uma das opções"}</h3>
+                      {variacaoObrigatorio && (
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                            variacaoId === null ? "bg-destructive/10 text-destructive" : "bg-emerald-500/15 text-emerald-700"
+                          )}
+                        >
+                          {variacaoId === null ? "Obrigatório" : "Ok"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 mb-2.5 text-xs text-muted-foreground">Escolha 1 opção.</p>
+
+                    <div className={cn("grid gap-3", visualizacaoGrade ? "grid-cols-2" : "grid-cols-1")}>
+                      {variacoesFiltradas.map((v) => {
+                        const label = [v.tamanho, v.cor].filter(Boolean).join(" - ") || `Opção #${v.id}`;
+                        const marcado = variacaoId === v.id;
+                        return (
+                          <label
+                            key={v.id}
+                            className={cn(
+                              "flex cursor-pointer items-center justify-between gap-3 rounded-xl border p-3.5 transition-colors",
+                              marcado && "border-primary/30 bg-primary/5"
+                            )}
+                          >
+                            <span className="min-w-0">
+                              <span className="block text-sm leading-tight font-medium">{label}</span>
+                              <span className="mt-0.5 block text-xs text-muted-foreground">{formatBRL(v.preco)}</span>
+                            </span>
+                            <input type="radio" name="variacao" checked={marcado} onChange={() => selecionarVariacao(v.id)} className="sr-only" />
+                            <Marcador marcado={marcado} />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+
+                {gruposFiltrados.map((grupo) => {
+                  const selecionados = selecoesGrupos[grupo.id] ?? [];
+                  const atingiuMax = grupo.tipo_selecao === "multipla" && grupo.max_selecao > 0 && selecionados.length >= grupo.max_selecao;
+                  const faltando = grupo.obrigatorio === 1 && selecionados.length === 0;
+                  const dica =
+                    grupo.tipo_selecao === "multipla"
                       ? grupo.max_selecao > 0
                         ? `Escolha até ${grupo.max_selecao} opç${grupo.max_selecao > 1 ? "ões" : "ão"}.`
                         : "Escolha 1 ou mais opções."
-                      : "Escolha 1 opção."}
-                  </div>
-                  <div className="mt-2 space-y-1.5">
-                    {grupo.itens.map((it) => {
-                      const ativo = selecionados.includes(it.id);
-                      const desabilitado = atingiuMax && !ativo;
-                      return (
-                        <div key={it.id} className={`flex items-center justify-between rounded-lg p-2.5 text-sm ${desabilitado ? "opacity-40" : ""}`}>
-                          <div>
-                            <div>{it.nome}</div>
-                            <div className="text-xs text-muted-foreground">{formatBRL(it.preco)}</div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao, grupo.max_selecao)}
-                            disabled={desabilitado}
-                            className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed ${
-                              ativo ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
-                            }`}
+                      : "Escolha 1 opção.";
+                  return (
+                    <section
+                      key={grupo.id}
+                      ref={(el) => {
+                        secaoRefs.current[`grupo-${grupo.id}`] = el;
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-sm font-bold uppercase">{grupo.titulo}</h3>
+                        {grupo.obrigatorio === 1 && (
+                          <span
+                            className={cn(
+                              "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                              faltando ? "bg-destructive/10 text-destructive" : "bg-emerald-500/15 text-emerald-700"
+                            )}
                           >
-                            {ativo ? <Check className="size-4" /> : <Plus className="size-4" />}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+                            {faltando ? "Obrigatório" : "Ok"}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 mb-2.5 text-xs text-muted-foreground">{dica}</p>
 
-            <textarea
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              placeholder="Observações do cliente"
-              rows={2}
-              className="w-full resize-none rounded-xl border-0 bg-muted/60 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
-            />
+                      <div className={cn("grid gap-3", visualizacaoGrade ? "grid-cols-2" : "grid-cols-1")}>
+                        {grupo.itens.map((it) => {
+                          const ativo = selecionados.includes(it.id);
+                          const desabilitado = atingiuMax && !ativo;
+                          if (grupo.tipo_selecao === "unica") {
+                            return (
+                              <label
+                                key={it.id}
+                                className={cn(
+                                  "flex cursor-pointer items-center justify-between gap-3 rounded-xl border p-3.5 transition-colors",
+                                  ativo && "border-primary/30 bg-primary/5",
+                                  desabilitado && "cursor-not-allowed opacity-40"
+                                )}
+                              >
+                                <span className="min-w-0">
+                                  <span className="block text-sm leading-tight font-medium">{it.nome}</span>
+                                  <span className="mt-0.5 block text-xs text-muted-foreground">{formatBRL(it.preco)}</span>
+                                </span>
+                                <input
+                                  type="radio"
+                                  name={`grupo-${grupo.id}`}
+                                  checked={ativo}
+                                  disabled={desabilitado}
+                                  onChange={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao, grupo.max_selecao)}
+                                  className="sr-only"
+                                />
+                                <Marcador marcado={ativo} />
+                              </label>
+                            );
+                          }
+                          return (
+                            <div
+                              key={it.id}
+                              className={cn(
+                                "flex items-center justify-between gap-3 rounded-xl border p-3.5 transition-colors",
+                                ativo && "border-primary/30 bg-primary/5",
+                                desabilitado && "opacity-40"
+                              )}
+                            >
+                              <div className="min-w-0">
+                                <div className="text-sm leading-tight font-medium">{it.nome}</div>
+                                <div className="mt-0.5 text-xs text-muted-foreground">{formatBRL(it.preco)}</div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao, grupo.max_selecao)}
+                                disabled={desabilitado}
+                                className={cn(
+                                  "flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed",
+                                  ativo ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
+                                )}
+                              >
+                                {ativo ? <Check className="size-4" /> : <Plus className="size-4" />}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  );
+                })}
+              </>
+            )}
           </div>
-        )}
 
-        <div className="flex shrink-0 items-center justify-between pt-1">
-          <div className="flex items-center gap-3 rounded-full bg-muted px-1 py-1">
-            <button
-              type="button"
-              onClick={() => setQtd((q) => Math.max(1, q - 1))}
-              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background"
-            >
-              <Minus className="size-3.5" />
-            </button>
-            <span className="w-4 text-center text-sm font-semibold tabular-nums">{qtd}</span>
-            <button
-              type="button"
-              disabled={qtd >= estoqueDisponivel}
-              onClick={() => setQtd((q) => Math.min(q + 1, estoqueDisponivel))}
-              className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Plus className="size-3.5" />
-            </button>
+          {/* Rodape: observacoes, quantidade e confirmar */}
+          <div className="shrink-0 space-y-2.5 border-t bg-background px-4 pt-3 pb-4">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold">Observações do cliente</span>
+              <input
+                value={observacoes}
+                onChange={(e) => setObservacoes(e.target.value)}
+                placeholder="Ex.: sem cebola, molho à parte..."
+                className="w-full rounded-2xl border px-3.5 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring/50"
+              />
+            </label>
+            <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted p-1">
+                <button
+                  type="button"
+                  disabled={qtd <= 1}
+                  onClick={() => setQtd((q) => Math.max(1, q - 1))}
+                  aria-label="Diminuir quantidade"
+                  className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-background shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Minus className="size-4" />
+                </button>
+                <span className="w-8 text-center text-sm font-semibold tabular-nums">{qtd}</span>
+                <button
+                  type="button"
+                  disabled={qtd >= estoqueDisponivel}
+                  onClick={() => setQtd((q) => Math.min(q + 1, estoqueDisponivel))}
+                  className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Plus className="size-4" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={confirmar}
+                disabled={!podeAdicionar}
+                className="h-11 flex-1 cursor-pointer rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {variacaoObrigatorio && variacaoId === null
+                  ? "Selecionar variação"
+                  : `${itemEditando ? "Salvar" : "Adicionar"} ${formatBRL(precoUnitario * qtd)}`}
+              </button>
+            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={confirmar}
-            disabled={!podeAdicionar}
-            className="h-11 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {variacaoObrigatorio && variacaoId === null
-              ? "Selecionar variação"
-              : `${itemEditando ? "Salvar" : "Adicionar"} · ${formatBRL(precoUnitario * qtd)}`}
-          </button>
         </div>
       </DialogContent>
     </Dialog>
