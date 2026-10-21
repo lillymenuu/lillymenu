@@ -236,7 +236,7 @@ export function PosComboDialog({
         <DialogTitle className="sr-only">{combo.nome}</DialogTitle>
 
         {/* Coluna fixa: imagem, nome, preco e descricao do combo */}
-        <div className="flex w-[320px] shrink-0 flex-col overflow-y-auto border-r px-6 py-6">
+        <div className="flex w-[320px] shrink-0 flex-col overflow-y-auto px-6 py-6">
           <div className="aspect-square w-full shrink-0 overflow-hidden rounded-2xl bg-muted">
             {combo.imagem ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -270,7 +270,7 @@ export function PosComboDialog({
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 placeholder="Buscar item do combo"
-                className="pl-8"
+                className="rounded-full pl-8"
               />
             </div>
             <button
@@ -278,7 +278,7 @@ export function PosComboDialog({
               onClick={() => setVisualizacaoGrade((v) => !v)}
               aria-label={visualizacaoGrade ? "Ver em lista" : "Ver em grade"}
               aria-pressed={visualizacaoGrade}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
             >
               {visualizacaoGrade ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
             </button>
@@ -286,7 +286,7 @@ export function PosComboDialog({
               type="button"
               onClick={() => onOpenChange(false)}
               aria-label="Fechar"
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
             >
               <X className="size-4" />
             </button>
@@ -336,7 +336,7 @@ export function PosComboDialog({
                           <div
                             key={opcao.id}
                             className={cn(
-                              "flex items-center gap-3 rounded-xl border p-3 transition-colors",
+                              "flex items-center gap-2.5 rounded-xl border p-2.5 transition-colors",
                               opcao.esgotado && "opacity-50",
                               q > 0 && "border-primary/30 bg-primary/5"
                             )}
@@ -348,31 +348,9 @@ export function PosComboDialog({
                               ) : combo.tipo_preco === "por_item" && opcao.preco > 0 ? (
                                 <div className="mt-0.5 text-xs text-muted-foreground">{formatBRL(opcao.preco)}</div>
                               ) : null}
-
-                              <div className="mt-2.5 flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  disabled={q === 0}
-                                  onClick={() => alterarQtdOpcao(passo, opcao.id, -1)}
-                                  aria-label={`Remover ${opcao.nome}`}
-                                  className="flex size-7 items-center justify-center rounded-full bg-muted text-foreground transition-transform active:scale-95 disabled:opacity-40"
-                                >
-                                  <Minus className="size-3.5" />
-                                </button>
-                                <span className="w-4 text-center text-sm font-semibold tabular-nums">{q}</span>
-                                <button
-                                  type="button"
-                                  aria-disabled={!podeAdd}
-                                  onClick={tentarAdd}
-                                  aria-label={`Adicionar ${opcao.nome}`}
-                                  className={cn("flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", !podeAdd && "cursor-not-allowed opacity-40")}
-                                >
-                                  <Plus className="size-3.5" />
-                                </button>
-                              </div>
                             </div>
 
-                            <div className="size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
+                            <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
                               {opcao.imagem ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={opcao.imagem} alt="" className="size-full object-cover" />
@@ -381,6 +359,28 @@ export function PosComboDialog({
                                   <ImageIcon className="size-4" />
                                 </div>
                               )}
+                            </div>
+
+                            <div className="flex shrink-0 items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={q === 0}
+                                onClick={() => alterarQtdOpcao(passo, opcao.id, -1)}
+                                aria-label={`Remover ${opcao.nome}`}
+                                className="flex size-7 cursor-pointer items-center justify-center rounded-full bg-muted text-foreground transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                <Minus className="size-3.5" />
+                              </button>
+                              <span className="w-4 text-center text-sm font-semibold tabular-nums">{q}</span>
+                              <button
+                                type="button"
+                                aria-disabled={!podeAdd}
+                                onClick={tentarAdd}
+                                aria-label={`Adicionar ${opcao.nome}`}
+                                className={cn("flex size-7 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", !podeAdd && "cursor-not-allowed opacity-40")}
+                              >
+                                <Plus className="size-3.5" />
+                              </button>
                             </div>
                           </div>
                         );
@@ -400,7 +400,7 @@ export function PosComboDialog({
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
                 placeholder="Ex.: sem cebola, molho à parte..."
-                className="w-full rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="w-full rounded-2xl border px-3.5 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring/50"
               />
             </label>
             <p className="text-[11px] text-muted-foreground/80">Quantidade mínima 1x</p>
@@ -411,7 +411,7 @@ export function PosComboDialog({
                   disabled={qtd <= 1}
                   onClick={() => setQtd((q) => Math.max(1, q - 1))}
                   aria-label="Diminuir quantidade"
-                  className="flex size-9 items-center justify-center rounded-full bg-background shadow-sm transition-transform active:scale-95 disabled:opacity-40"
+                  className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-background shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Minus className="size-4" />
                 </button>
@@ -421,7 +421,7 @@ export function PosComboDialog({
                   aria-disabled={qtdEfetiva >= maxQtd}
                   onClick={() => (qtdEfetiva >= maxQtd ? avisarEstoque() : setQtd((q) => Math.min(maxQtd, q + 1)))}
                   aria-label="Aumentar quantidade"
-                  className={cn("flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", qtdEfetiva >= maxQtd && "opacity-40")}
+                  className={cn("flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95", qtdEfetiva >= maxQtd && "opacity-40")}
                 >
                   <Plus className="size-4" />
                 </button>
@@ -430,7 +430,7 @@ export function PosComboDialog({
                 type="button"
                 onClick={confirmar}
                 disabled={carregando || !valido}
-                className="h-11 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-11 flex-1 cursor-pointer rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {itemEditando ? "Salvar" : "Adicionar"} {formatBRL(precoUnit * qtdEfetiva)}
               </button>
