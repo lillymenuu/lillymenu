@@ -59,6 +59,7 @@ export type CriarPedidoInput = {
   endereco?: string;
   subtotal: number;
   taxaEntrega?: number;
+  taxaMaquininha?: number;
   total: number;
   itens: ItemCarrinho[];
   trocoSolicitado?: boolean;
@@ -189,6 +190,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           tipo: input.tipo,
           subtotal: input.subtotal,
           taxa_entrega: input.taxaEntrega ?? 0,
+          taxa_maquininha: input.taxaMaquininha ?? 0,
           endereco_entrega: input.endereco ?? "",
           origem: "loja",
           criado_em: timestampFortaleza(),
@@ -273,7 +275,14 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
         });
       }
 
-      await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: input.formaPagamento, valor: input.total, loja_id: lojaId, criado_em: timestampFortaleza() });
+      await tx.insert(pedidoPagamentos).values({
+        pedido_id: pedidoId,
+        forma: input.formaPagamento,
+        valor: input.total,
+        taxa_maquininha: input.taxaMaquininha ?? 0,
+        loja_id: lojaId,
+        criado_em: timestampFortaleza(),
+      });
     });
   } catch (e) {
     return { ok: false, msg: e instanceof Error ? e.message : "Erro interno ao criar o pedido." };

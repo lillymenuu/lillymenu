@@ -29,6 +29,8 @@ export type StorePerfil = {
   debAtivo: boolean;
   bandeirasCredito: string[];
   bandeirasDebito: string[];
+  credTaxaPercent: number;
+  debTaxaPercent: number;
   entAtiva: boolean;
   retAtiva: boolean;
   taxasBairro: Record<string, number>;

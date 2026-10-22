@@ -133,6 +133,8 @@ export default async function StorePage({
     debAtivo: perfilNeon.debAtivo,
     bandeirasCredito: perfilNeon.bandeirasCredito,
     bandeirasDebito: perfilNeon.bandeirasDebito,
+    credTaxaPercent: perfilNeon.credTaxaPercent,
+    debTaxaPercent: perfilNeon.debTaxaPercent,
     entAtiva: perfilNeon.entAtiva,
     retAtiva: perfilNeon.retAtiva,
     taxasBairro: perfilNeon.taxasBairro,

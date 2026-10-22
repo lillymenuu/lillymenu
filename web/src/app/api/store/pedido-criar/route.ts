@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     endereco: typeof b.endereco === "string" ? b.endereco : undefined,
     subtotal: Number(b.subtotal ?? 0),
     taxaEntrega: b.taxa_entrega !== undefined ? Number(b.taxa_entrega) : undefined,
+    taxaMaquininha: b.taxa_maquininha !== undefined ? Number(b.taxa_maquininha) : undefined,
     total: Number(b.total ?? 0),
     itens,
     trocoSolicitado: Boolean(b.troco_solicitado),

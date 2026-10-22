@@ -160,6 +160,8 @@ export type PerfilLoja = {
   debAtivo: boolean;
   bandeirasCredito: string[];
   bandeirasDebito: string[];
+  credTaxaPercent: number;
+  debTaxaPercent: number;
   entAtiva: boolean;
   retAtiva: boolean;
   taxasBairro: Record<string, number>;
@@ -231,8 +233,12 @@ const CHAVES = [
   "pagamento_debito_ativo",
   "pagamento_credito_bandeiras",
   "pagamento_credito_bandeiras_custom",
+  "pagamento_credito_taxa_ativa",
+  "pagamento_credito_taxa",
   "pagamento_debito_bandeiras",
   "pagamento_debito_bandeiras_custom",
+  "pagamento_debito_taxa_ativa",
+  "pagamento_debito_taxa",
   "pedido_retirada_ativo",
   "taxas_bairro",
   "taxa_entrega_tipo",
@@ -329,6 +335,8 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; 
   const debAtivo = cfg.pagamento_debito_ativo !== "0";
   const bandeirasCredito = credAtivo ? bandeirasLabelPorGrupo(cfg.pagamento_credito_bandeiras || "visa,mastercard", cfg.pagamento_credito_bandeiras_custom || "[]") : [];
   const bandeirasDebito = debAtivo ? bandeirasLabelPorGrupo(cfg.pagamento_debito_bandeiras || "visa,mastercard", cfg.pagamento_debito_bandeiras_custom || "[]") : [];
+  const credTaxaPercent = cfg.pagamento_credito_taxa_ativa === "1" ? Number(cfg.pagamento_credito_taxa || 0) : 0;
+  const debTaxaPercent = cfg.pagamento_debito_taxa_ativa === "1" ? Number(cfg.pagamento_debito_taxa || 0) : 0;
 
   const entAtiva = await entregaDisponivelAgora(lojaId);
   const retAtiva = cfg.pedido_retirada_ativo !== "0";
@@ -506,6 +514,8 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; 
     debAtivo,
     bandeirasCredito,
     bandeirasDebito,
+    credTaxaPercent,
+    debTaxaPercent,
     entAtiva,
     retAtiva,
     taxasBairro,

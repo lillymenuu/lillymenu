@@ -173,7 +173,13 @@ export function StoreCheckoutDialog({
   }, [cupomAplicado, taxaEntrega]);
 
   const cashbackUsadoEfetivo = cashbackAplicado ? Math.min(cashbackValorUsado, cashbackDisponivel) : 0;
-  const total = Math.max(0, subtotal - desconto - cashbackUsadoEfetivo) + taxaFinal;
+  const totalAntesDaTaxaPagamento = Math.max(0, subtotal - desconto - cashbackUsadoEfetivo) + taxaFinal;
+  /* Taxa de cartao repassada ao cliente (Configuracoes > Formas de pagamento
+     > "Cobrar taxa do cliente"): so incide quando o lojista escolheu credito
+     ou debito como forma de pagamento. */
+  const taxaPagamentoPercent = formaPagamento === "credito" ? perfil.credTaxaPercent : formaPagamento === "debito" ? perfil.debTaxaPercent : 0;
+  const taxaPagamento = Math.round(totalAntesDaTaxaPagamento * (taxaPagamentoPercent / 100) * 100) / 100;
+  const total = totalAntesDaTaxaPagamento + taxaPagamento;
   const cashbackEstimado = perfil.cashbackAtivo && perfil.cashbackPct > 0 ? (total * perfil.cashbackPct) / 100 : 0;
 
   const trocoValorNumerico = parseValorMascarado(trocoPara);
@@ -420,6 +426,7 @@ export function StoreCheckoutDialog({
           endereco: isEntregaTipo ? enderecoTexto() : "",
           subtotal,
           taxa_entrega: taxaFinal,
+          taxa_maquininha: taxaPagamento,
           total,
           itens: itens.map((i) => ({
             id: i.id,
@@ -769,7 +776,11 @@ export function StoreCheckoutDialog({
                           <Icon size={20} className="shrink-0 text-neutral-700" />
                           <div className="min-w-0 flex-1">
                             <p className="text-[.9rem] font-bold text-neutral-900">{f.label}</p>
-                            <p className="mt-0.5 text-[.76rem] text-neutral-400">{f.sub}</p>
+                            <p className="mt-0.5 text-[.76rem] text-neutral-400">
+                              {f.sub}
+                              {f.valor === "credito" && perfil.credTaxaPercent > 0 ? ` • taxa de ${perfil.credTaxaPercent}% sobre o total` : ""}
+                              {f.valor === "debito" && perfil.debTaxaPercent > 0 ? ` • taxa de ${perfil.debTaxaPercent}% sobre o total` : ""}
+                            </p>
                             {(f.valor === "credito" || f.valor === "debito") && (perfil.bandeirasCredito.length || perfil.bandeirasDebito.length) > 0 && (
                               <div className="mt-1.5 flex flex-wrap gap-1.5">
                                 {(f.valor === "credito" ? perfil.bandeirasCredito : perfil.bandeirasDebito).map((b) => (
@@ -1009,6 +1020,12 @@ export function StoreCheckoutDialog({
                     <div className="flex justify-between text-neutral-500">
                       <span>Taxa de entrega</span>
                       <span>{formatarPreco(taxaFinal)}</span>
+                    </div>
+                  )}
+                  {taxaPagamento > 0 && (
+                    <div className="flex justify-between text-neutral-500">
+                      <span>Taxa de cartão</span>
+                      <span>{formatarPreco(taxaPagamento)}</span>
                     </div>
                   )}
                   {desconto > 0 && (
