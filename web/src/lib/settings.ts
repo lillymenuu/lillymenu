@@ -52,7 +52,13 @@ export type ConfiguracoesDetalhe = {
       bandeiras: string[];
       bandeiras_custom: { slug: string; label: string }[];
     };
-    voucher_ativo: boolean;
+    voucher: {
+      ativo: boolean;
+      taxa_ativa: boolean;
+      taxa: number;
+      bandeiras: string[];
+      bandeiras_custom: { slug: string; label: string }[];
+    };
     fiado_ativo: boolean;
   };
   cashback: {
@@ -182,6 +188,13 @@ export const BANDEIRAS_PADRAO: Record<string, string> = {
   diners: "Diners Club",
   alelo: "Alelo",
   amex: "Amex",
+};
+
+export const BANDEIRAS_VOUCHER_PADRAO: Record<string, string> = {
+  sodexo: "Sodexo",
+  alelo: "Alelo",
+  "vale-refeicao": "Vale refeição",
+  ticket: "Ticket",
 };
 
 export const DIAS_SEMANA_CURTO: Record<number, string> = {

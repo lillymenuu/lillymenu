@@ -9,8 +9,33 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "cn";
+import { formatarTelefone } from "@/lib/store/format";
 import type { ConfiguracoesDetalhe, PixTipoChave } from "@/lib/settings";
-import { BANDEIRAS_PADRAO } from "@/lib/settings";
+import { BANDEIRAS_PADRAO, BANDEIRAS_VOUCHER_PADRAO } from "@/lib/settings";
+
+function maskPixCpf(valor: string): string {
+  const v = valor.replace(/\D/g, "").slice(0, 11);
+  return v
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
+function maskPixCnpj(valor: string): string {
+  const v = valor.replace(/\D/g, "").slice(0, 14);
+  return v
+    .replace(/(\d{2})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1/$2")
+    .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+}
+
+function maskPixChave(tipo: PixTipoChave, valor: string): string {
+  if (tipo === "cpf") return maskPixCpf(valor);
+  if (tipo === "cnpj") return maskPixCnpj(valor);
+  if (tipo === "telefone") return formatarTelefone(valor);
+  return valor;
+}
 
 type Pagamento = ConfiguracoesDetalhe["pagamento"];
 type Bandeira = { slug: string; label: string };
@@ -37,16 +62,22 @@ function GrupoBandeiras({
   onSelecionadasChange,
   custom,
   onCustomChange,
+  catalogo = BANDEIRAS_PADRAO,
+  addTrigger = "inline",
 }: {
   titulo: string;
   selecionadas: string[];
   onSelecionadasChange: (v: string[]) => void;
   custom: Bandeira[];
   onCustomChange: (v: Bandeira[]) => void;
+  catalogo?: Record<string, string>;
+  /** "inline" (crédito/débito): campo + botão sempre visíveis. "link": texto que revela o campo ao clicar (voucher). */
+  addTrigger?: "inline" | "link";
 }) {
   const [novoNome, setNovoNome] = useState("");
+  const [mostrarCampoNovo, setMostrarCampoNovo] = useState(false);
   const customSlugs = new Set(custom.map((c) => c.slug));
-  const todas: Record<string, string> = { ...BANDEIRAS_PADRAO };
+  const todas: Record<string, string> = { ...catalogo };
   custom.forEach((c) => (todas[c.slug] = c.label));
 
   function alternar(slug: string) {
@@ -72,7 +103,24 @@ function GrupoBandeiras({
     onCustomChange([...custom, { slug, label: nome }]);
     onSelecionadasChange([...selecionadas, slug]);
     setNovoNome("");
+    setMostrarCampoNovo(false);
   }
+
+  const campoNovaBandeira = (
+    <div className="flex gap-1.5">
+      <Input
+        value={novoNome}
+        onChange={(e) => setNovoNome(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), adicionar())}
+        placeholder="Nome da bandeira"
+        autoFocus={addTrigger === "link"}
+        className="h-7 rounded-full border-0 bg-muted/60 px-3 text-xs"
+      />
+      <Button type="button" variant="outline" size="sm" className="h-7 gap-1 rounded-full px-2 text-xs" onClick={adicionar}>
+        <Plus className="size-3.5" /> Adicionar
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-2">
@@ -97,18 +145,19 @@ function GrupoBandeiras({
           </span>
         ))}
       </div>
-      <div className="flex gap-1.5">
-        <Input
-          value={novoNome}
-          onChange={(e) => setNovoNome(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), adicionar())}
-          placeholder="Nome da bandeira"
-          className="h-7 rounded-full border-0 bg-muted/60 px-3 text-xs"
-        />
-        <Button type="button" variant="outline" size="sm" className="h-7 gap-1 rounded-full px-2 text-xs" onClick={adicionar}>
-          <Plus className="size-3.5" /> Adicionar
-        </Button>
-      </div>
+      {addTrigger === "inline" ? (
+        campoNovaBandeira
+      ) : mostrarCampoNovo ? (
+        campoNovaBandeira
+      ) : (
+        <button
+          type="button"
+          onClick={() => setMostrarCampoNovo(true)}
+          className="w-full text-center text-xs font-medium text-primary hover:underline"
+        >
+          Criar bandeira customizada
+        </button>
+      )}
     </div>
   );
 }
@@ -139,7 +188,11 @@ export function FormasPagamentoDialog({
   const [debitoTaxa, setDebitoTaxa] = useState(String(pagamento.debito.taxa || ""));
   const [debitoBandeiras, setDebitoBandeiras] = useState(pagamento.debito.bandeiras);
   const [debitoCustom, setDebitoCustom] = useState(pagamento.debito.bandeiras_custom);
-  const [voucher, setVoucher] = useState(pagamento.voucher_ativo);
+  const [voucherAtivo, setVoucherAtivo] = useState(pagamento.voucher.ativo);
+  const [voucherTaxaAtiva, setVoucherTaxaAtiva] = useState(pagamento.voucher.taxa_ativa);
+  const [voucherTaxa, setVoucherTaxa] = useState(String(pagamento.voucher.taxa || ""));
+  const [voucherBandeiras, setVoucherBandeiras] = useState(pagamento.voucher.bandeiras);
+  const [voucherCustom, setVoucherCustom] = useState(pagamento.voucher.bandeiras_custom);
   const [fiado, setFiado] = useState(pagamento.fiado_ativo);
   const [salvando, setSalvando] = useState(false);
 
@@ -160,7 +213,11 @@ export function FormasPagamentoDialog({
     setDebitoTaxa(String(pagamento.debito.taxa || ""));
     setDebitoBandeiras(pagamento.debito.bandeiras);
     setDebitoCustom(pagamento.debito.bandeiras_custom);
-    setVoucher(pagamento.voucher_ativo);
+    setVoucherAtivo(pagamento.voucher.ativo);
+    setVoucherTaxaAtiva(pagamento.voucher.taxa_ativa);
+    setVoucherTaxa(String(pagamento.voucher.taxa || ""));
+    setVoucherBandeiras(pagamento.voucher.bandeiras);
+    setVoucherCustom(pagamento.voucher.bandeiras_custom);
     setFiado(pagamento.fiado_ativo);
   }, [open, pagamento]);
 
@@ -175,6 +232,10 @@ export function FormasPagamentoDialog({
     }
     if (debitoAtivo && debitoBandeiras.length === 0) {
       toast.error("Selecione ao menos uma bandeira de débito.");
+      return;
+    }
+    if (voucherAtivo && voucherBandeiras.length === 0) {
+      toast.error("Selecione ao menos uma bandeira de voucher.");
       return;
     }
     setSalvando(true);
@@ -198,7 +259,11 @@ export function FormasPagamentoDialog({
           pagamento_debito_taxa: debitoTaxa || "0",
           pagamento_debito_bandeiras: debitoBandeiras.join(","),
           pagamento_debito_bandeiras_custom: JSON.stringify(debitoCustom),
-          pagamento_voucher_ativo: voucher ? "1" : "0",
+          pagamento_voucher_ativo: voucherAtivo ? "1" : "0",
+          pagamento_voucher_taxa_ativa: voucherTaxaAtiva ? "1" : "0",
+          pagamento_voucher_taxa: voucherTaxa || "0",
+          pagamento_voucher_bandeiras: voucherBandeiras.join(","),
+          pagamento_voucher_bandeiras_custom: JSON.stringify(voucherCustom),
           pagamento_fiado_ativo: fiado ? "1" : "0",
         }),
       });
@@ -229,9 +294,40 @@ export function FormasPagamentoDialog({
             <Switch checked={dinheiro} onCheckedChange={setDinheiro} />
           </div>
 
-          <div className="flex items-center justify-between rounded-2xl border p-3">
-            <div className="text-sm font-medium">Voucher / vale-refeição</div>
-            <Switch checked={voucher} onCheckedChange={setVoucher} />
+          <div className="space-y-2 rounded-2xl border p-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium">Voucher</div>
+              <Switch checked={voucherAtivo} onCheckedChange={setVoucherAtivo} />
+            </div>
+            {voucherAtivo ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Habilitar taxa adicional em porcentagem %</Label>
+                  <Switch checked={voucherTaxaAtiva} onCheckedChange={setVoucherTaxaAtiva} />
+                </div>
+                {voucherTaxaAtiva ? (
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={voucherTaxa}
+                    onChange={(e) => setVoucherTaxa(e.target.value)}
+                    placeholder="Taxa (%)"
+                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
+                ) : null}
+                <GrupoBandeiras
+                  titulo="Bandeiras aceitas pela sua loja"
+                  selecionadas={voucherBandeiras}
+                  onSelecionadasChange={setVoucherBandeiras}
+                  custom={voucherCustom}
+                  onCustomChange={setVoucherCustom}
+                  catalogo={BANDEIRAS_VOUCHER_PADRAO}
+                  addTrigger="link"
+                />
+              </>
+            ) : null}
           </div>
 
           <div className="space-y-2 rounded-2xl border p-3">
@@ -248,7 +344,10 @@ export function FormasPagamentoDialog({
                       <button
                         key={opcao.valor}
                         type="button"
-                        onClick={() => setPixTipo(opcao.valor)}
+                        onClick={() => {
+                          setPixTipo(opcao.valor);
+                          setPixChave((v) => maskPixChave(opcao.valor, v));
+                        }}
                         className={cn(
                           "flex-1 rounded-full px-2 py-1 font-medium transition-colors",
                           pixTipo === opcao.valor ? "bg-background shadow-sm" : "text-muted-foreground"
@@ -262,7 +361,12 @@ export function FormasPagamentoDialog({
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label className="text-xs">Chave Pix</Label>
-                    <Input value={pixChave} onChange={(e) => setPixChave(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
+                    <Input
+                      value={pixChave}
+                      onChange={(e) => setPixChave(maskPixChave(pixTipo, e.target.value))}
+                      inputMode={pixTipo === "cpf" || pixTipo === "cnpj" || pixTipo === "telefone" ? "numeric" : "email"}
+                      className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                    />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Nome do titular</Label>

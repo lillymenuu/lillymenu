@@ -99,6 +99,10 @@ const CHAVES_CONFIGURACOES = [
   "pagamento_debito_bandeiras",
   "pagamento_debito_bandeiras_custom",
   "pagamento_voucher_ativo",
+  "pagamento_voucher_taxa_ativa",
+  "pagamento_voucher_taxa",
+  "pagamento_voucher_bandeiras",
+  "pagamento_voucher_bandeiras_custom",
   "pagamento_fiado_ativo",
   "cashback_ativo",
   "cashback_expira_dias",
@@ -203,6 +207,8 @@ async function montarDetalheConfiguracoes(lojaId: number, adminId: number, perfi
   const pagCreditoCustom = parseJsonArray(cfg.pagamento_credito_bandeiras_custom || "[]");
   const pagDebitoBandeiras = (cfg.pagamento_debito_bandeiras || "visa,mastercard").split(",").map((v) => v.trim()).filter(Boolean);
   const pagDebitoCustom = parseJsonArray(cfg.pagamento_debito_bandeiras_custom || "[]");
+  const pagVoucherBandeiras = (cfg.pagamento_voucher_bandeiras || "").split(",").map((v) => v.trim()).filter(Boolean);
+  const pagVoucherCustom = parseJsonArray(cfg.pagamento_voucher_bandeiras_custom || "[]");
 
   const agendDeliveryHorarios = normalizarAgendamentoHorarios(cfg.agendamento_delivery_horarios || "", agendamentoDefault);
   const agendRetiradaHorarios = normalizarAgendamentoHorarios(cfg.agendamento_retirada_horarios || "", agendamentoDefault);
@@ -245,7 +251,13 @@ async function montarDetalheConfiguracoes(lojaId: number, adminId: number, perfi
       },
       credito: { ativo: cfg.pagamento_credito_ativo !== "0", taxaAtiva: cfg.pagamento_credito_taxa_ativa === "1", taxa: Number(cfg.pagamento_credito_taxa || 0), bandeiras: pagCreditoBandeiras, bandeirasCustom: pagCreditoCustom },
       debito: { ativo: cfg.pagamento_debito_ativo !== "0", taxaAtiva: cfg.pagamento_debito_taxa_ativa === "1", taxa: Number(cfg.pagamento_debito_taxa || 0), bandeiras: pagDebitoBandeiras, bandeirasCustom: pagDebitoCustom },
-      voucherAtivo: cfg.pagamento_voucher_ativo === "1",
+      voucher: {
+        ativo: cfg.pagamento_voucher_ativo === "1",
+        taxaAtiva: cfg.pagamento_voucher_taxa_ativa === "1",
+        taxa: Number(cfg.pagamento_voucher_taxa || 0),
+        bandeiras: pagVoucherBandeiras,
+        bandeirasCustom: pagVoucherCustom,
+      },
       fiadoAtivo: cfg.pagamento_fiado_ativo === "1",
     },
     cashback: { ativo: cfg.cashback_ativo === "1", expiraDias: Number(cfg.cashback_expira_dias || 20), carenciaHoras: Number(cfg.cashback_carencia_horas || 12), percentual: Number(cfg.cashback_percentual || 1) },
@@ -329,7 +341,7 @@ export async function salvarConfiguracoes(lojaId: number, body: SalvarConfigurac
     }
   }
 
-  if ("pagamento_pix_ativo" in dados || "pagamento_credito_ativo" in dados || "pagamento_debito_ativo" in dados) {
+  if ("pagamento_pix_ativo" in dados || "pagamento_credito_ativo" in dados || "pagamento_debito_ativo" in dados || "pagamento_voucher_ativo" in dados) {
     if (boolFlag(dados.pagamento_pix_ativo ?? "0")) {
       if (!String(dados.pagamento_pix_chave ?? "").trim() || !String(dados.pagamento_pix_nome ?? "").trim()) return { ok: false, msg: "Preencha os dados do Pix." };
     }
@@ -350,8 +362,16 @@ export async function salvarConfiguracoes(lojaId: number, body: SalvarConfigurac
       const taxa = toFloatConfig(dados.pagamento_debito_taxa ?? 0);
       if (taxa <= 0 || taxa > 100) return { ok: false, msg: "Informe uma taxa valida para debito." };
     }
+    if (boolFlag(dados.pagamento_voucher_ativo ?? "0") && !String(dados.pagamento_voucher_bandeiras ?? "").trim()) {
+      return { ok: false, msg: "Selecione ao menos uma bandeira de voucher." };
+    }
+    if (boolFlag(dados.pagamento_voucher_taxa_ativa ?? "0")) {
+      const taxa = toFloatConfig(dados.pagamento_voucher_taxa ?? 0);
+      if (taxa <= 0 || taxa > 100) return { ok: false, msg: "Informe uma taxa valida para voucher." };
+    }
     if ("pagamento_credito_bandeiras_custom" in dados && !validarCustomJson(dados.pagamento_credito_bandeiras_custom)) return { ok: false, msg: "Bandeiras customizadas de credito invalidas." };
     if ("pagamento_debito_bandeiras_custom" in dados && !validarCustomJson(dados.pagamento_debito_bandeiras_custom)) return { ok: false, msg: "Bandeiras customizadas de debito invalidas." };
+    if ("pagamento_voucher_bandeiras_custom" in dados && !validarCustomJson(dados.pagamento_voucher_bandeiras_custom)) return { ok: false, msg: "Bandeiras customizadas de voucher invalidas." };
   }
 
   const camposImagem: { chave: string; base64Campo: string; removerCampo: string }[] = [
