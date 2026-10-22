@@ -1,5 +1,7 @@
 export type HorarioDia = { inicio: string; fim: string } | null;
 
+export type PixTipoChave = "cpf" | "cnpj" | "email" | "telefone";
+
 export type ConfiguracoesDetalhe = {
   ok: true;
   sou_admin_principal: boolean;
@@ -35,7 +37,7 @@ export type ConfiguracoesDetalhe = {
   };
   pagamento: {
     dinheiro_ativo: boolean;
-    pix: { ativo: boolean; chave: string; nome: string };
+    pix: { ativo: boolean; chave: string; nome: string; tipo: PixTipoChave };
     credito: {
       ativo: boolean;
       taxa_ativa: boolean;

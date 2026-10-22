@@ -2,17 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ConfiguracoesDetalhe } from "@/lib/settings";
+import { cn } from "cn";
+import type { ConfiguracoesDetalhe, PixTipoChave } from "@/lib/settings";
 import { BANDEIRAS_PADRAO } from "@/lib/settings";
 
 type Pagamento = ConfiguracoesDetalhe["pagamento"];
 type Bandeira = { slug: string; label: string };
+
+const PIX_TIPOS: { valor: PixTipoChave; label: string }[] = [
+  { valor: "cpf", label: "CPF" },
+  { valor: "cnpj", label: "CNPJ" },
+  { valor: "email", label: "E-mail" },
+  { valor: "telefone", label: "Telefone" },
+];
 
 function slugificar(valor: string): string {
   return valor
@@ -37,11 +45,17 @@ function GrupoBandeiras({
   onCustomChange: (v: Bandeira[]) => void;
 }) {
   const [novoNome, setNovoNome] = useState("");
+  const customSlugs = new Set(custom.map((c) => c.slug));
   const todas: Record<string, string> = { ...BANDEIRAS_PADRAO };
   custom.forEach((c) => (todas[c.slug] = c.label));
 
   function alternar(slug: string) {
     onSelecionadasChange(selecionadas.includes(slug) ? selecionadas.filter((s) => s !== slug) : [...selecionadas, slug]);
+  }
+
+  function remover(slug: string) {
+    onCustomChange(custom.filter((c) => c.slug !== slug));
+    onSelecionadasChange(selecionadas.filter((s) => s !== slug));
   }
 
   function adicionar() {
@@ -65,10 +79,22 @@ function GrupoBandeiras({
       <Label className="text-xs">{titulo}</Label>
       <div className="flex flex-wrap gap-2">
         {Object.entries(todas).map(([slug, label]) => (
-          <label key={slug} className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs">
-            <input type="checkbox" checked={selecionadas.includes(slug)} onChange={() => alternar(slug)} className="size-3.5" />
-            {label}
-          </label>
+          <span key={slug} className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs">
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={selecionadas.includes(slug)} onChange={() => alternar(slug)} className="size-3.5" />
+              {label}
+            </label>
+            {customSlugs.has(slug) ? (
+              <button
+                type="button"
+                onClick={() => remover(slug)}
+                className="-mr-1 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label={`Remover ${label}`}
+              >
+                <X className="size-3" />
+              </button>
+            ) : null}
+          </span>
         ))}
       </div>
       <div className="flex gap-1.5">
@@ -102,6 +128,7 @@ export function FormasPagamentoDialog({
   const [pixAtivo, setPixAtivo] = useState(pagamento.pix.ativo);
   const [pixChave, setPixChave] = useState(pagamento.pix.chave);
   const [pixNome, setPixNome] = useState(pagamento.pix.nome);
+  const [pixTipo, setPixTipo] = useState<PixTipoChave>(pagamento.pix.tipo);
   const [creditoAtivo, setCreditoAtivo] = useState(pagamento.credito.ativo);
   const [creditoTaxaAtiva, setCreditoTaxaAtiva] = useState(pagamento.credito.taxa_ativa);
   const [creditoTaxa, setCreditoTaxa] = useState(String(pagamento.credito.taxa || ""));
@@ -122,6 +149,7 @@ export function FormasPagamentoDialog({
     setPixAtivo(pagamento.pix.ativo);
     setPixChave(pagamento.pix.chave);
     setPixNome(pagamento.pix.nome);
+    setPixTipo(pagamento.pix.tipo);
     setCreditoAtivo(pagamento.credito.ativo);
     setCreditoTaxaAtiva(pagamento.credito.taxa_ativa);
     setCreditoTaxa(String(pagamento.credito.taxa || ""));
@@ -159,6 +187,7 @@ export function FormasPagamentoDialog({
           pagamento_pix_ativo: pixAtivo ? "1" : "0",
           pagamento_pix_chave: pixChave,
           pagamento_pix_nome: pixNome,
+          pagamento_pix_tipo: pixTipo,
           pagamento_credito_ativo: creditoAtivo ? "1" : "0",
           pagamento_credito_taxa_ativa: creditoTaxaAtiva ? "1" : "0",
           pagamento_credito_taxa: creditoTaxa || "0",
@@ -195,41 +224,61 @@ export function FormasPagamentoDialog({
           <DialogTitle>Formas de pagamento</DialogTitle>
         </DialogHeader>
         <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto px-1">
-          <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="flex items-center justify-between rounded-2xl border p-3">
             <div className="text-sm font-medium">Dinheiro</div>
             <Switch checked={dinheiro} onCheckedChange={setDinheiro} />
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="flex items-center justify-between rounded-2xl border p-3">
             <div className="text-sm font-medium">Voucher / vale-refeição</div>
             <Switch checked={voucher} onCheckedChange={setVoucher} />
           </div>
 
-          <div className="space-y-2 rounded-lg border p-3">
+          <div className="space-y-2 rounded-2xl border p-3">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium">Pix</div>
               <Switch checked={pixAtivo} onCheckedChange={setPixAtivo} />
             </div>
             {pixAtivo ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
                 <div className="space-y-1">
-                  <Label className="text-xs">Chave Pix</Label>
-                  <Input value={pixChave} onChange={(e) => setPixChave(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
+                  <Label className="text-xs">Tipo de chave</Label>
+                  <div className="flex items-center gap-1 rounded-full bg-muted p-1 text-xs">
+                    {PIX_TIPOS.map((opcao) => (
+                      <button
+                        key={opcao.valor}
+                        type="button"
+                        onClick={() => setPixTipo(opcao.valor)}
+                        className={cn(
+                          "flex-1 rounded-full px-2 py-1 font-medium transition-colors",
+                          pixTipo === opcao.valor ? "bg-background shadow-sm" : "text-muted-foreground"
+                        )}
+                      >
+                        {opcao.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Nome do titular</Label>
-                  <Input value={pixNome} onChange={(e) => setPixNome(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Chave Pix</Label>
+                    <Input value={pixChave} onChange={(e) => setPixChave(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Nome do titular</Label>
+                    <Input value={pixNome} onChange={(e) => setPixNome(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
+                  </div>
                 </div>
               </div>
             ) : null}
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="flex items-center justify-between rounded-2xl border p-3">
             <div className="text-sm font-medium">Fiado</div>
             <Switch checked={fiado} onCheckedChange={setFiado} />
           </div>
 
-          <div className="space-y-2 rounded-lg border p-3">
+          <div className="space-y-2 rounded-2xl border p-3">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium">Cartão de crédito</div>
               <Switch checked={creditoAtivo} onCheckedChange={setCreditoAtivo} />
@@ -263,7 +312,7 @@ export function FormasPagamentoDialog({
             ) : null}
           </div>
 
-          <div className="space-y-2 rounded-lg border p-3">
+          <div className="space-y-2 rounded-2xl border p-3">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium">Cartão de débito</div>
               <Switch checked={debitoAtivo} onCheckedChange={setDebitoAtivo} />

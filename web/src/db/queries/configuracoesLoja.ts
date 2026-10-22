@@ -87,6 +87,7 @@ const CHAVES_CONFIGURACOES = [
   "pagamento_pix_ativo",
   "pagamento_pix_chave",
   "pagamento_pix_nome",
+  "pagamento_pix_tipo",
   "pagamento_credito_ativo",
   "pagamento_credito_taxa_ativa",
   "pagamento_credito_taxa",
@@ -236,7 +237,12 @@ async function montarDetalheConfiguracoes(lojaId: number, adminId: number, perfi
     horarios: { abertura: horarioAbertura, fechamento: horarioFechamento, diasFuncionamento: diasFunc, porDia: horariosPorDia },
     pagamento: {
       dinheiroAtivo: cfg.pagamento_dinheiro_ativo !== "0",
-      pix: { ativo: cfg.pagamento_pix_ativo !== "0", chave: cfg.pagamento_pix_chave || "", nome: cfg.pagamento_pix_nome || "" },
+      pix: {
+        ativo: cfg.pagamento_pix_ativo !== "0",
+        chave: cfg.pagamento_pix_chave || "",
+        nome: cfg.pagamento_pix_nome || "",
+        tipo: (["cpf", "cnpj", "email", "telefone"].includes(cfg.pagamento_pix_tipo) ? cfg.pagamento_pix_tipo : "cpf") as "cpf" | "cnpj" | "email" | "telefone",
+      },
       credito: { ativo: cfg.pagamento_credito_ativo !== "0", taxaAtiva: cfg.pagamento_credito_taxa_ativa === "1", taxa: Number(cfg.pagamento_credito_taxa || 0), bandeiras: pagCreditoBandeiras, bandeirasCustom: pagCreditoCustom },
       debito: { ativo: cfg.pagamento_debito_ativo !== "0", taxaAtiva: cfg.pagamento_debito_taxa_ativa === "1", taxa: Number(cfg.pagamento_debito_taxa || 0), bandeiras: pagDebitoBandeiras, bandeirasCustom: pagDebitoCustom },
       voucherAtivo: cfg.pagamento_voucher_ativo === "1",
@@ -326,6 +332,9 @@ export async function salvarConfiguracoes(lojaId: number, body: SalvarConfigurac
   if ("pagamento_pix_ativo" in dados || "pagamento_credito_ativo" in dados || "pagamento_debito_ativo" in dados) {
     if (boolFlag(dados.pagamento_pix_ativo ?? "0")) {
       if (!String(dados.pagamento_pix_chave ?? "").trim() || !String(dados.pagamento_pix_nome ?? "").trim()) return { ok: false, msg: "Preencha os dados do Pix." };
+    }
+    if ("pagamento_pix_tipo" in dados && !["cpf", "cnpj", "email", "telefone"].includes(String(dados.pagamento_pix_tipo))) {
+      return { ok: false, msg: "Tipo de chave Pix invalido." };
     }
     if (boolFlag(dados.pagamento_credito_ativo ?? "0") && !String(dados.pagamento_credito_bandeiras ?? "").trim()) {
       return { ok: false, msg: "Selecione ao menos uma bandeira de credito." };
