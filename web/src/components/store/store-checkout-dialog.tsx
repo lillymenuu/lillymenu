@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Bike, Calendar, ChevronDown, CreditCard, Info, Loader2, Map, MapPin, QrCode, User, Wallet } from "lucide-react";
+import { AlertCircle, Bike, Calendar, ChevronDown, Copy, CreditCard, Info, Loader2, Map, MapPin, QrCode, User, Wallet } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "cn";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CheckoutStepper } from "@/components/store/checkout-stepper";
@@ -396,6 +397,14 @@ export function StoreCheckoutDialog({
   function enderecoTexto(): string {
     const partes = [rua + (numero ? `, ${numero}` : ""), complemento || null, bairro, cidade + (estado ? `/${estado}` : ""), cep ? `CEP ${cep}` : ""].filter(Boolean);
     return partes.join(", ");
+  }
+
+  function copiarPix() {
+    if (!perfil.pixChave) return;
+    navigator.clipboard
+      ?.writeText(perfil.pixChave)
+      .then(() => toast.success("A chave Pix foi copiada!"))
+      .catch(() => toast.error("Não foi possível copiar a chave Pix."));
   }
 
   const podeAvancarDados = nome.trim().length >= 2 && telefone.replace(/\D/g, "").length >= 10;
@@ -946,6 +955,21 @@ export function StoreCheckoutDialog({
                         )}
                       </div>
                     </div>
+                    {formaPagamento === "pix" && perfil.pixChave && (
+                      <div className="mt-3 rounded-xl bg-neutral-50 p-3">
+                        <p className="mb-0.5 text-[.72rem] text-neutral-400">Chave Pix para transferência</p>
+                        <p className="mb-0.5 text-[.9rem] break-all text-neutral-900">{perfil.pixChave}</p>
+                        {perfil.pixNome && <p className="mb-2.5 text-[.78rem] text-neutral-500">{perfil.pixNome}</p>}
+                        <button
+                          type="button"
+                          onClick={copiarPix}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-[.82rem] font-normal text-white"
+                          style={{ background: brown }}
+                        >
+                          <Copy size={14} /> Copiar chave pix
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="border-b border-neutral-100 py-3.5">
