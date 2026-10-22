@@ -289,165 +289,173 @@ export function FormasPagamentoDialog({
           <DialogTitle>Formas de pagamento</DialogTitle>
         </DialogHeader>
         <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-2 items-start gap-3 overflow-y-auto px-1">
-          <div className="flex items-center justify-between rounded-2xl border p-3">
-            <div className="text-sm font-medium">Dinheiro</div>
-            <Switch checked={dinheiro} onCheckedChange={setDinheiro} />
-          </div>
-
-          <div className="space-y-2 rounded-2xl border p-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">Voucher</div>
-              <Switch checked={voucherAtivo} onCheckedChange={setVoucherAtivo} />
+          {/* Duas colunas de flex independentes (em vez de um unico grid) —
+              assim um card alto numa linha (ex.: Voucher aberto) nao faz a
+              linha toda crescer e empurrar o card da coluna vizinha pra baixo;
+              cada coluna empilha pela sua propria altura. */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between rounded-2xl border p-3">
+              <div className="text-sm font-medium">Dinheiro</div>
+              <Switch checked={dinheiro} onCheckedChange={setDinheiro} />
             </div>
-            {voucherAtivo ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Habilitar taxa adicional em porcentagem %</Label>
-                  <Switch checked={voucherTaxaAtiva} onCheckedChange={setVoucherTaxaAtiva} />
-                </div>
-                {voucherTaxaAtiva ? (
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={voucherTaxa}
-                    onChange={(e) => setVoucherTaxa(e.target.value)}
-                    placeholder="Taxa (%)"
-                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
-                  />
-                ) : null}
-                <GrupoBandeiras
-                  titulo="Bandeiras aceitas pela sua loja"
-                  selecionadas={voucherBandeiras}
-                  onSelecionadasChange={setVoucherBandeiras}
-                  custom={voucherCustom}
-                  onCustomChange={setVoucherCustom}
-                  catalogo={BANDEIRAS_VOUCHER_PADRAO}
-                  addTrigger="link"
-                />
-              </>
-            ) : null}
-          </div>
 
-          <div className="space-y-2 rounded-2xl border p-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">Pix</div>
-              <Switch checked={pixAtivo} onCheckedChange={setPixAtivo} />
-            </div>
-            {pixAtivo ? (
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <Label className="text-xs">Tipo de chave</Label>
-                  <div className="flex items-center gap-1 rounded-full bg-muted p-1 text-xs">
-                    {PIX_TIPOS.map((opcao) => (
-                      <button
-                        key={opcao.valor}
-                        type="button"
-                        onClick={() => {
-                          setPixTipo(opcao.valor);
-                          setPixChave((v) => maskPixChave(opcao.valor, v));
-                        }}
-                        className={cn(
-                          "flex-1 rounded-full px-2 py-1 font-medium transition-colors",
-                          pixTipo === opcao.valor ? "bg-background shadow-sm" : "text-muted-foreground"
-                        )}
-                      >
-                        {opcao.label}
-                      </button>
-                    ))}
+            <div className="space-y-2 rounded-2xl border p-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">Pix</div>
+                <Switch checked={pixAtivo} onCheckedChange={setPixAtivo} />
+              </div>
+              {pixAtivo ? (
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Tipo de chave</Label>
+                    <div className="flex items-center gap-1 rounded-full bg-muted p-1 text-xs">
+                      {PIX_TIPOS.map((opcao) => (
+                        <button
+                          key={opcao.valor}
+                          type="button"
+                          onClick={() => {
+                            setPixTipo(opcao.valor);
+                            setPixChave((v) => maskPixChave(opcao.valor, v));
+                          }}
+                          className={cn(
+                            "flex-1 rounded-full px-2 py-1 font-medium transition-colors",
+                            pixTipo === opcao.valor ? "bg-background shadow-sm" : "text-muted-foreground"
+                          )}
+                        >
+                          {opcao.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Chave Pix</Label>
+                      <Input
+                        value={pixChave}
+                        onChange={(e) => setPixChave(maskPixChave(pixTipo, e.target.value))}
+                        inputMode={pixTipo === "cpf" || pixTipo === "cnpj" || pixTipo === "telefone" ? "numeric" : "email"}
+                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Nome do titular</Label>
+                      <Input value={pixNome} onChange={(e) => setPixNome(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Chave Pix</Label>
+              ) : null}
+            </div>
+
+            <div className="space-y-2 rounded-2xl border p-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">Cartão de crédito</div>
+                <Switch checked={creditoAtivo} onCheckedChange={setCreditoAtivo} />
+              </div>
+              {creditoAtivo ? (
+                <>
+                  <GrupoBandeiras
+                    titulo="Bandeiras aceitas"
+                    selecionadas={creditoBandeiras}
+                    onSelecionadasChange={setCreditoBandeiras}
+                    custom={creditoCustom}
+                    onCustomChange={setCreditoCustom}
+                  />
+                  <div className="flex items-center justify-between pt-1">
+                    <Label className="text-xs">Cobrar taxa do cliente</Label>
+                    <Switch checked={creditoTaxaAtiva} onCheckedChange={setCreditoTaxaAtiva} />
+                  </div>
+                  {creditoTaxaAtiva ? (
                     <Input
-                      value={pixChave}
-                      onChange={(e) => setPixChave(maskPixChave(pixTipo, e.target.value))}
-                      inputMode={pixTipo === "cpf" || pixTipo === "cnpj" || pixTipo === "telefone" ? "numeric" : "email"}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={creditoTaxa}
+                      onChange={(e) => setCreditoTaxa(e.target.value)}
+                      placeholder="Taxa (%)"
                       className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                     />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Nome do titular</Label>
-                    <Input value={pixNome} onChange={(e) => setPixNome(e.target.value)} className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm" />
-                  </div>
-                </div>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="space-y-2 rounded-2xl border p-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">Voucher</div>
+                <Switch checked={voucherAtivo} onCheckedChange={setVoucherAtivo} />
               </div>
-            ) : null}
-          </div>
-
-          <div className="flex items-center justify-between rounded-2xl border p-3">
-            <div className="text-sm font-medium">Fiado</div>
-            <Switch checked={fiado} onCheckedChange={setFiado} />
-          </div>
-
-          <div className="space-y-2 rounded-2xl border p-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">Cartão de crédito</div>
-              <Switch checked={creditoAtivo} onCheckedChange={setCreditoAtivo} />
-            </div>
-            {creditoAtivo ? (
-              <>
-                <GrupoBandeiras
-                  titulo="Bandeiras aceitas"
-                  selecionadas={creditoBandeiras}
-                  onSelecionadasChange={setCreditoBandeiras}
-                  custom={creditoCustom}
-                  onCustomChange={setCreditoCustom}
-                />
-                <div className="flex items-center justify-between pt-1">
-                  <Label className="text-xs">Cobrar taxa do cliente</Label>
-                  <Switch checked={creditoTaxaAtiva} onCheckedChange={setCreditoTaxaAtiva} />
-                </div>
-                {creditoTaxaAtiva ? (
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={creditoTaxa}
-                    onChange={(e) => setCreditoTaxa(e.target.value)}
-                    placeholder="Taxa (%)"
-                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              {voucherAtivo ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Habilitar taxa adicional em porcentagem %</Label>
+                    <Switch checked={voucherTaxaAtiva} onCheckedChange={setVoucherTaxaAtiva} />
+                  </div>
+                  {voucherTaxaAtiva ? (
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={voucherTaxa}
+                      onChange={(e) => setVoucherTaxa(e.target.value)}
+                      placeholder="Taxa (%)"
+                      className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                    />
+                  ) : null}
+                  <GrupoBandeiras
+                    titulo="Bandeiras aceitas pela sua loja"
+                    selecionadas={voucherBandeiras}
+                    onSelecionadasChange={setVoucherBandeiras}
+                    custom={voucherCustom}
+                    onCustomChange={setVoucherCustom}
+                    catalogo={BANDEIRAS_VOUCHER_PADRAO}
+                    addTrigger="link"
                   />
-                ) : null}
-              </>
-            ) : null}
-          </div>
-
-          <div className="space-y-2 rounded-2xl border p-3">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">Cartão de débito</div>
-              <Switch checked={debitoAtivo} onCheckedChange={setDebitoAtivo} />
+                </>
+              ) : null}
             </div>
-            {debitoAtivo ? (
-              <>
-                <GrupoBandeiras
-                  titulo="Bandeiras aceitas"
-                  selecionadas={debitoBandeiras}
-                  onSelecionadasChange={setDebitoBandeiras}
-                  custom={debitoCustom}
-                  onCustomChange={setDebitoCustom}
-                />
-                <div className="flex items-center justify-between pt-1">
-                  <Label className="text-xs">Cobrar taxa do cliente</Label>
-                  <Switch checked={debitoTaxaAtiva} onCheckedChange={setDebitoTaxaAtiva} />
-                </div>
-                {debitoTaxaAtiva ? (
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={debitoTaxa}
-                    onChange={(e) => setDebitoTaxa(e.target.value)}
-                    placeholder="Taxa (%)"
-                    className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+
+            <div className="flex items-center justify-between rounded-2xl border p-3">
+              <div className="text-sm font-medium">Fiado</div>
+              <Switch checked={fiado} onCheckedChange={setFiado} />
+            </div>
+
+            <div className="space-y-2 rounded-2xl border p-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">Cartão de débito</div>
+                <Switch checked={debitoAtivo} onCheckedChange={setDebitoAtivo} />
+              </div>
+              {debitoAtivo ? (
+                <>
+                  <GrupoBandeiras
+                    titulo="Bandeiras aceitas"
+                    selecionadas={debitoBandeiras}
+                    onSelecionadasChange={setDebitoBandeiras}
+                    custom={debitoCustom}
+                    onCustomChange={setDebitoCustom}
                   />
-                ) : null}
-              </>
-            ) : null}
+                  <div className="flex items-center justify-between pt-1">
+                    <Label className="text-xs">Cobrar taxa do cliente</Label>
+                    <Switch checked={debitoTaxaAtiva} onCheckedChange={setDebitoTaxaAtiva} />
+                  </div>
+                  {debitoTaxaAtiva ? (
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={debitoTaxa}
+                      onChange={(e) => setDebitoTaxa(e.target.value)}
+                      placeholder="Taxa (%)"
+                      className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+                    />
+                  ) : null}
+                </>
+              ) : null}
+            </div>
           </div>
         </div>
         <DialogFooter className="border-t-0 bg-transparent">
