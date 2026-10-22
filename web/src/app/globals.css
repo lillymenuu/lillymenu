@@ -133,6 +133,20 @@
   html {
     @apply font-sans;
   }
+  button:not(:disabled):not([data-disabled]),
+  a[href],
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"],
+  [role="switch"]:not([data-disabled]),
+  [role="checkbox"]:not([data-disabled]),
+  [role="radio"]:not([data-disabled]),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  select:not(:disabled),
+  label[for] {
+    cursor: pointer;
+  }
 }
 
 @layer utilities {
