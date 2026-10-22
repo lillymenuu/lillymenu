@@ -77,7 +77,6 @@ export async function POST(request: Request) {
     cupomCodigo: body.cupom ? String(body.cupom) : undefined,
     descontoTipo: body.desconto_tipo === "percent" ? "percent" : "valor",
     descontoValor: toNum(body.desconto_valor),
-    taxaMaquininhaPercent: toNum(body.taxa_maquininha_percent),
     cashbackAplicado: toBool01(body.cashback_aplicado),
     cashbackUsado: toNum(body.cashback_usado),
     pagamentos,

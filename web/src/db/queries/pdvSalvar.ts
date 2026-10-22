@@ -46,6 +46,28 @@ function toFloat(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/*
+ * Taxa de cartao/voucher repassada ao cliente: busca direto da configuracao
+ * da loja (Configuracoes > Formas de pagamento) em vez de confiar num
+ * percentual enviado pelo cliente — assim o operador nao consegue burlar
+ * ou inflar a taxa cobrada manipulando a requisicao.
+ */
+async function taxasPagamentoPorForma(lojaId: number): Promise<Record<string, number>> {
+  const [credAtiva, credTaxa, debAtiva, debTaxa, voucherAtiva, voucherTaxa] = await Promise.all([
+    getConfig(lojaId, "pagamento_credito_taxa_ativa", "0"),
+    getConfig(lojaId, "pagamento_credito_taxa", "0"),
+    getConfig(lojaId, "pagamento_debito_taxa_ativa", "0"),
+    getConfig(lojaId, "pagamento_debito_taxa", "0"),
+    getConfig(lojaId, "pagamento_voucher_taxa_ativa", "0"),
+    getConfig(lojaId, "pagamento_voucher_taxa", "0"),
+  ]);
+  return {
+    credito: credAtiva === "1" ? toFloat(credTaxa) : 0,
+    debito: debAtiva === "1" ? toFloat(debTaxa) : 0,
+    voucher: voucherAtiva === "1" ? toFloat(voucherTaxa) : 0,
+  };
+}
+
 function extrairBairroEndereco(endereco: string | null | undefined): string {
   if (!endereco) return "";
   const m = endereco.match(/Bairro:\s*([^|]+)/i);
@@ -99,7 +121,6 @@ export type SalvarPedidoPdvInput = {
   cupomCodigo?: string;
   descontoTipo?: "valor" | "percent";
   descontoValor?: number;
-  taxaMaquininhaPercent?: number;
   cashbackAplicado?: boolean;
   cashbackUsado?: number;
   pagamentos?: PagamentoPdvInput[];
@@ -179,12 +200,11 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   let cupom = (input.cupomCodigo ?? "").trim().toUpperCase();
   let descontoTipo: "valor" | "percent" = input.descontoTipo === "percent" ? "percent" : "valor";
   let descontoValor = toFloat(input.descontoValor);
-  let taxaMaquininhaPercent = toFloat(input.taxaMaquininhaPercent);
   if (perfil !== "admin" && perfil !== "gerente") {
     cupom = "";
     descontoValor = 0;
-    taxaMaquininhaPercent = 0;
   }
+  const taxasPorForma = await taxasPagamentoPorForma(lojaId);
 
   if (!input.clienteId || itens.length === 0) return { ok: false, msg: "Dados incompletos" };
 
@@ -426,9 +446,9 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   const pagamentoPrincipal = pagamentosValidos[0]?.forma ?? input.formaPagamentoPrincipal ?? "pix";
 
   if (input.pagamentoDividido) {
-    for (const p of pagamentosValidos) if (p.forma === "credito" || p.forma === "debito") taxaMaquininhaTotal += p.valor * (taxaMaquininhaPercent / 100);
-  } else if (pagamentoPrincipal === "credito" || pagamentoPrincipal === "debito") {
-    taxaMaquininhaTotal = base * (taxaMaquininhaPercent / 100);
+    for (const p of pagamentosValidos) taxaMaquininhaTotal += p.valor * ((taxasPorForma[p.forma] ?? 0) / 100);
+  } else {
+    taxaMaquininhaTotal = base * ((taxasPorForma[pagamentoPrincipal] ?? 0) / 100);
   }
 
   const total = base + taxaMaquininhaTotal;
@@ -504,7 +524,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
 
           await tx.delete(pedidoPagamentos).where(and(eq(pedidoPagamentos.pedido_id, pedidoEdicaoId), eq(pedidoPagamentos.loja_id, lojaId)));
           for (const p of pagamentosValidos) {
-            const taxaPagamento = p.forma === "credito" || p.forma === "debito" ? p.valor * (taxaMaquininhaPercent / 100) : 0;
+            const taxaPagamento = p.valor * ((taxasPorForma[p.forma] ?? 0) / 100);
             await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoEdicaoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamento, loja_id: lojaId });
           }
 
@@ -586,7 +606,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
       }
 
       for (const p of pagamentosValidos) {
-        const taxaPagamento = p.forma === "credito" || p.forma === "debito" ? p.valor * (taxaMaquininhaPercent / 100) : 0;
+        const taxaPagamento = p.valor * ((taxasPorForma[p.forma] ?? 0) / 100);
         await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamento, loja_id: lojaId });
       }
 

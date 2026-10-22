@@ -47,6 +47,10 @@ export function PosPagamentoPanel({
   clienteStats,
   valoresIniciais,
   cashbackAplicado,
+  fiadoAtivo,
+  taxaCredito,
+  taxaDebito,
+  taxaVoucher,
   onDadosChange,
   onFinalizar,
   finalizando,
@@ -60,11 +64,18 @@ export function PosPagamentoPanel({
   valoresIniciais?: { descontoTipo?: "valor" | "percent"; descontoValor?: number };
   /** Valor de cashback a usar, ja decidido no resumo do pedido (ver pos-overlay.tsx). */
   cashbackAplicado: number;
+  /** Fiado so aparece como opcao de pagamento quando habilitado em Configuracoes > Formas de pagamento. */
+  fiadoAtivo: boolean;
+  /** Percentuais de taxa repassada ao cliente (Configuracoes > Formas de pagamento); 0 quando desativada. */
+  taxaCredito: number;
+  taxaDebito: number;
+  taxaVoucher: number;
   onDadosChange: (dados: PosPagamentoDados, total: number) => void;
   onFinalizar: (imprimir: boolean) => void;
   finalizando: boolean;
   desabilitado: boolean;
 }) {
+  const taxaPorForma: Partial<Record<PosFormaPagamento, number>> = { credito: taxaCredito, debito: taxaDebito, voucher: taxaVoucher };
   const [pagamentosRegistrados, setPagamentosRegistrados] = useState<PosPagamentoLinha[]>([]);
   const [valorInput, setValorInput] = useState("");
   const [descontoModalAberto, setDescontoModalAberto] = useState(false);
@@ -80,7 +91,18 @@ export function PosPagamentoPanel({
   const cashbackNum = Math.max(0, Math.min(cashbackAplicado, clienteStats?.cashback ?? cashbackAplicado));
   const cupomValorAplicado = cupom?.valor ?? 0;
 
-  const total = Math.max(0, subtotal + taxaEntrega - descontoReais - cupomValorAplicado - cashbackNum);
+  /* Taxa de cartao/voucher repassada ao cliente: incide sobre o valor de cada
+     linha ja registrada na forma correspondente, entao o total so cresce
+     depois que o operador de fato lanca um pagamento nessa forma — o campo
+     de valor (preenchido com o "restante") absorve isso automaticamente na
+     proxima linha, sem precisar de uma segunda etapa manual. */
+  const taxaPagamentoExtra = useMemo(
+    () => pagamentosRegistrados.reduce((acc, p) => acc + p.valor * ((taxaPorForma[p.forma] ?? 0) / 100), 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pagamentosRegistrados, taxaCredito, taxaDebito, taxaVoucher]
+  );
+
+  const total = Math.max(0, subtotal + taxaEntrega - descontoReais - cupomValorAplicado - cashbackNum) + taxaPagamentoExtra;
   const pagoAteAgora = useMemo(() => pagamentosRegistrados.reduce((s, p) => s + p.valor, 0), [pagamentosRegistrados]);
   const restante = Math.max(0, Math.round((total - pagoAteAgora) * 100) / 100);
 
@@ -91,7 +113,7 @@ export function PosPagamentoPanel({
     setValorInput(restante > 0 ? String(restante) : "");
   }, [restante]);
 
-  const pagamentosFinais: PosPagamentoLinha[] = semPagamento && restante > 0 ? [...pagamentosRegistrados, { forma: "fiado", valor: restante }] : pagamentosRegistrados;
+  const pagamentosFinais: PosPagamentoLinha[] = fiadoAtivo && semPagamento && restante > 0 ? [...pagamentosRegistrados, { forma: "fiado", valor: restante }] : pagamentosRegistrados;
   const dinheiroValorLinha = useMemo(() => pagamentosFinais.filter((p) => p.forma === "dinheiro").reduce((s, p) => s + p.valor, 0), [pagamentosFinais]);
   // valorPago so tem sentido quando ha uma linha em dinheiro — representa o quanto o cliente
   // de fato entregou em especie (pode ser maior que a linha registrada, gerando troco no backend).
@@ -161,6 +183,11 @@ export function PosPagamentoPanel({
             Restante a cobrar {formatBRL(restante)}
           </div>
         ) : null}
+        {taxaPagamentoExtra > 0 ? (
+          <div className="text-muted-foreground">
+            Taxa de cartão/voucher repassada {formatBRL(taxaPagamentoExtra)}
+          </div>
+        ) : null}
         {descontoReais > 0 ? (
           <div className="flex items-center justify-center gap-1.5 font-medium text-primary">
             Desconto concedido {formatBRL(descontoReais)}
@@ -211,15 +238,17 @@ export function PosPagamentoPanel({
             Desconto
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={() => registrarPagamento("fiado")}
-          disabled={restante <= 0}
-          className="flex w-full flex-col items-center gap-2 rounded-2xl border py-4 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Wallet className="size-4 text-muted-foreground" />
-          Fiado
-        </button>
+        {fiadoAtivo ? (
+          <button
+            type="button"
+            onClick={() => registrarPagamento("fiado")}
+            disabled={restante <= 0}
+            className="flex w-full flex-col items-center gap-2 rounded-2xl border py-4 text-[11px] font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Wallet className="size-4 text-muted-foreground" />
+            Fiado
+          </button>
+        ) : null}
       </div>
 
       <PosDescontoDialog
@@ -237,10 +266,12 @@ export function PosPagamentoPanel({
         onConfirmar={confirmarTroco}
       />
 
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium">Finalizar sem pagamento</span>
-        <Switch checked={semPagamento} onCheckedChange={setSemPagamento} />
-      </div>
+      {fiadoAtivo ? (
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium">Finalizar sem pagamento</span>
+          <Switch checked={semPagamento} onCheckedChange={setSemPagamento} />
+        </div>
+      ) : null}
 
       {pagamentosRegistrados.length > 0 ? (
         <div className="space-y-2">

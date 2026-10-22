@@ -105,6 +105,12 @@ export function PosOverlay({
   const [pagamentoDados, setPagamentoDados] = useState<PosPagamentoDados | null>(null);
   const [finalizando, setFinalizando] = useState(false);
   const [taxaEntregaConfig, setTaxaEntregaConfig] = useState<{ tipo: string; gratis: boolean; valorFixo: number } | null>(null);
+  const [pagamentoConfig, setPagamentoConfig] = useState<{
+    fiadoAtivo: boolean;
+    taxaCredito: number;
+    taxaDebito: number;
+    taxaVoucher: number;
+  }>({ fiadoAtivo: false, taxaCredito: 0, taxaDebito: 0, taxaVoucher: 0 });
   const [temCupomDisponivel, setTemCupomDisponivel] = useState(false);
 
   const [entregaModalAberto, setEntregaModalAberto] = useState(false);
@@ -173,6 +179,12 @@ export function PosOverlay({
             valorFixo: cfg.taxa_entrega.fixa.valor,
           });
           setAgendamentoConfig(cfg.agendamento);
+          setPagamentoConfig({
+            fiadoAtivo: Boolean(cfg.pagamento?.fiado_ativo),
+            taxaCredito: cfg.pagamento?.credito?.taxa_ativa ? Number(cfg.pagamento.credito.taxa) || 0 : 0,
+            taxaDebito: cfg.pagamento?.debito?.taxa_ativa ? Number(cfg.pagamento.debito.taxa) || 0 : 0,
+            taxaVoucher: cfg.pagamento?.voucher?.taxa_ativa ? Number(cfg.pagamento.voucher.taxa) || 0 : 0,
+          });
           if (cfg.loja?.link_slug) {
             setLojaLink(`${cfg.loja_link_base}${encodeURIComponent(cfg.loja.link_slug)}`);
           }
@@ -455,7 +467,6 @@ export function PosOverlay({
           cupom: cupom?.codigo ?? "",
           desconto_tipo: pagamentoDados.descontoTipo,
           desconto_valor: pagamentoDados.descontoValor,
-          taxa_maquininha_percent: 0,
           cashback_aplicado: cashbackAtivo ? "1" : "0",
           cashback_usado: pagamentoDados.cashbackUsado,
           cpf_cnpj_nota: cpfCnpjNota,
@@ -732,6 +743,10 @@ export function PosOverlay({
             clienteStats={clienteStats}
             valoresIniciais={pagamentoValoresIniciais}
             cashbackAplicado={cashbackResumoNum}
+            fiadoAtivo={pagamentoConfig.fiadoAtivo}
+            taxaCredito={pagamentoConfig.taxaCredito}
+            taxaDebito={pagamentoConfig.taxaDebito}
+            taxaVoucher={pagamentoConfig.taxaVoucher}
             onDadosChange={(dados) => setPagamentoDados(dados)}
             onFinalizar={finalizarPedido}
             finalizando={finalizando}
