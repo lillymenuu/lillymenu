@@ -147,7 +147,11 @@ function GarcomAppInterno({
      na cobrança de verdade e o criarPedidoMesa, que recalcula a partir da
      config da loja e ignora qualquer valor vindo daqui. */
   const taxaServicoValor = perfil.taxaServicoAtiva ? Math.round(subtotalCarrinho * (perfil.taxaServicoPct / 100) * 100) / 100 : 0;
-  const totalCarrinho = subtotalCarrinho + taxaServicoValor;
+  /* taxa de cartao repassada ao cliente (Configuracoes > Formas de pagamento)
+     — so pra exibir; quem manda na cobranca de verdade e o criarPedidoMesa. */
+  const taxaMaquininhaPercent = formaPagamento === "credito" ? perfil.credTaxaPercent : formaPagamento === "debito" ? perfil.debTaxaPercent : 0;
+  const taxaMaquininhaValor = Math.round((subtotalCarrinho + taxaServicoValor) * (taxaMaquininhaPercent / 100) * 100) / 100;
+  const totalCarrinho = subtotalCarrinho + taxaServicoValor + taxaMaquininhaValor;
 
   const trocoValorNumerico = parseValorMascarado(trocoValor);
   const trocoValido = trocoValor.trim() === "" || (!isNaN(trocoValorNumerico) && trocoValorNumerico > totalCarrinho);
@@ -446,6 +450,12 @@ function GarcomAppInterno({
                   <span>{formatarPreco(taxaServicoValor)}</span>
                 </div>
               )}
+              {taxaMaquininhaValor > 0 && (
+                <div className="mb-1 flex items-center justify-between text-[.78rem] text-neutral-500">
+                  <span>Taxa de cartão ({taxaMaquininhaPercent}%)</span>
+                  <span>{formatarPreco(taxaMaquininhaValor)}</span>
+                </div>
+              )}
               <div className="mb-2.5 flex items-center justify-between">
                 <span className="text-[.78rem] text-neutral-500">Total do pedido</span>
                 <span className="text-[.9rem] font-bold text-neutral-900">{formatarPreco(totalCarrinho)}</span>
@@ -493,10 +503,10 @@ function GarcomAppInterno({
               <p className="mb-2.5 text-[.84rem] font-semibold text-neutral-900">Forma de pagamento</p>
               <div className="space-y-2">
                 {[
-                  { valor: "pix", label: "Pix", ativo: perfil.pixAtivo },
-                  { valor: "dinheiro", label: "Dinheiro", ativo: perfil.dinAtivo },
-                  { valor: "credito", label: "Cartão de crédito", ativo: perfil.credAtivo },
-                  { valor: "debito", label: "Cartão de débito", ativo: perfil.debAtivo },
+                  { valor: "pix", label: "Pix", ativo: perfil.pixAtivo, taxaPct: 0 },
+                  { valor: "dinheiro", label: "Dinheiro", ativo: perfil.dinAtivo, taxaPct: 0 },
+                  { valor: "credito", label: "Cartão de crédito", ativo: perfil.credAtivo, taxaPct: perfil.credTaxaPercent },
+                  { valor: "debito", label: "Cartão de débito", ativo: perfil.debAtivo, taxaPct: perfil.debTaxaPercent },
                 ]
                   .filter((f) => f.ativo)
                   .map((f) => (
@@ -510,7 +520,10 @@ function GarcomAppInterno({
                       className="flex cursor-pointer items-center gap-3 rounded-xl border-[1.5px] p-3 transition-colors"
                       style={formaPagamento === f.valor ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#e5e7eb" }}
                     >
-                      <span className="flex-1 text-[.86rem] font-semibold text-neutral-900">{f.label}</span>
+                      <span className="flex-1 text-[.86rem] font-semibold text-neutral-900">
+                        {f.label}
+                        {f.taxaPct > 0 ? <span className="ml-1.5 font-normal text-neutral-400">(+{f.taxaPct}%)</span> : null}
+                      </span>
                       <span
                         className="flex size-[20px] shrink-0 items-center justify-center rounded-full border-2"
                         style={formaPagamento === f.valor ? { borderColor: brown, background: brown } : { borderColor: "#ddd" }}

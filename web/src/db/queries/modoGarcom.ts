@@ -268,6 +268,8 @@ export type PerfilGarcomLoja = {
   pixAtivo: boolean;
   credAtivo: boolean;
   debAtivo: boolean;
+  credTaxaPercent: number;
+  debTaxaPercent: number;
   taxaServicoAtiva: boolean;
   taxaServicoPct: number;
 };
@@ -282,6 +284,10 @@ export async function perfilGarcomLoja(lojaId: number, baseUrl: string): Promise
     "pagamento_pix_ativo",
     "pagamento_credito_ativo",
     "pagamento_debito_ativo",
+    "pagamento_credito_taxa_ativa",
+    "pagamento_credito_taxa",
+    "pagamento_debito_taxa_ativa",
+    "pagamento_debito_taxa",
     "taxa_servico_ativa",
     "taxa_servico_pct",
   ]);
@@ -293,6 +299,8 @@ export async function perfilGarcomLoja(lojaId: number, baseUrl: string): Promise
     pixAtivo: cfg.pagamento_pix_ativo !== "0",
     credAtivo: cfg.pagamento_credito_ativo !== "0",
     debAtivo: cfg.pagamento_debito_ativo !== "0",
+    credTaxaPercent: cfg.pagamento_credito_taxa_ativa === "1" ? Number(cfg.pagamento_credito_taxa || "0") : 0,
+    debTaxaPercent: cfg.pagamento_debito_taxa_ativa === "1" ? Number(cfg.pagamento_debito_taxa || "0") : 0,
     taxaServicoAtiva: cfg.taxa_servico_ativa === "1",
     taxaServicoPct: Number(cfg.taxa_servico_pct || "0"),
   };
@@ -408,12 +416,32 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
 
   const subtotal = input.itens.reduce((soma, item) => soma + item.preco * Math.max(1, item.qtd || 1), 0);
 
-  /* taxa de servico do garcom: calculada aqui a partir da config da loja
-     (nunca confia em valor vindo do cliente), igual ao resto do sistema. */
-  const cfgTaxa = await getConfigs(lojaId, ["taxa_servico_ativa", "taxa_servico_pct"]);
+  /* taxa de servico do garcom e taxa de cartao repassada ao cliente: ambas
+     calculadas aqui a partir da config da loja (nunca confia em valor vindo
+     do cliente), igual ao resto do sistema. */
+  const cfgTaxa = await getConfigs(lojaId, [
+    "taxa_servico_ativa",
+    "taxa_servico_pct",
+    "pagamento_credito_taxa_ativa",
+    "pagamento_credito_taxa",
+    "pagamento_debito_taxa_ativa",
+    "pagamento_debito_taxa",
+  ]);
   const taxaServico = cfgTaxa.taxa_servico_ativa === "1" ? Math.round(subtotal * (Number(cfgTaxa.taxa_servico_pct || "0") / 100) * 100) / 100 : 0;
 
-  const total = subtotal + taxaServico;
+  const taxaMaquininhaPercent =
+    input.formaPagamento === "credito"
+      ? cfgTaxa.pagamento_credito_taxa_ativa === "1"
+        ? Number(cfgTaxa.pagamento_credito_taxa || "0")
+        : 0
+      : input.formaPagamento === "debito"
+        ? cfgTaxa.pagamento_debito_taxa_ativa === "1"
+          ? Number(cfgTaxa.pagamento_debito_taxa || "0")
+          : 0
+        : 0;
+  const taxaMaquininha = Math.round((subtotal + taxaServico) * (taxaMaquininhaPercent / 100) * 100) / 100;
+
+  const total = subtotal + taxaServico + taxaMaquininha;
   /* trocoValor e o valor com que o cliente vai pagar (ex.: "troco para 20"), nao o troco em si -- o troco de verdade e a diferenca pro total do pedido. */
   const trocoValorRecebido = input.trocoValor ?? 0;
 
@@ -432,6 +460,7 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           total,
           subtotal,
           taxa_servico: taxaServico > 0 ? taxaServico : null,
+          taxa_maquininha: taxaMaquininha,
           status: "pendente",
           loja_id: lojaId,
           tipo: "mesa",
