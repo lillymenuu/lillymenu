@@ -963,7 +963,7 @@ export function StoreCheckoutDialog({
                         <button
                           type="button"
                           onClick={copiarPix}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-[.82rem] font-normal text-white"
+                          className="flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-[.82rem] font-normal text-white"
                           style={{ background: brown }}
                         >
                           <Copy size={14} /> Copiar chave pix
@@ -1102,7 +1102,7 @@ export function StoreCheckoutDialog({
                   type="button"
                   disabled={avancarDesabilitado}
                   onClick={avancar}
-                  className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+                  className="w-full rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
                   style={{ background: avancarDesabilitado ? "#c0a88a" : brown }}
                 >
                   Continuar
@@ -1112,7 +1112,7 @@ export function StoreCheckoutDialog({
                   type="button"
                   disabled={formaPagamento === "" || enviando}
                   onClick={finalizarPedido}
-                  className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+                  className="w-full rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
                   style={{ background: formaPagamento === "" || enviando ? "#c0a88a" : brown }}
                 >
                   {enviando ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Enviar pedido"}
@@ -1224,7 +1224,7 @@ export function StoreCheckoutDialog({
                 href={`https://wa.me/55${wppNum}?text=${encodeURIComponent("Olá! Meu bairro não está na área de entrega cadastrada, gostaria de combinar a forma de entrega do meu pedido.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-emerald-600 py-3.5 text-[.9rem] font-bold text-white transition-colors hover:bg-emerald-700"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 py-3.5 text-[.9rem] font-bold text-white transition-colors hover:bg-emerald-700"
               >
                 <WhatsAppIcon size={18} />
                 Falar no WhatsApp
@@ -1239,7 +1239,7 @@ export function StoreCheckoutDialog({
                   (perfil.taxaEntregaTipo === "area" && (calculandoAreaTaxa || areaTaxaInfo === null || !areaTaxaInfo.atendido))
                 }
                 onClick={confirmarEndereco}
-                className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+                className="w-full rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
                 style={{
                   background:
                     !rua.trim() ||

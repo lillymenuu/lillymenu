@@ -253,7 +253,7 @@ export function StoreCartSheet({
               <button
                 type="button"
                 onClick={onFinalizar}
-                className="shrink-0 rounded-[10px] px-6 py-3 text-[.86rem] font-bold text-white"
+                className="shrink-0 rounded-full px-6 py-3 text-[.86rem] font-bold text-white"
                 style={{ background: brown }}
               >
                 Continuar

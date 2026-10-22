@@ -1100,7 +1100,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             <button
               type="button"
               onClick={() => setCartAberto(true)}
-              className="shrink-0 rounded-[10px] px-5 py-2.5 text-[.86rem] font-bold text-white"
+              className="shrink-0 rounded-full px-5 py-2.5 text-[.86rem] font-bold text-white"
               style={{ background: brown }}
             >
               Ver carrinho

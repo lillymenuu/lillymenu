@@ -188,7 +188,7 @@ export function StoreAgendamentoOverlay({
           onClick={() => {
             if (diaSelecionado && slot) onConfirmar(diaSelecionado.date, slot);
           }}
-          className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold tracking-wide text-white transition-colors disabled:cursor-not-allowed"
+          className="w-full rounded-full py-3.5 text-[.9rem] font-bold tracking-wide text-white transition-colors disabled:cursor-not-allowed"
           style={{ background: diaSelecionado && slot ? brown : "#c0a88a" }}
         >
           CONTINUAR
