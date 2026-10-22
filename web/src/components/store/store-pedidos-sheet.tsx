@@ -255,7 +255,7 @@ export function StorePedidosSheet({
                       <button
                         type="button"
                         onClick={copiarPix}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-[.82rem] font-normal text-white"
+                        className="flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-[.82rem] font-normal text-white"
                         style={{ background: brown }}
                       >
                         <Copy size={14} /> Copiar chave pix
@@ -366,7 +366,7 @@ export function StorePedidosSheet({
                         <button
                           type="button"
                           onClick={() => window.open(mapsUrl, "_blank", "noopener")}
-                          className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[.78rem] font-normal text-white"
+                          className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-[.78rem] font-normal text-white"
                           style={{ background: brown }}
                         >
                           <MapPin size={13} /> Ver no mapa
@@ -381,7 +381,7 @@ export function StorePedidosSheet({
                         <button
                           type="button"
                           disabled
-                          className="flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-lg py-2.5 text-[.82rem] font-normal text-white opacity-50"
+                          className="flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-full py-2.5 text-[.82rem] font-normal text-white opacity-50"
                           style={{ background: "#c0a88a" }}
                         >
                           <CheckCircle2 size={15} /> Pedido avaliado
@@ -393,7 +393,7 @@ export function StorePedidosSheet({
                             setAvaliacaoPedidoId(p.id);
                             setAvaliacaoAberta(true);
                           }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-[.82rem] font-normal text-white"
+                          className="flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-[.82rem] font-normal text-white"
                           style={{ background: brown }}
                         >
                           <Star size={15} fill="#f59e0b" color="#f59e0b" /> Avaliar pedido
