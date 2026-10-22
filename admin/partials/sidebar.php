@@ -287,6 +287,21 @@ $secGerenciar = $mostrarControleCaixa || $mostrarControleFiado || $mostrarMotobo
 </script>
 
 <style>
+  /* Cursor de mao em todos os elementos clicaveis do Admin */
+  button:not(:disabled),
+  .btn:not(.disabled):not([disabled]),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  a[href],
+  a[onclick],
+  [role="button"],
+  [onclick],
+  select,
+  label[for]{
+    cursor:pointer;
+  }
+
   .sidebar-preload .sidebar,
   .sidebar-preload .content{
     transition:none !important;
