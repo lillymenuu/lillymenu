@@ -423,7 +423,7 @@ export function NotificationBell({
   );
 
   const flutuantes = mounted && pedidosFlutuantes.length > 0 && (
-    <div className="pointer-events-none fixed inset-x-0 top-4 z-[70] flex flex-col items-center gap-3 px-4">
+    <div className="pointer-events-none fixed inset-x-0 top-4 z-40 flex flex-col items-center gap-3 px-4">
       {pedidosFlutuantes.map((pedido) => (
         <div
           key={pedido.id}
