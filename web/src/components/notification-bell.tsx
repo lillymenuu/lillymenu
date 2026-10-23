@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Bell, Receipt, Star, X } from "lucide-react";
 import { cn } from "cn";
+import { OrderCard } from "@/components/ordermanager/order-card";
+import { LinkMotoboyDialog } from "@/components/ordermanager/link-motoboy-dialog";
+import type { Motoboy, Pedido } from "@/lib/pedidos";
 
 type NotifItem = {
   id: number;
@@ -79,6 +82,56 @@ export function NotificationBell({
   const maiorIdPedidoRef = useRef<number | null>(null);
   const maiorIdAvaliacaoRef = useRef<number | null>(null);
   const audioDesbloqueadoRef = useRef(false);
+
+  /* Pedidos vindos da loja (origem "loja") trocam o toast discreto por um
+     card flutuante com os dados completos — o lojista aceita/recusa/vincula
+     o entregador direto da notificacao, sem precisar abrir o Gestor de
+     Pedidos. */
+  const [pedidosFlutuantes, setPedidosFlutuantes] = useState<Pedido[]>([]);
+  const [vincularFlutuante, setVincularFlutuante] = useState<Pedido | null>(null);
+  const [motoboysFlutuante, setMotoboysFlutuante] = useState<Motoboy[]>([]);
+
+  const removerFlutuante = useCallback((id: number) => {
+    setPedidosFlutuantes((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const abrirFlutuante = useCallback(
+    (pedido: Pedido) => {
+      removerFlutuante(pedido.id);
+      router.push(`/ordermanager?pedido=${pedido.id}`);
+    },
+    [removerFlutuante, router]
+  );
+
+  async function moverStatusFlutuante(pedido: Pedido, status: string) {
+    try {
+      const res = await fetch("/api/ordermanager/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: pedido.id, status }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        toast.error(data.msg ?? "Erro ao atualizar o pedido.");
+        return;
+      }
+      toast.success(status === "cancelado" ? "Pedido recusado." : "Pedido aceito.");
+      removerFlutuante(pedido.id);
+    } catch {
+      toast.error("Erro de conexão.");
+    }
+  }
+
+  async function abrirVincularFlutuante(pedido: Pedido) {
+    try {
+      const res = await fetch(`/api/ordermanager/motoboys?pedido_id=${pedido.id}`);
+      const data = await res.json();
+      setMotoboysFlutuante(data.ok ? (data.motoboys ?? []) : []);
+    } catch {
+      setMotoboysFlutuante([]);
+    }
+    setVincularFlutuante(pedido);
+  }
 
   useEffect(() => setMounted(true), []);
 
@@ -160,7 +213,10 @@ export function NotificationBell({
         maiorIdPedidoRef.current = maiorId;
       } else if (maiorId > maiorIdPedidoRef.current) {
         const recemChegados = novos.filter((i) => i.id > maiorIdPedidoRef.current!);
-        recemChegados.forEach((item) => {
+        const recemChegadosLoja = recemChegados.filter((i) => i.origem === "loja");
+        const recemChegadosOutros = recemChegados.filter((i) => i.origem !== "loja");
+
+        recemChegadosOutros.forEach((item) => {
           toast.custom(() => (
             <button
               onClick={() => abrirItem(item)}
@@ -178,7 +234,23 @@ export function NotificationBell({
             </button>
           ));
         });
-        if (recemChegados.some((i) => i.origem === "loja")) {
+
+        /* Pedidos da loja ganham o card flutuante completo (ver render mais
+           abaixo) em vez do toast discreto — busca os dados completos na
+           mesma lista que o Gestor de Pedidos usa, pra reaproveitar o
+           OrderCard tal como ele aparece la. */
+        if (recemChegadosLoja.length > 0) {
+          fetch("/api/ordermanager/pedidos", { cache: "no-store" })
+            .then((r) => r.json())
+            .then((data) => {
+              if (!data.ok) return;
+              const idsLoja = new Set(recemChegadosLoja.map((i) => i.id));
+              const encontrados: Pedido[] = (data.pedidos ?? []).filter((p: Pedido) => idsLoja.has(p.id));
+              if (encontrados.length > 0) {
+                setPedidosFlutuantes((prev) => [...prev, ...encontrados.filter((p) => !prev.some((x) => x.id === p.id))]);
+              }
+            })
+            .catch(() => {});
           tocarAlarme();
         }
         maiorIdPedidoRef.current = maiorId;
@@ -350,6 +422,36 @@ export function NotificationBell({
     </div>
   );
 
+  const flutuantes = mounted && pedidosFlutuantes.length > 0 && (
+    <div className="pointer-events-none fixed inset-x-0 top-4 z-[70] flex flex-col items-center gap-3 px-4">
+      {pedidosFlutuantes.map((pedido) => (
+        <div
+          key={pedido.id}
+          className="pointer-events-auto relative w-full max-w-[280px] animate-in fade-in slide-in-from-top-8 duration-300"
+        >
+          <button
+            type="button"
+            onClick={() => removerFlutuante(pedido.id)}
+            aria-label="Dispensar"
+            className="absolute -right-2 -top-2 z-10 flex size-6 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
+          >
+            <X size={12} />
+          </button>
+          <OrderCard
+            pedido={pedido}
+            onAbrir={() => abrirFlutuante(pedido)}
+            onImprimir={() => abrirFlutuante(pedido)}
+            onAvancar={() => moverStatusFlutuante(pedido, "aceito")}
+            onRecusar={() => moverStatusFlutuante(pedido, "cancelado")}
+            onVincularMotoboy={() => abrirVincularFlutuante(pedido)}
+            onDragStart={(e) => e.preventDefault()}
+            onDragEnd={() => {}}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <>
       <button
@@ -374,6 +476,26 @@ export function NotificationBell({
         )}
       </button>
       {mounted && panel ? createPortal(panel, document.body) : null}
+      {mounted && flutuantes ? createPortal(flutuantes, document.body) : null}
+      {mounted && vincularFlutuante
+        ? createPortal(
+            <LinkMotoboyDialog
+              open={vincularFlutuante !== null}
+              onOpenChange={(v) => !v && setVincularFlutuante(null)}
+              pedidoId={vincularFlutuante.id}
+              pedidoNome={vincularFlutuante.nome}
+              motoboys={motoboysFlutuante}
+              motoboyAtualId={vincularFlutuante.motoboy_id}
+              onVinculado={(motoboyId, motoboyNome) => {
+                setPedidosFlutuantes((prev) =>
+                  prev.map((p) => (p.id === vincularFlutuante.id ? { ...p, motoboy_id: motoboyId, motoboy_nome: motoboyNome || null } : p))
+                );
+                setVincularFlutuante(null);
+              }}
+            />,
+            document.body
+          )
+        : null}
     </>
   );
 }
