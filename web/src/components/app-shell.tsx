@@ -187,11 +187,11 @@ function AppShellInner({
                 <img
                   src={logoPlataforma || "/favicon_store.png"}
                   alt=""
-                  className="size-9 shrink-0 rounded-md object-contain"
+                  className="size-9 shrink-0 rounded-2xl object-contain"
                 />
                 <div className="min-w-0">
                   <div className="truncate text-sm font-bold text-foreground">Lilly Menu</div>
-                  <div className="truncate text-xs text-muted-foreground">Sistema de Gestão</div>
+                  <div className="truncate text-[10px] text-muted-foreground">Sistema de Gestão</div>
                 </div>
               </div>
             )}
