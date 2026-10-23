@@ -273,6 +273,17 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
     cart.limpar();
     setCheckoutAberto(false);
     setPedidoConfirmado({ codigo, snapshot });
+    /* O pedido que acabou de ser enviado muda o hash de reservas de estoque
+       que compoe o catalogoVersao (ver montarPerfilLoja/loja-status) — sem
+       re-sincronizar aqui, o proximo poll de verificarStatus detecta essa
+       mudanca como se o cardapio tivesse sido atualizado de verdade e mostra
+       o aviso "Cardapio atualizado" pro proprio cliente que acabou de pedir. */
+    fetch(`/api/store/loja-status?loja_id=${perfil.loja_id}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.ok && d.catalogoVersao) catalogoVersaoRef.current = d.catalogoVersao;
+      })
+      .catch(() => {});
   }
 
   const categoriasFiltradas = catalogo.categorias.map((cat) => ({
