@@ -1,6 +1,7 @@
 "use client";
 
-import { Clock, MapPin, Printer, Bike, ShoppingBag, UtensilsCrossed, CalendarClock } from "lucide-react";
+import { Clock, Copy, MapPin, Printer, Bike, ShoppingBag, UtensilsCrossed, CalendarClock } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { Pedido } from "@/lib/pedidos";
 import { PROXIMA_ETAPA, TIPO_CORES, TIPO_LABELS, formatBRL, formatHora } from "./constants";
@@ -42,6 +43,15 @@ export function OrderCard({
 
   function parar(e: React.MouseEvent) {
     e.stopPropagation();
+  }
+
+  function copiarEndereco(e: React.MouseEvent) {
+    parar(e);
+    if (!pedido.endereco_entrega) return;
+    navigator.clipboard
+      ?.writeText(pedido.endereco_entrega)
+      .then(() => toast.success("Endereço copiado."))
+      .catch(() => toast.error("Não foi possível copiar o endereço."));
   }
 
   return (
@@ -100,6 +110,14 @@ export function OrderCard({
         <div className="flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs text-muted-foreground">
           <MapPin size={12} className="shrink-0" />
           <span className="truncate">{pedido.endereco_entrega}</span>
+          <button
+            type="button"
+            onClick={copiarEndereco}
+            className="flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Copiar endereço"
+          >
+            <Copy size={11} />
+          </button>
         </div>
       )}
 
