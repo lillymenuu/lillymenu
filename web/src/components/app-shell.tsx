@@ -333,13 +333,13 @@ function AppShellInner({
                               ? "bg-white/20 font-medium text-white"
                               : "text-white/80 hover:bg-white/10 hover:text-white"
                             : active
-                              ? "bg-primary/10 font-medium text-primary"
+                              ? "bg-primary/5 font-medium text-primary"
                               : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       );
                       if (itemBloqueado) {
                         const itemBloqueadoNode = (
                           <span className={className} aria-disabled="true">
-                            <Icon size={16} />
+                            <Icon size={20} />
                             <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
                           </span>
                         );
@@ -371,19 +371,19 @@ function AppShellInner({
                             setMobileOpen(false);
                           }}
                         >
-                          <Icon size={16} />
+                          <Icon size={20} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
                           {!collapsed && badge}
                         </button>
                       ) : item.migrated ? (
                         <Link href={item.href} className={className} onClick={() => setMobileOpen(false)}>
-                          <Icon size={16} />
+                          <Icon size={20} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
                           {!collapsed && badge}
                         </Link>
                       ) : (
                         <a href={`${phpAdminUrl}${item.href}`} className={className}>
-                          <Icon size={16} />
+                          <Icon size={20} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
                           {!collapsed && badge}
                         </a>
