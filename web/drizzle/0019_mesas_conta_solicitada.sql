@@ -1,0 +1,1 @@
+ALTER TABLE "mesas" ADD COLUMN "conta_solicitada_em" timestamp;

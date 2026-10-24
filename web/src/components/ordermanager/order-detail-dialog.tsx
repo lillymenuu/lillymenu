@@ -153,6 +153,7 @@ type PedidoDetalhe = {
   motoboy_whatsapp: string | null;
   editado_por: string | null;
   mesa_nome: string | null;
+  mesa_conta_solicitada_em: string | null;
   caixa_id: number | null;
   forma_pagamento: string | null;
   valor_pago: number | null;
@@ -492,6 +493,13 @@ export function OrderDetailDialog({
                     <div className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
                       <UtensilsCrossed size={11} />
                       Mesa: <span className="font-medium text-foreground">{pedido.mesa_nome}</span>
+                    </div>
+                  )}
+
+                  {pedido.mesa_conta_solicitada_em && (
+                    <div className="flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-[11px] font-medium text-amber-700">
+                      <Wallet size={11} className="shrink-0" />
+                      Conta solicitada pelo cliente
                     </div>
                   )}
 

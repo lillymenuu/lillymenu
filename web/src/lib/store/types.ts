@@ -289,6 +289,21 @@ export type StorePedidoStatusResposta = {
   itens?: { produto_nome: string; quantidade: number; preco: number | string; observacoes: string }[];
 };
 
+/** Status da mesa pro acesso via QR Code (sem telefone/OTP — ver StorePedidosSheet). */
+export type StoreMesaStatusResposta = {
+  ok: boolean;
+  msg?: string;
+  mesa?: {
+    nome: string;
+    aberta_em: string | null;
+    conta_solicitada: boolean;
+  };
+  pedidos?: {
+    pedido: NonNullable<StorePedidoStatusResposta["pedido"]>;
+    itens: NonNullable<StorePedidoStatusResposta["itens"]>;
+  }[];
+};
+
 export type StorePontosProduto = {
   id: number;
   nome: string;

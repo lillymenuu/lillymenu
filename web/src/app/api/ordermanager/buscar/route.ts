@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       status_em: p.statusEm,
       pagamentos: p.pagamentos,
       mesa_nome: p.mesaNome,
+      mesa_conta_solicitada_em: p.mesaContaSolicitadaEm,
     })),
   });
 }

@@ -834,6 +834,9 @@ export const mesas = pgTable(
        lojas). E o que vai no link do QR Code (?mesa=N): usar o `id` direto resultava em numeros tipo
        "?mesa=37" pra "Mesa 01", sem relacao nenhuma com a mesa de verdade pro lojista. */
     numero: integer("numero").notNull().default(1),
+    /* Preenchido quando o cliente pede a conta pela tela "Meus pedidos" (acesso via QR Code da
+       mesa) — fica null de novo quando o garcom/lojista dispensa o aviso (ja levou a conta). */
+    conta_solicitada_em: timestamp("conta_solicitada_em", { mode: "string" }),
   },
   (t) => [
     index("mesas_idx_mesas_loja").on(t.loja_id),

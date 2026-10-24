@@ -134,6 +134,13 @@
       "when": 1792876318374,
       "tag": "0018_mesas_numero_sequencial",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792877814854,
+      "tag": "0019_mesas_conta_solicitada",
+      "breakpoints": true
     }
   ]
 }

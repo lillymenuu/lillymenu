@@ -71,6 +71,7 @@ export type PedidoResumo = {
   statusEm: string | null;
   pagamentos: PagamentoPedido[];
   mesaNome: string | null;
+  mesaContaSolicitadaEm: string | null;
 };
 
 // Correlacao com pedidos.id/loja_id via nome literal da tabela externa (nao
@@ -140,6 +141,7 @@ export async function listarPedidos(input: ListarPedidosInput): Promise<ListarPe
       motoboyWhatsapp: motoboys.whatsapp,
       statusEm: statusEmExpr,
       mesaNome: mesas.nome,
+      mesaContaSolicitadaEm: mesas.conta_solicitada_em,
     })
     .from(pedidos)
     .leftJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
@@ -183,6 +185,7 @@ export async function kanbanPedidos(lojaId: number): Promise<{ ok: true; pedidos
       motoboyWhatsapp: motoboys.whatsapp,
       statusEm: statusEmExpr,
       mesaNome: mesas.nome,
+      mesaContaSolicitadaEm: mesas.conta_solicitada_em,
     })
     .from(pedidos)
     .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
@@ -225,6 +228,7 @@ export async function listarPedidosAgendados(input: ListarPedidosAgendadosInput)
       motoboyWhatsapp: motoboys.whatsapp,
       statusEm: statusEmExpr,
       mesaNome: sql<string | null>`null`,
+      mesaContaSolicitadaEm: sql<string | null>`null`,
     })
     .from(pedidos)
     .leftJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
@@ -283,6 +287,7 @@ export async function buscarPedidos(lojaId: number, termoBruto: string): Promise
       motoboyWhatsapp: sql<string | null>`null`,
       statusEm: sql<string | null>`null`,
       mesaNome: mesas.nome,
+      mesaContaSolicitadaEm: mesas.conta_solicitada_em,
     })
     .from(pedidos)
     .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
@@ -334,6 +339,7 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
       motoboyNome: motoboys.nome,
       motoboyWhatsapp: motoboys.whatsapp,
       mesaNome: mesas.nome,
+      mesaContaSolicitadaEm: mesas.conta_solicitada_em,
     })
     .from(pedidos)
     .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
@@ -438,7 +444,18 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
 
   return {
     ok: true,
-    pedido: { ...linha.pedido, nome: linha.clienteNome, telefone: linha.clienteTelefone, motoboy_id: linha.motoboyId, motoboy_nome: linha.motoboyNome, motoboy_whatsapp: linha.motoboyWhatsapp, mesa_nome: linha.mesaNome, codigo: codigoDisplay(linha.pedido.id, base), editadoPor: editoLinha?.nome ?? null },
+    pedido: {
+      ...linha.pedido,
+      nome: linha.clienteNome,
+      telefone: linha.clienteTelefone,
+      motoboy_id: linha.motoboyId,
+      motoboy_nome: linha.motoboyNome,
+      motoboy_whatsapp: linha.motoboyWhatsapp,
+      mesa_nome: linha.mesaNome,
+      mesa_conta_solicitada_em: linha.mesaContaSolicitadaEm,
+      codigo: codigoDisplay(linha.pedido.id, base),
+      editadoPor: editoLinha?.nome ?? null,
+    },
     clienteStats: stats,
     itens: itensLinhas,
     pagamentos: pagamentosLinhas,

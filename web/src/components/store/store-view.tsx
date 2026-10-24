@@ -286,6 +286,18 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       .catch(() => {});
   }
 
+  /* Acesso via QR Code da mesa: pula a verificacao de telefone/OTP (perfil.mesaId ja veio
+     validado do servidor em montarPerfilLoja) e abre direto o status compartilhado da mesa. */
+  function abrirMeusPedidos(telefonePreenchido?: string) {
+    if (perfil.mesaId !== null) {
+      setPedidosSheetAberto(true);
+      return;
+    }
+    if (telefonePreenchido) setAuthTelefoneInicial(telefonePreenchido);
+    setAuthDestino("pedidos");
+    setAuthModalAberto(true);
+  }
+
   const categoriasFiltradas = catalogo.categorias.map((cat) => ({
     cat,
     produtos: catalogo.produtosPorCat[cat.id] ?? [],
@@ -487,10 +499,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             </button>
             <button
               type="button"
-              onClick={() => {
-                setAuthDestino("pedidos");
-                setAuthModalAberto(true);
-              }}
+              onClick={() => abrirMeusPedidos()}
               className={`flex cursor-pointer items-center gap-2 px-1 text-base font-bold text-white/80 transition-colors hover:text-white ${
                 (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "text-white" : ""
               }`}
@@ -696,10 +705,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             </button>
             <button
               type="button"
-              onClick={() => {
-                setAuthDestino("pedidos");
-                setAuthModalAberto(true);
-              }}
+              onClick={() => abrirMeusPedidos()}
               className={`flex cursor-pointer flex-col items-center gap-0.5 text-[.68rem] font-bold ${
                 (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "" : "text-neutral-400"
               }`}
@@ -1154,10 +1160,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           </button>
           <button
             type="button"
-            onClick={() => {
-              setAuthDestino("pedidos");
-              setAuthModalAberto(true);
-            }}
+            onClick={() => abrirMeusPedidos()}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide ${
               (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "" : "text-neutral-400"
             }`}
@@ -1229,10 +1232,9 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         perfil={perfil}
         snapshot={pedidoConfirmado?.snapshot ?? null}
         onAcompanhar={() => {
-          setAuthTelefoneInicial(pedidoConfirmado?.snapshot.telefone ?? "");
+          const telefone = pedidoConfirmado?.snapshot.telefone ?? "";
           setPedidoConfirmado(null);
-          setAuthDestino("pedidos");
-          setAuthModalAberto(true);
+          abrirMeusPedidos(telefone);
         }}
       />
 

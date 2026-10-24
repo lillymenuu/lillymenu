@@ -9,6 +9,17 @@ export async function GET() {
   const pedidos = await pedidosMesas(sessao.lojaId);
   return NextResponse.json({
     ok: true,
-    pedidos: pedidos.map((p) => ({ id: p.id, codigo: p.codigo, status: p.status, total: p.total, criado_em: p.criadoEm, mesa_id: p.mesaId, mesa_nome: p.mesaNome, garcom_id: p.garcomId, garcom_nome: p.garcomNome })),
+    pedidos: pedidos.map((p) => ({
+      id: p.id,
+      codigo: p.codigo,
+      status: p.status,
+      total: p.total,
+      criado_em: p.criadoEm,
+      mesa_id: p.mesaId,
+      mesa_nome: p.mesaNome,
+      garcom_id: p.garcomId,
+      garcom_nome: p.garcomNome,
+      mesa_conta_solicitada_em: p.mesaContaSolicitadaEm,
+    })),
   });
 }

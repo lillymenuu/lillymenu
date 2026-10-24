@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Copy, MapPin, ShoppingBag, Star } from "lucide-react";
+import { CheckCircle2, Copy, MapPin, Receipt, Share2, ShoppingBag, Star, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { StoreAvaliacaoModal } from "@/components/store/store-avaliacao-modal";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { formatarPreco } from "@/lib/store/format";
-import type { StorePedidoStatusResposta, StorePedidosClienteResposta, StorePerfil } from "@/lib/store/types";
+import type { StoreMesaStatusResposta, StorePedidoStatusResposta, StorePedidosClienteResposta, StorePerfil } from "@/lib/store/types";
 
 type PedidoDetalhe = NonNullable<StorePedidoStatusResposta["pedido"]>;
 
@@ -35,6 +36,14 @@ function formatarHorario(criadoEm: string): string {
   if (isNaN(dt.getTime())) return "";
   const p = (n: number) => String(n).padStart(2, "0");
   return `${p(dt.getDate())}/${p(dt.getMonth() + 1)}/${dt.getFullYear()} ${p(dt.getHours())}:${p(dt.getMinutes())}:${p(dt.getSeconds())}`;
+}
+
+function formatarHoraCurta(criadoEm: string | null): string {
+  if (!criadoEm) return "";
+  const dt = new Date(criadoEm.replace(" ", "T"));
+  if (isNaN(dt.getTime())) return "";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(dt.getHours())}:${p(dt.getMinutes())}`;
 }
 
 function parseAgendamento(agendRaw: string | null): string {
@@ -65,9 +74,16 @@ export function StorePedidosSheet({
   pedidosResumo: PedidoResumoItem[];
 }) {
   const { brown } = useStoreTheme();
+  /* Acesso via QR Code da mesa (ver mesa-qrcode-dialog.tsx): a conta e compartilhada entre quem
+     estiver sentado ali, sem telefone/OTP — "Meus pedidos" vira o status da mesa (todos os pedidos
+     feitos nela, de qualquer dispositivo) em vez do historico de UM cliente especifico. */
+  const isMesa = perfil.mesaId !== null;
   const [detalhes, setDetalhes] = useState<PedidoDetalhe[] | null>(null);
   const [itensPorPedido, setItensPorPedido] = useState<Record<number, StorePedidoStatusResposta["itens"]>>({});
+  const [mesaInfo, setMesaInfo] = useState<NonNullable<StoreMesaStatusResposta["mesa"]> | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [pedirContaAberto, setPedirContaAberto] = useState(false);
+  const [solicitandoConta, setSolicitandoConta] = useState(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* Fonte da verdade de "ja avaliado" e o campo p.avaliado (vem do servidor,
@@ -110,22 +126,44 @@ export function StorePedidosSheet({
     setItensPorPedido(itensMap);
   }
 
+  async function buscarMesaStatus() {
+    if (perfil.mesaId === null) return;
+    try {
+      const res = await fetch(`/api/store/mesa-status?loja_id=${perfil.loja_id}&mesa_id=${perfil.mesaId}`);
+      const data: StoreMesaStatusResposta = await res.json();
+      if (!data.ok) return;
+      setMesaInfo(data.mesa ?? null);
+      const pedidosOk = data.pedidos ?? [];
+      setDetalhes(pedidosOk.map((p) => p.pedido));
+      const itensMap: Record<number, StorePedidoStatusResposta["itens"]> = {};
+      pedidosOk.forEach((p) => {
+        itensMap[p.pedido.id] = p.itens;
+      });
+      setItensPorPedido(itensMap);
+    } catch {
+      // mantem o estado anterior — proximo poll tenta de novo
+    }
+  }
+
   useEffect(() => {
-    if (!open || pedidosResumo.length === 0) return;
+    if (!open) return;
+    const buscar = isMesa ? buscarMesaStatus : buscarCards;
+    if (!isMesa && pedidosResumo.length === 0) return;
+
     setCarregando(true);
-    buscarCards().finally(() => setCarregando(false));
+    buscar().finally(() => setCarregando(false));
 
     pollTimerRef.current = setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      buscarCards();
-    }, 12000);
+      buscar();
+    }, isMesa ? 8000 : 12000);
 
     return () => {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, pedidosResumo]);
+  }, [open, pedidosResumo, isMesa]);
 
   useEffect(() => {
     if (!detalhes || !pollTimerRef.current) return;
@@ -144,9 +182,102 @@ export function StorePedidosSheet({
       .catch(() => toast.error("Não foi possível copiar a chave Pix."));
   }
 
+  /* Compartilha o mesmo link que a pessoa abriu (QR Code da mesa) — quem receber entra direto
+     nesse cardapio ja vinculado a mesa e consegue pedir/ver a conta junto. */
+  function compartilharMesa() {
+    const link = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: `${perfil.nomeLoja} — ${mesaInfo?.nome ?? "Mesa"}`, url: link }).catch(() => {});
+      return;
+    }
+    navigator.clipboard
+      ?.writeText(link)
+      .then(() => toast.success("Link da mesa copiado!"))
+      .catch(() => toast.error("Não foi possível copiar o link."));
+  }
+
+  async function confirmarPedirConta() {
+    if (perfil.mesaId === null) return;
+    setSolicitandoConta(true);
+    try {
+      const res = await fetch("/api/store/mesa-conta-solicitar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loja_id: perfil.loja_id, mesa_id: perfil.mesaId }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMesaInfo((atual) => (atual ? { ...atual, conta_solicitada: true } : atual));
+        setPedirContaAberto(false);
+      } else {
+        toast.error(data.msg ?? "Não foi possível pedir a conta.");
+      }
+    } catch {
+      toast.error("Erro de conexão. Tente novamente.");
+    } finally {
+      setSolicitandoConta(false);
+    }
+  }
+
+  const pedidosAbertosMesa = (detalhes ?? []).filter((p) => p.status !== "finalizado" && p.status !== "cancelado");
+  const itensTotalMesa = pedidosAbertosMesa.reduce((s, p) => s + (itensPorPedido[p.id] ?? []).reduce((s2, i) => s2 + i.quantidade, 0), 0);
+  const totalMesa = pedidosAbertosMesa.reduce((s, p) => s + p.total, 0);
+
   return (
-    <StoreSheet open={open} onOpenChange={onOpenChange} title="Meus pedidos" onBack={() => onOpenChange(false)}>
+    <StoreSheet open={open} onOpenChange={onOpenChange} title={isMesa ? (mesaInfo?.nome ?? "Mesa") : "Meus pedidos"} onBack={() => onOpenChange(false)}>
       <div className="p-4">
+        {isMesa && mesaInfo && pedidosAbertosMesa.length > 0 && (
+          <div className="mb-3.5 space-y-2.5 border-b border-neutral-100 pb-3.5">
+            <div className="rounded-[14px] border border-neutral-100 p-3.5">
+              <div className="mb-2 flex items-center gap-2 text-[.86rem] font-bold text-neutral-900">
+                <UtensilsCrossed size={16} className="shrink-0" style={{ color: brown }} />
+                {mesaInfo.nome}
+                {mesaInfo.aberta_em && <span className="font-normal text-neutral-400">• Aberta às {formatarHoraCurta(mesaInfo.aberta_em)}</span>}
+              </div>
+              <div className="flex items-center gap-1.5 text-[.8rem] text-neutral-600">
+                <span>
+                  Itens: <span className="font-semibold text-neutral-900">{itensTotalMesa}</span>
+                </span>
+                <span className="text-neutral-300">•</span>
+                <span>
+                  Total: <span className="font-semibold text-neutral-900">{formatarPreco(totalMesa)}</span>
+                  {perfil.taxaServicoAtiva && perfil.taxaServicoPct > 0 && (
+                    <span className="text-neutral-400"> (+{perfil.taxaServicoPct}%)</span>
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={compartilharMesa}
+              className="flex w-full items-center gap-3 rounded-[14px] border border-neutral-100 p-3.5 text-left"
+            >
+              <Share2 size={16} className="shrink-0 text-neutral-400" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[.84rem] font-bold text-neutral-900">Compartilhar o acesso à mesa</p>
+                <p className="text-[.74rem] text-neutral-400">Clique aqui e acesse em outros dispositivos</p>
+              </div>
+            </button>
+
+            {mesaInfo.conta_solicitada ? (
+              <div className="rounded-[14px] bg-neutral-50 px-4 py-5 text-center">
+                <p className="text-[.86rem] font-bold text-neutral-900">Só um instante</p>
+                <p className="text-[.8rem] text-neutral-500">um garçom irá trazer sua conta</p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setPedirContaAberto(true)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-[.84rem] font-bold tracking-wide text-white uppercase"
+                style={{ background: brown }}
+              >
+                <Receipt size={15} /> Pedir a conta
+              </button>
+            )}
+          </div>
+        )}
+
         {cliente && (
           <div className="mb-3.5 flex items-center gap-2.5 border-b border-neutral-100 pb-3.5">
             <div
@@ -435,6 +566,31 @@ export function StorePedidosSheet({
           });
         }}
       />
+
+      <Dialog open={pedirContaAberto} onOpenChange={(v) => !solicitandoConta && setPedirContaAberto(v)}>
+        <DialogContent showCloseButton={false} className="max-w-xs gap-4 rounded-2xl p-5 text-center sm:max-w-xs">
+          <DialogTitle className="text-[1rem] font-bold text-neutral-900">Confirmar fechamento da mesa?</DialogTitle>
+          <div className="flex gap-2.5">
+            <button
+              type="button"
+              onClick={() => setPedirContaAberto(false)}
+              disabled={solicitandoConta}
+              className="flex-1 rounded-full border-[1.5px] border-neutral-200 py-2.5 text-[.84rem] font-bold text-neutral-700 disabled:opacity-60"
+            >
+              Voltar
+            </button>
+            <button
+              type="button"
+              onClick={confirmarPedirConta}
+              disabled={solicitandoConta}
+              className="flex-1 rounded-full py-2.5 text-[.84rem] font-bold text-white disabled:opacity-60"
+              style={{ background: brown }}
+            >
+              {solicitandoConta ? "Aguarde..." : "Confirmar"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </StoreSheet>
   );
 }

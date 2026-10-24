@@ -9,6 +9,7 @@ export type Mesa = {
   ativo: number;
   criado_em: string;
   tem_pedido_aberto: boolean;
+  conta_solicitada_em: string | null;
 };
 
 export type Garcom = {
@@ -49,6 +50,7 @@ export type PedidoMesa = {
   mesa_nome: string | null;
   garcom_id: number | null;
   garcom_nome: string | null;
+  mesa_conta_solicitada_em: string | null;
 };
 
 export async function getModoGarcomDetalhe(lojaId: number): Promise<ModoGarcomDetalheResposta> {
@@ -61,7 +63,15 @@ export async function getModoGarcomDetalhe(lojaId: number): Promise<ModoGarcomDe
 
   return {
     ok: true,
-    mesas: resultado.mesas.map((m) => ({ id: m.id, numero: m.numero, nome: m.nome, ativo: m.ativo ? 1 : 0, criado_em: m.criadoEm, tem_pedido_aberto: m.temPedidoAberto })),
+    mesas: resultado.mesas.map((m) => ({
+      id: m.id,
+      numero: m.numero,
+      nome: m.nome,
+      ativo: m.ativo ? 1 : 0,
+      criado_em: m.criadoEm,
+      tem_pedido_aberto: m.temPedidoAberto,
+      conta_solicitada_em: m.contaSolicitadaEm,
+    })),
     garcons: resultado.garcons.map((g) => ({ id: g.id, nome: g.nome, email: g.email, ativo: g.ativo ? 1 : 0, criado_em: g.criadoEm })),
     pedidos_pendentes: resultado.pedidosPendentes,
     mesas_ativas: resultado.mesasAtivas,

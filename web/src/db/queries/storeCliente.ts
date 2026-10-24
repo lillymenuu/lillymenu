@@ -1,9 +1,10 @@
 import "server-only";
-import { and, eq, or, desc } from "drizzle-orm";
+import { and, eq, or, desc, ne, notInArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { clientes, pedidos, pedidoItens, avaliacoes } from "@/db/schema";
+import { clientes, pedidos, pedidoItens, avaliacoes, mesas } from "@/db/schema";
 import { apenasDigitos, telefoneSemMascara } from "@/db/queries/telefone";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
+import { timestampFortaleza } from "@/db/queries/tempo";
 
 /*
  * Equivalente de public/api/pedidos_por_cliente.php e pedido_status.php:
@@ -235,4 +236,115 @@ export async function buscarClienteLojaPorTelefone(lojaId: number, telefoneBruto
     .limit(1);
 
   return linha ? { nome: linha.nome ?? "", aniversario: linha.aniversario } : null;
+}
+
+/*
+ * Status da mesa (acesso via QR Code — ver mesa-qrcode-dialog.tsx/garcom-app.tsx): equivalente a
+ * "Meus pedidos" mas sem exigir telefone/OTP, porque a conta e compartilhada entre todo mundo
+ * sentado na mesa (qualquer um que escaneou o mesmo QR Code ou recebeu o link "Compartilhar o
+ * acesso a mesa"). Por isso lista TODOS os pedidos da mesa, nao so os de um cliente especifico.
+ */
+export type PedidoMesaStatus = { pedido: Extract<PedidoStatusResultado, { ok: true }>["pedido"]; itens: ItemPedidoPublico[] };
+
+export type StatusMesaResultado =
+  | { ok: false; msg: string }
+  | {
+      ok: true;
+      mesa: { nome: string; abertaEm: string | null; contaSolicitada: boolean };
+      pedidos: PedidoMesaStatus[];
+    };
+
+export async function statusMesaPublico(lojaId: number, mesaId: number): Promise<StatusMesaResultado> {
+  if (!mesaId || mesaId <= 0) return { ok: false, msg: "Mesa inválida." };
+
+  const [mesa] = await db
+    .select({ nome: mesas.nome, contaSolicitadaEm: mesas.conta_solicitada_em })
+    .from(mesas)
+    .where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId)))
+    .limit(1);
+  if (!mesa) return { ok: false, msg: "Mesa não encontrada." };
+
+  const base = await pedidoCodigoBase(lojaId);
+  const pedidosLinhas = await db
+    .select({
+      id: pedidos.id,
+      status: pedidos.status,
+      total: pedidos.total,
+      taxaEntrega: pedidos.taxa_entrega,
+      formaPagamento: pedidos.forma_pagamento,
+      criadoEm: pedidos.criado_em,
+      tipo: pedidos.tipo,
+      subtotal: pedidos.subtotal,
+      desconto: pedidos.desconto,
+      troco: pedidos.troco,
+      cashbackUsado: pedidos.cashback_usado,
+      enderecoEntrega: pedidos.endereco_entrega,
+      agendamento: pedidos.agendamento,
+      clienteNome: clientes.nome,
+      clienteTelefone: clientes.telefone,
+    })
+    .from(pedidos)
+    .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
+    .where(and(eq(pedidos.mesa_id, mesaId), eq(pedidos.loja_id, lojaId), ne(pedidos.status, "cancelado")))
+    .orderBy(desc(pedidos.criado_em))
+    .limit(30);
+
+  const pedidosComItens: PedidoMesaStatus[] = [];
+  let abertaEm: string | null = null;
+  for (const p of pedidosLinhas) {
+    const itensLinhas = await db
+      .select({ produtoNome: pedidoItens.produto_nome, quantidade: pedidoItens.quantidade, preco: pedidoItens.preco, observacoes: pedidoItens.observacoes })
+      .from(pedidoItens)
+      .where(and(eq(pedidoItens.pedido_id, p.id), eq(pedidoItens.loja_id, lojaId)))
+      .orderBy(pedidoItens.id);
+
+    const [avaliacaoRow] = await db.select({ id: avaliacoes.id }).from(avaliacoes).where(and(eq(avaliacoes.pedido_id, p.id), eq(avaliacoes.loja_id, lojaId))).limit(1);
+
+    if (p.status !== "finalizado" && p.criadoEm && (!abertaEm || p.criadoEm < abertaEm)) abertaEm = p.criadoEm;
+
+    pedidosComItens.push({
+      pedido: {
+        id: p.id,
+        codigo: codigoDisplay(p.id, base),
+        status: p.status ?? "pendente",
+        tipo: p.tipo ?? "mesa",
+        total: Number(p.total ?? 0),
+        taxaEntrega: Number(p.taxaEntrega ?? 0),
+        formaPagamento: p.formaPagamento ?? "",
+        troco: p.troco !== null ? Number(p.troco) : null,
+        subtotal: p.subtotal !== null ? Number(p.subtotal) : null,
+        desconto: Number(p.desconto ?? 0),
+        cashbackUsado: p.cashbackUsado !== null ? Number(p.cashbackUsado) : null,
+        enderecoEntrega: p.enderecoEntrega ?? "",
+        avaliado: Boolean(avaliacaoRow),
+        criadoEm: p.criadoEm ?? "",
+        nome: p.clienteNome ?? "",
+        telefone: p.clienteTelefone ?? "",
+        agendamento: p.agendamento,
+      },
+      itens: itensLinhas.map((i) => ({ ...i, observacoes: i.observacoes ?? "" })),
+    });
+  }
+
+  return {
+    ok: true,
+    mesa: { nome: mesa.nome, abertaEm, contaSolicitada: mesa.contaSolicitadaEm !== null },
+    pedidos: pedidosComItens,
+  };
+}
+
+export async function solicitarContaMesaPublico(lojaId: number, mesaId: number): Promise<{ ok: true } | { ok: false; msg: string }> {
+  if (!mesaId || mesaId <= 0) return { ok: false, msg: "Mesa inválida." };
+
+  const [mesa] = await db.select({ id: mesas.id }).from(mesas).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).limit(1);
+  if (!mesa) return { ok: false, msg: "Mesa não encontrada ou desativada." };
+
+  const [{ n: abertos }] = await db
+    .select({ n: sql<string>`count(*)` })
+    .from(pedidos)
+    .where(and(eq(pedidos.mesa_id, mesaId), eq(pedidos.loja_id, lojaId), notInArray(pedidos.status, ["finalizado", "cancelado"])));
+  if (Number(abertos) === 0) return { ok: false, msg: "Não há pedidos em aberto nessa mesa." };
+
+  await db.update(mesas).set({ conta_solicitada_em: timestampFortaleza() }).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId)));
+  return { ok: true };
 }

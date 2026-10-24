@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Copy, MapPin, Printer, Bike, ShoppingBag, UtensilsCrossed, CalendarClock } from "lucide-react";
+import { Clock, Copy, MapPin, Printer, Bike, Receipt, ShoppingBag, UtensilsCrossed, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { Pedido } from "@/lib/pedidos";
@@ -110,6 +110,13 @@ export function OrderCard({
         <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
           <UtensilsCrossed size={11} className="shrink-0" />
           {pedido.mesa_nome}
+        </div>
+      )}
+
+      {pedido.mesa_conta_solicitada_em && (
+        <div className="flex items-center justify-center gap-1.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-xs font-medium text-amber-700">
+          <Receipt size={12} className="shrink-0" />
+          Conta solicitada
         </div>
       )}
 

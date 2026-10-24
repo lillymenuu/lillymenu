@@ -65,7 +65,7 @@ function resolverSlugLoja(linkLojaCfg: string, nomeLojaCfg: string): string {
   return slug;
 }
 
-export type MesaDetalhe = { id: number; numero: number; nome: string; ativo: boolean; criadoEm: string; temPedidoAberto: boolean };
+export type MesaDetalhe = { id: number; numero: number; nome: string; ativo: boolean; criadoEm: string; temPedidoAberto: boolean; contaSolicitadaEm: string | null };
 export type GarcomDetalhe = { id: number; nome: string; email: string; ativo: boolean; criadoEm: string };
 
 export type DetalheModoGarcomResultado = {
@@ -81,7 +81,11 @@ export type DetalheModoGarcomResultado = {
 };
 
 export async function detalheModoGarcom(lojaId: number, protocoloHost: string): Promise<DetalheModoGarcomResultado> {
-  const mesasRaw = await db.select({ id: mesas.id, numero: mesas.numero, nome: mesas.nome, ativo: mesas.ativo, criadoEm: mesas.criado_em }).from(mesas).where(eq(mesas.loja_id, lojaId)).orderBy(mesas.nome);
+  const mesasRaw = await db
+    .select({ id: mesas.id, numero: mesas.numero, nome: mesas.nome, ativo: mesas.ativo, criadoEm: mesas.criado_em, contaSolicitadaEm: mesas.conta_solicitada_em })
+    .from(mesas)
+    .where(eq(mesas.loja_id, lojaId))
+    .orderBy(mesas.nome);
 
   const pedidosAbertosPorMesa = await db
     .select({ mesaId: pedidos.mesa_id, qtd: sql<string>`count(*)` })
@@ -107,7 +111,7 @@ export async function detalheModoGarcom(lojaId: number, protocoloHost: string): 
   const cardapioUrl = slug !== "" ? `${protocoloHost}/${encodeURIComponent(slug)}` : `${protocoloHost}/public/loja.php?loja_id=${lojaId}`;
 
   return {
-    mesas: mesasRaw.map((m) => ({ id: m.id, numero: m.numero, nome: m.nome, ativo: m.ativo, criadoEm: m.criadoEm, temPedidoAberto: (mapaAbertos.get(m.id) ?? 0) > 0 })),
+    mesas: mesasRaw.map((m) => ({ id: m.id, numero: m.numero, nome: m.nome, ativo: m.ativo, criadoEm: m.criadoEm, temPedidoAberto: (mapaAbertos.get(m.id) ?? 0) > 0, contaSolicitadaEm: m.contaSolicitadaEm })),
     garcons: garconsRaw,
     pedidosPendentes: Number(pedidosPendentesCount),
     mesasAtivas: mesasAtivasCount,
@@ -191,13 +195,41 @@ export async function toggleMesa(lojaId: number, id: number, ativo: boolean | nu
   return { ok: true };
 }
 
-export type PedidoMesa = { id: number; codigo: number; status: string; total: number; criadoEm: string | null; mesaId: number | null; mesaNome: string | null; garcomId: number | null; garcomNome: string | null };
+/** O garcom/lojista confirma que ja levou a conta — some o aviso de "conta solicitada" na mesa. */
+export async function dispensarContaMesa(lojaId: number, id: number): Promise<{ ok: boolean }> {
+  if (id <= 0) return { ok: false };
+  await db.update(mesas).set({ conta_solicitada_em: null }).where(and(eq(mesas.id, id), eq(mesas.loja_id, lojaId)));
+  return { ok: true };
+}
+
+export type PedidoMesa = {
+  id: number;
+  codigo: number;
+  status: string;
+  total: number;
+  criadoEm: string | null;
+  mesaId: number | null;
+  mesaNome: string | null;
+  garcomId: number | null;
+  garcomNome: string | null;
+  mesaContaSolicitadaEm: string | null;
+};
 
 export async function pedidosMesas(lojaId: number): Promise<PedidoMesa[]> {
   const hoje = dataFortaleza();
 
   const linhas = await db
-    .select({ id: pedidos.id, status: pedidos.status, total: pedidos.total, criadoEm: pedidos.criado_em, mesaId: pedidos.mesa_id, mesaNome: mesas.nome, garcomId: pedidos.garcom_id, garcomNome: garcons.nome })
+    .select({
+      id: pedidos.id,
+      status: pedidos.status,
+      total: pedidos.total,
+      criadoEm: pedidos.criado_em,
+      mesaId: pedidos.mesa_id,
+      mesaNome: mesas.nome,
+      garcomId: pedidos.garcom_id,
+      garcomNome: garcons.nome,
+      mesaContaSolicitadaEm: mesas.conta_solicitada_em,
+    })
     .from(pedidos)
     .leftJoin(mesas, and(eq(mesas.id, pedidos.mesa_id), eq(mesas.loja_id, pedidos.loja_id)))
     .leftJoin(garcons, and(eq(garcons.id, pedidos.garcom_id), eq(garcons.loja_id, pedidos.loja_id)))
@@ -207,7 +239,18 @@ export async function pedidosMesas(lojaId: number): Promise<PedidoMesa[]> {
 
   const base = await pedidoCodigoBase(lojaId);
 
-  return linhas.map((p) => ({ id: p.id, codigo: codigoDisplay(p.id, base), status: p.status, total: Number(p.total ?? 0), criadoEm: p.criadoEm, mesaId: p.mesaId, mesaNome: p.mesaNome, garcomId: p.garcomId, garcomNome: p.garcomNome }));
+  return linhas.map((p) => ({
+    id: p.id,
+    codigo: codigoDisplay(p.id, base),
+    status: p.status,
+    total: Number(p.total ?? 0),
+    criadoEm: p.criadoEm,
+    mesaId: p.mesaId,
+    mesaNome: p.mesaNome,
+    garcomId: p.garcomId,
+    garcomNome: p.garcomNome,
+    mesaContaSolicitadaEm: p.mesaContaSolicitadaEm,
+  }));
 }
 
 const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -321,12 +364,30 @@ export async function mesasAtivasGarcom(lojaId: number): Promise<MesaGarcom[]> {
   return db.select({ id: mesas.id, nome: mesas.nome }).from(mesas).where(and(eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).orderBy(mesas.nome);
 }
 
-export type PedidoAbertoGarcom = { id: number; codigo: number; status: string; total: number; criadoEm: string | null; mesaNome: string | null; itensResumo: string };
+export type PedidoAbertoGarcom = {
+  id: number;
+  codigo: number;
+  status: string;
+  total: number;
+  criadoEm: string | null;
+  mesaId: number | null;
+  mesaNome: string | null;
+  itensResumo: string;
+  mesaContaSolicitadaEm: string | null;
+};
 
 /** Equivalente de public/api/garcom_pedidos_abertos.php — pedidos de mesa ainda nao finalizados/cancelados. */
 export async function pedidosAbertosGarcom(lojaId: number): Promise<PedidoAbertoGarcom[]> {
   const linhas = await db
-    .select({ id: pedidos.id, status: pedidos.status, total: pedidos.total, criadoEm: pedidos.criado_em, mesaNome: mesas.nome })
+    .select({
+      id: pedidos.id,
+      status: pedidos.status,
+      total: pedidos.total,
+      criadoEm: pedidos.criado_em,
+      mesaId: pedidos.mesa_id,
+      mesaNome: mesas.nome,
+      mesaContaSolicitadaEm: mesas.conta_solicitada_em,
+    })
     .from(pedidos)
     .leftJoin(mesas, and(eq(mesas.id, pedidos.mesa_id), eq(mesas.loja_id, pedidos.loja_id)))
     .where(and(eq(pedidos.loja_id, lojaId), isNotNull(pedidos.mesa_id), notInArray(pedidos.status, ["finalizado", "cancelado"])))
@@ -354,8 +415,10 @@ export async function pedidosAbertosGarcom(lojaId: number): Promise<PedidoAberto
     status: p.status,
     total: Number(p.total ?? 0),
     criadoEm: p.criadoEm,
+    mesaId: p.mesaId,
     mesaNome: p.mesaNome,
     itensResumo: (itensPorPedido.get(p.id) ?? []).join(", "),
+    mesaContaSolicitadaEm: p.mesaContaSolicitadaEm,
   }));
 }
 

@@ -207,6 +207,24 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
     }
   }
 
+  /** O lojista/garcom confirma que ja levou a conta pro cliente — some o aviso de "conta solicitada"
+      tanto na aba Mesas quanto na aba Pedidos (as duas mostram o mesmo sinalizador). */
+  async function dispensarConta(mesaId: number) {
+    setDados((d) => ({ ...d, mesas: d.mesas.map((m) => (m.id === mesaId ? { ...m, conta_solicitada_em: null } : m)) }));
+    setPedidos((atual) => atual?.map((p) => (p.mesa_id === mesaId ? { ...p, mesa_conta_solicitada_em: null } : p)) ?? atual);
+    try {
+      const res = await fetch("/api/waitermode/mesa-conta-dispensar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: mesaId }),
+      });
+      const data = await res.json();
+      if (!data.ok) toast.error("Erro ao atualizar a mesa.");
+    } catch {
+      toast.error("Erro ao atualizar a mesa.");
+    }
+  }
+
   async function confirmarExclusaoMesa() {
     if (!mesaExcluir) return;
     setExcluindoMesa(true);
@@ -469,6 +487,15 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                         </Button>
                       )}
                     </div>
+                    {p.mesa_conta_solicitada_em && p.mesa_id && (
+                      <button
+                        type="button"
+                        onClick={() => dispensarConta(p.mesa_id!)}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-50 py-2 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-100"
+                      >
+                        <Receipt className="size-3.5" /> Conta solicitada · toque ao entregar
+                      </button>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -510,6 +537,15 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                     <Badge className="w-fit bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                       Livre
                     </Badge>
+                  )}
+                  {m.conta_solicitada_em && (
+                    <button
+                      type="button"
+                      onClick={() => dispensarConta(m.id)}
+                      className="flex items-center justify-center gap-1.5 rounded-lg bg-amber-50 py-2 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-100"
+                    >
+                      <Receipt className="size-3.5" /> Conta solicitada · toque ao entregar
+                    </button>
                   )}
                   <Button
                     variant="outline"

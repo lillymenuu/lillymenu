@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeftRight, ImageIcon, Info, LogOut, Plus, ReceiptText } from "lucide-react";
+import { AlertCircle, ArrowLeftRight, ImageIcon, Info, LogOut, Plus, Receipt, ReceiptText } from "lucide-react";
 import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-theme";
 import { StoreProdutoDialog } from "@/components/store/store-produto-dialog";
 import { StoreComboDialog } from "@/components/store/store-combo-dialog";
@@ -111,6 +111,16 @@ function GarcomAppInterno({
     const t = setInterval(carregarAbertos, 15000);
     return () => clearInterval(t);
   }, [navView]);
+
+  function marcarContaEntregue(mesaId: number | null) {
+    if (!mesaId) return;
+    setPedidosAbertos((atual) => atual?.map((p) => (p.mesaId === mesaId ? { ...p, mesaContaSolicitadaEm: null } : p)) ?? atual);
+    fetch("/api/waitermode/mesa-conta-dispensar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: mesaId }),
+    }).catch(() => {});
+  }
 
   const consumoCarrinho = consumoDoCarrinho(carrinho);
 
@@ -283,19 +293,30 @@ function GarcomAppInterno({
             <p className="py-10 text-center text-[.84rem] text-neutral-400">Nenhum pedido em aberto no momento.</p>
           ) : (
             pedidosAbertos.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-xl border border-neutral-100 p-3.5">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[.82rem] font-semibold text-neutral-900">
-                    {p.mesaNome ?? "—"} · Pedido #{p.codigo}
-                  </p>
-                  <p className="truncate text-[.76rem] text-neutral-500">{p.itensResumo}</p>
+              <div key={p.id} className="rounded-xl border border-neutral-100 p-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[.82rem] font-semibold text-neutral-900">
+                      {p.mesaNome ?? "—"} · Pedido #{p.codigo}
+                    </p>
+                    <p className="truncate text-[.76rem] text-neutral-500">{p.itensResumo}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[.86rem] font-bold text-neutral-900">{formatarPreco(p.total)}</p>
+                    <span className="text-[.7rem] font-semibold" style={{ color: brown }}>
+                      {STATUS_LABEL[p.status] ?? p.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-[.86rem] font-bold text-neutral-900">{formatarPreco(p.total)}</p>
-                  <span className="text-[.7rem] font-semibold" style={{ color: brown }}>
-                    {STATUS_LABEL[p.status] ?? p.status}
-                  </span>
-                </div>
+                {p.mesaContaSolicitadaEm && (
+                  <button
+                    type="button"
+                    onClick={() => marcarContaEntregue(p.mesaId)}
+                    className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-50 py-2 text-[.74rem] font-semibold text-amber-700"
+                  >
+                    <Receipt size={13} /> Conta solicitada · toque ao entregar
+                  </button>
+                )}
               </div>
             ))
           )}
