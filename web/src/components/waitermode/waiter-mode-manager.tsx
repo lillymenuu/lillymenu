@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Copy, Pencil, Plus, Receipt, Trash2, KeyRound, QrCode } from "lucide-react";
+import { Copy, Pencil, Plus, Receipt, Trash2, KeyRound, QrCode, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,21 @@ import { CodigoGeradoDialog } from "@/components/waitermode/codigo-gerado-dialog
 import { MesaQrCodeDialog } from "@/components/waitermode/mesa-qrcode-dialog";
 import type { Garcom, Mesa, ModoGarcomDetalheResposta, ModoGarcomStats, PedidoMesa } from "@/lib/modoGarcom";
 import { cn } from "cn";
+
+/* O banco so guarda o hash do codigo de acesso do garcom — o texto puro so existe no momento em
+   que e gerado. Persistimos ele aqui (so neste navegador) pra sobreviver a um F5 da tela, ja que
+   nao tem como recupera-lo depois pelo servidor. */
+const CODIGOS_VISIVEIS_STORAGE_KEY = "lillymenu_waitermode_codigos_garcom";
+
+function lerCodigosVisiveis(): Record<number, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(CODIGOS_VISIVEIS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
 
 export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcomDetalheResposta }) {
   const [dados, setDados] = useState(dadosIniciais);
@@ -44,9 +59,26 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
   const [gerandoCodigo, setGerandoCodigo] = useState(false);
   const [codigoGerado, setCodigoGerado] = useState<string | null>(null);
   /* Codigo de acesso so existe em texto puro no momento em que e gerado (o banco guarda so o hash) —
-     mantem visivel ao lado do botao "Gerar novo codigo" enquanto essa tela estiver aberta, pra nao
-     depender so do modal que aparece uma vez. */
-  const [codigosVisiveis, setCodigosVisiveis] = useState<Record<number, string>>({});
+     mantem visivel ao lado do botao "Gerar novo codigo", inclusive apos recarregar a pagina (ver
+     lerCodigosVisiveis/CODIGOS_VISIVEIS_STORAGE_KEY), ja que o servidor nao tem como devolve-lo de novo. */
+  const [codigosVisiveis, setCodigosVisiveis] = useState<Record<number, string>>(lerCodigosVisiveis);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(CODIGOS_VISIVEIS_STORAGE_KEY, JSON.stringify(codigosVisiveis));
+    } catch {
+      // localStorage indisponivel (modo privado, etc.) — a tela continua funcionando sem persistir
+    }
+  }, [codigosVisiveis]);
+
+  function esconderCodigoVisivel(id: number) {
+    setCodigosVisiveis((atual) => {
+      if (!(id in atual)) return atual;
+      const copia = { ...atual };
+      delete copia[id];
+      return copia;
+    });
+  }
 
   const [taxaServicoPctInput, setTaxaServicoPctInput] = useState(String(dadosIniciais.taxa_servico_pct || ""));
   const [salvandoTaxaServico, setSalvandoTaxaServico] = useState(false);
@@ -235,6 +267,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
         return;
       }
       toast.success("Garçom excluído com sucesso.");
+      esconderCodigoVisivel(garcomExcluir.id);
       setGarcomExcluir(null);
       recarregarDetalhe();
     } catch {
@@ -553,15 +586,25 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                     <KeyRound className="size-3.5" /> Gerar novo código
                   </Button>
                   {codigosVisiveis[g.id] && (
-                    <button
-                      type="button"
-                      onClick={() => copiarCodigo(codigosVisiveis[g.id])}
-                      className="flex items-center gap-1.5 rounded-full border bg-muted/40 px-2.5 py-1.5 text-xs transition-colors hover:bg-muted"
-                      title="Copiar código"
-                    >
-                      <span className="font-mono font-semibold tracking-[0.15em]">{codigosVisiveis[g.id]}</span>
-                      <Copy className="size-3 text-muted-foreground" />
-                    </button>
+                    <div className="flex items-center gap-1 rounded-full border bg-muted/40 pl-2.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => copiarCodigo(codigosVisiveis[g.id])}
+                        className="flex items-center gap-1.5 py-1.5 transition-colors hover:text-foreground"
+                        title="Copiar código"
+                      >
+                        <span className="font-mono font-semibold tracking-[0.15em]">{codigosVisiveis[g.id]}</span>
+                        <Copy className="size-3 text-muted-foreground" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => esconderCodigoVisivel(g.id)}
+                        className="flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        title="Ocultar código"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
                   )}
                   <Button
                     variant="ghost"
