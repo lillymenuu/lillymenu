@@ -142,6 +142,7 @@ type PedidoDetalhe = {
   subtotal: number;
   desconto: number;
   taxa_maquininha: number;
+  taxa_servico: number | null;
   cashback_usado: number;
   cashback_valor: number;
   total: number;
@@ -631,6 +632,12 @@ export function OrderDetailDialog({
                       <div className="flex items-center justify-between font-normal text-muted-foreground">
                         <span>Taxa de entrega</span>
                         <span>{formatBRL(pedido.taxa_entrega)}</span>
+                      </div>
+                    )}
+                    {Number(pedido.taxa_servico) > 0 && (
+                      <div className="flex items-center justify-between font-normal text-muted-foreground">
+                        <span>Taxa de serviço (garçom)</span>
+                        <span>{formatBRL(pedido.taxa_servico ?? 0)}</span>
                       </div>
                     )}
                     {Number(pedido.taxa_maquininha) > 0 && (
