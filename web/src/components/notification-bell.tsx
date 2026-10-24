@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Bell, Receipt, Star, X } from "lucide-react";
+import { Bell, Receipt, ReceiptText, Star, X } from "lucide-react";
 import { cn } from "cn";
 import { OrderCard } from "@/components/ordermanager/order-card";
 import { LinkMotoboyDialog } from "@/components/ordermanager/link-motoboy-dialog";
@@ -17,7 +17,7 @@ type NotifItem = {
   cliente: string;
   status: string | null;
   origem: string | null;
-  tipo: "novo" | "editado" | "avaliacao";
+  tipo: "novo" | "editado" | "avaliacao" | "conta";
   chave: string;
   nota?: number;
   pedido_id?: number;
@@ -81,6 +81,7 @@ export function NotificationBell({
   const panelRef = useRef<HTMLDivElement>(null);
   const maiorIdPedidoRef = useRef<number | null>(null);
   const maiorIdAvaliacaoRef = useRef<number | null>(null);
+  const maiorIdContaRef = useRef<number | null>(null);
   const audioDesbloqueadoRef = useRef(false);
 
   /* Pedidos vindos da loja (origem "loja") trocam o toast discreto por um
@@ -192,6 +193,8 @@ export function NotificationBell({
       setOpen(false);
       if (item.tipo === "avaliacao") {
         router.push("/avaliacoes");
+      } else if (item.tipo === "conta") {
+        router.push(item.pedido_id ? `/ordermanager?pedido=${item.pedido_id}` : "/ordermanager");
       } else {
         router.push(`/ordermanager?pedido=${item.id}`);
       }
@@ -284,6 +287,35 @@ export function NotificationBell({
         });
         tocarAlarme();
         maiorIdAvaliacaoRef.current = maiorIdAv;
+      }
+
+      const contas = novosItens.filter((i) => i.tipo === "conta");
+      const maiorIdConta = contas.length ? Math.max(...contas.map((i) => i.id)) : 0;
+      if (maiorIdContaRef.current === null) {
+        maiorIdContaRef.current = maiorIdConta;
+      } else if (maiorIdConta > maiorIdContaRef.current) {
+        const recemChegadas = contas.filter((i) => i.id > maiorIdContaRef.current!);
+        recemChegadas.forEach((item) => {
+          toast.custom(
+            () => (
+              <button
+                onClick={() => abrirItem(item)}
+                className="flex w-full items-start gap-3 rounded-lg border border-destructive/40 bg-popover p-3 text-left shadow-lg"
+              >
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+                  <ReceiptText size={16} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium">Pediram a conta!</div>
+                  <div className="truncate text-xs text-muted-foreground">{item.cliente}</div>
+                </div>
+              </button>
+            ),
+            { duration: 10000 }
+          );
+        });
+        tocarAlarme();
+        maiorIdContaRef.current = maiorIdConta;
       }
     } catch {
       // rede instavel; a proxima chamada do polling tenta de novo
@@ -379,6 +411,7 @@ export function NotificationBell({
             {visiveis.map((item) => {
               const isAvaliacao = item.tipo === "avaliacao";
               const isEditado = item.tipo === "editado";
+              const isConta = item.tipo === "conta";
               const isNaoLida = !lidas.has(item.chave);
               const nota = item.nota || 0;
               return (
@@ -393,10 +426,10 @@ export function NotificationBell({
                   <div
                     className={cn(
                       "flex size-9 shrink-0 items-center justify-center rounded-full",
-                      isAvaliacao ? "bg-amber-500/15 text-amber-500" : "bg-primary/15 text-primary"
+                      isAvaliacao ? "bg-amber-500/15 text-amber-500" : isConta ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"
                     )}
                   >
-                    {isAvaliacao ? <Star size={15} /> : <Receipt size={15} />}
+                    {isAvaliacao ? <Star size={15} /> : isConta ? <ReceiptText size={15} /> : <Receipt size={15} />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium">
@@ -404,10 +437,12 @@ export function NotificationBell({
                         ? "Você recebeu uma nova avaliação."
                         : isEditado
                           ? "Pedido editado."
-                          : "Você recebeu um novo pedido."}
+                          : isConta
+                            ? "Pediram a conta."
+                            : "Você recebeu um novo pedido."}
                     </div>
                     <div className="truncate text-xs text-muted-foreground">
-                      Pedido #{item.codigo ?? item.id} · {item.cliente}
+                      {isConta ? item.cliente : `Pedido #${item.codigo ?? item.id} · ${item.cliente}`}
                       {isAvaliacao && ` · ${"★".repeat(nota)}${"☆".repeat(Math.max(0, 5 - nota))}`}
                     </div>
                     <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground/70">

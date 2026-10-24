@@ -60,7 +60,10 @@ export function OrderCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onAbrir}
-      className="flex cursor-pointer flex-col gap-1.5 rounded-xl border bg-card p-2.5 text-sm shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+      className={cn(
+        "flex cursor-pointer flex-col gap-1.5 rounded-xl border bg-card p-2.5 text-sm shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing",
+        pedido.mesa_conta_solicitada_em && "border-2 border-destructive"
+      )}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 font-medium">
@@ -114,7 +117,7 @@ export function OrderCard({
       )}
 
       {pedido.mesa_conta_solicitada_em && (
-        <div className="flex items-center justify-center gap-1.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-xs font-medium text-amber-700">
+        <div className="flex items-center justify-center gap-1.5 rounded-lg bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive">
           <Receipt size={12} className="shrink-0" />
           Conta solicitada
         </div>

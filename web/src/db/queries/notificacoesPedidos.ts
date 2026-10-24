@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNotNull, notInArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { operacaoLogs, pedidos, clientes, avaliacoes } from "@/db/schema";
+import { operacaoLogs, pedidos, clientes, avaliacoes, mesas } from "@/db/schema";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { dataFortaleza } from "@/db/queries/tempo";
 
@@ -18,7 +18,7 @@ export type NotificacaoPedido = {
   cliente: string;
   status: string | null;
   origem: string | null;
-  tipo: "novo" | "editado" | "avaliacao";
+  tipo: "novo" | "editado" | "avaliacao" | "conta";
   chave: string;
   nota?: number;
   pedidoId?: number;
@@ -86,6 +86,37 @@ export async function notificacoesPedidos(lojaId: number): Promise<NotificacaoPe
       chave: `avaliacao-${av.id}`,
       nota: av.nota,
       pedidoId: av.pedidoId,
+    });
+  }
+
+  /* Mesas com conta solicitada (acesso via QR Code — ver store-pedidos-sheet.tsx/solicitarContaMesaPublico).
+     Nao tem um "id" proprio que cresca a cada nova solicitacao (mesas.id e fixo), entao usa o timestamp
+     do pedido de conta como id — assim cada solicitacao nova (mesmo de uma mesa que ja pediu antes)
+     ultrapassa o maior id visto e dispara notificacao de novo, igual ao sino espera. */
+  const mesasContaSolicitada = await db
+    .select({ id: mesas.id, nome: mesas.nome, contaSolicitadaEm: mesas.conta_solicitada_em })
+    .from(mesas)
+    .where(and(eq(mesas.loja_id, lojaId), isNotNull(mesas.conta_solicitada_em)));
+
+  for (const m of mesasContaSolicitada) {
+    if (!m.contaSolicitadaEm) continue;
+    const [pedidoRecente] = await db
+      .select({ id: pedidos.id })
+      .from(pedidos)
+      .where(and(eq(pedidos.mesa_id, m.id), eq(pedidos.loja_id, lojaId), notInArray(pedidos.status, ["finalizado", "cancelado"])))
+      .orderBy(sql`${pedidos.id} desc`)
+      .limit(1);
+
+    resultado.push({
+      id: Math.floor(new Date(m.contaSolicitadaEm.replace(" ", "T")).getTime() / 1000),
+      codigo: pedidoRecente ? codigoDisplay(pedidoRecente.id, base) : 0,
+      criadoEm: m.contaSolicitadaEm,
+      cliente: m.nome,
+      status: null,
+      origem: null,
+      tipo: "conta",
+      chave: `conta-${m.id}-${m.contaSolicitadaEm}`,
+      pedidoId: pedidoRecente?.id,
     });
   }
 
