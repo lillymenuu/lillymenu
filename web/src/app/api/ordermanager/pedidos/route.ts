@@ -29,6 +29,8 @@ export async function GET() {
       motoboy_whatsapp: p.motoboyWhatsapp,
       status_em: p.statusEm,
       pagamentos: p.pagamentos,
+      mesa_nome: p.mesaNome,
+      mesa_conta_solicitada_em: p.mesaContaSolicitadaEm,
     })),
   });
 }
