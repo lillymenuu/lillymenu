@@ -568,7 +568,11 @@ export function StorePedidosSheet({
       />
 
       <Dialog open={pedirContaAberto} onOpenChange={(v) => !solicitandoConta && setPedirContaAberto(v)}>
-        <DialogContent showCloseButton={false} className="max-w-xs gap-4 rounded-2xl p-5 text-center sm:max-w-xs">
+        <DialogContent
+          showCloseButton={false}
+          overlayClassName="backdrop-blur-sm bg-black/30"
+          className="max-w-xs gap-4 rounded-2xl p-5 text-center sm:max-w-xs"
+        >
           <DialogTitle className="text-[1rem] font-bold text-neutral-900">Confirmar fechamento da mesa?</DialogTitle>
           <div className="flex gap-2.5">
             <button
