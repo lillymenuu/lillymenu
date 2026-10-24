@@ -16,7 +16,7 @@ export function GarcomFormDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   garcom: Garcom | null;
-  onSalvo: (codigoAcesso: string | null) => void;
+  onSalvo: (codigoAcesso: string | null, id: number) => void;
 }) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -51,7 +51,7 @@ export function GarcomFormDialog({
         return;
       }
       onOpenChange(false);
-      onSalvo(data.codigo_acesso ?? null);
+      onSalvo(data.codigo_acesso ?? null, data.id);
     } catch {
       setMsg("Erro ao salvar garçom.");
     } finally {

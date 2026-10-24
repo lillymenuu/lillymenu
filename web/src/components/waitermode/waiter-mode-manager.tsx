@@ -43,6 +43,10 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
   const [garcomGerarCodigo, setGarcomGerarCodigo] = useState<Garcom | null>(null);
   const [gerandoCodigo, setGerandoCodigo] = useState(false);
   const [codigoGerado, setCodigoGerado] = useState<string | null>(null);
+  /* Codigo de acesso so existe em texto puro no momento em que e gerado (o banco guarda so o hash) —
+     mantem visivel ao lado do botao "Gerar novo codigo" enquanto essa tela estiver aberta, pra nao
+     depender so do modal que aparece uma vez. */
+  const [codigosVisiveis, setCodigosVisiveis] = useState<Record<number, string>>({});
 
   const [taxaServicoPctInput, setTaxaServicoPctInput] = useState(String(dadosIniciais.taxa_servico_pct || ""));
   const [salvandoTaxaServico, setSalvandoTaxaServico] = useState(false);
@@ -255,6 +259,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
         return;
       }
       toast.success("Novo código gerado com sucesso!");
+      setCodigosVisiveis((atual) => ({ ...atual, [garcomGerarCodigo.id]: data.codigo_acesso }));
       setGarcomGerarCodigo(null);
       setCodigoGerado(data.codigo_acesso);
     } catch {
@@ -289,6 +294,10 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
 
   function copiarLink() {
     navigator.clipboard.writeText(dados.garcom_login_url).then(() => toast.success("Link copiado!"));
+  }
+
+  function copiarCodigo(codigo: string) {
+    navigator.clipboard.writeText(codigo).then(() => toast.success("Código copiado!"));
   }
 
   return (
@@ -543,6 +552,17 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                   <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setGarcomGerarCodigo(g)}>
                     <KeyRound className="size-3.5" /> Gerar novo código
                   </Button>
+                  {codigosVisiveis[g.id] && (
+                    <button
+                      type="button"
+                      onClick={() => copiarCodigo(codigosVisiveis[g.id])}
+                      className="flex items-center gap-1.5 rounded-lg border bg-muted/40 px-2.5 py-1.5 text-xs transition-colors hover:bg-muted"
+                      title="Copiar código"
+                    >
+                      <span className="font-mono font-semibold tracking-[0.15em]">{codigosVisiveis[g.id]}</span>
+                      <Copy className="size-3 text-muted-foreground" />
+                    </button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon-sm"
@@ -579,9 +599,10 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
         open={garcomFormOpen}
         onOpenChange={setGarcomFormOpen}
         garcom={garcomEditando}
-        onSalvo={(codigo) => {
+        onSalvo={(codigo, id) => {
           recarregarDetalhe();
           if (codigo) {
+            setCodigosVisiveis((atual) => ({ ...atual, [id]: codigo }));
             setCodigoGerado(codigo);
           } else {
             toast.success("Garçom atualizado com sucesso!");
