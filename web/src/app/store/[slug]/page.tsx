@@ -98,7 +98,7 @@ export default async function StorePage({
 
   const baseUrl = await baseUrlAtual();
   const [perfilNeon, catalogoNeon] = await Promise.all([
-    montarPerfilLoja(lojaId, { mesaId: sp.mesa ? Number(sp.mesa) : undefined, cupom: sp.cupom, baseUrl }),
+    montarPerfilLoja(lojaId, { mesaNumero: sp.mesa ? Number(sp.mesa) : undefined, cupom: sp.cupom, baseUrl }),
     montarCatalogoLoja(lojaId, baseUrl),
   ]);
 

@@ -4,6 +4,7 @@ import { detalheModoGarcom } from "@/db/queries/modoGarcom";
 
 export type Mesa = {
   id: number;
+  numero: number;
   nome: string;
   ativo: number;
   criado_em: string;
@@ -60,7 +61,7 @@ export async function getModoGarcomDetalhe(lojaId: number): Promise<ModoGarcomDe
 
   return {
     ok: true,
-    mesas: resultado.mesas.map((m) => ({ id: m.id, nome: m.nome, ativo: m.ativo ? 1 : 0, criado_em: m.criadoEm, tem_pedido_aberto: m.temPedidoAberto })),
+    mesas: resultado.mesas.map((m) => ({ id: m.id, numero: m.numero, nome: m.nome, ativo: m.ativo ? 1 : 0, criado_em: m.criadoEm, tem_pedido_aberto: m.temPedidoAberto })),
     garcons: resultado.garcons.map((g) => ({ id: g.id, nome: g.nome, email: g.email, ativo: g.ativo ? 1 : 0, criado_em: g.criadoEm })),
     pedidos_pendentes: resultado.pedidosPendentes,
     mesas_ativas: resultado.mesasAtivas,

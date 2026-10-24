@@ -65,7 +65,7 @@ function resolverSlugLoja(linkLojaCfg: string, nomeLojaCfg: string): string {
   return slug;
 }
 
-export type MesaDetalhe = { id: number; nome: string; ativo: boolean; criadoEm: string; temPedidoAberto: boolean };
+export type MesaDetalhe = { id: number; numero: number; nome: string; ativo: boolean; criadoEm: string; temPedidoAberto: boolean };
 export type GarcomDetalhe = { id: number; nome: string; email: string; ativo: boolean; criadoEm: string };
 
 export type DetalheModoGarcomResultado = {
@@ -81,7 +81,7 @@ export type DetalheModoGarcomResultado = {
 };
 
 export async function detalheModoGarcom(lojaId: number, protocoloHost: string): Promise<DetalheModoGarcomResultado> {
-  const mesasRaw = await db.select({ id: mesas.id, nome: mesas.nome, ativo: mesas.ativo, criadoEm: mesas.criado_em }).from(mesas).where(eq(mesas.loja_id, lojaId)).orderBy(mesas.nome);
+  const mesasRaw = await db.select({ id: mesas.id, numero: mesas.numero, nome: mesas.nome, ativo: mesas.ativo, criadoEm: mesas.criado_em }).from(mesas).where(eq(mesas.loja_id, lojaId)).orderBy(mesas.nome);
 
   const pedidosAbertosPorMesa = await db
     .select({ mesaId: pedidos.mesa_id, qtd: sql<string>`count(*)` })
@@ -107,7 +107,7 @@ export async function detalheModoGarcom(lojaId: number, protocoloHost: string): 
   const cardapioUrl = slug !== "" ? `${protocoloHost}/${encodeURIComponent(slug)}` : `${protocoloHost}/public/loja.php?loja_id=${lojaId}`;
 
   return {
-    mesas: mesasRaw.map((m) => ({ id: m.id, nome: m.nome, ativo: m.ativo, criadoEm: m.criadoEm, temPedidoAberto: (mapaAbertos.get(m.id) ?? 0) > 0 })),
+    mesas: mesasRaw.map((m) => ({ id: m.id, numero: m.numero, nome: m.nome, ativo: m.ativo, criadoEm: m.criadoEm, temPedidoAberto: (mapaAbertos.get(m.id) ?? 0) > 0 })),
     garcons: garconsRaw,
     pedidosPendentes: Number(pedidosPendentesCount),
     mesasAtivas: mesasAtivasCount,
@@ -161,7 +161,15 @@ export async function salvarMesa(lojaId: number, id: number, nomeInput: string):
     return { ok: true, id };
   }
 
-  const [nova] = await db.insert(mesas).values({ loja_id: lojaId, nome, ativo: true }).returning({ id: mesas.id });
+  const [nova] = await db
+    .insert(mesas)
+    .values({
+      loja_id: lojaId,
+      nome,
+      ativo: true,
+      numero: sql`coalesce((select max(${mesas.numero}) from ${mesas} where ${mesas.loja_id} = ${lojaId}), 0) + 1`,
+    })
+    .returning({ id: mesas.id });
   await clienteDaMesa(nova.id, nome, lojaId);
 
   return { ok: true, id: nova.id };

@@ -282,14 +282,16 @@ const CHAVES = [
   "taxa_servico_pct",
 ];
 
-export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; cupom?: string; baseUrl: string }): Promise<PerfilLoja> {
+export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: number; cupom?: string; baseUrl: string }): Promise<PerfilLoja> {
   const cfg = await getConfigs(lojaId, CHAVES);
   const baseUrl = opts.baseUrl;
 
   let mesaId = 0;
   let mesaNome: string | null = null;
-  if (opts.mesaId && opts.mesaId > 0) {
-    const [mesa] = await db.select({ id: mesas.id, nome: mesas.nome }).from(mesas).where(and(eq(mesas.id, opts.mesaId), eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).limit(1);
+  if (opts.mesaNumero && opts.mesaNumero > 0) {
+    /* opts.mesaNumero e o "numero" da mesa (sequencial por loja, o que vai no link do QR Code —
+       ver mesas.numero/mesa-qrcode-dialog.tsx), nao o id interno da tabela. */
+    const [mesa] = await db.select({ id: mesas.id, nome: mesas.nome }).from(mesas).where(and(eq(mesas.numero, opts.mesaNumero), eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).limit(1);
     if (mesa) {
       mesaId = mesa.id;
       mesaNome = mesa.nome;

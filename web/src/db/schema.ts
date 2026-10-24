@@ -829,10 +829,16 @@ export const mesas = pgTable(
     cliente_id: integer("cliente_id"),
     ativo: boolean("ativo").notNull().default(true),
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    /* Numero sequencial POR LOJA (1, 2, 3...), atribuido uma unica vez na criacao da mesa e nunca
+       reaproveitado — diferente de `id` (sequencia global do Postgres, compartilhada entre todas as
+       lojas). E o que vai no link do QR Code (?mesa=N): usar o `id` direto resultava em numeros tipo
+       "?mesa=37" pra "Mesa 01", sem relacao nenhuma com a mesa de verdade pro lojista. */
+    numero: integer("numero").notNull().default(1),
   },
   (t) => [
     index("mesas_idx_mesas_loja").on(t.loja_id),
     index("mesas_idx_mesas_ativo").on(t.loja_id, t.ativo),
+    unique("mesas_uq_mesas_loja_numero").on(t.loja_id, t.numero),
   ]
 );
 
