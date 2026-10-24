@@ -7,6 +7,7 @@ import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-them
 import { StoreProdutoDialog } from "@/components/store/store-produto-dialog";
 import { StoreComboDialog } from "@/components/store/store-combo-dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { consumoDoCarrinho } from "@/components/store/estoque-carrinho";
 import { formatarPreco, maskValorDigitado, parseValorMascarado } from "@/lib/store/format";
@@ -76,6 +77,8 @@ function GarcomAppInterno({
   const [produtoAtivo, setProdutoAtivo] = useState<StoreProduto | null>(null);
   const [comboAtivo, setComboAtivo] = useState<StoreCombo | null>(null);
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
+  const [clienteNome, setClienteNome] = useState("");
+  const [pagamentoModalOpen, setPagamentoModalOpen] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState("");
   const [trocoPrecisa, setTrocoPrecisa] = useState<boolean | null>(null);
   const [trocoValor, setTrocoValor] = useState("");
@@ -114,6 +117,7 @@ function GarcomAppInterno({
   function escolherMesa(m: MesaGarcom) {
     setMesa(m);
     setCarrinho([]);
+    setClienteNome("");
     setFormaPagamento("");
     setTrocoPrecisa(null);
     setTrocoValor("");
@@ -124,6 +128,7 @@ function GarcomAppInterno({
     if (carrinho.length > 0 && !window.confirm("Voltar agora descarta os itens ainda não enviados dessa mesa. Continuar?")) return;
     setMesa(null);
     setCarrinho([]);
+    setClienteNome("");
     setEtapa("mesas");
   }
 
@@ -179,13 +184,16 @@ function GarcomAppInterno({
           forma_pagamento: formaPagamento,
           troco_solicitado: formaPagamento === "dinheiro" && trocoPrecisa === true && trocoValorNumerico > 0,
           troco_valor: trocoValorNumerico || 0,
+          cliente_nome: clienteNome.trim() || undefined,
         }),
       });
       const data = await res.json();
       if (data.ok) {
+        setPagamentoModalOpen(false);
         setCartSheetOpen(false);
         setConfirmacao({ mesaNome: mesa.nome, total: totalCarrinho });
         setCarrinho([]);
+        setClienteNome("");
         setFormaPagamento("");
         setTrocoPrecisa(null);
         setTrocoValor("");
@@ -214,7 +222,7 @@ function GarcomAppInterno({
   const categoriasComItens = categorias.filter((c) => (produtosPorCat[c.id]?.length ?? 0) > 0 || (combosPorCat[c.id]?.length ?? 0) > 0);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div className="flex h-dvh flex-col overflow-hidden bg-white">
       {/* topo */}
       <div className="flex shrink-0 items-center gap-3 border-b border-neutral-100 px-4 py-3">
         <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-sm font-bold text-neutral-500">
@@ -462,12 +470,11 @@ function GarcomAppInterno({
               </div>
               <button
                 type="button"
-                disabled={!formaPagamento || enviando || (formaPagamento === "dinheiro" && trocoPrecisa === true && !trocoValido)}
-                onClick={enviarPedido}
-                className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
-                style={{ background: !formaPagamento || enviando ? "#c0a88a" : brown }}
+                onClick={() => setPagamentoModalOpen(true)}
+                className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors"
+                style={{ background: brown }}
               >
-                {enviando ? "Enviando..." : "Enviar pedido"}
+                Continuar
               </button>
             </>
           ) : undefined
@@ -500,83 +507,115 @@ function GarcomAppInterno({
 
           {carrinho.length > 0 && (
             <div className="pt-1">
-              <p className="mb-2.5 text-[.84rem] font-semibold text-neutral-900">Forma de pagamento</p>
-              <div className="space-y-2">
-                {[
-                  { valor: "pix", label: "Pix", ativo: perfil.pixAtivo, taxaPct: 0 },
-                  { valor: "dinheiro", label: "Dinheiro", ativo: perfil.dinAtivo, taxaPct: 0 },
-                  { valor: "credito", label: "Cartão de crédito", ativo: perfil.credAtivo, taxaPct: perfil.credTaxaPercent },
-                  { valor: "debito", label: "Cartão de débito", ativo: perfil.debAtivo, taxaPct: perfil.debTaxaPercent },
-                ]
-                  .filter((f) => f.ativo)
-                  .map((f) => (
-                    <label
-                      key={f.valor}
-                      onClick={() => {
-                        setFormaPagamento(f.valor);
-                        setTrocoPrecisa(null);
-                        setTrocoValor("");
-                      }}
-                      className="flex cursor-pointer items-center gap-3 rounded-xl border-[1.5px] p-3 transition-colors"
-                      style={formaPagamento === f.valor ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#e5e7eb" }}
-                    >
-                      <span className="flex-1 text-[.86rem] font-semibold text-neutral-900">
-                        {f.label}
-                        {f.taxaPct > 0 ? <span className="ml-1.5 font-normal text-neutral-400">(+{f.taxaPct}%)</span> : null}
-                      </span>
-                      <span
-                        className="flex size-[20px] shrink-0 items-center justify-center rounded-full border-2"
-                        style={formaPagamento === f.valor ? { borderColor: brown, background: brown } : { borderColor: "#ddd" }}
-                      >
-                        {formaPagamento === f.valor && <span className="size-2 rounded-full bg-white" />}
-                      </span>
-                      <input type="radio" name="pagamento" checked={formaPagamento === f.valor} onChange={() => {}} className="sr-only" />
-                    </label>
-                  ))}
-              </div>
+              <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">
+                Identificar cliente (opcional)
+              </label>
+              <input
+                value={clienteNome}
+                onChange={(e) => setClienteNome(e.target.value)}
+                placeholder="Nome do cliente"
+                className={fieldClass()}
+              />
+            </div>
+          )}
+        </div>
+      </StoreSheet>
 
-              {formaPagamento === "dinheiro" && (
-                <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3.5">
-                  <p className="mb-2 text-[.8rem] font-semibold text-neutral-800">Precisa de troco?</p>
-                  <div className="mb-2 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setTrocoPrecisa(true)}
-                      className="flex-1 rounded-lg border-[1.5px] py-2 text-[.82rem] font-semibold"
-                      style={trocoPrecisa === true ? { borderColor: "#86efac", background: "#f0fdf4", color: "#16a34a" } : { borderColor: "#e5e7eb", color: "#111" }}
-                    >
-                      Sim
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTrocoPrecisa(false);
-                        setTrocoValor("");
-                      }}
-                      className="flex-1 rounded-lg border-[1.5px] py-2 text-[.82rem] font-semibold"
-                      style={trocoPrecisa === false ? { borderColor: "#fed7aa", background: "#fff7ed", color: "#9a3412" } : { borderColor: "#e5e7eb", color: "#111" }}
-                    >
-                      Não
-                    </button>
-                  </div>
-                  {trocoPrecisa === true && (
-                    <>
-                      <input value={trocoValor} onChange={(e) => setTrocoValor(maskValorDigitado(e.target.value))} inputMode="decimal" placeholder="Troco para quanto?" className={fieldClass()} />
-                      {!trocoValido && (
-                        <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-[.76rem] text-red-700">
-                          <AlertCircle size={13} className="shrink-0" />O valor precisa ser maior que o total do pedido
-                        </div>
-                      )}
-                    </>
+      <Dialog open={pagamentoModalOpen} onOpenChange={(v) => !enviando && setPagamentoModalOpen(v)}>
+        <DialogContent className="max-h-[85vh] max-w-[420px] overflow-y-auto rounded-3xl p-5">
+          <DialogHeader>
+            <DialogTitle>Forma de pagamento</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex items-center justify-between rounded-xl bg-neutral-50 px-3.5 py-3">
+            <span className="text-[.8rem] text-neutral-500">Total do pedido</span>
+            <span className="text-[.95rem] font-bold text-neutral-900">{formatarPreco(totalCarrinho)}</span>
+          </div>
+
+          <div className="space-y-2">
+            {[
+              { valor: "pix", label: "Pix", ativo: perfil.pixAtivo, taxaPct: 0 },
+              { valor: "dinheiro", label: "Dinheiro", ativo: perfil.dinAtivo, taxaPct: 0 },
+              { valor: "credito", label: "Cartão de crédito", ativo: perfil.credAtivo, taxaPct: perfil.credTaxaPercent },
+              { valor: "debito", label: "Cartão de débito", ativo: perfil.debAtivo, taxaPct: perfil.debTaxaPercent },
+            ]
+              .filter((f) => f.ativo)
+              .map((f) => (
+                <label
+                  key={f.valor}
+                  onClick={() => {
+                    setFormaPagamento(f.valor);
+                    setTrocoPrecisa(null);
+                    setTrocoValor("");
+                  }}
+                  className="flex cursor-pointer items-center gap-3 rounded-xl border-[1.5px] p-3 transition-colors"
+                  style={formaPagamento === f.valor ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#e5e7eb" }}
+                >
+                  <span className="flex-1 text-[.86rem] font-semibold text-neutral-900">
+                    {f.label}
+                    {f.taxaPct > 0 ? <span className="ml-1.5 font-normal text-neutral-400">(+{f.taxaPct}%)</span> : null}
+                  </span>
+                  <span
+                    className="flex size-[20px] shrink-0 items-center justify-center rounded-full border-2"
+                    style={formaPagamento === f.valor ? { borderColor: brown, background: brown } : { borderColor: "#ddd" }}
+                  >
+                    {formaPagamento === f.valor && <span className="size-2 rounded-full bg-white" />}
+                  </span>
+                  <input type="radio" name="pagamento" checked={formaPagamento === f.valor} onChange={() => {}} className="sr-only" />
+                </label>
+              ))}
+          </div>
+
+          {formaPagamento === "dinheiro" && (
+            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3.5">
+              <p className="mb-2 text-[.8rem] font-semibold text-neutral-800">Precisa de troco?</p>
+              <div className="mb-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTrocoPrecisa(true)}
+                  className="flex-1 rounded-lg border-[1.5px] py-2 text-[.82rem] font-semibold"
+                  style={trocoPrecisa === true ? { borderColor: "#86efac", background: "#f0fdf4", color: "#16a34a" } : { borderColor: "#e5e7eb", color: "#111" }}
+                >
+                  Sim
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTrocoPrecisa(false);
+                    setTrocoValor("");
+                  }}
+                  className="flex-1 rounded-lg border-[1.5px] py-2 text-[.82rem] font-semibold"
+                  style={trocoPrecisa === false ? { borderColor: "#fed7aa", background: "#fff7ed", color: "#9a3412" } : { borderColor: "#e5e7eb", color: "#111" }}
+                >
+                  Não
+                </button>
+              </div>
+              {trocoPrecisa === true && (
+                <>
+                  <input value={trocoValor} onChange={(e) => setTrocoValor(maskValorDigitado(e.target.value))} inputMode="decimal" placeholder="Troco para quanto?" className={fieldClass()} />
+                  {!trocoValido && (
+                    <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-[.76rem] text-red-700">
+                      <AlertCircle size={13} className="shrink-0" />O valor precisa ser maior que o total do pedido
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           )}
 
           {erroEnvio && <p className="text-[.84rem] text-red-600">{erroEnvio}</p>}
-        </div>
-      </StoreSheet>
+
+          <button
+            type="button"
+            disabled={!formaPagamento || enviando || (formaPagamento === "dinheiro" && trocoPrecisa === true && !trocoValido)}
+            onClick={enviarPedido}
+            className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+            style={{ background: !formaPagamento || enviando ? "#c0a88a" : brown }}
+          >
+            {enviando ? "Enviando..." : "Enviar pedido"}
+          </button>
+        </DialogContent>
+      </Dialog>
 
       {confirmacao && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6">

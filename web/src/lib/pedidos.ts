@@ -23,6 +23,7 @@ export type Pedido = {
   status_em: string | null;
   pagamentos: Pagamento[];
   codigo: number;
+  mesa_nome: string | null;
 };
 
 export type Motoboy = { id: number; nome: string; whatsapp: string };
@@ -50,6 +51,7 @@ export async function getPedidosKanban(lojaId: number): Promise<{ ok: true; pedi
       motoboy_whatsapp: p.motoboyWhatsapp,
       status_em: p.statusEm,
       pagamentos: p.pagamentos,
+      mesa_nome: p.mesaNome,
     })),
   };
 }
@@ -77,6 +79,7 @@ export async function getPedidosAgendados(lojaId: number, ano: number, mes: numb
       motoboy_whatsapp: p.motoboyWhatsapp,
       status_em: p.statusEm,
       pagamentos: p.pagamentos,
+      mesa_nome: p.mesaNome,
     })),
   };
 }
@@ -134,6 +137,7 @@ export async function getPedidosListar(lojaId: number, params: PedidosListarPara
       motoboy_whatsapp: p.motoboyWhatsapp,
       status_em: p.statusEm,
       pagamentos: p.pagamentos,
+      mesa_nome: p.mesaNome,
     })),
     total: resultado.total,
     paginas: resultado.paginas,

@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, ne, inArray, isNotNull, notInArray, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db, withTransaction, type NeonTx } from "@/db";
-import { mesas, garcons, pedidos, pedidoItens, produtos, estoque, clientes, configuracoes } from "@/db/schema";
+import { mesas, garcons, pedidos, pedidoItens, pedidoPagamentos, produtos, estoque, clientes, configuracoes } from "@/db/schema";
 import { getConfigs } from "@/db/queries/config";
 import { fixImgPath } from "@/db/queries/lojaPerfil";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
@@ -370,6 +370,8 @@ export type CriarPedidoMesaInput = {
   formaPagamento: string;
   trocoSolicitado?: boolean;
   trocoValor?: number;
+  /** Nome do cliente identificado pelo garcom na hora do pedido (opcional) — some ao nome da mesa no Gestor de Pedidos. */
+  clienteNome?: string;
 };
 
 const FORMAS_PAGAMENTO_VALIDAS = ["dinheiro", "pix", "credito", "debito"];
@@ -445,10 +447,21 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
   /* trocoValor e o valor com que o cliente vai pagar (ex.: "troco para 20"), nao o troco em si -- o troco de verdade e a diferenca pro total do pedido. */
   const trocoValorRecebido = input.trocoValor ?? 0;
 
+  const clienteNomeInformado = input.clienteNome?.trim() || "";
+
   let pedidoId = 0;
   try {
     await withTransaction(async (tx: NeonTx) => {
-      const clienteId = await clienteDaMesa(mesaId, mesa.nome, lojaId);
+      /* Se o garcom identificou o cliente, cria um registro proprio pra esse pedido (nao fica
+         preso ao placeholder compartilhado da mesa) — assim o nome de verdade aparece no Gestor
+         de Pedidos, e a mesa continua visivel separadamente (pedidos.mesa_id, mostrado pelo join
+         com `mesas` em pedidosAdmin). Sem identificacao, mantem o fallback de sempre. */
+      const clienteId = clienteNomeInformado
+        ? (await tx.insert(clientes).values({ nome: clienteNomeInformado, telefone: "", loja_id: lojaId }).returning({ id: clientes.id }))[0].id
+        : await clienteDaMesa(mesaId, mesa.nome, lojaId);
+
+      const valorPagoDinheiro =
+        input.formaPagamento === "dinheiro" && input.trocoSolicitado && trocoValorRecebido > total ? trocoValorRecebido : null;
 
       const [novoPedido] = await tx
         .insert(pedidos)
@@ -466,7 +479,8 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           tipo: "mesa",
           origem: "garcom",
           criado_em: timestampFortaleza(),
-          troco: input.formaPagamento === "dinheiro" && input.trocoSolicitado && trocoValorRecebido > total ? trocoValorRecebido - total : null,
+          valor_pago: valorPagoDinheiro,
+          troco: valorPagoDinheiro !== null ? valorPagoDinheiro - total : null,
         })
         .returning({ id: pedidos.id });
       pedidoId = novoPedido.id;
@@ -475,6 +489,11 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
          sempre caia no fallback do id bruto (COALESCE(codigo, id)) em qualquer tela que le pedidos.codigo. */
       const codigoBaseTx = await pedidoCodigoBase(lojaId);
       await tx.update(pedidos).set({ codigo: String(codigoDisplay(pedidoId, codigoBaseTx)) }).where(eq(pedidos.id, pedidoId));
+
+      /* pedido_pagamentos e a fonte de verdade lida pelo Gestor de Pedidos (ver pedidosAdmin.ts) —
+         sem essa linha o campo "Pagamento" do pedido aparece em branco mesmo com forma_pagamento
+         preenchida em `pedidos`. */
+      await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: input.formaPagamento, valor: total, taxa_maquininha: taxaMaquininha, loja_id: lojaId });
 
       for (const item of input.itens) {
         const qtd = Math.max(1, item.qtd || 1);

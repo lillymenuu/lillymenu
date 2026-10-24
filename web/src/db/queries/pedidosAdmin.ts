@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { pedidos, clientes, motoboys, pedidoPagamentos, pedidoItens, pedidoItemOpcoes, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
+import { pedidos, clientes, motoboys, mesas, pedidoPagamentos, pedidoItens, pedidoItemOpcoes, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
 
 /*
@@ -70,6 +70,7 @@ export type PedidoResumo = {
   motoboyWhatsapp: string | null;
   statusEm: string | null;
   pagamentos: PagamentoPedido[];
+  mesaNome: string | null;
 };
 
 // Correlacao com pedidos.id/loja_id via nome literal da tabela externa (nao
@@ -138,10 +139,12 @@ export async function listarPedidos(input: ListarPedidosInput): Promise<ListarPe
       motoboyNome: motoboys.nome,
       motoboyWhatsapp: motoboys.whatsapp,
       statusEm: statusEmExpr,
+      mesaNome: mesas.nome,
     })
     .from(pedidos)
     .leftJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
     .leftJoin(motoboys, and(eq(motoboys.id, pedidos.motoboy_id), eq(motoboys.loja_id, pedidos.loja_id)))
+    .leftJoin(mesas, and(eq(mesas.id, pedidos.mesa_id), eq(mesas.loja_id, pedidos.loja_id)))
     .where(where)
     .orderBy(desc(pedidos.criado_em))
     .limit(limite)
@@ -179,10 +182,12 @@ export async function kanbanPedidos(lojaId: number): Promise<{ ok: true; pedidos
       motoboyNome: motoboys.nome,
       motoboyWhatsapp: motoboys.whatsapp,
       statusEm: statusEmExpr,
+      mesaNome: mesas.nome,
     })
     .from(pedidos)
     .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
     .leftJoin(motoboys, and(eq(motoboys.id, pedidos.motoboy_id), eq(motoboys.loja_id, pedidos.loja_id)))
+    .leftJoin(mesas, and(eq(mesas.id, pedidos.mesa_id), eq(mesas.loja_id, pedidos.loja_id)))
     .where(eq(pedidos.loja_id, lojaId))
     .orderBy(desc(pedidos.id));
 
@@ -219,6 +224,7 @@ export async function listarPedidosAgendados(input: ListarPedidosAgendadosInput)
       motoboyNome: motoboys.nome,
       motoboyWhatsapp: motoboys.whatsapp,
       statusEm: statusEmExpr,
+      mesaNome: sql<string | null>`null`,
     })
     .from(pedidos)
     .leftJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
@@ -276,9 +282,11 @@ export async function buscarPedidos(lojaId: number, termoBruto: string): Promise
       motoboyNome: sql<string | null>`null`,
       motoboyWhatsapp: sql<string | null>`null`,
       statusEm: sql<string | null>`null`,
+      mesaNome: mesas.nome,
     })
     .from(pedidos)
     .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
+    .leftJoin(mesas, and(eq(mesas.id, pedidos.mesa_id), eq(mesas.loja_id, pedidos.loja_id)))
     .where(and(eq(pedidos.loja_id, lojaId), sql.join(condicoesOr, sql` or `)))
     .orderBy(desc(pedidos.id))
     .limit(30);
@@ -325,10 +333,12 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
       motoboyId: motoboys.id,
       motoboyNome: motoboys.nome,
       motoboyWhatsapp: motoboys.whatsapp,
+      mesaNome: mesas.nome,
     })
     .from(pedidos)
     .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
     .leftJoin(motoboys, and(eq(motoboys.id, pedidos.motoboy_id), eq(motoboys.loja_id, pedidos.loja_id)))
+    .leftJoin(mesas, and(eq(mesas.id, pedidos.mesa_id), eq(mesas.loja_id, pedidos.loja_id)))
     .where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId)))
     .limit(1);
 
@@ -428,7 +438,7 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
 
   return {
     ok: true,
-    pedido: { ...linha.pedido, nome: linha.clienteNome, telefone: linha.clienteTelefone, motoboy_id: linha.motoboyId, motoboy_nome: linha.motoboyNome, motoboy_whatsapp: linha.motoboyWhatsapp, codigo: codigoDisplay(linha.pedido.id, base), editadoPor: editoLinha?.nome ?? null },
+    pedido: { ...linha.pedido, nome: linha.clienteNome, telefone: linha.clienteTelefone, motoboy_id: linha.motoboyId, motoboy_nome: linha.motoboyNome, motoboy_whatsapp: linha.motoboyWhatsapp, mesa_nome: linha.mesaNome, codigo: codigoDisplay(linha.pedido.id, base), editadoPor: editoLinha?.nome ?? null },
     clienteStats: stats,
     itens: itensLinhas,
     pagamentos: pagamentosLinhas,

@@ -151,6 +151,7 @@ type PedidoDetalhe = {
   motoboy_nome: string | null;
   motoboy_whatsapp: string | null;
   editado_por: string | null;
+  mesa_nome: string | null;
   caixa_id: number | null;
   forma_pagamento: string | null;
   valor_pago: number | null;
@@ -485,6 +486,13 @@ export function OrderDetailDialog({
                       </span>
                     )}
                   </div>
+
+                  {pedido.mesa_nome && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
+                      <UtensilsCrossed size={11} />
+                      Mesa: <span className="font-medium text-foreground">{pedido.mesa_nome}</span>
+                    </div>
+                  )}
 
                   {pedido.tipo === "entrega" && pedido.endereco_entrega && (
                     <div className="flex flex-col gap-1">

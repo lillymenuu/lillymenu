@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     formaPagamento: String(b.forma_pagamento ?? ""),
     trocoSolicitado: Boolean(b.troco_solicitado),
     trocoValor: b.troco_valor !== undefined ? Number(b.troco_valor) : undefined,
+    clienteNome: typeof b.cliente_nome === "string" ? b.cliente_nome : undefined,
   });
 
   return NextResponse.json(resultado);

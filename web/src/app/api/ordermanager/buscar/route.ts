@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       motoboy_whatsapp: p.motoboyWhatsapp,
       status_em: p.statusEm,
       pagamentos: p.pagamentos,
+      mesa_nome: p.mesaNome,
     })),
   });
 }

@@ -106,6 +106,13 @@ export function OrderCard({
         <span className="shrink-0 text-xs font-normal text-muted-foreground">{pedido.telefone}</span>
       </div>
 
+      {pedido.mesa_nome && (
+        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+          <UtensilsCrossed size={11} className="shrink-0" />
+          {pedido.mesa_nome}
+        </div>
+      )}
+
       {pedido.tipo === "entrega" && pedido.endereco_entrega && (
         <div className="flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs text-muted-foreground">
           <MapPin size={12} className="shrink-0" />
