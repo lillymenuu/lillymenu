@@ -98,10 +98,10 @@ export function MesaQrCodeDialog({
           </span>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="gap-1.5 rounded-lg font-normal" onClick={imprimir} disabled={!dataUrl}>
+          <Button variant="outline" className="gap-1.5 rounded-full font-normal" onClick={imprimir} disabled={!dataUrl}>
             <Printer className="size-4" /> Imprimir
           </Button>
-          <Button className="gap-1.5 rounded-lg font-normal" onClick={baixar} disabled={!dataUrl}>
+          <Button className="gap-1.5 rounded-full font-normal" onClick={baixar} disabled={!dataUrl}>
             <Download className="size-4" /> Baixar PNG
           </Button>
         </DialogFooter>

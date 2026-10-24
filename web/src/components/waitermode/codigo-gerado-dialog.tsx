@@ -21,7 +21,7 @@ export function CodigoGeradoDialog({
         </p>
         <div className="rounded-xl bg-muted/50 py-6 text-center text-3xl font-bold tracking-[0.3em]">{codigo}</div>
         <DialogFooter>
-          <Button className="rounded-lg font-normal" onClick={onClose}>
+          <Button className="rounded-full font-normal" onClick={onClose}>
             Entendi
           </Button>
         </DialogFooter>

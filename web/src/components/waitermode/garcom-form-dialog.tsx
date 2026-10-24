@@ -83,10 +83,10 @@ export function GarcomFormDialog({
           {msg && <p className="text-sm text-destructive">{msg}</p>}
         </div>
         <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full font-normal" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : garcom ? "Salvar alterações" : "Salvar e gerar código"}
           </Button>
         </DialogFooter>

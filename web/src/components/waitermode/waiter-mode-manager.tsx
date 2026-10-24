@@ -362,7 +362,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
             </div>
             <Button
               size="sm"
-              className="rounded-lg font-normal"
+              className="rounded-full font-normal"
               disabled={salvandoTaxaServico}
               onClick={() => salvarTaxaServico(dados.taxa_servico_ativa, Number(taxaServicoPctInput.replace(",", ".")) || 0)}
             >
@@ -416,12 +416,12 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                     </span>
                     <div className="flex flex-wrap items-center gap-1.5">
                       {proxima && (
-                        <Button size="sm" className="rounded-lg font-normal" onClick={() => mudarStatusPedido(p.id, proxima.proximo)}>
+                        <Button size="sm" className="rounded-full font-normal" onClick={() => mudarStatusPedido(p.id, proxima.proximo)}>
                           {proxima.label}
                         </Button>
                       )}
                       {p.status === "entrega" && (
-                        <Button size="sm" className="rounded-lg font-normal" onClick={() => finalizarPedido(p.id)}>
+                        <Button size="sm" className="rounded-full font-normal" onClick={() => finalizarPedido(p.id)}>
                           Dar baixa
                         </Button>
                       )}
@@ -429,7 +429,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                         <Button
                           size="sm"
                           variant="outline"
-                          className="rounded-lg font-normal"
+                          className="rounded-full font-normal"
                           onClick={() => cancelarPedido(p.id)}
                         >
                           Cancelar
@@ -449,7 +449,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
               Toque em uma mesa pra ativar/desativar. Mesas desativadas não aparecem pro garçom.
             </p>
             <Button
-              className="shrink-0 gap-1.5 rounded-lg font-normal"
+              className="shrink-0 gap-1.5 rounded-full font-normal"
               onClick={() => {
                 setMesaEditando(null);
                 setMesaFormOpen(true);
@@ -481,7 +481,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-1.5 rounded-lg font-normal"
+                    className="gap-1.5 rounded-full font-normal"
                     onClick={() => setMesaQrCode(m)}
                   >
                     <QrCode className="size-3.5" /> QR Code
@@ -513,7 +513,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
               Compartilhe o link de acesso com a equipe — cada garçom entra com o próprio e-mail e código.
             </p>
             <Button
-              className="shrink-0 gap-1.5 rounded-lg font-normal"
+              className="shrink-0 gap-1.5 rounded-full font-normal"
               onClick={() => {
                 setGarcomEditando(null);
                 setGarcomFormOpen(true);
@@ -549,14 +549,14 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                     <div className="font-medium">{g.nome}</div>
                     <div className="text-xs text-muted-foreground">{g.email}</div>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setGarcomGerarCodigo(g)}>
+                  <Button variant="outline" size="sm" className="gap-1.5 rounded-full font-normal" onClick={() => setGarcomGerarCodigo(g)}>
                     <KeyRound className="size-3.5" /> Gerar novo código
                   </Button>
                   {codigosVisiveis[g.id] && (
                     <button
                       type="button"
                       onClick={() => copiarCodigo(codigosVisiveis[g.id])}
-                      className="flex items-center gap-1.5 rounded-lg border bg-muted/40 px-2.5 py-1.5 text-xs transition-colors hover:bg-muted"
+                      className="flex items-center gap-1.5 rounded-full border bg-muted/40 px-2.5 py-1.5 text-xs transition-colors hover:bg-muted"
                       title="Copiar código"
                     >
                       <span className="font-mono font-semibold tracking-[0.15em]">{codigosVisiveis[g.id]}</span>
