@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Bike, Calendar, ChevronDown, Copy, CreditCard, Info, Loader2, Map, MapPin, QrCode, User, Wallet } from "lucide-react";
+import { AlertCircle, Bike, Calendar, ChevronDown, Copy, CreditCard, Info, Loader2, Map, MapPin, QrCode, User, UtensilsCrossed, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "cn";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -17,7 +17,10 @@ import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
 import type { StoreCartItem, StoreCupomResultado, StorePedidoSnapshot, StorePerfil } from "@/lib/store/types";
 
 type Etapa = "dados" | "entrega" | "pagamento" | "resumo";
-const ETAPAS: Etapa[] = ["dados", "entrega", "pagamento", "resumo"];
+const ETAPAS_PADRAO: Etapa[] = ["dados", "entrega", "pagamento", "resumo"];
+/* Pedido feito pelo cliente escaneando o QR Code da mesa (perfil.mesaId) — sem escolha de tipo de
+   entrega: o pedido ja nasce marcado como consumo local nessa mesa, direto pro gestor de pedidos. */
+const ETAPAS_MESA: Etapa[] = ["dados", "pagamento", "resumo"];
 
 const FORMAS_PAGAMENTO: { valor: string; label: string; sub: string; icon: typeof QrCode; flag: keyof StorePerfil }[] = [
   { valor: "pix", label: "Pix", sub: "A chave sera exibida apos a confirmacao do pedido.", icon: QrCode, flag: "pixAtivo" },
@@ -55,6 +58,8 @@ export function StoreCheckoutDialog({
   onVoltarCarrinho?: () => void;
 }) {
   const { brown } = useStoreTheme();
+  const isMesa = perfil.mesaId !== null;
+  const ETAPAS = isMesa ? ETAPAS_MESA : ETAPAS_PADRAO;
   const [etapa, setEtapa] = useState<Etapa>("dados");
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
@@ -174,7 +179,10 @@ export function StoreCheckoutDialog({
   }, [cupomAplicado, taxaEntrega]);
 
   const cashbackUsadoEfetivo = cashbackAplicado ? Math.min(cashbackValorUsado, cashbackDisponivel) : 0;
-  const totalAntesDaTaxaPagamento = Math.max(0, subtotal - desconto - cashbackUsadoEfetivo) + taxaFinal;
+  /* Taxa de servico do garcom (Modo Garcom > Taxa de servico) — tambem cobrada no pedido de mesa
+     feito pelo proprio cliente via QR Code, e nao so no lancado pelo garcom. */
+  const taxaServico = isMesa && perfil.taxaServicoAtiva ? Math.round(subtotal * (perfil.taxaServicoPct / 100) * 100) / 100 : 0;
+  const totalAntesDaTaxaPagamento = Math.max(0, subtotal - desconto - cashbackUsadoEfetivo) + taxaFinal + taxaServico;
   /* Taxa de cartao repassada ao cliente (Configuracoes > Formas de pagamento
      > "Cobrar taxa do cliente"): so incide quando o lojista escolheu credito
      ou debito como forma de pagamento. */
@@ -430,11 +438,13 @@ export function StoreCheckoutDialog({
           cliente_cpf_cnpj: cpfCnpjNota || undefined,
           /* pedido_criar.php so reconhece "entrega"/"retirada"/"mesa" no campo tipo;
              a variante "_agendada" (usada so pra UI/cupom) e normalizada aqui. */
-          tipo: isEntregaTipo ? "entrega" : "retirada",
+          tipo: isMesa ? "mesa" : isEntregaTipo ? "entrega" : "retirada",
+          mesa_id: isMesa ? perfil.mesaId : undefined,
           forma_pagamento: formaPagamento,
           endereco: isEntregaTipo ? enderecoTexto() : "",
           subtotal,
           taxa_entrega: taxaFinal,
+          taxa_servico: taxaServico,
           taxa_maquininha: taxaPagamento,
           total,
           itens: itens.map((i) => ({
@@ -466,7 +476,8 @@ export function StoreCheckoutDialog({
           nome: nome.trim(),
           telefone,
           itens,
-          tipo: tipo as StorePedidoSnapshot["tipo"],
+          tipo: isMesa ? "mesa" : (tipo as StorePedidoSnapshot["tipo"]),
+          mesaNome: isMesa ? perfil.mesaNome : undefined,
           formaPagamento,
           trocoValor: formaPagamento === "dinheiro" && trocoValorValido ? trocoValorNumerico : 0,
           endereco: isEntregaTipo ? enderecoTexto() : "",
@@ -768,7 +779,7 @@ export function StoreCheckoutDialog({
 
               {etapa === "pagamento" && (
                 <div>
-                  <p className="mb-3 text-[.84rem] text-neutral-500">Forma de pagamento na entrega</p>
+                  <p className="mb-3 text-[.84rem] text-neutral-500">{isMesa ? "Forma de pagamento" : "Forma de pagamento na entrega"}</p>
                   <div className="space-y-2.5">
                     {FORMAS_PAGAMENTO.filter((f) => perfil[f.flag]).map((f) => {
                       const Icon = f.icon;
@@ -872,6 +883,16 @@ export function StoreCheckoutDialog({
                       </button>
                     </div>
                   </div>
+
+                  {isMesa && (
+                    <div className="border-b border-neutral-100 py-3.5">
+                      <p className="mb-1.5 text-[.86rem] font-normal text-neutral-900">Mesa</p>
+                      <div className="flex items-center gap-2.5">
+                        <UtensilsCrossed size={16} className="shrink-0 text-neutral-500" />
+                        <span className="text-[.86rem] font-normal text-neutral-500">{perfil.mesaNome}</span>
+                      </div>
+                    </div>
+                  )}
 
                   {isEntregaTipo && (
                     <div className="border-b border-neutral-100 py-3.5">
@@ -1044,6 +1065,12 @@ export function StoreCheckoutDialog({
                     <div className="flex justify-between text-neutral-500">
                       <span>Taxa de entrega</span>
                       <span>{formatarPreco(taxaFinal)}</span>
+                    </div>
+                  )}
+                  {taxaServico > 0 && (
+                    <div className="flex justify-between text-neutral-500">
+                      <span>Taxa de serviço</span>
+                      <span>{formatarPreco(taxaServico)}</span>
                     </div>
                   )}
                   {taxaPagamento > 0 && (

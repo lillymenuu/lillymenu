@@ -76,6 +76,10 @@ export type StorePerfil = {
   agendDeliveryHorarios: Record<string, StoreAgendHorario>;
   agendRetiradaHorarios: Record<string, StoreAgendHorario>;
   nfceDisponivel: boolean;
+  /** Taxa de servico do garcom (Modo Garcom) — tambem cobrada no pedido de mesa feito pelo
+      proprio cliente via QR Code (ver mesaId/mesaNome). */
+  taxaServicoAtiva: boolean;
+  taxaServicoPct: number;
 };
 
 export type StoreAgendHorario = { inicio: string; fim: string };
@@ -314,7 +318,7 @@ export type StorePedidoSnapshot = {
   nome: string;
   telefone: string;
   itens: StoreCartItem[];
-  tipo: "entrega" | "entrega_agendada" | "retirada" | "retirada_agendada";
+  tipo: "entrega" | "entrega_agendada" | "retirada" | "retirada_agendada" | "mesa";
   formaPagamento: string;
   trocoValor: number;
   endereco: string;
@@ -323,4 +327,6 @@ export type StorePedidoSnapshot = {
   desconto: number;
   cashbackUsado: number;
   total: number;
+  /** So preenchido quando tipo === "mesa" (pedido feito via QR Code da mesa). */
+  mesaNome?: string | null;
 };

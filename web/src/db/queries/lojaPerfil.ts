@@ -204,6 +204,10 @@ export type PerfilLoja = {
   agendDeliveryHorarios: Record<string, AgendHorario>;
   agendRetiradaHorarios: Record<string, AgendHorario>;
   nfceDisponivel: boolean;
+  /** Taxa de servico do garcom (Modo Garcom > Taxa de servico) — tambem cobrada nos pedidos
+      feitos pelo proprio cliente via QR Code da mesa, ja que e uma taxa do consumo local. */
+  taxaServicoAtiva: boolean;
+  taxaServicoPct: number;
 };
 
 const CHAVES = [
@@ -274,6 +278,8 @@ const CHAVES = [
   "horario_abertura",
   "horario_fechamento",
   "dias_funcionamento",
+  "taxa_servico_ativa",
+  "taxa_servico_pct",
 ];
 
 export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; cupom?: string; baseUrl: string }): Promise<PerfilLoja> {
@@ -448,6 +454,8 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; 
 
   const geoAtivo = (await getConfig(0, "saas_nominatim_ativo", "1")) === "1";
   const nfceDisponivel = await temRecursoPlano(lojaId, "cliente", "menu.nfce");
+  const taxaServicoAtiva = cfg.taxa_servico_ativa === "1";
+  const taxaServicoPct = Number(cfg.taxa_servico_pct || "0");
 
   const diasFuncInfo = (cfg.dias_funcionamento || "")
     .split(",")
@@ -558,5 +566,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaId?: number; 
     agendDeliveryHorarios,
     agendRetiradaHorarios,
     nfceDisponivel,
+    taxaServicoAtiva,
+    taxaServicoPct,
   };
 }

@@ -180,6 +180,8 @@ export default async function StorePage({
     agendDeliveryHorarios: perfilNeon.agendDeliveryHorarios,
     agendRetiradaHorarios: perfilNeon.agendRetiradaHorarios,
     nfceDisponivel: perfilNeon.nfceDisponivel,
+    taxaServicoAtiva: perfilNeon.taxaServicoAtiva,
+    taxaServicoPct: perfilNeon.taxaServicoPct,
   };
 
   const produtosPorCat: Record<string, StoreProduto[]> = {};

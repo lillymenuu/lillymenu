@@ -1,6 +1,7 @@
 "use client";
 
 import { ShoppingBag } from "lucide-react";
+import { cn } from "cn";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -83,14 +84,17 @@ export function StoreSuccessDialog({
 }) {
   const { brown } = useStoreTheme();
 
+  const isMesa = snapshot?.tipo === "mesa";
   const isEntrega = snapshot ? snapshot.tipo === "entrega" || snapshot.tipo === "entrega_agendada" : true;
   const isAgendado = snapshot ? snapshot.tipo.endsWith("_agendada") : false;
-  const previsao = isAgendado && snapshot?.agendamentoTexto
-    ? snapshot.agendamentoTexto
-    : isEntrega
-      ? `${perfil.tEntMin}-${perfil.tEntMax} min`
-      : `${perfil.tRetMin}-${perfil.tRetMax} min`;
-  const previsaoLabel = isAgendado ? (isEntrega ? "Entrega agendada" : "Retirada agendada") : isEntrega ? "Entrega em" : "Retirada em";
+  const previsao = isMesa
+    ? (snapshot?.mesaNome ?? "")
+    : isAgendado && snapshot?.agendamentoTexto
+      ? snapshot.agendamentoTexto
+      : isEntrega
+        ? `${perfil.tEntMin}-${perfil.tEntMax} min`
+        : `${perfil.tRetMin}-${perfil.tRetMax} min`;
+  const previsaoLabel = isMesa ? "Mesa" : isAgendado ? (isEntrega ? "Entrega agendada" : "Retirada agendada") : isEntrega ? "Entrega em" : "Retirada em";
 
   function enviarWhatsapp() {
     const numero = perfil.lojaContato.replace(/\D/g, "");
@@ -171,23 +175,29 @@ export function StoreSuccessDialog({
           </div>
 
           <div className="flex w-full max-w-[420px] flex-col gap-3" style={rise(0.95)}>
-            <button
-              type="button"
-              onClick={enviarWhatsapp}
-              className="relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl py-4 text-[.88rem] font-extrabold tracking-wide text-white uppercase transition-transform active:scale-[.98]"
-              style={{ background: `linear-gradient(135deg, ${brown}, ${brown}dd)`, boxShadow: `0 10px 26px ${brown}55` }}
-            >
-              <span
-                className="pointer-events-none absolute inset-y-0 w-1/3 -skew-x-12 bg-white/25"
-                style={{ animation: "store-success-shine 3s ease-in-out 1.6s infinite" }}
-              />
-              <WhatsAppIcon size={20} className="relative" />
-              <span className="relative">Enviar para o WhatsApp da loja</span>
-            </button>
+            {!isMesa && (
+              <button
+                type="button"
+                onClick={enviarWhatsapp}
+                className="relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl py-4 text-[.88rem] font-extrabold tracking-wide text-white uppercase transition-transform active:scale-[.98]"
+                style={{ background: `linear-gradient(135deg, ${brown}, ${brown}dd)`, boxShadow: `0 10px 26px ${brown}55` }}
+              >
+                <span
+                  className="pointer-events-none absolute inset-y-0 w-1/3 -skew-x-12 bg-white/25"
+                  style={{ animation: "store-success-shine 3s ease-in-out 1.6s infinite" }}
+                />
+                <WhatsAppIcon size={20} className="relative" />
+                <span className="relative">Enviar para o WhatsApp da loja</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onAcompanhar}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-neutral-200 bg-white py-3.5 text-[.86rem] font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+              className={cn(
+                "flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[.86rem] font-semibold transition-colors",
+                isMesa ? "text-white" : "border-[1.5px] border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+              )}
+              style={isMesa ? { background: `linear-gradient(135deg, ${brown}, ${brown}dd)`, boxShadow: `0 10px 26px ${brown}55` } : undefined}
             >
               <ShoppingBag size={16} />
               Acompanhar pedido

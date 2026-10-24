@@ -3,6 +3,7 @@ import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
 import { db, withTransaction, type NeonTx } from "@/db";
 import {
   lojas,
+  mesas,
   clientes,
   pedidos,
   pedidoItens,
@@ -25,10 +26,13 @@ import { timestampFortaleza } from "@/db/queries/tempo";
 
 /*
  * Equivalente de public/api/pedido_criar.php — cria um pedido da loja publica
- * (retirada/entrega; mesa/garcom fica de fora por enquanto, tem endpoint e
- * regras proprias). Fora do escopo desta porta: notificacao por WhatsApp
- * (Evolution API) e o registro em whats_conversas/whats_mensagens, que
- * dependem dela — ficam para quando esse fluxo for portado.
+ * (retirada/entrega, e tambem mesa: cliente que escaneou o QR Code da mesa e
+ * pede direto pelo cardapio, sem passar pelo garcom — ver tipo "mesa" e
+ * mesaId). O pedido lancado pelo proprio garcom continua em endpoint e
+ * regras proprias (criarPedidoMesa, em modoGarcom.ts). Fora do escopo desta
+ * porta: notificacao por WhatsApp (Evolution API) e o registro em
+ * whats_conversas/whats_mensagens, que dependem dela — ficam para quando esse
+ * fluxo for portado.
  *
  * Mesma divisao de responsabilidade do PHP: pedido + itens + baixa de estoque
  * + resgate de pontos (se houver) rodam em UMA transacao. Cupom, debito/credito
@@ -54,11 +58,14 @@ export type CriarPedidoInput = {
   lojaId: number;
   clienteNome: string;
   clienteTelefone: string;
-  tipo: "retirada" | "entrega";
+  tipo: "retirada" | "entrega" | "mesa";
+  /** Obrigatorio quando tipo === "mesa" — id da mesa escaneada no QR Code. */
+  mesaId?: number | null;
   formaPagamento: string;
   endereco?: string;
   subtotal: number;
   taxaEntrega?: number;
+  taxaServico?: number;
   taxaMaquininha?: number;
   total: number;
   itens: ItemCarrinho[];
@@ -131,6 +138,14 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
     return { ok: false, msg: "Esta loja nao esta aceitando pedidos no momento." };
   }
 
+  /* pedido de mesa (QR Code escaneado na mesa) — mesma mesa validada em montarPerfilLoja,
+     revalidada aqui pra fechar a brecha de montar o pedido direto na API. */
+  if (input.tipo === "mesa") {
+    if (!input.mesaId || input.mesaId <= 0) return { ok: false, msg: "Mesa inválida." };
+    const [mesa] = await db.select({ id: mesas.id }).from(mesas).where(and(eq(mesas.id, input.mesaId), eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).limit(1);
+    if (!mesa) return { ok: false, msg: "Mesa inválida ou desativada." };
+  }
+
   /* checagem de estoque (fecha a brecha de montar o pedido direto na API) */
   const necessario = calcularEstoqueNecessario(input.itens);
   if (necessario.size > 0) {
@@ -149,8 +164,10 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
     }
   }
 
-  /* loja fechada: bloqueia pedido imediato (agendado passa sempre) */
-  const pedidoImediato = !(input.tipoAgendamento ?? "").includes("agendada");
+  /* loja fechada: bloqueia pedido imediato (agendado passa sempre). Pedido de mesa nunca e
+     agendado e nunca e bloqueado por isso — mesma regra do pedido lancado pelo garcom
+     (criarPedidoMesa): o cliente esta fisicamente no salao, a loja obviamente esta atendendo. */
+  const pedidoImediato = input.tipo !== "mesa" && !(input.tipoAgendamento ?? "").includes("agendada");
   if (pedidoImediato) {
     const receberAtivo = (await getConfig(lojaId, "receber_pedidos_ativo", "1")) === "1";
     if (!receberAtivo || !(await estaAberto(lojaId))) {
@@ -188,8 +205,10 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           status: "pendente",
           loja_id: lojaId,
           tipo: input.tipo,
+          mesa_id: input.tipo === "mesa" ? input.mesaId : null,
           subtotal: input.subtotal,
           taxa_entrega: input.taxaEntrega ?? 0,
+          taxa_servico: input.taxaServico && input.taxaServico > 0 ? input.taxaServico : null,
           taxa_maquininha: input.taxaMaquininha ?? 0,
           endereco_entrega: input.endereco ?? "",
           origem: "loja",
