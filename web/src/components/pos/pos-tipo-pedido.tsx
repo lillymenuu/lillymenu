@@ -13,7 +13,7 @@ export type PosEndereco = {
   complemento: string;
 };
 
-const OPCOES: { valor: PosTipoPedidoValor; label: string; icon: LucideIcon }[] = [
+export const TIPOS_PEDIDO: { valor: PosTipoPedidoValor; label: string; icon: LucideIcon }[] = [
   { valor: "venda_rapida", label: "Venda rápida", icon: FastForward },
   { valor: "entrega", label: "Entrega", icon: Bike },
   { valor: "retirada", label: "Retirada", icon: ShoppingBasket },
@@ -31,7 +31,7 @@ export function PosTipoPedido({
     <div className="space-y-1">
       <label className="text-xs font-medium text-muted-foreground">Tipo do pedido</label>
       <div className="grid grid-cols-4 gap-1.5">
-        {OPCOES.map((opcao) => {
+        {TIPOS_PEDIDO.map((opcao) => {
           const ativo = tipo === opcao.valor;
           const Icon = opcao.icon;
           return (

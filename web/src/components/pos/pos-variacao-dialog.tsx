@@ -198,13 +198,13 @@ export function PosVariacaoDialog({
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex h-[min(650px,calc(100vh-24px))] w-[1040px] max-w-[calc(100%-1.5rem)] gap-0 overflow-hidden rounded-[20px] p-0 sm:max-w-[1040px]"
+        className="flex h-[min(650px,calc(100vh-24px))] w-[1040px] max-w-[calc(100%-1.5rem)] gap-0 overflow-hidden rounded-[20px] p-0 sm:max-w-[1040px] max-md:h-[92dvh] max-md:flex-col"
       >
         <DialogTitle className="sr-only">{produto.nome}</DialogTitle>
 
         {/* Coluna fixa: imagem, nome, preco e descricao do produto */}
-        <div className="flex w-[320px] shrink-0 flex-col overflow-y-auto px-6 py-6">
-          <div className="aspect-square w-full shrink-0 overflow-hidden rounded-2xl bg-muted">
+        <div className="flex w-[320px] shrink-0 flex-col overflow-y-auto px-6 py-6 max-md:grid max-md:w-full max-md:grid-cols-[64px_1fr] max-md:gap-x-3 max-md:overflow-visible max-md:px-4 max-md:pt-6 max-md:pb-1">
+          <div className="aspect-square w-full shrink-0 overflow-hidden rounded-2xl bg-muted max-md:row-span-2 max-md:size-16 max-md:rounded-xl">
             {produto.imagem ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={produto.imagem} alt="" className="size-full object-cover" />
@@ -214,16 +214,16 @@ export function PosVariacaoDialog({
               </div>
             )}
           </div>
-          <h2 className="mt-4 text-base leading-tight font-bold">{produto.nome}</h2>
-          <div className="mt-1.5 flex items-baseline gap-1.5 text-sm">
+          <h2 className="mt-4 text-base leading-tight font-bold max-md:mt-0 max-md:line-clamp-2 max-md:self-end">{produto.nome}</h2>
+          <div className="mt-1.5 flex items-baseline gap-1.5 text-sm max-md:mt-0.5 max-md:self-start">
             {emPromo && <span className="text-muted-foreground line-through">{formatBRL(produto.preco)}</span>}
             <span className="text-base font-bold text-primary">{formatBRL(produto.preco_promocional ?? produto.preco)}</span>
           </div>
-          {produto.descricao && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{produto.descricao}</p>}
+          {produto.descricao && <p className="mt-2 text-sm leading-relaxed text-muted-foreground max-md:col-span-2 max-md:line-clamp-2">{produto.descricao}</p>}
         </div>
 
         {/* Coluna rolavel: busca, variacao/grupos e rodape */}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col max-md:min-h-0">
           <div className="flex shrink-0 items-center gap-2 px-4 pt-4 pb-3">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
