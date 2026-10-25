@@ -34,6 +34,7 @@ import {
   ScrollText,
   FileBarChart,
   Store,
+  UserCheck,
 } from "lucide-react";
 
 export type NavItem = {
@@ -79,6 +80,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "relatorios", label: "Relatório de clientes", icon: Users, href: "/clientreports", migrated: true },
       { menuKey: "fidelidade", label: "Fidelidade", icon: Award, href: "/loyaltyreports", migrated: true },
       { menuKey: "crossSellRelatorio", label: "Cross-sell", icon: Shuffle, href: "/crosssellreport", migrated: true },
+      { menuKey: "modoGarcom", label: "Relatório de garçons", icon: UserCheck, href: "/waiter-report", migrated: true },
     ],
   },
   {
