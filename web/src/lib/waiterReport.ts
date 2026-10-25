@@ -16,7 +16,7 @@ export type WaiterReportLinha = {
 
 export type WaiterReportTopProduto = { nome: string; qtd: number; valor: number };
 export type WaiterReportMesaOciosa = { id: number; numero: number; nome: string };
-export type WaiterReportChamado = { mesa_id: number; mesa_nome: string; garcom_nome: string | null; minutos: number };
+export type WaiterReportChamado = { mesa_id: number; mesa_nome: string; garcom_nome: string | null; minutos: number; status: "aberto" | "fechado" };
 
 export type WaiterReportResposta = {
   ok: true;
@@ -60,6 +60,6 @@ export async function getWaiterReport(lojaId: number, params: WaiterReportParams
     })),
     top_produtos: resultado.topProdutos,
     mesas_sem_movimento: resultado.mesasSemMovimento,
-    chamados_abertos: resultado.chamadosAbertos.map((c) => ({ mesa_id: c.mesaId, mesa_nome: c.mesaNome, garcom_nome: c.garcomNome, minutos: c.minutos })),
+    chamados_abertos: resultado.chamadosAbertos.map((c) => ({ mesa_id: c.mesaId, mesa_nome: c.mesaNome, garcom_nome: c.garcomNome, minutos: c.minutos, status: c.status })),
   };
 }

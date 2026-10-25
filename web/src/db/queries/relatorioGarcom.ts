@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq, ne, isNotNull, notInArray, sql } from "drizzle-orm";
+import { and, eq, ne, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { garcons, pedidos, pedidoItens, mesas } from "@/db/schema";
+import { garcons, pedidos, pedidoItens, mesas, pedidoStatusLog } from "@/db/schema";
 import { getConfigs } from "@/db/queries/config";
 import { timestampFortaleza } from "@/db/queries/tempo";
 
@@ -11,12 +11,20 @@ import { timestampFortaleza } from "@/db/queries/tempo";
  *
  * Duas limitacoes de schema que o relatorio reflete honestamente em vez de inventar
  * numero:
- * - Nao existe log historico de chamados de mesa (conta_solicitada_em e so um
- *   timestamp "aberto", zerado sem registro de quando/quem atendeu) — por isso
- *   "chamadosAbertos" mostra apenas o estado AO VIVO (quem esta esperando agora),
- *   nao uma media historica de tempo de resposta.
+ * - Nao existe log do MOMENTO em que um chamado de mesa foi atendido
+ *   (conta_solicitada_em e so um timestamp "aberto", zerado sem registro de
+ *   quando/quem atendeu) — entao "chamadosAbertos" so consegue congelar o tempo
+ *   de espera quando o ultimo pedido da mesa ja fechou (finalizado/cancelado,
+ *   via pedido_status_log); enquanto a mesa ainda tem pedido em andamento, o
+ *   tempo mostrado e AO VIVO (quanto tempo esta esperando agora).
  * - "mesasSemMovimento" = mesas ativas sem nenhum pedido no periodo filtrado
  *   (nao ha conceito de "sessao de mesa aberta" separado dos proprios pedidos).
+ *
+ * pedidos.updated_at NAO serve pra marcar "quando o pedido finalizou": as
+ * cascatas de troca de status (pedidosStatus.ts) so fazem UPDATE de `status`,
+ * sem tocar updated_at — ele fica preso perto de criado_em. O momento real de
+ * cada transicao de status mora em pedido_status_log (criado_em da linha
+ * correspondente), usado aqui tanto pro giro medio quanto pros chamados.
  */
 
 export type Turno = "todos" | "manha" | "tarde" | "noite";
@@ -63,7 +71,7 @@ export type RelatorioGarcomLinha = {
   giroMedioMinutos: number | null;
 };
 
-export type RelatorioGarcomChamado = { mesaId: number; mesaNome: string; garcomNome: string | null; minutos: number };
+export type RelatorioGarcomChamado = { mesaId: number; mesaNome: string; garcomNome: string | null; minutos: number; status: "aberto" | "fechado" };
 export type RelatorioGarcomMesaOciosa = { id: number; numero: number; nome: string };
 export type RelatorioGarcomTopProduto = { nome: string; qtd: number; valor: number };
 
@@ -107,7 +115,14 @@ export async function relatorioGarcons(input: RelatorioGarcomInput): Promise<Rel
       valorVendido: sql<string>`coalesce(sum(${pedidos.total}),0)`,
       baseComissao: sql<string>`coalesce(sum(${pedidos.subtotal} - ${pedidos.desconto}),0)`,
       comissaoValor: sql<string>`coalesce(sum(${pedidos.taxa_servico}),0)`,
-      giroMedioMinutos: sql<string | null>`avg(case when ${pedidos.status} = 'finalizado' and ${pedidos.updated_at} is not null then extract(epoch from (${pedidos.updated_at} - ${pedidos.criado_em}))/60 end)`,
+      giroMedioMinutos: sql<string | null>`avg(
+        case when ${pedidos.status} = 'finalizado' then
+          extract(epoch from (
+            (select max(${pedidoStatusLog.criado_em}) from ${pedidoStatusLog} where ${pedidoStatusLog.pedido_id} = ${pedidos.id} and ${pedidoStatusLog.status} = 'finalizado')
+            - ${pedidos.criado_em}
+          )) / 60
+        end
+      )`,
     })
     .from(garcons)
     .leftJoin(pedidos, and(...joinCondicoes))
@@ -176,19 +191,39 @@ export async function relatorioGarcons(input: RelatorioGarcomInput): Promise<Rel
   const agora = timestampFortaleza();
   const chamadosAbertos: RelatorioGarcomChamado[] = await Promise.all(
     chamadosRaw.map(async (m) => {
+      /* Pedido mais recente da mesa, independente do status: se ja fechou
+         (finalizado/cancelado), o chamado tambem fechou junto — congela a
+         espera no momento real dessa troca de status (pedido_status_log),
+         em vez de continuar contando a partir de "agora". */
       const [ultimoPedido] = await db
-        .select({ garcomNome: garcons.nome })
+        .select({ id: pedidos.id, status: pedidos.status, garcomNome: garcons.nome })
         .from(pedidos)
         .leftJoin(garcons, eq(garcons.id, pedidos.garcom_id))
-        .where(and(eq(pedidos.mesa_id, m.mesaId), eq(pedidos.loja_id, lojaId), notInArray(pedidos.status, ["finalizado", "cancelado"])))
+        .where(and(eq(pedidos.mesa_id, m.mesaId), eq(pedidos.loja_id, lojaId)))
         .orderBy(sql`${pedidos.criado_em} desc`)
         .limit(1);
 
+      const encerrado = ultimoPedido?.status === "finalizado" || ultimoPedido?.status === "cancelado";
+
+      let fimReferencia: string | null = null;
+      if (encerrado && ultimoPedido) {
+        const [logLinha] = await db
+          .select({ criadoEm: pedidoStatusLog.criado_em })
+          .from(pedidoStatusLog)
+          .where(and(eq(pedidoStatusLog.pedido_id, ultimoPedido.id), eq(pedidoStatusLog.status, ultimoPedido.status), eq(pedidoStatusLog.loja_id, lojaId)))
+          .orderBy(sql`${pedidoStatusLog.criado_em} desc`)
+          .limit(1);
+        fimReferencia = logLinha?.criadoEm ?? null;
+      }
+
+      const status: "aberto" | "fechado" = fimReferencia ? "fechado" : "aberto";
+      const fimEfetivo = fimReferencia ?? agora;
+
       const minutos = m.contaSolicitadaEm
-        ? Math.max(0, Math.round((new Date(agora.replace(" ", "T")).getTime() - new Date(m.contaSolicitadaEm.replace(" ", "T")).getTime()) / 60_000))
+        ? Math.max(0, Math.round((new Date(fimEfetivo.replace(" ", "T")).getTime() - new Date(m.contaSolicitadaEm.replace(" ", "T")).getTime()) / 60_000))
         : 0;
 
-      return { mesaId: m.mesaId, mesaNome: m.mesaNome, garcomNome: ultimoPedido?.garcomNome ?? null, minutos };
+      return { mesaId: m.mesaId, mesaNome: m.mesaNome, garcomNome: ultimoPedido?.garcomNome ?? null, minutos, status };
     })
   );
 

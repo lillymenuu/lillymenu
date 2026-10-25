@@ -294,7 +294,7 @@ export function WaiterReportManager({
                 <Tooltip>
                   <TooltipTrigger render={<Info size={12} className="cursor-help text-muted-foreground" />} />
                   <TooltipContent>
-                    Estado ao vivo — o sistema ainda não guarda histórico de quando cada chamado foi atendido, então aqui aparece apenas quem está esperando agora.
+                    Mesas que pediram a conta e ainda não foram dispensadas no Modo Garçom. Enquanto o pedido da mesa segue em andamento o tempo conta ao vivo; assim que o pedido fecha (finalizado ou cancelado), o tempo de espera fica congelado.
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -308,7 +308,14 @@ export function WaiterReportManager({
                         {c.mesa_nome}
                         {c.garcom_nome && <span className="text-muted-foreground"> · {c.garcom_nome}</span>}
                       </span>
-                      <Badge variant={c.minutos >= 10 ? "destructive" : "secondary"}>{c.minutos} min esperando</Badge>
+                      {c.status === "fechado" ? (
+                        <span className="flex items-center gap-1.5">
+                          <Badge variant="outline">Fechado</Badge>
+                          <span className="text-xs text-muted-foreground">esperou {c.minutos} min</span>
+                        </span>
+                      ) : (
+                        <Badge variant={c.minutos >= 10 ? "destructive" : "secondary"}>{c.minutos} min esperando</Badge>
+                      )}
                     </li>
                   ))}
                 </ul>
