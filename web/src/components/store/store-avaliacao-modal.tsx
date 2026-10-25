@@ -63,7 +63,12 @@ export function StoreAvaliacaoModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-w-[440px] gap-0 overflow-hidden rounded-[18px] p-0 sm:max-w-[440px]">
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="backdrop-blur-sm! bg-black/30!"
+        overlayForceRender
+        className="max-w-[440px] gap-0 overflow-hidden rounded-[18px] p-0 sm:max-w-[440px]"
+      >
         <div className="relative border-b border-neutral-100 px-5 py-4 text-center">
           <button
             type="button"
