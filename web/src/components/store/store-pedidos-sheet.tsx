@@ -571,6 +571,7 @@ export function StorePedidosSheet({
         <DialogContent
           showCloseButton={false}
           overlayClassName="backdrop-blur-sm! bg-black/30!"
+          overlayForceRender
           className="max-w-xs gap-4 rounded-2xl p-5 text-center sm:max-w-xs"
         >
           <DialogTitle className="text-[1rem] font-bold text-neutral-900">Confirmar fechamento da mesa?</DialogTitle>

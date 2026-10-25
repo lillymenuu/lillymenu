@@ -44,14 +44,23 @@ function DialogContent({
   children,
   showCloseButton = true,
   overlayClassName,
+  overlayForceRender,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
   overlayClassName?: string
+  /**
+   * Base UI skips rendering the backdrop for a dialog it detects as "nested"
+   * (opened while another dialog is already open) — by design, so stacked
+   * dialogs don't darken the screen progressively. Pass true here when this
+   * dialog needs its own visible/blurred backdrop anyway (e.g. a confirm
+   * dialog opened on top of a full-screen sheet).
+   */
+  overlayForceRender?: boolean
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay className={overlayClassName} />
+      <DialogOverlay className={overlayClassName} forceRender={overlayForceRender} />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
