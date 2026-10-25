@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { pedidos, clientes, motoboys, mesas, pedidoPagamentos, pedidoItens, pedidoItemOpcoes, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
+import { pedidos, clientes, motoboys, mesas, garcons, pedidoPagamentos, pedidoItens, pedidoItemOpcoes, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
 
 /*
@@ -340,11 +340,13 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
       motoboyWhatsapp: motoboys.whatsapp,
       mesaNome: mesas.nome,
       mesaContaSolicitadaEm: mesas.conta_solicitada_em,
+      garcomNome: garcons.nome,
     })
     .from(pedidos)
     .innerJoin(clientes, and(eq(clientes.id, pedidos.cliente_id), eq(clientes.loja_id, pedidos.loja_id)))
     .leftJoin(motoboys, and(eq(motoboys.id, pedidos.motoboy_id), eq(motoboys.loja_id, pedidos.loja_id)))
     .leftJoin(mesas, and(eq(mesas.id, pedidos.mesa_id), eq(mesas.loja_id, pedidos.loja_id)))
+    .leftJoin(garcons, and(eq(garcons.id, pedidos.garcom_id), eq(garcons.loja_id, pedidos.loja_id)))
     .where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId)))
     .limit(1);
 
@@ -453,6 +455,7 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
       motoboy_whatsapp: linha.motoboyWhatsapp,
       mesa_nome: linha.mesaNome,
       mesa_conta_solicitada_em: linha.mesaContaSolicitadaEm,
+      garcom_nome: linha.garcomNome,
       codigo: codigoDisplay(linha.pedido.id, base),
       editadoPor: editoLinha?.nome ?? null,
     },

@@ -154,6 +154,7 @@ type PedidoDetalhe = {
   editado_por: string | null;
   mesa_nome: string | null;
   mesa_conta_solicitada_em: string | null;
+  garcom_nome: string | null;
   caixa_id: number | null;
   forma_pagamento: string | null;
   valor_pago: number | null;
@@ -493,6 +494,13 @@ export function OrderDetailDialog({
                     <div className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
                       <UtensilsCrossed size={11} />
                       Mesa: <span className="font-medium text-foreground">{pedido.mesa_nome}</span>
+                    </div>
+                  )}
+
+                  {pedido.garcom_nome && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-normal text-muted-foreground">
+                      <User size={11} />
+                      Garçom: <span className="font-medium text-foreground">{pedido.garcom_nome}</span>
                     </div>
                   )}
 
