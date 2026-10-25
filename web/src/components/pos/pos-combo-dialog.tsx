@@ -278,7 +278,7 @@ export function PosComboDialog({
               onClick={() => setVisualizacaoGrade((v) => !v)}
               aria-label={visualizacaoGrade ? "Ver em lista" : "Ver em grade"}
               aria-pressed={visualizacaoGrade}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+              className="flex size-9 shrink-0 max-md:hidden cursor-pointer items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
             >
               {visualizacaoGrade ? <LayoutGrid className="size-4" /> : <List className="size-4" />}
             </button>
@@ -323,7 +323,7 @@ export function PosComboDialog({
                     </div>
                     <p className="mt-1 mb-2.5 text-xs text-muted-foreground">{dicaDoPasso(passo)}</p>
 
-                    <div className={cn("grid gap-3", visualizacaoGrade ? "grid-cols-2" : "grid-cols-1")}>
+                    <div className={cn("grid gap-3 max-md:grid-cols-1", visualizacaoGrade ? "grid-cols-2" : "grid-cols-1")}>
                       {passo.opcoes.map((opcao) => {
                         const q = selecoes[passo.id]?.[opcao.id] ?? 0;
                         const limiteEstoque = opcao.estoque !== null && (q + 1) * qtdEfetiva > opcao.estoque;
