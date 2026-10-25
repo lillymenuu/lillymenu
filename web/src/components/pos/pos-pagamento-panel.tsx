@@ -42,6 +42,7 @@ export type PosPagamentoDados = {
 export function PosPagamentoPanel({
   subtotal,
   taxaEntrega,
+  taxaServico = 0,
   cupom,
   podeAplicarDesconto,
   clienteStats,
@@ -58,6 +59,8 @@ export function PosPagamentoPanel({
 }: {
   subtotal: number;
   taxaEntrega: number;
+  /** Taxa de servico (modo garcom), ja calculada — some ao total e aparece como linha informativa. Sem taxa de servico fora do modo garcom (0 por padrao). */
+  taxaServico?: number;
   cupom: { codigo: string; valor: number } | null;
   podeAplicarDesconto: boolean;
   clienteStats: PosClienteStats | null;
@@ -102,7 +105,7 @@ export function PosPagamentoPanel({
     [pagamentosRegistrados, taxaCredito, taxaDebito, taxaVoucher]
   );
 
-  const total = Math.max(0, subtotal + taxaEntrega - descontoReais - cupomValorAplicado - cashbackNum) + taxaPagamentoExtra;
+  const total = Math.max(0, subtotal + taxaEntrega - descontoReais - cupomValorAplicado - cashbackNum) + taxaServico + taxaPagamentoExtra;
   const pagoAteAgora = useMemo(() => pagamentosRegistrados.reduce((s, p) => s + p.valor, 0), [pagamentosRegistrados]);
   const restante = Math.max(0, Math.round((total - pagoAteAgora) * 100) / 100);
 
@@ -181,6 +184,11 @@ export function PosPagamentoPanel({
         {restante > 0 ? (
           <div className="font-medium text-destructive">
             Restante a cobrar {formatBRL(restante)}
+          </div>
+        ) : null}
+        {taxaServico > 0 ? (
+          <div className="text-muted-foreground">
+            Taxa de serviço {formatBRL(taxaServico)}
           </div>
         ) : null}
         {taxaPagamentoExtra > 0 ? (

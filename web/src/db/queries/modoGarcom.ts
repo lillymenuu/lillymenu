@@ -321,6 +321,7 @@ export type PerfilGarcomLoja = {
   debAtivo: boolean;
   credTaxaPercent: number;
   debTaxaPercent: number;
+  voucherTaxaPercent: number;
   taxaServicoAtiva: boolean;
   taxaServicoPct: number;
 };
@@ -339,6 +340,8 @@ export async function perfilGarcomLoja(lojaId: number, baseUrl: string): Promise
     "pagamento_credito_taxa",
     "pagamento_debito_taxa_ativa",
     "pagamento_debito_taxa",
+    "pagamento_voucher_taxa_ativa",
+    "pagamento_voucher_taxa",
     "taxa_servico_ativa",
     "taxa_servico_pct",
   ]);
@@ -352,6 +355,7 @@ export async function perfilGarcomLoja(lojaId: number, baseUrl: string): Promise
     debAtivo: cfg.pagamento_debito_ativo !== "0",
     credTaxaPercent: cfg.pagamento_credito_taxa_ativa === "1" ? Number(cfg.pagamento_credito_taxa || "0") : 0,
     debTaxaPercent: cfg.pagamento_debito_taxa_ativa === "1" ? Number(cfg.pagamento_debito_taxa || "0") : 0,
+    voucherTaxaPercent: cfg.pagamento_voucher_taxa_ativa === "1" ? Number(cfg.pagamento_voucher_taxa || "0") : 0,
     taxaServicoAtiva: cfg.taxa_servico_ativa === "1",
     taxaServicoPct: Number(cfg.taxa_servico_pct || "0"),
   };
@@ -433,25 +437,40 @@ export type ItemPedidoMesa = {
   selecoesGrupos?: Record<number, number[]> | null;
 };
 
+export type PagamentoMesaInput = { forma: string; valor: number };
+
 export type CriarPedidoMesaInput = {
   lojaId: number;
   garcomId: number;
   mesaId: number;
   itens: ItemPedidoMesa[];
-  formaPagamento: string;
-  trocoSolicitado?: boolean;
-  trocoValor?: number;
+  /** Pagamento dividido entre uma ou mais formas — mesmo formato de pdvSalvar.ts (PosPagamentoPanel). */
+  pagamentos: PagamentoMesaInput[];
+  /** Dinheiro recebido do cliente (pra calcular troco); so relevante quando ha uma linha "dinheiro". */
+  valorPago?: number;
+  descontoTipo?: "valor" | "percent";
+  descontoValor?: number;
   /** Nome do cliente identificado pelo garcom na hora do pedido (opcional) — some ao nome da mesa no Gestor de Pedidos. */
   clienteNome?: string;
 };
 
-const FORMAS_PAGAMENTO_VALIDAS = ["dinheiro", "pix", "credito", "debito"];
+const FORMAS_PAGAMENTO_VALIDAS = ["dinheiro", "pix", "credito", "debito", "voucher", "outro"];
 
-/** Equivalente de public/api/garcom_pedido_criar.php — pedido de mesa lancado pelo garcom. */
+function toFloatMesa(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Equivalente de public/api/garcom_pedido_criar.php — pedido de mesa lancado pelo garcom.
+ * Pagamento dividido/desconto seguem a mesma logica de pdvSalvar.ts (PosPagamentoPanel, reaproveitado
+ * no modal do garcom) — sem cupom, cashback, pontos, fiado ou caixa, que nao fazem sentido aqui: o
+ * garcom nao e um operador de caixa e o "cliente" da mesa costuma ser so um nome, sem cadastro real. */
 export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok: true; id: number; codigo: number } | { ok: false; msg: string }> {
   const { lojaId, garcomId, mesaId } = input;
   if (mesaId <= 0 || !input.itens || input.itens.length === 0) return { ok: false, msg: "Selecione a mesa e adicione ao menos um item." };
-  if (!FORMAS_PAGAMENTO_VALIDAS.includes(input.formaPagamento)) return { ok: false, msg: "Escolha a forma de pagamento." };
+
+  const pagamentosInput = (input.pagamentos ?? []).filter((p) => FORMAS_PAGAMENTO_VALIDAS.includes(p.forma) && toFloatMesa(p.valor) > 0);
+  if (pagamentosInput.length === 0) return { ok: false, msg: "Registre ao menos um pagamento." };
 
   const [mesa] = await db.select({ id: mesas.id, nome: mesas.nome }).from(mesas).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).limit(1);
   if (!mesa) return { ok: false, msg: "Mesa inválida ou desativada." };
@@ -489,7 +508,12 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
 
   const subtotal = input.itens.reduce((soma, item) => soma + item.preco * Math.max(1, item.qtd || 1), 0);
 
-  /* taxa de servico do garcom e taxa de cartao repassada ao cliente: ambas
+  const descontoTipo: "valor" | "percent" = input.descontoTipo === "percent" ? "percent" : "valor";
+  const descontoValorInput = toFloatMesa(input.descontoValor);
+  const desconto = descontoValorInput > 0 ? Math.min(subtotal, descontoTipo === "percent" ? subtotal * (descontoValorInput / 100) : descontoValorInput) : 0;
+  const baseAposDesconto = Math.max(0, subtotal - desconto);
+
+  /* taxa de servico do garcom e taxa de cartao/voucher repassada ao cliente: ambas
      calculadas aqui a partir da config da loja (nunca confia em valor vindo
      do cliente), igual ao resto do sistema. */
   const cfgTaxa = await getConfigs(lojaId, [
@@ -499,25 +523,36 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
     "pagamento_credito_taxa",
     "pagamento_debito_taxa_ativa",
     "pagamento_debito_taxa",
+    "pagamento_voucher_taxa_ativa",
+    "pagamento_voucher_taxa",
   ]);
-  const taxaServico = cfgTaxa.taxa_servico_ativa === "1" ? Math.round(subtotal * (Number(cfgTaxa.taxa_servico_pct || "0") / 100) * 100) / 100 : 0;
+  const taxaServico = cfgTaxa.taxa_servico_ativa === "1" ? Math.round(baseAposDesconto * (Number(cfgTaxa.taxa_servico_pct || "0") / 100) * 100) / 100 : 0;
 
-  const taxaMaquininhaPercent =
-    input.formaPagamento === "credito"
-      ? cfgTaxa.pagamento_credito_taxa_ativa === "1"
-        ? Number(cfgTaxa.pagamento_credito_taxa || "0")
-        : 0
-      : input.formaPagamento === "debito"
-        ? cfgTaxa.pagamento_debito_taxa_ativa === "1"
-          ? Number(cfgTaxa.pagamento_debito_taxa || "0")
-          : 0
-        : 0;
-  const taxaMaquininha = Math.round((subtotal + taxaServico) * (taxaMaquininhaPercent / 100) * 100) / 100;
+  const taxaPorForma: Record<string, number> = {
+    credito: cfgTaxa.pagamento_credito_taxa_ativa === "1" ? Number(cfgTaxa.pagamento_credito_taxa || "0") : 0,
+    debito: cfgTaxa.pagamento_debito_taxa_ativa === "1" ? Number(cfgTaxa.pagamento_debito_taxa || "0") : 0,
+    voucher: cfgTaxa.pagamento_voucher_taxa_ativa === "1" ? Number(cfgTaxa.pagamento_voucher_taxa || "0") : 0,
+  };
 
-  const total = subtotal + taxaServico + taxaMaquininha;
-  /* trocoValor e o valor com que o cliente vai pagar (ex.: "troco para 20"), nao o troco em si -- o troco de verdade e a diferenca pro total do pedido. */
-  const trocoValorRecebido = input.trocoValor ?? 0;
+  const pagamentosValidos = pagamentosInput.map((p) => ({ forma: p.forma, valor: Math.round(toFloatMesa(p.valor) * 100) / 100 }));
+  const taxaMaquininha = Math.round(pagamentosValidos.reduce((soma, p) => soma + p.valor * ((taxaPorForma[p.forma] ?? 0) / 100), 0) * 100) / 100;
 
+  const total = baseAposDesconto + taxaServico + taxaMaquininha;
+  const pagamentoTotal = pagamentosValidos.reduce((soma, p) => soma + p.valor, 0);
+  if (Math.abs(pagamentoTotal - total) > 0.01) return { ok: false, msg: "A soma dos pagamentos precisa ser igual ao total." };
+
+  const dinheiroPago = pagamentosValidos.filter((p) => p.forma === "dinheiro").reduce((soma, p) => soma + p.valor, 0);
+  let dinheiroRecebido = toFloatMesa(input.valorPago);
+  let troco: number | null = null;
+  if (dinheiroPago > 0) {
+    if (dinheiroRecebido <= 0) dinheiroRecebido = dinheiroPago;
+    if (dinheiroRecebido + 0.0001 < dinheiroPago) return { ok: false, msg: "Valor em dinheiro insuficiente." };
+    troco = dinheiroRecebido - dinheiroPago;
+  } else {
+    dinheiroRecebido = 0;
+  }
+
+  const formaPagamentoPrincipal = pagamentosValidos[0].forma;
   const clienteNomeInformado = input.clienteNome?.trim() || "";
 
   let pedidoId = 0;
@@ -531,18 +566,16 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
         ? (await tx.insert(clientes).values({ nome: clienteNomeInformado, telefone: "", loja_id: lojaId }).returning({ id: clientes.id }))[0].id
         : await clienteDaMesa(mesaId, mesa.nome, lojaId);
 
-      const valorPagoDinheiro =
-        input.formaPagamento === "dinheiro" && input.trocoSolicitado && trocoValorRecebido > total ? trocoValorRecebido : null;
-
       const [novoPedido] = await tx
         .insert(pedidos)
         .values({
           cliente_id: clienteId,
           mesa_id: mesaId,
           garcom_id: garcomId,
-          forma_pagamento: input.formaPagamento,
+          forma_pagamento: formaPagamentoPrincipal,
           total,
           subtotal,
+          desconto,
           taxa_servico: taxaServico > 0 ? taxaServico : null,
           taxa_maquininha: taxaMaquininha,
           status: "pendente",
@@ -550,8 +583,8 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           tipo: "mesa",
           origem: "garcom",
           criado_em: timestampFortaleza(),
-          valor_pago: valorPagoDinheiro,
-          troco: valorPagoDinheiro !== null ? valorPagoDinheiro - total : null,
+          valor_pago: dinheiroRecebido > 0 ? dinheiroRecebido : null,
+          troco,
         })
         .returning({ id: pedidos.id });
       pedidoId = novoPedido.id;
@@ -562,9 +595,11 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
       await tx.update(pedidos).set({ codigo: String(codigoDisplay(pedidoId, codigoBaseTx)) }).where(eq(pedidos.id, pedidoId));
 
       /* pedido_pagamentos e a fonte de verdade lida pelo Gestor de Pedidos (ver pedidosAdmin.ts) —
-         sem essa linha o campo "Pagamento" do pedido aparece em branco mesmo com forma_pagamento
-         preenchida em `pedidos`. */
-      await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: input.formaPagamento, valor: total, taxa_maquininha: taxaMaquininha, loja_id: lojaId });
+         uma linha por forma de pagamento, igual ao PDV (pagamento dividido). */
+      for (const p of pagamentosValidos) {
+        const taxaPagamentoLinha = Math.round(p.valor * ((taxaPorForma[p.forma] ?? 0) / 100) * 100) / 100;
+        await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamentoLinha, loja_id: lojaId });
+      }
 
       for (const item of input.itens) {
         const qtd = Math.max(1, item.qtd || 1);

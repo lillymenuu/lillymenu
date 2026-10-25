@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeftRight, ImageIcon, Info, LogOut, Plus, Receipt, ReceiptText } from "lucide-react";
+import { ArrowLeftRight, ImageIcon, Info, LogOut, Plus, Receipt, ReceiptText } from "lucide-react";
 import { StoreThemeProvider, useStoreTheme } from "@/components/store/store-theme";
 import { StoreProdutoDialog } from "@/components/store/store-produto-dialog";
 import { StoreComboDialog } from "@/components/store/store-combo-dialog";
@@ -10,7 +10,9 @@ import { StoreSheet } from "@/components/store/store-sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { consumoDoCarrinho } from "@/components/store/estoque-carrinho";
-import { formatarPreco, maskValorDigitado, parseValorMascarado } from "@/lib/store/format";
+import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
+import { PosPagamentoPanel, type PosPagamentoDados } from "@/components/pos/pos-pagamento-panel";
+import { formatarPreco } from "@/lib/store/format";
 import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreCartItem, StoreCategoria, StoreCombo, StoreProduto } from "@/lib/store/types";
 import type { MesaGarcom, PedidoAbertoGarcom, PerfilGarcomLoja } from "@/db/queries/modoGarcom";
@@ -79,9 +81,8 @@ function GarcomAppInterno({
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [clienteNome, setClienteNome] = useState("");
   const [pagamentoModalOpen, setPagamentoModalOpen] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState("");
-  const [trocoPrecisa, setTrocoPrecisa] = useState<boolean | null>(null);
-  const [trocoValor, setTrocoValor] = useState("");
+  const [pagamentoDados, setPagamentoDados] = useState<PosPagamentoDados | null>(null);
+  const [pagamentoTotal, setPagamentoTotal] = useState(0);
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState("");
   const [confirmacao, setConfirmacao] = useState<{ mesaNome: string; total: number } | null>(null);
@@ -124,13 +125,19 @@ function GarcomAppInterno({
 
   const consumoCarrinho = consumoDoCarrinho(carrinho);
 
+  /* Limite da linha: o estoque do produto menos o que as OUTRAS linhas (variacoes, combos) ja
+     consomem — mesma logica de store-cart-sheet.tsx, que faltava aqui (o stepper do carrinho
+     deixava passar do estoque disponivel). */
+  function limiteDaLinha(item: StoreCartItem) {
+    if (item.estoqueMax === undefined || item.tipo !== "produto") return item.estoqueMax;
+    return item.qtd + Math.max(0, item.estoqueMax - (consumoCarrinho[item.id] ?? 0));
+  }
+
   function escolherMesa(m: MesaGarcom) {
     setMesa(m);
     setCarrinho([]);
     setClienteNome("");
-    setFormaPagamento("");
-    setTrocoPrecisa(null);
-    setTrocoValor("");
+    setPagamentoDados(null);
     setEtapa("cardapio");
   }
 
@@ -139,6 +146,7 @@ function GarcomAppInterno({
     setMesa(null);
     setCarrinho([]);
     setClienteNome("");
+    setPagamentoDados(null);
     setEtapa("mesas");
   }
 
@@ -158,21 +166,16 @@ function GarcomAppInterno({
 
   const subtotalCarrinho = carrinho.reduce((s, i) => s + i.precoUnit * i.qtd, 0);
   const qtdCarrinho = carrinho.reduce((s, i) => s + i.qtd, 0);
-  /* mesmo calculo do servidor (arredondado igual) — so pra exibir; quem manda
-     na cobrança de verdade e o criarPedidoMesa, que recalcula a partir da
-     config da loja e ignora qualquer valor vindo daqui. */
+  /* mesmo calculo do servidor (arredondado igual) — so pra exibir antes de abrir o
+     pagamento; quem manda na cobrança de verdade e o criarPedidoMesa, que recalcula
+     a partir da config da loja e ignora qualquer valor vindo daqui. Taxa de cartão e
+     desconto so entram na conta de verdade dentro do PosPagamentoPanel, que ainda nao
+     esta aberto nesse ponto (forma de pagamento/desconto nao foram escolhidos). */
   const taxaServicoValor = perfil.taxaServicoAtiva ? Math.round(subtotalCarrinho * (perfil.taxaServicoPct / 100) * 100) / 100 : 0;
-  /* taxa de cartao repassada ao cliente (Configuracoes > Formas de pagamento)
-     — so pra exibir; quem manda na cobranca de verdade e o criarPedidoMesa. */
-  const taxaMaquininhaPercent = formaPagamento === "credito" ? perfil.credTaxaPercent : formaPagamento === "debito" ? perfil.debTaxaPercent : 0;
-  const taxaMaquininhaValor = Math.round((subtotalCarrinho + taxaServicoValor) * (taxaMaquininhaPercent / 100) * 100) / 100;
-  const totalCarrinho = subtotalCarrinho + taxaServicoValor + taxaMaquininhaValor;
+  const totalCarrinho = subtotalCarrinho + taxaServicoValor;
 
-  const trocoValorNumerico = parseValorMascarado(trocoValor);
-  const trocoValido = trocoValor.trim() === "" || (!isNaN(trocoValorNumerico) && trocoValorNumerico > totalCarrinho);
-
-  async function enviarPedido() {
-    if (!mesa || carrinho.length === 0 || !formaPagamento) return;
+  async function enviarPedido(imprimir: boolean) {
+    if (!mesa || carrinho.length === 0 || !pagamentoDados || pagamentoDados.pagamentos.length === 0) return;
     setEnviando(true);
     setErroEnvio("");
     try {
@@ -191,22 +194,28 @@ function GarcomAppInterno({
             variacao_id: i.variacaoId ?? undefined,
             selecoes_grupos: i.selecoesGrupos,
           })),
-          forma_pagamento: formaPagamento,
-          troco_solicitado: formaPagamento === "dinheiro" && trocoPrecisa === true && trocoValorNumerico > 0,
-          troco_valor: trocoValorNumerico || 0,
+          pagamentos: pagamentoDados.pagamentos,
+          valor_pago: pagamentoDados.valorPago,
+          desconto_tipo: pagamentoDados.descontoTipo,
+          desconto_valor: pagamentoDados.descontoValor,
           cliente_nome: clienteNome.trim() || undefined,
         }),
       });
       const data = await res.json();
       if (data.ok) {
+        if (imprimir && window.impressaoQZ) {
+          try {
+            await Promise.race([window.impressaoQZ.imprimirAutomaticoPedido("pdv", data.id, perfil.nomeLoja), new Promise((resolve) => setTimeout(resolve, 6000))]);
+          } catch {
+            // impressao automatica e best-effort — nao bloqueia a confirmacao do pedido
+          }
+        }
         setPagamentoModalOpen(false);
         setCartSheetOpen(false);
-        setConfirmacao({ mesaNome: mesa.nome, total: totalCarrinho });
+        setConfirmacao({ mesaNome: mesa.nome, total: pagamentoTotal });
         setCarrinho([]);
         setClienteNome("");
-        setFormaPagamento("");
-        setTrocoPrecisa(null);
-        setTrocoValor("");
+        setPagamentoDados(null);
       } else {
         setErroEnvio(data.msg ?? "Erro ao enviar o pedido.");
       }
@@ -467,6 +476,18 @@ function GarcomAppInterno({
         footer={
           carrinho.length > 0 ? (
             <>
+              <div className="mb-3">
+                <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">
+                  Identificar cliente (opcional)
+                </label>
+                <input
+                  value={clienteNome}
+                  onChange={(e) => setClienteNome(e.target.value)}
+                  placeholder="Nome do cliente"
+                  className={fieldClass()}
+                />
+              </div>
+
               {taxaServicoValor > 0 && (
                 <div className="mb-1 flex items-center justify-between text-[.78rem] text-neutral-500">
                   <span>Subtotal</span>
@@ -479,20 +500,15 @@ function GarcomAppInterno({
                   <span>{formatarPreco(taxaServicoValor)}</span>
                 </div>
               )}
-              {taxaMaquininhaValor > 0 && (
-                <div className="mb-1 flex items-center justify-between text-[.78rem] text-neutral-500">
-                  <span>Taxa de cartão ({taxaMaquininhaPercent}%)</span>
-                  <span>{formatarPreco(taxaMaquininhaValor)}</span>
-                </div>
-              )}
               <div className="mb-2.5 flex items-center justify-between">
                 <span className="text-[.78rem] text-neutral-500">Total do pedido</span>
                 <span className="text-[.9rem] font-bold text-neutral-900">{formatarPreco(totalCarrinho)}</span>
               </div>
+              <p className="mb-2.5 text-[.72rem] text-neutral-400">Taxas de cartão e descontos são definidos na próxima etapa.</p>
               <button
                 type="button"
                 onClick={() => setPagamentoModalOpen(true)}
-                className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors"
+                className="w-full rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors"
                 style={{ background: brown }}
               >
                 Continuar
@@ -521,120 +537,47 @@ function GarcomAppInterno({
                   )}
                   {item.obs && <p className="text-[.74rem] text-neutral-500">{item.obs}</p>}
                 </div>
-                <QtyStepper value={item.qtd} onChange={(qtd) => alterarQtd(item.key, qtd - item.qtd)} min={0} />
+                <QtyStepper
+                  value={item.qtd}
+                  onChange={(qtd) => alterarQtd(item.key, qtd - item.qtd)}
+                  min={0}
+                  max={limiteDaLinha(item)}
+                  onMaxAtingido={avisarEstoqueIndisponivel}
+                />
               </div>
             ))
-          )}
-
-          {carrinho.length > 0 && (
-            <div className="pt-1">
-              <label className="mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">
-                Identificar cliente (opcional)
-              </label>
-              <input
-                value={clienteNome}
-                onChange={(e) => setClienteNome(e.target.value)}
-                placeholder="Nome do cliente"
-                className={fieldClass()}
-              />
-            </div>
           )}
         </div>
       </StoreSheet>
 
       <Dialog open={pagamentoModalOpen} onOpenChange={(v) => !enviando && setPagamentoModalOpen(v)}>
-        <DialogContent className="max-h-[85vh] max-w-[420px] overflow-y-auto rounded-3xl p-5">
+        <DialogContent className="max-h-[90vh] min-h-[560px] max-w-[450px] overflow-y-auto rounded-3xl sm:max-w-[450px]">
           <DialogHeader>
-            <DialogTitle>Forma de pagamento</DialogTitle>
+            <DialogTitle>Registre o pagamento do pedido</DialogTitle>
           </DialogHeader>
-
-          <div className="flex items-center justify-between rounded-xl bg-neutral-50 px-3.5 py-3">
-            <span className="text-[.8rem] text-neutral-500">Total do pedido</span>
-            <span className="text-[.95rem] font-bold text-neutral-900">{formatarPreco(totalCarrinho)}</span>
-          </div>
-
-          <div className="space-y-2">
-            {[
-              { valor: "pix", label: "Pix", ativo: perfil.pixAtivo, taxaPct: 0 },
-              { valor: "dinheiro", label: "Dinheiro", ativo: perfil.dinAtivo, taxaPct: 0 },
-              { valor: "credito", label: "Cartão de crédito", ativo: perfil.credAtivo, taxaPct: perfil.credTaxaPercent },
-              { valor: "debito", label: "Cartão de débito", ativo: perfil.debAtivo, taxaPct: perfil.debTaxaPercent },
-            ]
-              .filter((f) => f.ativo)
-              .map((f) => (
-                <label
-                  key={f.valor}
-                  onClick={() => {
-                    setFormaPagamento(f.valor);
-                    setTrocoPrecisa(null);
-                    setTrocoValor("");
-                  }}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border-[1.5px] p-3 transition-colors"
-                  style={formaPagamento === f.valor ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#e5e7eb" }}
-                >
-                  <span className="flex-1 text-[.86rem] font-semibold text-neutral-900">
-                    {f.label}
-                    {f.taxaPct > 0 ? <span className="ml-1.5 font-normal text-neutral-400">(+{f.taxaPct}%)</span> : null}
-                  </span>
-                  <span
-                    className="flex size-[20px] shrink-0 items-center justify-center rounded-full border-2"
-                    style={formaPagamento === f.valor ? { borderColor: brown, background: brown } : { borderColor: "#ddd" }}
-                  >
-                    {formaPagamento === f.valor && <span className="size-2 rounded-full bg-white" />}
-                  </span>
-                  <input type="radio" name="pagamento" checked={formaPagamento === f.valor} onChange={() => {}} className="sr-only" />
-                </label>
-              ))}
-          </div>
-
-          {formaPagamento === "dinheiro" && (
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3.5">
-              <p className="mb-2 text-[.8rem] font-semibold text-neutral-800">Precisa de troco?</p>
-              <div className="mb-2 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTrocoPrecisa(true)}
-                  className="flex-1 rounded-lg border-[1.5px] py-2 text-[.82rem] font-semibold"
-                  style={trocoPrecisa === true ? { borderColor: "#86efac", background: "#f0fdf4", color: "#16a34a" } : { borderColor: "#e5e7eb", color: "#111" }}
-                >
-                  Sim
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTrocoPrecisa(false);
-                    setTrocoValor("");
-                  }}
-                  className="flex-1 rounded-lg border-[1.5px] py-2 text-[.82rem] font-semibold"
-                  style={trocoPrecisa === false ? { borderColor: "#fed7aa", background: "#fff7ed", color: "#9a3412" } : { borderColor: "#e5e7eb", color: "#111" }}
-                >
-                  Não
-                </button>
-              </div>
-              {trocoPrecisa === true && (
-                <>
-                  <input value={trocoValor} onChange={(e) => setTrocoValor(maskValorDigitado(e.target.value))} inputMode="decimal" placeholder="Troco para quanto?" className={fieldClass()} />
-                  {!trocoValido && (
-                    <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-[.76rem] text-red-700">
-                      <AlertCircle size={13} className="shrink-0" />O valor precisa ser maior que o total do pedido
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
 
           {erroEnvio && <p className="text-[.84rem] text-red-600">{erroEnvio}</p>}
 
-          <button
-            type="button"
-            disabled={!formaPagamento || enviando || (formaPagamento === "dinheiro" && trocoPrecisa === true && !trocoValido)}
-            onClick={enviarPedido}
-            className="w-full rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
-            style={{ background: !formaPagamento || enviando ? "#c0a88a" : brown }}
-          >
-            {enviando ? "Enviando..." : "Enviar pedido"}
-          </button>
+          <PosPagamentoPanel
+            subtotal={subtotalCarrinho}
+            taxaEntrega={0}
+            taxaServico={taxaServicoValor}
+            cupom={null}
+            podeAplicarDesconto
+            clienteStats={null}
+            cashbackAplicado={0}
+            fiadoAtivo={false}
+            taxaCredito={perfil.credTaxaPercent}
+            taxaDebito={perfil.debTaxaPercent}
+            taxaVoucher={perfil.voucherTaxaPercent}
+            onDadosChange={(dados, total) => {
+              setPagamentoDados(dados);
+              setPagamentoTotal(total);
+            }}
+            onFinalizar={enviarPedido}
+            finalizando={enviando}
+            desabilitado={carrinho.length === 0}
+          />
         </DialogContent>
       </Dialog>
 
@@ -648,7 +591,7 @@ function GarcomAppInterno({
             <p className="mb-5 text-[.86rem] text-neutral-500">
               {confirmacao.mesaNome} · {formatarPreco(confirmacao.total)}
             </p>
-            <button type="button" onClick={fecharConfirmacao} className="w-full rounded-[10px] py-3 text-[.88rem] font-bold text-white" style={{ background: brown }}>
+            <button type="button" onClick={fecharConfirmacao} className="w-full rounded-full py-3 text-[.88rem] font-bold text-white" style={{ background: brown }}>
               Novo pedido
             </button>
           </div>

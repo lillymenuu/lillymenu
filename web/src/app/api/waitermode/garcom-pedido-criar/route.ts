@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessaoGarcom } from "@/lib/session";
-import { criarPedidoMesa, type ItemPedidoMesa } from "@/db/queries/modoGarcom";
+import { criarPedidoMesa, type ItemPedidoMesa, type PagamentoMesaInput } from "@/db/queries/modoGarcom";
 
 type ItemPayload = {
   id?: number;
@@ -12,6 +12,8 @@ type ItemPayload = {
   variacao_id?: number | null;
   selecoes_grupos?: Record<string, number[]> | null;
 };
+
+type PagamentoPayload = { forma?: string; valor?: number };
 
 /* Equivalente de public/api/garcom_pedido_criar.php. */
 export async function POST(request: Request) {
@@ -34,14 +36,18 @@ export async function POST(request: Request) {
     selecoesGrupos: i.selecoes_grupos ?? null,
   }));
 
+  const pagamentosRaw = Array.isArray(b.pagamentos) ? (b.pagamentos as PagamentoPayload[]) : [];
+  const pagamentos: PagamentoMesaInput[] = pagamentosRaw.map((p) => ({ forma: String(p.forma ?? ""), valor: Number(p.valor ?? 0) }));
+
   const resultado = await criarPedidoMesa({
     lojaId: sessao.lojaId,
     garcomId: sessao.id,
     mesaId: Number(b.mesa_id ?? 0),
     itens,
-    formaPagamento: String(b.forma_pagamento ?? ""),
-    trocoSolicitado: Boolean(b.troco_solicitado),
-    trocoValor: b.troco_valor !== undefined ? Number(b.troco_valor) : undefined,
+    pagamentos,
+    valorPago: b.valor_pago !== undefined ? Number(b.valor_pago) : undefined,
+    descontoTipo: b.desconto_tipo === "percent" ? "percent" : "valor",
+    descontoValor: b.desconto_valor !== undefined ? Number(b.desconto_valor) : undefined,
     clienteNome: typeof b.cliente_nome === "string" ? b.cliente_nome : undefined,
   });
 
