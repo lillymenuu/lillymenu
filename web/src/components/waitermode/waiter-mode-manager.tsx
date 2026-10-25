@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Copy, Pencil, Plus, Receipt, Trash2, KeyRound, QrCode, X } from "lucide-react";
+import { Copy, Eye, Pencil, Plus, Receipt, Trash2, KeyRound, QrCode, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
+import { OrderDetailDialog } from "@/components/ordermanager/order-detail-dialog";
 import { STATUS_CORES, STATUS_LABELS, PROXIMA_ETAPA, formatBRL, formatHora } from "@/components/ordermanager/constants";
 import { MesaFormDialog } from "@/components/waitermode/mesa-form-dialog";
 import { GarcomFormDialog } from "@/components/waitermode/garcom-form-dialog";
@@ -46,6 +47,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
   const [aba, setAba] = useState("pedidos");
   const [pedidos, setPedidos] = useState<PedidoMesa[] | null>(null);
   const [filtroMesa, setFiltroMesa] = useState("todas");
+  const [pedidoDetalheId, setPedidoDetalheId] = useState<number | null>(null);
 
   const [mesaFormOpen, setMesaFormOpen] = useState(false);
   const [mesaEditando, setMesaEditando] = useState<Mesa | null>(null);
@@ -483,16 +485,26 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
               const proxima = PROXIMA_ETAPA[p.status];
               const podeCancelar = p.status !== "finalizado" && p.status !== "cancelado";
               return (
-                <Card key={p.id} className="rounded-2xl">
+                <Card key={p.id} className="rounded-2xl transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
                   <CardContent className="flex flex-col gap-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">{p.mesa_nome ?? "—"}</span>
-                      <span
-                        className="rounded-full px-2 py-0.5 text-xs font-medium"
-                        style={{ backgroundColor: cor.bg, color: cor.fg }}
-                      >
-                        {STATUS_LABELS[p.status] ?? p.status}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="rounded-full px-2 py-0.5 text-xs font-medium"
+                          style={{ backgroundColor: cor.bg, color: cor.fg }}
+                        >
+                          {STATUS_LABELS[p.status] ?? p.status}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="Ver pedido"
+                          onClick={() => setPedidoDetalheId(p.id)}
+                        >
+                          <Eye className="size-3.5" />
+                        </Button>
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm font-medium">
@@ -751,6 +763,14 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
         }}
       />
       <MesaQrCodeDialog mesa={mesaQrCode} cardapioUrl={dados.cardapio_url} onOpenChange={(v) => !v && setMesaQrCode(null)} />
+      <OrderDetailDialog
+        open={pedidoDetalheId !== null}
+        onOpenChange={(v) => !v && setPedidoDetalheId(null)}
+        pedidoId={pedidoDetalheId}
+        motoboys={[]}
+        phpAdminUrl=""
+        onAtualizado={carregarPedidos}
+      />
     </div>
   );
 }
