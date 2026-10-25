@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Copy, Pencil, Plus, Receipt, Trash2, KeyRound, QrCode, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 import { STATUS_CORES, STATUS_LABELS, PROXIMA_ETAPA, formatBRL, formatHora } from "@/components/ordermanager/constants";
 import { MesaFormDialog } from "@/components/waitermode/mesa-form-dialog";
@@ -44,6 +45,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
   });
   const [aba, setAba] = useState("pedidos");
   const [pedidos, setPedidos] = useState<PedidoMesa[] | null>(null);
+  const [filtroMesa, setFiltroMesa] = useState("todas");
 
   const [mesaFormOpen, setMesaFormOpen] = useState(false);
   const [mesaEditando, setMesaEditando] = useState<Mesa | null>(null);
@@ -123,7 +125,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
     const timer = setInterval(() => {
       if (aba === "pedidos") carregarPedidos();
       carregarStats();
-    }, 15000);
+    }, 6000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aba]);
@@ -351,6 +353,17 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
     navigator.clipboard.writeText(codigo).then(() => toast.success("Código copiado!"));
   }
 
+  const mesaOptions = useMemo(() => {
+    const opts: Record<string, string> = { todas: "Todas as mesas" };
+    for (const m of dados.mesas) opts[String(m.id)] = m.nome;
+    return opts;
+  }, [dados.mesas]);
+
+  const pedidosFiltrados = useMemo(
+    () => (filtroMesa === "todas" ? pedidos : (pedidos?.filter((p) => String(p.mesa_id) === filtroMesa) ?? null)),
+    [pedidos, filtroMesa]
+  );
+
   return (
     <div className="flex h-full flex-col gap-4 p-4 md:p-6">
       <div>
@@ -441,21 +454,47 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pedidos" className="mt-4">
+        <TabsContent value="pedidos" className="mt-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Pedidos de mesa de hoje.</p>
+            <Select items={mesaOptions} value={filtroMesa} onValueChange={(v) => v && setFiltroMesa(v)}>
+              <SelectTrigger size="sm" className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(mesaOptions).map(([v, label]) => (
+                  <SelectItem key={v} value={v}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {pedidos === null && <p className="py-8 text-center text-sm text-muted-foreground">Carregando pedidos...</p>}
-          {pedidos && pedidos.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">Nenhum pedido de mesa ainda.</p>
+          {pedidosFiltrados && pedidosFiltrados.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              {filtroMesa === "todas" ? "Nenhum pedido de mesa ainda." : "Nenhum pedido para essa mesa hoje."}
+            </p>
           )}
-          <div className="flex flex-col gap-2">
-            {pedidos?.map((p) => {
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {pedidosFiltrados?.map((p) => {
               const cor = STATUS_CORES[p.status] ?? STATUS_CORES.pendente;
               const proxima = PROXIMA_ETAPA[p.status];
               const podeCancelar = p.status !== "finalizado" && p.status !== "cancelado";
               return (
-                <Card key={p.id}>
-                  <CardContent className="flex flex-wrap items-center gap-3">
-                    <div className="w-24 shrink-0 font-medium">{p.mesa_nome ?? "—"}</div>
-                    <div className="min-w-40 flex-1">
+                <Card key={p.id} className="rounded-2xl">
+                  <CardContent className="flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{p.mesa_nome ?? "—"}</span>
+                      <span
+                        className="rounded-full px-2 py-0.5 text-xs font-medium"
+                        style={{ backgroundColor: cor.bg, color: cor.fg }}
+                      >
+                        {STATUS_LABELS[p.status] ?? p.status}
+                      </span>
+                    </div>
+                    <div>
                       <div className="text-sm font-medium">
                         Pedido #{p.codigo}
                         {p.garcom_nome ? ` · ${p.garcom_nome}` : ""}
@@ -463,12 +502,6 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                       <div className="text-xs text-muted-foreground">{formatHora(p.criado_em)}</div>
                     </div>
                     <div className="font-semibold">{formatBRL(p.total)}</div>
-                    <span
-                      className="rounded-full px-2 py-0.5 text-xs font-medium"
-                      style={{ backgroundColor: cor.bg, color: cor.fg }}
-                    >
-                      {STATUS_LABELS[p.status] ?? p.status}
-                    </span>
                     <div className="flex flex-wrap items-center gap-1.5">
                       {proxima && (
                         <Button size="sm" className="rounded-full font-normal" onClick={() => mudarStatusPedido(p.id, proxima.proximo)}>
@@ -491,7 +524,7 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
                         </Button>
                       )}
                     </div>
-                    {p.mesa_conta_solicitada_em && p.mesa_id && (
+                    {podeCancelar && p.mesa_conta_solicitada_em && p.mesa_id && (
                       <button
                         type="button"
                         onClick={() => dispensarConta(p.mesa_id!)}
