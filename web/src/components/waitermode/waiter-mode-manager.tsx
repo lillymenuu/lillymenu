@@ -424,8 +424,8 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
       </Card>
 
       <Tabs value={aba} onValueChange={(v) => v && setAba(v)}>
-        <TabsList className="h-11 gap-1 rounded-xl p-1">
-          <TabsTrigger value="pedidos" className="gap-1.5 rounded-lg py-2.5 text-[.9rem] transition-transform active:scale-95">
+        <TabsList className="h-11! gap-1 rounded-xl p-1">
+          <TabsTrigger value="pedidos" className="h-auto! gap-1.5 rounded-lg py-2.5! text-[.9rem]! transition-transform active:scale-95">
             <Receipt className="size-4" /> Pedidos
             {stats.pedidos_pendentes > 0 && (
               <Badge variant="destructive" className="ml-1 h-4 min-w-4 px-1">
@@ -433,10 +433,10 @@ export function WaiterModeManager({ dadosIniciais }: { dadosIniciais: ModoGarcom
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="mesas" className="rounded-lg py-2.5 text-[.9rem] transition-transform active:scale-95">
+          <TabsTrigger value="mesas" className="h-auto! rounded-lg py-2.5! text-[.9rem]! transition-transform active:scale-95">
             Mesas
           </TabsTrigger>
-          <TabsTrigger value="garcons" className="rounded-lg py-2.5 text-[.9rem] transition-transform active:scale-95">
+          <TabsTrigger value="garcons" className="h-auto! rounded-lg py-2.5! text-[.9rem]! transition-transform active:scale-95">
             Garçons
           </TabsTrigger>
         </TabsList>
