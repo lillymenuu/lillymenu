@@ -146,6 +146,12 @@ export function PosOverlay({
   }
 
   const [pedidoEditandoCodigo, setPedidoEditandoCodigo] = useState<number | null>(null);
+  /* Mesa/garcom/origem do pedido ORIGINAL sendo editado — invisiveis nessa tela (o PDV nao tem UI
+     de mesa/garcom), so preservados pra mandar de volta no salvar. Sem isso, editar um pedido de
+     mesa do Modo Garcom "soltava" o pedido recriado da mesa/garcom original (ver pdvSalvar.ts). */
+  const [mesaIdEdicao, setMesaIdEdicao] = useState<number | null>(null);
+  const [garcomIdEdicao, setGarcomIdEdicao] = useState<number | null>(null);
+  const [origemEdicao, setOrigemEdicao] = useState<string | null>(null);
   const [temItemComboNaEdicao, setTemItemComboNaEdicao] = useState(false);
   const [pagamentoValoresIniciais, setPagamentoValoresIniciais] = useState<
     { descontoTipo?: "valor" | "percent"; descontoValor?: number } | undefined
@@ -238,6 +244,9 @@ export function PosOverlay({
         }[] = data.itens ?? [];
 
         setPedidoEditandoCodigo(pedido.codigo ?? pedido.id);
+        setMesaIdEdicao(pedido.mesa_id ?? null);
+        setGarcomIdEdicao(pedido.garcom_id ?? null);
+        setOrigemEdicao(pedido.origem ?? null);
         setCliente({ id: pedido.cliente_id, nome: pedido.nome, telefone: pedido.telefone });
         setCashbackAtivo(!!pedido.cashback_aplicado);
         if (pedido.tipo === "entrega" || pedido.tipo === "retirada" || pedido.tipo === "mesa") {
@@ -474,6 +483,9 @@ export function PosOverlay({
           caixa_id: caixa?.caixa?.id ?? null,
           offline_uuid: crypto.randomUUID(),
           pedido_edicao_id: pedidoEditandoId ?? null,
+          mesa_id_original: mesaIdEdicao,
+          garcom_id_original: garcomIdEdicao,
+          origem_original: origemEdicao,
         }),
       });
       const data = await res.json();

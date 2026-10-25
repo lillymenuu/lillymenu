@@ -87,6 +87,9 @@ export async function POST(request: Request) {
     observacoesCliente: body.observacoes_cliente ? String(body.observacoes_cliente) : undefined,
     cpfCnpjNota: body.cpf_cnpj_nota ? String(body.cpf_cnpj_nota) : undefined,
     vendaRapida: toBool01(body.venda_rapida),
+    mesaIdOriginal: body.mesa_id_original ? Number(body.mesa_id_original) : undefined,
+    garcomIdOriginal: body.garcom_id_original ? Number(body.garcom_id_original) : undefined,
+    origemOriginal: body.origem_original ? String(body.origem_original) : undefined,
   });
 
   if (!resultado.ok) return NextResponse.json(resultado);

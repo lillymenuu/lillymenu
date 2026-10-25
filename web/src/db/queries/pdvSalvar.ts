@@ -131,6 +131,13 @@ export type SalvarPedidoPdvInput = {
   observacoesCliente?: string;
   cpfCnpjNota?: string;
   vendaRapida?: boolean;
+  /** Mesa/garcom/origem do pedido ORIGINAL sendo editado (ver pos-overlay.tsx) — preservados na
+   * recriacao quando a edicao muda os itens (ver comentario acima de `pedidoEdicaoId` mais abaixo).
+   * Sem isso, editar um pedido de mesa lancado pelo Modo Garcom "soltava" o pedido novo da mesa/
+   * garcom original, e ele sumia da aba Pedidos do Modo Garcom (que filtra por mesa_id). */
+  mesaIdOriginal?: number | null;
+  garcomIdOriginal?: number | null;
+  origemOriginal?: string | null;
 };
 
 export type SalvarPedidoPdvResultado = { ok: true; pedidoId: number; codigo: number; tipo: string; jaExistia?: boolean } | { ok: false; msg: string };
@@ -536,6 +543,8 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         cliente_id: input.clienteId,
         operador_id: adminId,
         caixa_id: caixaId,
+        mesa_id: input.mesaIdOriginal ?? null,
+        garcom_id: input.garcomIdOriginal ?? null,
         tipo: input.tipo,
         endereco_entrega: input.tipo === "entrega" ? (input.endereco ?? null) : null,
         subtotal,
@@ -557,7 +566,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         cashback_percentual: cashbackAplicadoFinal ? cashbackPercentual : 0,
         cashback_expira_em: cashbackAplicadoFinal ? cashbackExpiraEm : null,
         cashback_aplicado: cashbackAplicadoFinal,
-        origem: "balcao",
+        origem: input.origemOriginal ?? "balcao",
         offline_uuid: offlineUuid !== "" ? offlineUuid : null,
         criado_em: timestampFortaleza(),
       };
