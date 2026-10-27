@@ -288,7 +288,7 @@ export function FormasPagamentoDialog({
         <DialogHeader>
           <DialogTitle>Formas de pagamento</DialogTitle>
         </DialogHeader>
-        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-2 items-start gap-3 overflow-y-auto px-1">
+        <div className="scrollbar-hidden grid min-h-0 flex-1 grid-cols-1 items-start sm:grid-cols-2 gap-3 overflow-y-auto px-1">
           {/* Duas colunas de flex independentes (em vez de um unico grid) —
               assim um card alto numa linha (ex.: Voucher aberto) nao faz a
               linha toda crescer e empurrar o card da coluna vizinha pra baixo;
@@ -327,7 +327,7 @@ export function FormasPagamentoDialog({
                       ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Chave Pix</Label>
                       <Input
