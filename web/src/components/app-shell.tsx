@@ -221,7 +221,7 @@ function AppShellInner({
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-52 shrink-0 overflow-hidden transition-[transform,width] duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
           /* Celular: gaveta larga, cantos arredondados e curva de abertura de app. */
-          "max-md:w-[84vw] max-md:max-w-80 max-md:rounded-r-3xl max-md:ease-[cubic-bezier(0.32,0.72,0,1)]",
+          "max-md:w-[72vw] max-md:max-w-[280px]max-md:rounded-r-3xl max-md:ease-[cubic-bezier(0.32,0.72,0,1)]",
           mobileOpen ? "translate-x-0 max-md:shadow-2xl" : "-translate-x-full",
           arrasteX !== null && "max-md:transition-none",
           collapsed ? "md:w-16" : "md:w-52"
