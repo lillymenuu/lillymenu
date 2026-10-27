@@ -341,10 +341,13 @@ export function OrderDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg gap-3 overflow-hidden rounded-3xl sm:max-w-lg">
-          <DialogHeader className="pr-8">
+        {/* Celular: bottom sheet com altura limitada (cabecalho com o X sempre visivel, so o meio
+            rola). Antes o meio tinha 75vh fixos + cabecalho + 3 botoes no rodape, passava da altura
+            da tela e o X ficava fora dela. */}
+        <DialogContent className="max-w-lg gap-3 overflow-hidden rounded-3xl sm:max-w-lg max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:flex max-md:max-h-[92dvh] max-md:w-full max-md:max-w-full max-md:translate-x-0 max-md:translate-y-0 max-md:flex-col max-md:rounded-b-none max-md:pb-[max(1rem,env(safe-area-inset-bottom))] max-md:data-open:slide-in-from-bottom-10 max-md:data-open:zoom-in-100">
+          <DialogHeader className="pr-8 max-md:shrink-0">
             <div className="flex items-center justify-between gap-2">
-              <DialogTitle>Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>
+              <DialogTitle className="whitespace-nowrap">Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>
               {pedido && (
                 <div className="flex items-center gap-1.5">
                   <button
@@ -360,16 +363,17 @@ export function OrderDetailDialog({
                   <button
                     type="button"
                     onClick={() => window.print()}
+                    aria-label="Imprimir"
                     className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
                   >
-                    <Printer size={13} /> Imprimir
+                    <Printer size={13} /> <span className="max-md:sr-only">Imprimir</span>
                   </button>
                 </div>
               )}
             </div>
           </DialogHeader>
 
-          <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden">
+          <div className="scrollbar-hidden max-h-[75vh] overflow-y-auto overflow-x-hidden max-md:max-h-none max-md:min-h-0 max-md:flex-1">
             {carregando ? (
               <DetalheSkeleton />
             ) : pedido ? (
@@ -681,7 +685,7 @@ export function OrderDetailDialog({
           </div>
 
           {pedido && (
-            <DialogFooter className="border-t-0 bg-transparent">
+            <DialogFooter className="border-t-0 bg-transparent max-md:shrink-0">
               <Button
                 variant="outline"
                 size="lg"
