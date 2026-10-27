@@ -83,6 +83,36 @@ export function PosMobile({
     return () => document.documentElement.classList.remove("pos-mobile");
   }, []);
 
+  /* Teclado do celular: a tela e os bottom sheets acompanham a area realmente visivel
+     (visualViewport) — sem isso o iPhone rola a pagina por baixo e o modal fica atras do
+     teclado ou desalinhado. Vars lidas em globals.css (.pos-mobile) e no container abaixo. */
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const raiz = document.documentElement.style;
+    function atualizar() {
+      raiz.setProperty("--pos-vv-topo", `${vv!.offsetTop}px`);
+      raiz.setProperty("--pos-vv-altura", `${vv!.height}px`);
+      raiz.setProperty("--pos-teclado", `${Math.max(0, window.innerHeight - vv!.height - vv!.offsetTop)}px`);
+    }
+    function aoRedimensionar() {
+      atualizar();
+      /* O sheet encolheu pro teclado caber: traz de volta pra vista o campo que esta sendo digitado. */
+      const ativo = document.activeElement;
+      if (ativo instanceof HTMLInputElement || ativo instanceof HTMLTextAreaElement) {
+        requestAnimationFrame(() => ativo.scrollIntoView({ block: "nearest" }));
+      }
+    }
+    atualizar();
+    vv.addEventListener("resize", aoRedimensionar);
+    vv.addEventListener("scroll", atualizar);
+    return () => {
+      vv.removeEventListener("resize", aoRedimensionar);
+      vv.removeEventListener("scroll", atualizar);
+      for (const v of ["--pos-vv-topo", "--pos-vv-altura", "--pos-teclado"]) raiz.removeProperty(v);
+    };
+  }, []);
+
   const qtdItens = cart.itens.reduce((s, i) => s + i.qtd, 0);
   const emPagamento = pos.etapa === "pagamento";
   /* Carrinho esvaziado nas telas seguintes: volta pro cardapio. */
@@ -118,7 +148,7 @@ export function PosMobile({
   const passoAtual = emPagamento ? 3 : tela === "detalhes" ? 2 : tela === "carrinho" ? 1 : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-background">
+    <div className="fixed inset-x-0 top-(--pos-vv-topo,0px) z-50 flex h-(--pos-vv-altura,100dvh) flex-col overflow-hidden bg-background">
       {/* Barra do app */}
       <header className="flex shrink-0 items-center gap-1 border-b bg-background px-2 pt-[max(0.25rem,env(safe-area-inset-top))] pb-1">
         <button

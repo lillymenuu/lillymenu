@@ -322,12 +322,13 @@
 @media (max-width: 767px) {
   html.pos-mobile [data-slot="dialog-content"] {
     top: auto;
-    bottom: 0;
+    bottom: var(--pos-teclado, 0px);
     left: 0;
     translate: none;
     width: 100%;
     max-width: 100%;
-    max-height: 92dvh;
+    max-height: calc(var(--pos-vv-altura, 100dvh) * 0.92);
+    overflow-y: auto;
     border-radius: 1.5rem 1.5rem 0 0;
     --tw-enter-scale: 1;
     --tw-exit-scale: 1;
@@ -347,5 +348,11 @@
     border-radius: 999px;
     background: var(--border);
     pointer-events: none;
+  }
+  /* Campo com fonte < 16px faz o iPhone dar zoom ao focar e desalinhar a tela inteira. */
+  html.pos-mobile input:not([type="checkbox"]):not([type="radio"]),
+  html.pos-mobile textarea,
+  html.pos-mobile select {
+    font-size: 16px;
   }
 }
