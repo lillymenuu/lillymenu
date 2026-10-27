@@ -101,7 +101,7 @@ export default async function DashboardPage({
         <div className="self-end justify-self-center">
           <DashboardSearch menu={menu} phpAdminUrl={phpAdminUrl} />
         </div>
-        <div className="justify-self-start sm:justify-self-end">
+        <div className="justify-self-center sm:justify-self-end">
           <StoreLinkField link={linkLoja} />
         </div>
       </div>

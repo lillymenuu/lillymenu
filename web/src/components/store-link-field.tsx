@@ -21,7 +21,7 @@ export function StoreLinkField({ link }: { link: string }) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-center gap-1 sm:items-end">
       <span className="text-xs font-medium text-primary">Link da sua loja</span>
       <div className="flex items-center gap-1.5 rounded-full border bg-background py-1 pl-3 pr-1">
         <span className="max-w-[180px] truncate text-xs text-muted-foreground" title={link}>
