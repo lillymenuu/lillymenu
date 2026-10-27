@@ -68,7 +68,7 @@ export function DashboardSearch({
             />
             <Input
               autoFocus
-              className="h-10 w-full rounded-full border-0 bg-muted/60 pl-9 text-sm placeholder:text-xs placeholder:text-muted-foreground/70"
+              className="h-10 w-full rounded-full border-0 bg-muted/60 pl-9 text-base md:text-sm placeholder:text-sm md:placeholder:text-xs placeholder:text-muted-foreground/70"
               placeholder="Buscar página..."
               value={termo}
               onChange={(e) => setTermo(e.target.value)}

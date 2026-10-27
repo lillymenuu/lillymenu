@@ -349,7 +349,15 @@
     background: var(--border);
     pointer-events: none;
   }
-  /* Campo com fonte < 16px faz o iPhone dar zoom ao focar e desalinhar a tela inteira. */
+}
+
+/* Campo com fonte < 16px faz o iPhone dar zoom ao focar e desalinhar a tela inteira. Vale pro
+   painel admin todo no celular (app-shell.tsx poe .admin-app no <html>, alcancando tambem os
+   modais em portal) e pro PDV mobile; no computador cada campo segue com o tamanho dele. */
+@media (max-width: 767px) {
+  html.admin-app input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  html.admin-app textarea,
+  html.admin-app select,
   html.pos-mobile input:not([type="checkbox"]):not([type="radio"]),
   html.pos-mobile textarea,
   html.pos-mobile select {

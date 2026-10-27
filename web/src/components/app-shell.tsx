@@ -108,6 +108,13 @@ function AppShellInner({
     }
   }, []);
 
+  /* Marca o <html> enquanto o painel admin esta montado — inclusive modais, que vao por portal
+     pro body — pra regra de campos 16px no celular (ver ".admin-app" em globals.css). */
+  useEffect(() => {
+    document.documentElement.classList.add("admin-app");
+    return () => document.documentElement.classList.remove("admin-app");
+  }, []);
+
   /* Gaveta aberta no celular: trava a rolagem da pagina por baixo e fecha com Esc. */
   useEffect(() => {
     if (!mobileOpen) return;
