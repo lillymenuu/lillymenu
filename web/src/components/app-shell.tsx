@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -47,6 +47,10 @@ function AppShellInner({
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  /* Arrasto da gaveta no celular (px, <= 0) enquanto o dedo esta na tela; null fora do gesto. */
+  const [arrasteX, setArrasteX] = useState<number | null>(null);
+  const toqueRef = useRef<{ x: number; y: number; t: number; eixo: "x" | "y" | null } | null>(null);
+  const gavetaRef = useRef<HTMLElement>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [lojaAberta, setLojaAberta] = useState(sidebarData.loja.aberta);
   const [alternandoLoja, setAlternandoLoja] = useState(false);
@@ -104,6 +108,54 @@ function AppShellInner({
     }
   }, []);
 
+  /* Gaveta aberta no celular: trava a rolagem da pagina por baixo e fecha com Esc. */
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen]);
+
+  /* Arrastar a gaveta pra esquerda fecha (como num app): passou de 1/3 da largura ou foi um
+     gesto rapido. Gesto mais vertical que horizontal e rolagem do menu, nao arrasto. */
+  function onToqueInicio(e: React.TouchEvent) {
+    if (!mobileOpen) return;
+    const t = e.touches[0];
+    toqueRef.current = { x: t.clientX, y: t.clientY, t: Date.now(), eixo: null };
+  }
+
+  function onToqueMove(e: React.TouchEvent) {
+    const toque = toqueRef.current;
+    if (!toque) return;
+    const t = e.touches[0];
+    const dx = t.clientX - toque.x;
+    const dy = t.clientY - toque.y;
+    if (toque.eixo === null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      toque.eixo = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (toque.eixo === "x") setArrasteX(Math.min(0, dx));
+  }
+
+  function onToqueFim() {
+    const toque = toqueRef.current;
+    toqueRef.current = null;
+    if (toque?.eixo === "x" && arrasteX !== null) {
+      const largura = gavetaRef.current?.offsetWidth ?? 300;
+      const velocidade = Math.abs(arrasteX) / Math.max(1, Date.now() - toque.t);
+      if (arrasteX < -largura / 3 || (velocidade > 0.5 && arrasteX < -24)) setMobileOpen(false);
+    }
+    setArrasteX(null);
+  }
+
+  /* Fundo escurecido acompanha o dedo durante o arrasto (1 = gaveta toda aberta). */
+  const opacidadeFundo = arrasteX === null ? 1 : Math.max(0, 1 + arrasteX / 300);
+
   function toggleCollapsed() {
     setCollapsed((prev) => {
       const next = !prev;
@@ -149,19 +201,32 @@ function AppShellInner({
 
   return (
     <div className="flex min-h-screen bg-muted/20">
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      <div
+        aria-hidden
+        className={cn(
+          "fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px] md:hidden",
+          arrasteX === null && "transition-opacity duration-300",
+          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        )}
+        style={mobileOpen && arrasteX !== null ? { opacity: opacidadeFundo } : undefined}
+        onClick={() => setMobileOpen(false)}
+      />
 
       <aside
+        ref={gavetaRef}
+        onTouchStart={onToqueInicio}
+        onTouchMove={onToqueMove}
+        onTouchEnd={onToqueFim}
+        onTouchCancel={onToqueFim}
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-52 shrink-0 overflow-hidden transition-[transform,width] duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          /* Celular: gaveta larga, cantos arredondados e curva de abertura de app. */
+          "max-md:w-[84vw] max-md:max-w-80 max-md:rounded-r-3xl max-md:ease-[cubic-bezier(0.32,0.72,0,1)]",
+          mobileOpen ? "translate-x-0 max-md:shadow-2xl" : "-translate-x-full",
+          arrasteX !== null && "max-md:transition-none",
           collapsed ? "md:w-16" : "md:w-52"
         )}
+        style={arrasteX !== null ? { transform: `translateX(${arrasteX}px)` } : undefined}
       >
         <div
           aria-hidden
@@ -180,7 +245,7 @@ function AppShellInner({
         />
 
         <div className="scrollbar-thin relative z-10 flex h-full flex-col overflow-y-auto overflow-x-hidden">
-          <div className="flex items-center justify-between gap-2 p-4">
+          <div className="flex items-center justify-between gap-2 p-4 max-md:pt-[max(1rem,env(safe-area-inset-top))]">
             {!collapsed && (
               <div className="flex min-w-0 items-center gap-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -197,13 +262,13 @@ function AppShellInner({
             )}
             <button
               className={cn(
-                "rounded-md p-1 md:hidden",
-                collapsed ? "text-white hover:bg-white/10" : "text-foreground hover:bg-muted"
+                "flex size-10 items-center justify-center rounded-full md:hidden",
+                collapsed ? "text-white active:bg-white/10" : "text-foreground active:bg-muted"
               )}
               onClick={() => setMobileOpen(false)}
               aria-label="Fechar menu"
             >
-              <X size={18} />
+              <X size={20} />
             </button>
             <button
               className={cn(
@@ -324,7 +389,7 @@ function AppShellInner({
                       const active = pathname === item.href;
                       const itemBloqueado = bloqueado && item.href !== "/plan-details";
                       const className = cn(
-                        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors max-md:rounded-xl max-md:py-3 max-md:text-[15px]",
                         collapsed && "md:justify-center md:px-0",
                         itemBloqueado
                           ? cn("cursor-not-allowed opacity-40", collapsed ? "text-white/60" : "text-foreground/40")
@@ -439,15 +504,36 @@ function AppShellInner({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b bg-background p-3 md:hidden">
+        <header className="sticky top-0 z-30 flex items-center gap-2 border-b bg-background/85 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 backdrop-blur-md md:hidden">
           <button
-            className="rounded-md p-1.5 hover:bg-muted"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full transition-colors active:bg-muted"
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menu"
+            aria-expanded={mobileOpen}
           >
-            <Menu size={20} />
+            <Menu size={22} />
           </button>
-          <span className="text-sm font-semibold">{sidebarData.loja.nome}</span>
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted text-sm font-bold">
+              {sidebarData.loja.logo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={sidebarData.loja.logo.startsWith("http") ? sidebarData.loja.logo : `${phpAdminUrl}/${sidebarData.loja.logo}`}
+                  alt=""
+                  className="size-full object-cover"
+                />
+              ) : (
+                sidebarData.loja.inicial
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-[15px] leading-tight font-semibold">{sidebarData.loja.nome}</div>
+              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className={cn("size-1.5 rounded-full", lojaAberta ? "bg-emerald-500" : "bg-muted-foreground/50")} />
+                {lojaAberta ? "Loja aberta" : "Loja fechada"}
+              </div>
+            </div>
+          </div>
         </header>
         <main className="min-w-0 flex-1">{children}</main>
         <footer className="border-t border-border py-4 text-center text-sm text-foreground">
