@@ -158,6 +158,21 @@ export function OrderCard({
         </div>
       )}
 
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-normal text-muted-foreground">Total</span>
+        <span className="font-medium">{formatBRL(pedido.total)}</span>
+      </div>
+      <div className="flex items-start justify-between text-sm">
+        <span className="font-normal text-muted-foreground">Pagamento</span>
+        <div className="flex flex-col items-end">
+          {formasPagamento.map((forma, i) => (
+            <span key={i} className="font-normal capitalize">
+              {forma}
+            </span>
+          ))}
+        </div>
+      </div>
+
       {endereco && (
         <div className="flex flex-col gap-1 border-y border-dashed py-2">
           <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -181,21 +196,6 @@ export function OrderCard({
           )}
         </div>
       )}
-
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-normal text-muted-foreground">Total</span>
-        <span className="font-medium">{formatBRL(pedido.total)}</span>
-      </div>
-      <div className="flex items-start justify-between text-sm">
-        <span className="font-normal text-muted-foreground">Pagamento</span>
-        <div className="flex flex-col items-end">
-          {formasPagamento.map((forma, i) => (
-            <span key={i} className="font-normal capitalize">
-              {forma}
-            </span>
-          ))}
-        </div>
-      </div>
 
       {pedido.tipo === "entrega" &&
         (pedido.motoboy_nome ? (
