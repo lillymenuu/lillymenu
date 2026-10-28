@@ -101,6 +101,9 @@ export function usePosPedido({
     { descontoTipo?: "valor" | "percent"; descontoValor?: number } | undefined
   >(undefined);
   const [cashbackUsarValor, setCashbackUsarValor] = useState(0);
+  // Cashback que o pedido em edicao ja usou: ja saiu do saldo do cliente, entao volta a contar
+  // como disponivel pra ele (senao o limite pelo saldo atual zerava o cashback ao editar).
+  const [cashbackOriginalEdicao, setCashbackOriginalEdicao] = useState<{ clienteId: number; valor: number } | null>(null);
   const [cashbackModalAberto, setCashbackModalAberto] = useState(false);
   const [cpfCnpjNota, setCpfCnpjNota] = useState("");
 
@@ -214,6 +217,7 @@ export function usePosPedido({
         const cashbackUsadoOriginal = Number(pedido.cashback_usado) || 0;
         if (cashbackUsadoOriginal > 0) {
           setCashbackUsarValor(cashbackUsadoOriginal);
+          setCashbackOriginalEdicao({ clienteId: pedido.cliente_id, valor: cashbackUsadoOriginal });
         }
 
         setTemItemComboNaEdicao(itens.some((i) => (i.observacoes ?? "").startsWith("[combo]")));
@@ -325,7 +329,9 @@ export function usePosPedido({
           ? taxaEntregaConfig.valorFixo
           : 0;
 
-  const cashbackResumoNum = Math.max(0, Math.min(cashbackUsarValor, clienteStats?.cashback ?? cashbackUsarValor));
+  const cashbackDisponivel =
+    (clienteStats?.cashback ?? 0) + (cashbackOriginalEdicao && cashbackOriginalEdicao.clienteId === cliente?.id ? cashbackOriginalEdicao.valor : 0);
+  const cashbackResumoNum = Math.max(0, Math.min(cashbackUsarValor, clienteStats ? cashbackDisponivel : cashbackUsarValor));
   const totalResumo = Math.max(0, cart.subtotal + taxaEntrega - (cupom?.valor ?? 0) - cashbackResumoNum);
 
   // Agendamento nao existe pra consumo local (mesa), igual ao legado.
@@ -534,6 +540,7 @@ export function usePosPedido({
     alterarQtdProduto,
     definirQtdProduto,
     taxaEntrega,
+    cashbackDisponivel,
     cashbackResumoNum,
     totalResumo,
     agendamentoCfgAtual,

@@ -45,7 +45,6 @@ export function PosPagamentoPanel({
   taxaServico = 0,
   cupom,
   podeAplicarDesconto,
-  clienteStats,
   valoresIniciais,
   cashbackAplicado,
   fiadoAtivo,
@@ -91,7 +90,8 @@ export function PosPagamentoPanel({
   const [semPagamento, setSemPagamento] = useState(false);
   const [dinheiroRecebido, setDinheiroRecebido] = useState(0);
 
-  const cashbackNum = Math.max(0, Math.min(cashbackAplicado, clienteStats?.cashback ?? cashbackAplicado));
+  // cashbackAplicado ja chega limitado ao disponivel (use-pos-pedido.ts, que soma o que o pedido em edicao ja usou)
+  const cashbackNum = Math.max(0, cashbackAplicado);
   const cupomValorAplicado = cupom?.valor ?? 0;
 
   /* Taxa de cartao/voucher repassada ao cliente: incide sobre o valor de cada

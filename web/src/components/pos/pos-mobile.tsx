@@ -245,7 +245,7 @@ export function PosMobile({
       <PosCashbackDialog
         open={pos.cashbackModalAberto}
         onOpenChange={pos.setCashbackModalAberto}
-        saldoDisponivel={clienteStats?.cashback ?? 0}
+        saldoDisponivel={pos.cashbackDisponivel}
         validoAte={clienteStats?.cashback_valido_ate}
         valorInicial={pos.cashbackResumoNum}
         onConfirmar={pos.setCashbackUsarValor}
@@ -786,7 +786,7 @@ function TelaDetalhes({ pos }: { pos: Pos }) {
               <PosAgendamentoCard valor={pos.agendamento} onAbrir={() => pos.setAgendamentoModalAberto(true)} onLimpar={() => pos.setAgendamento(null)} />
             ) : null}
 
-            {pos.temCupomDisponivel || (clienteStats && (clienteStats.cashback ?? 0) > 0) || pos.catalogo?.nfceDisponivel ? (
+            {pos.temCupomDisponivel || (clienteStats && pos.cashbackDisponivel > 0) || pos.catalogo?.nfceDisponivel ? (
               <section className="space-y-2.5">
                 <h2 className="text-sm font-bold">Descontos e nota</h2>
                 {pos.temCupomDisponivel ? (
@@ -800,7 +800,7 @@ function TelaDetalhes({ pos }: { pos: Pos }) {
                   />
                 ) : null}
 
-                {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
+                {clienteStats && pos.cashbackDisponivel > 0 ? (
                   <button
                     type="button"
                     onClick={() => pos.setCashbackModalAberto(true)}
@@ -814,7 +814,7 @@ function TelaDetalhes({ pos }: { pos: Pos }) {
                         </>
                       ) : (
                         <>
-                          Usar cashback de <span className="font-semibold text-primary">{formatBRL(clienteStats.cashback ?? 0)}</span>
+                          Usar cashback de <span className="font-semibold text-primary">{formatBRL(pos.cashbackDisponivel)}</span>
                         </>
                       )}
                     </span>

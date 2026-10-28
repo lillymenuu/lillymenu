@@ -1,6 +1,6 @@
 import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { db, withTransaction } from "@/db";
+import { db, withTransaction, type NeonTx } from "@/db";
 import {
   pedidos,
   pedidoItens,
@@ -199,6 +199,63 @@ async function validarCupomPdv(lojaId: number, codigo: string, clienteId: number
   return { id: cupom.id, frete, descontoTipo: frete ? "valor" : cupom.tipo === "valor" ? "valor" : "percent", descontoValor: frete ? 0 : cupom.desconto };
 }
 
+/** Ajusta o cashback usado pelo pedido em `delta` (positivo = usa mais, negativo = devolve) e
+ *  retorna o saldo do cliente depois do ajuste. Uso consome as entradas liberadas em FIFO; a
+ *  devolucao reduz os registros de uso do proprio pedido (mais recentes primeiro), pra entrada
+ *  de origem voltar a ter esse valor livre. */
+async function ajustarUsoCashback(tx: NeonTx, lojaId: number, clienteId: number, pedidoId: number, delta: number, saldoAntes: number): Promise<number> {
+  if (Math.abs(delta) <= 0.009) return saldoAntes;
+  await tx.update(clientes).set({ cashback_saldo: sql`greatest(0, ${clientes.cashback_saldo} - ${delta})` }).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
+
+  if (delta < 0) {
+    let devolver = -delta;
+    const usos = await tx
+      .select({ id: cashbackMovimentacoes.id, valor: cashbackMovimentacoes.valor })
+      .from(cashbackMovimentacoes)
+      .where(and(eq(cashbackMovimentacoes.pedido_id, pedidoId), eq(cashbackMovimentacoes.tipo, "uso"), eq(cashbackMovimentacoes.loja_id, lojaId)))
+      .orderBy(sql`${cashbackMovimentacoes.id} desc`);
+    for (const uso of usos) {
+      if (devolver <= 0.009) break;
+      const valor = Number(uso.valor);
+      if (valor <= devolver + 0.009) {
+        await tx.delete(cashbackMovimentacoes).where(eq(cashbackMovimentacoes.id, uso.id));
+        devolver -= valor;
+      } else {
+        await tx.update(cashbackMovimentacoes).set({ valor: valor - devolver }).where(eq(cashbackMovimentacoes.id, uso.id));
+        devolver = 0;
+      }
+    }
+    return saldoAntes - delta;
+  }
+
+  let saldoMov = saldoAntes;
+  let restante = delta;
+  const entradasResult = await tx.execute<{ id: number; valor: string; usado: string }>(sql`
+    SELECT m.id, m.valor,
+      COALESCE((SELECT SUM(valor) FROM cashback_movimentacoes u WHERE u.referencia_id = m.id AND u.tipo IN ('uso','resgate','expirado') AND u.loja_id = m.loja_id), 0) AS usado
+    FROM cashback_movimentacoes m
+    WHERE m.cliente_id = ${clienteId} AND m.loja_id = ${lojaId} AND m.tipo IN ('entrada','ganho')
+      AND (m.expira_em IS NULL OR m.expira_em >= CURRENT_DATE) AND (m.disponivel_em IS NULL OR m.disponivel_em <= NOW())
+    ORDER BY m.criado_em ASC, m.id ASC
+  `);
+  for (const entrada of entradasResult.rows) {
+    if (restante <= 0.009) break;
+    const disponivel = Number(entrada.valor) - Number(entrada.usado);
+    if (disponivel <= 0.009) continue;
+    const usar = Math.min(restante, disponivel);
+    const saldoDepoisMov = Math.max(0, saldoMov - usar);
+    await tx.insert(cashbackMovimentacoes).values({ cliente_id: clienteId, pedido_id: pedidoId, tipo: "uso", valor: usar, saldo_antes: saldoMov, saldo_depois: saldoDepoisMov, referencia_id: entrada.id, loja_id: lojaId });
+    saldoMov = saldoDepoisMov;
+    restante -= usar;
+  }
+  if (restante > 0.009) {
+    const saldoDepoisMov = Math.max(0, saldoMov - restante);
+    await tx.insert(cashbackMovimentacoes).values({ cliente_id: clienteId, pedido_id: pedidoId, tipo: "uso", valor: restante, saldo_antes: saldoMov, saldo_depois: saldoDepoisMov, referencia_id: null, loja_id: lojaId });
+    saldoMov = saldoDepoisMov;
+  }
+  return saldoMov;
+}
+
 export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<SalvarPedidoPdvResultado> {
   const { lojaId, adminId } = input;
   const perfil = input.perfil;
@@ -369,10 +426,18 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   }
   const clienteCashbackLiberado = Math.max(0, Math.min(clienteCashbackSaldo, clienteCashbackSaldo - cashbackNaoLiberado));
 
+  // Na edicao, o cashback que o proprio pedido ja usou ja saiu do saldo do cliente — ele volta a
+  // contar como disponivel pra este pedido, senao reaplicar o mesmo valor falhava por saldo insuficiente.
+  let cashbackUsadoOriginal = 0;
+  if (pedidoEdicaoId) {
+    const [original] = await db.select({ usado: pedidos.cashback_usado, clienteId: pedidos.cliente_id }).from(pedidos).where(and(eq(pedidos.id, pedidoEdicaoId), eq(pedidos.loja_id, lojaId))).limit(1);
+    if (original && original.clienteId === input.clienteId) cashbackUsadoOriginal = Math.max(0, Number(original.usado) || 0);
+  }
+
   const cashbackUsadoInput = Math.max(0, toFloat(input.cashbackUsado));
   if (cashbackUsadoInput > 0) {
-    if (cashbackUsadoInput > clienteCashbackLiberado + 0.009) {
-      const msg = cashbackUsadoInput <= clienteCashbackSaldo + 0.009 ? "Cashback ainda em carência. Aguarde o período de liberação após a compra que o gerou." : "Cashback insuficiente para o cliente.";
+    if (cashbackUsadoInput > clienteCashbackLiberado + cashbackUsadoOriginal + 0.009) {
+      const msg = cashbackUsadoInput <= clienteCashbackSaldo + cashbackUsadoOriginal + 0.009 ? "Cashback ainda em carência. Aguarde o período de liberação após a compra que o gerou." : "Cashback insuficiente para o cliente.";
       return { ok: false, msg };
     }
     const limiteUso = Math.max(0, subtotal + taxa - desconto);
@@ -488,7 +553,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
 
   try {
     const resultadoTx = await withTransaction(async (tx) => {
-      // edicao com os MESMOS itens: so atualiza pagamento/tipo/endereco/cupom, sem tocar estoque/cashback/pontos/fiado
+      // edicao com os MESMOS itens: so atualiza pagamento/tipo/endereco/cupom/cashback usado, sem tocar estoque/pontos/fiado
       if (pedidoEdicaoId) {
         const itensAtuais = await tx
           .select({ produtoId: pedidoItens.produto_id, quantidade: pedidoItens.quantidade, produtoNome: pedidoItens.produto_nome, preco: pedidoItens.preco, observacoes: pedidoItens.observacoes })
@@ -525,9 +590,12 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
               troco,
               cupom: cupom !== "" ? cupom : null,
               cpf_cnpj_nota: cpfCnpjNota,
+              cashback_usado: cashbackUsadoInput > 0 ? cashbackUsadoInput : 0,
               updated_at: sql`now()`,
             })
             .where(and(eq(pedidos.id, pedidoEdicaoId), eq(pedidos.loja_id, lojaId)));
+
+          await ajustarUsoCashback(tx, lojaId, input.clienteId, pedidoEdicaoId, cashbackUsadoInput - cashbackUsadoOriginal, clienteCashbackSaldo);
 
           await tx.delete(pedidoPagamentos).where(and(eq(pedidoPagamentos.pedido_id, pedidoEdicaoId), eq(pedidoPagamentos.loja_id, lojaId)));
           for (const p of pagamentosValidos) {
@@ -629,47 +697,17 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         if ((resCupom.rowCount ?? 0) === 0) throw new Error("Cupom indisponivel");
       }
 
-      // cashback: uso (FIFO por entrada/ganho) + credito pendente
-      if (cashbackUsadoInput > 0.009 || (cashbackAplicadoFinal && cashbackValor > 0.009)) {
-        const saldoAntes = clienteCashbackSaldo;
-        let saldoDepois = saldoAntes;
-        if (cashbackUsadoInput > 0) saldoDepois = Math.max(0, saldoDepois - cashbackUsadoInput);
-        const deltaCashback = saldoDepois - saldoAntes;
-        if (Math.abs(deltaCashback) > 0.009) {
-          await tx.update(clientes).set({ cashback_saldo: sql`greatest(0, ${clientes.cashback_saldo} + ${deltaCashback})` }).where(and(eq(clientes.id, input.clienteId), eq(clientes.loja_id, lojaId)));
-        }
-
-        let saldoMov = saldoAntes;
-        if (cashbackUsadoInput > 0.009) {
-          let restante = cashbackUsadoInput;
-          const entradasResult = await tx.execute<{ id: number; valor: string; usado: string }>(sql`
-            SELECT m.id, m.valor,
-              COALESCE((SELECT SUM(valor) FROM cashback_movimentacoes u WHERE u.referencia_id = m.id AND u.tipo IN ('uso','resgate','expirado') AND u.loja_id = m.loja_id), 0) AS usado
-            FROM cashback_movimentacoes m
-            WHERE m.cliente_id = ${input.clienteId} AND m.loja_id = ${lojaId} AND m.tipo IN ('entrada','ganho')
-              AND (m.expira_em IS NULL OR m.expira_em >= CURRENT_DATE) AND (m.disponivel_em IS NULL OR m.disponivel_em <= NOW())
-            ORDER BY m.criado_em ASC, m.id ASC
-          `);
-          for (const entrada of entradasResult.rows) {
-            if (restante <= 0.009) break;
-            const disponivel = Number(entrada.valor) - Number(entrada.usado);
-            if (disponivel <= 0.009) continue;
-            const usar = Math.min(restante, disponivel);
-            const saldoDepoisMov = Math.max(0, saldoMov - usar);
-            await tx.insert(cashbackMovimentacoes).values({ cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "uso", valor: usar, saldo_antes: saldoMov, saldo_depois: saldoDepoisMov, referencia_id: entrada.id, loja_id: lojaId });
-            saldoMov = saldoDepoisMov;
-            restante -= usar;
-          }
-          if (restante > 0.009) {
-            const saldoDepoisMov = Math.max(0, saldoMov - restante);
-            await tx.insert(cashbackMovimentacoes).values({ cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "uso", valor: restante, saldo_antes: saldoMov, saldo_depois: saldoDepoisMov, referencia_id: null, loja_id: lojaId });
-            saldoMov = saldoDepoisMov;
-          }
-        }
-
-        if (cashbackAplicadoFinal && cashbackValor > 0.009) {
-          await tx.insert(cashbackMovimentacoes).values({ cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "pendente", valor: cashbackValor, saldo_antes: saldoMov, saldo_depois: saldoMov, referencia_id: null, loja_id: lojaId });
-        }
+      // cashback: uso (FIFO por entrada/ganho) + credito pendente. Na edicao, o uso do pedido antigo
+      // passa pra este (ja foi descontado do saldo) e so a diferenca pro valor novo mexe no saldo.
+      if (pedidoEdicaoId && cashbackUsadoOriginal > 0.009) {
+        await tx
+          .update(cashbackMovimentacoes)
+          .set({ pedido_id: pedidoId })
+          .where(and(eq(cashbackMovimentacoes.pedido_id, pedidoEdicaoId), eq(cashbackMovimentacoes.tipo, "uso"), eq(cashbackMovimentacoes.loja_id, lojaId)));
+      }
+      const saldoMov = await ajustarUsoCashback(tx, lojaId, input.clienteId, pedidoId, cashbackUsadoInput - cashbackUsadoOriginal, clienteCashbackSaldo);
+      if (cashbackAplicadoFinal && cashbackValor > 0.009) {
+        await tx.insert(cashbackMovimentacoes).values({ cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "pendente", valor: cashbackValor, saldo_antes: saldoMov, saldo_depois: saldoMov, referencia_id: null, loja_id: lojaId });
       }
 
       // pontos: resgate imediato + credito pendente

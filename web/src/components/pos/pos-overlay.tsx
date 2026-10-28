@@ -111,6 +111,7 @@ export function PosOverlay({
     alterarQtdProduto,
     definirQtdProduto,
     taxaEntrega,
+    cashbackDisponivel,
     cashbackResumoNum,
     totalResumo,
     agendamentoCfgAtual,
@@ -305,7 +306,7 @@ export function PosOverlay({
                     />
                   ) : null}
 
-                  {clienteStats && (clienteStats.cashback ?? 0) > 0 ? (
+                  {clienteStats && cashbackDisponivel > 0 ? (
                     <button
                       type="button"
                       onClick={() => setCashbackModalAberto(true)}
@@ -318,7 +319,7 @@ export function PosOverlay({
                         </>
                       ) : (
                         <>
-                          Usar cashback disponível de <span className="text-primary">{formatBRL(clienteStats.cashback ?? 0)}</span>
+                          Usar cashback disponível de <span className="text-primary">{formatBRL(cashbackDisponivel)}</span>
                         </>
                       )}
                     </button>
@@ -327,7 +328,7 @@ export function PosOverlay({
                   <PosCashbackDialog
                     open={cashbackModalAberto}
                     onOpenChange={setCashbackModalAberto}
-                    saldoDisponivel={clienteStats?.cashback ?? 0}
+                    saldoDisponivel={cashbackDisponivel}
                     validoAte={clienteStats?.cashback_valido_ate}
                     valorInicial={cashbackResumoNum}
                     onConfirmar={setCashbackUsarValor}
