@@ -9,6 +9,39 @@ import { cn } from "cn";
 
 const TIPO_ICONS = { entrega: Bike, retirada: ShoppingBag, mesa: UtensilsCrossed } as const;
 
+/* O endereco vem num texto so, em dois formatos conforme a origem do pedido:
+   - Loja: "Rua X, 123, Complemento, Bairro, Cidade/UF, CEP 00000-000" (complemento opcional)
+   - PDV: "Rua X, 123 | Bairro: Y | Cidade: Z | CEP: ... | Complemento: ..."
+   Separa em rua/numero/complemento (linha principal) e bairro · cidade · CEP. */
+function dividirEndereco(texto: string): { principal: string; secundario: string } {
+  const limpo = texto.replace(/\s*\|?\s*Agendamento:.*$/i, "").trim();
+
+  if (limpo.includes("|")) {
+    const principal: string[] = [];
+    const secundario: string[] = [];
+    for (const seg of limpo.split("|").map((s) => s.trim()).filter(Boolean)) {
+      const m = seg.match(/^(bairro|cidade|cep|complemento):\s*(.*)$/i);
+      if (!m) principal.push(seg);
+      else if (m[1].toLowerCase() === "complemento") principal.push(m[2]);
+      else secundario.push(m[2]);
+    }
+    return { principal: principal.filter(Boolean).join(" – "), secundario: secundario.filter(Boolean).join(" · ") };
+  }
+
+  const partes = limpo.split(",").map((s) => s.trim()).filter(Boolean);
+  const iCidade = partes.findLastIndex((p) => p.includes("/"));
+  if (iCidade < 3) return { principal: limpo, secundario: "" };
+
+  const iBairro = iCidade - 1;
+  const ruaNumero = partes.slice(0, 2).join(", ");
+  const complemento = partes.slice(2, iBairro).join(", ");
+  const secundario = [partes[iBairro], ...partes.slice(iCidade).map((p) => p.replace(/^CEP\s*/i, ""))];
+  return {
+    principal: [ruaNumero, complemento].filter(Boolean).join(" – "),
+    secundario: secundario.filter(Boolean).join(" · "),
+  };
+}
+
 export function OrderCard({
   pedido,
   onAbrir,
@@ -40,6 +73,8 @@ export function OrderCard({
   const Icon = TIPO_ICONS[pedido.tipo as keyof typeof TIPO_ICONS] ?? ShoppingBag;
   const corTipo = TIPO_CORES[pedido.tipo] ?? "#6b7280";
   const finalizarEmVerde = pedido.status === "entrega";
+  const endereco =
+    pedido.tipo === "entrega" && pedido.endereco_entrega ? dividirEndereco(pedido.endereco_entrega) : null;
 
   function parar(e: React.MouseEvent) {
     e.stopPropagation();
@@ -123,18 +158,27 @@ export function OrderCard({
         </div>
       )}
 
-      {pedido.tipo === "entrega" && pedido.endereco_entrega && (
-        <div className="flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs text-muted-foreground">
-          <MapPin size={12} className="shrink-0" />
-          <span className="truncate">{pedido.endereco_entrega}</span>
-          <button
-            type="button"
-            onClick={copiarEndereco}
-            className="flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label="Copiar endereço"
-          >
-            <Copy size={11} />
-          </button>
+      {endereco && (
+        <div className="flex flex-col gap-1 border-y border-dashed py-2">
+          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <MapPin size={12} className="shrink-0" />
+              Endereço de entrega
+            </span>
+            <button
+              type="button"
+              onClick={copiarEndereco}
+              className="flex shrink-0 items-center gap-1 rounded-md px-1 py-0.5 hover:bg-muted hover:text-foreground"
+              aria-label="Copiar endereço"
+            >
+              <Copy size={11} />
+              Copiar
+            </button>
+          </div>
+          <span className="font-medium leading-snug break-words">{endereco.principal}</span>
+          {endereco.secundario && (
+            <span className="text-xs text-muted-foreground">{endereco.secundario}</span>
+          )}
         </div>
       )}
 
