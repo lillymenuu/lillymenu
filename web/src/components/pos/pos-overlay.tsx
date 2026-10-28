@@ -22,6 +22,7 @@ import { PosAgendamentoDialog } from "@/components/pos/pos-agendamento-dialog";
 import { PosCupomField } from "@/components/pos/pos-cupom-field";
 import { PosPagamentoPanel } from "@/components/pos/pos-pagamento-panel";
 import { PosCashbackDialog } from "@/components/pos/pos-cashback-dialog";
+import { PosSairEdicaoDialog } from "@/components/pos/pos-sair-edicao-dialog";
 import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
 import { PosImpressaoToggle } from "@/components/pos/pos-impressao-toggle";
 import { ENDERECO_VAZIO, usePosPedido } from "@/components/pos/use-pos-pedido";
@@ -122,6 +123,13 @@ export function PosOverlay({
   } = usePosPedido({ pedidoEditandoId, agendamentoPrefillData, onConcluido: onFechar });
 
   const [telaCheia, setTelaCheia] = useState(false);
+  const [sairEdicaoAberto, setSairEdicaoAberto] = useState(false);
+
+  // Editando um pedido, fechar sem salvar descarta as alteracoes — confirma antes.
+  function pedirFechar() {
+    if (pedidoEditandoId) setSairEdicaoAberto(true);
+    else onFechar();
+  }
 
   /* Tela cheia no <html>, nao so no overlay: os modais do PDV (Dialog/base-ui) sao
      renderizados via portal em document.body — se so o overlay entrasse em tela cheia,
@@ -151,7 +159,7 @@ export function PosOverlay({
 
   return (
     <div
-      onKeyDown={(e) => e.key === "Escape" && !document.fullscreenElement && onFechar()}
+      onKeyDown={(e) => e.key === "Escape" && !document.fullscreenElement && !sairEdicaoAberto && pedirFechar()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-4"
     >
       <div className="flex h-full w-full max-w-[1680px] flex-col overflow-hidden rounded-3xl bg-background shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 duration-200">
@@ -196,7 +204,7 @@ export function PosOverlay({
             >
               {telaCheia ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             </Button>
-            <Button variant="ghost" size="icon" onClick={onFechar}>
+            <Button variant="ghost" size="icon" onClick={pedirFechar} aria-label="Fechar">
               <X className="size-4.5" />
             </Button>
           </div>
@@ -444,6 +452,7 @@ export function PosOverlay({
           cart.alterarObservacoes(rowKey, observacoes);
         }}
       />
+      <PosSairEdicaoDialog open={sairEdicaoAberto} onOpenChange={setSairEdicaoAberto} codigo={pedidoEditandoCodigo} onSair={onFechar} />
     </div>
   );
 }

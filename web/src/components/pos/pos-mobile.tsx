@@ -35,6 +35,7 @@ import { PosAgendamentoDialog } from "@/components/pos/pos-agendamento-dialog";
 import { PosCupomField } from "@/components/pos/pos-cupom-field";
 import { PosPagamentoPanel } from "@/components/pos/pos-pagamento-panel";
 import { PosCashbackDialog } from "@/components/pos/pos-cashback-dialog";
+import { PosSairEdicaoDialog } from "@/components/pos/pos-sair-edicao-dialog";
 import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
 import { PosImpressaoToggle } from "@/components/pos/pos-impressao-toggle";
 import { ENDERECO_VAZIO, usePosPedido } from "@/components/pos/use-pos-pedido";
@@ -68,6 +69,7 @@ export function PosMobile({
 }) {
   const [telaEscolhida, setTela] = useState<Tela>("cardapio");
   const [pedidoCriado, setPedidoCriado] = useState<{ codigo: number | string | null } | null>(null);
+  const [sairEdicaoAberto, setSairEdicaoAberto] = useState(false);
 
   const pos = usePosPedido({
     pedidoEditandoId,
@@ -132,6 +134,8 @@ export function PosMobile({
     if (emPagamento) pos.setEtapa("resumo");
     else if (tela === "detalhes") setTela("carrinho");
     else if (tela === "carrinho") setTela("cardapio");
+    // Editando um pedido, fechar sem salvar descarta as alteracoes — confirma antes.
+    else if (pedidoEditandoId) setSairEdicaoAberto(true);
     else onFechar();
   }
 
@@ -219,6 +223,8 @@ export function PosMobile({
       {pedidoCriado ? (
         <TelaSucesso codigo={pedidoCriado.codigo} onNovoPedido={novoPedido} onFechar={onFechar} />
       ) : null}
+
+      <PosSairEdicaoDialog open={sairEdicaoAberto} onOpenChange={setSairEdicaoAberto} codigo={pos.pedidoEditandoCodigo} onSair={onFechar} />
 
       {/* Modais compartilhados com o PDV de computador */}
       <PosEntregaDialog
