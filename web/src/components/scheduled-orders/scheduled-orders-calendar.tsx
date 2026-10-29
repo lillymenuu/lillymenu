@@ -226,13 +226,13 @@ export function ScheduledOrdersCalendar({
           <p className="text-sm text-muted-foreground">Acompanhe e lance pedidos agendados direto pelo calendário.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setConfigOpen(true)}>
+          <Button className="rounded-xl" variant="outline" size="sm" onClick={() => setConfigOpen(true)}>
             <Settings2 size={14} /> Configurar regras
           </Button>
           <button
             type="button"
             onClick={() => abrirPos(undefined, { agendamentoPrefillData: diaSelecionado ?? undefined })}
-            className="inline-flex h-7 items-center gap-1 rounded-lg bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
+            className="inline-flex h-7 items-center gap-1 rounded-xl bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
           >
             <Plus size={14} /> Lançar pedido agendado
           </button>
@@ -241,13 +241,13 @@ export function ScheduledOrdersCalendar({
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3">
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => mudarMes(-1)} aria-label="Mês anterior">
+          <Button className="rounded-xl" variant="ghost" size="icon-sm" onClick={() => mudarMes(-1)} aria-label="Mês anterior">
             <ChevronLeft className="size-4" />
           </Button>
           <div className="min-w-44 text-center text-sm font-semibold">
             {MESES[mes - 1]} de {ano}
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={() => mudarMes(1)} aria-label="Próximo mês">
+          <Button className="rounded-xl" variant="ghost" size="icon-sm" onClick={() => mudarMes(1)} aria-label="Próximo mês">
             <ChevronRight className="size-4" />
           </Button>
         </div>
@@ -255,7 +255,7 @@ export function ScheduledOrdersCalendar({
           <span className="text-xs text-muted-foreground">
             {totalMes} pedido{totalMes === 1 ? "" : "s"} agendado{totalMes === 1 ? "" : "s"} neste mês
           </span>
-          <Button variant="outline" size="sm" onClick={irParaHoje}>
+          <Button className="rounded-xl" variant="outline" size="sm" onClick={irParaHoje}>
             Hoje
           </Button>
         </div>
@@ -417,7 +417,7 @@ function DiaPainel({
             {pedidos.length} pedido{pedidos.length === 1 ? "" : "s"} agendado{pedidos.length === 1 ? "" : "s"}
           </div>
         </div>
-        <Button variant="ghost" size="icon-sm" onClick={onFechar} aria-label="Voltar para o resumo do mês">
+        <Button className="rounded-xl" variant="ghost" size="icon-sm" onClick={onFechar} aria-label="Voltar para o resumo do mês">
           <X className="size-4" />
         </Button>
       </div>
@@ -435,7 +435,7 @@ function DiaPainel({
 
       {!ehPassado ? (
         <div className="shrink-0 border-t p-3">
-          <Button className="w-full" onClick={() => onLancarPedido(diaIso)}>
+          <Button className="w-full rounded-xl" onClick={() => onLancarPedido(diaIso)}>
             <Plus className="size-4" /> Lançar pedido agendado para este dia
           </Button>
         </div>
@@ -472,7 +472,7 @@ function ResumoMesPainel({
               <p className="text-sm font-medium">Nenhum pedido agendado em {MESES[mes - 1].toLowerCase()} de {ano}.</p>
               <p className="mt-1 text-xs text-muted-foreground">Pedidos feitos pela loja ou pelo balcão com agendamento aparecem aqui.</p>
             </div>
-            <Button size="sm" onClick={onLancarPedido}>
+            <Button className="rounded-xl" size="sm" onClick={onLancarPedido}>
               <Plus className="size-4" /> Lançar pedido agendado
             </Button>
           </div>
