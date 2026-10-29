@@ -119,7 +119,7 @@ function SecaoAgendamento({
             <div className="text-xs font-medium">Horário customizado para {titulo.toLowerCase()}</div>
             {horarios.map((h) => (
               <div key={h.dia} className="flex items-center gap-2">
-                <Select value={String(h.dia)} onValueChange={(v) => onHorariosChange(horarios.map((x) => (x.dia === h.dia ? { ...x, dia: Number(v) } : x)))}>
+                <Select items={DIAS_SEMANA_LONGO} value={String(h.dia)} onValueChange={(v) => onHorariosChange(horarios.map((x) => (x.dia === h.dia ? { ...x, dia: Number(v) } : x)))}>
                   <SelectTrigger className="w-32 shrink-0">
                     <SelectValue />
                   </SelectTrigger>
@@ -134,12 +134,12 @@ function SecaoAgendamento({
                 <Input type="time" value={h.inicio} onChange={(e) => atualizarDia(h.dia, "inicio", e.target.value)} />
                 <span className="text-xs text-muted-foreground">até</span>
                 <Input type="time" value={h.fim} onChange={(e) => atualizarDia(h.dia, "fim", e.target.value)} />
-                <Button variant="ghost" size="icon" className="shrink-0" onClick={() => removerDia(h.dia)}>
+                <Button variant="ghost" size="icon" className="shrink-0 rounded-xl" onClick={() => removerDia(h.dia)}>
                   <Trash2 className="size-4 text-destructive" />
                 </Button>
               </div>
             ))}
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={adicionarDia} disabled={horarios.length >= 7}>
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={adicionarDia} disabled={horarios.length >= 7}>
               <Plus className="size-3.5" /> Criar horário customizado
             </Button>
           </div>
@@ -285,7 +285,7 @@ export function PedidosAgendadosDialog({
           </TabsContent>
         </Tabs>
         <DialogFooter>
-          <Button onClick={salvar} disabled={salvando}>
+          <Button className="rounded-xl" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
