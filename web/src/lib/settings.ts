@@ -218,7 +218,7 @@ export const DIAS_SEMANA_LONGO: Record<number, string> = {
 };
 
 export const CORES_MENU_OPCOES: { valor: string; nome: string; desc: string }[] = [
-  { valor: "#e63770", nome: "Rosa Diggy", desc: "Cor padrão do sistema." },
+  { valor: "#e63770", nome: "Rosa Pink", desc: "Cor padrão do sistema." },
   { valor: "#dc2626", nome: "Vermelho Vivo", desc: "Neutro, vibrante e enérgico, transmite dinamismo, apetite e proximidade." },
   { valor: "#ea5a3c", nome: "Vermelho Vibrante", desc: "Boa para lanchonetes e hamburguerias." },
   { valor: "#1f2d3d", nome: "Cinza Escuro", desc: "Ideal para cafés modernos ou bistrôs elegantes." },
@@ -230,5 +230,7 @@ export const CORES_MENU_OPCOES: { valor: string; nome: string; desc: string }[] 
   { valor: "#c98bd9", nome: "Rosa Doce", desc: "Ótima para docerias temáticas e infantis." },
   { valor: "#7b5c3e", nome: "Marrom Rústico", desc: "Estilo rústico combina com pizzarias com forno à lenha." },
   { valor: "#651073", nome: "Roxo Açaí", desc: "Tom roxo vibrante, inspirado na polpa do açaí — ideal para açaiterias e sorveterias." },
+  { valor: "#f3e9dc", nome: "Creme", desc: "Tom claro e aconchegante, ótimo para cafeterias e confeitarias delicadas." },
+  { valor: "#c08552", nome: "Caramelo", desc: "Quente e acolhedor, combina com padarias, cafés e docerias." },
 ];
 

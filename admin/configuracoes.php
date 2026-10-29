@@ -112,7 +112,7 @@ $loja_verificada = config($conn, 'loja_verificada', '0');
 $loja_contato_cadastro = config($conn, 'loja_contato', config($conn, 'whatsapp_numero', ''));
 $tema_cor_menu = config($conn, 'tema_cor_menu', '#e63770');
 $coresMenuOptions = [
-  ['valor' => '#e63770', 'nome' => 'Rosa Diggy', 'desc' => 'Cor padrão do sistema.'],
+  ['valor' => '#e63770', 'nome' => 'Rosa Pink', 'desc' => 'Cor padrão do sistema.'],
   ['valor' => '#dc2626', 'nome' => 'Vermelho Vivo', 'desc' => 'Neutro, vibrante e enérgico, transmite dinamismo, apetite e proximidade.'],
   ['valor' => '#ea5a3c', 'nome' => 'Vermelho Vibrante', 'desc' => 'Boa para lanchonetes e hamburguerias.'],
   ['valor' => '#1f2d3d', 'nome' => 'Cinza Escuro', 'desc' => 'Ideal para cafés modernos ou bistrôs elegantes.'],
@@ -123,6 +123,8 @@ $coresMenuOptions = [
   ['valor' => '#a8195f', 'nome' => 'Fúcsia', 'desc' => 'Boa para marcas femininas e modernas.'],
   ['valor' => '#c98bd9', 'nome' => 'Rosa Doce', 'desc' => 'Ótima para docerias temáticas e infantis.'],
   ['valor' => '#7b5c3e', 'nome' => 'Marrom Rústico', 'desc' => 'Estilo rústico combina com pizzarias com forno à lenha.'],
+  ['valor' => '#f3e9dc', 'nome' => 'Creme', 'desc' => 'Tom claro e aconchegante, ótimo para cafeterias e confeitarias delicadas.'],
+  ['valor' => '#c08552', 'nome' => 'Caramelo', 'desc' => 'Quente e acolhedor, combina com padarias, cafés e docerias.'],
 ];
 $usuario_nome = $_SESSION['admin_nome'] ?? 'Administrador';
 $usuario_email = $_SESSION['admin_email'] ?? 'admin@local';
