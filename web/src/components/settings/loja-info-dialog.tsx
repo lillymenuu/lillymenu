@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "cn";
 import type { ConfiguracoesDetalhe } from "@/lib/settings";
+import { BannerCropDialog } from "@/components/settings/banner-crop-dialog";
 
 type Loja = ConfiguracoesDetalhe["loja"];
 
@@ -114,6 +115,7 @@ export function LojaInfoDialog({
   const [capaPreview, setCapaPreview] = useState(loja.capa);
   const [capaBase64, setCapaBase64] = useState("");
   const [capaRemover, setCapaRemover] = useState(false);
+  const [capaCropSrc, setCapaCropSrc] = useState<string | null>(null);
   const [perfilPreview, setPerfilPreview] = useState(loja.perfil);
   const [perfilBase64, setPerfilBase64] = useState("");
   const [perfilRemover, setPerfilRemover] = useState(false);
@@ -148,17 +150,23 @@ export function LojaInfoDialog({
     setPerfilRemover(false);
   }, [open, loja]);
 
-  async function selecionarCapa(e: React.ChangeEvent<HTMLInputElement>) {
+  // A capa passa pelo BannerCropDialog antes de virar preview/base64, pra loja
+  // escolher o enquadramento.
+  function selecionarCapa(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-    try {
-      const dataUrl = await redimensionarImagem(file, 1200);
-      setCapaBase64(dataUrl);
-      setCapaPreview(dataUrl);
-      setCapaRemover(false);
-    } catch {
-      toast.error("Não foi possível processar a imagem.");
-    }
+    const reader = new FileReader();
+    reader.onload = () => setCapaCropSrc(reader.result as string);
+    reader.onerror = () => toast.error("Não foi possível processar a imagem.");
+    reader.readAsDataURL(file);
+  }
+
+  function aplicarCapaRecortada(dataUrl: string) {
+    setCapaBase64(dataUrl);
+    setCapaPreview(dataUrl);
+    setCapaRemover(false);
+    setCapaCropSrc(null);
   }
 
   async function selecionarPerfil(e: React.ChangeEvent<HTMLInputElement>) {
@@ -289,12 +297,15 @@ export function LojaInfoDialog({
 
         <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-1">
         <div className="relative mb-9">
-          <div className="relative h-28 w-full overflow-hidden rounded-lg border bg-muted">
+          <div className="relative aspect-[4/1] w-full overflow-hidden rounded-xl border bg-muted">
             {capaPreview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={capaPreview.startsWith("data:") ? capaPreview : imagemUrl(capaPreview, phpAdminUrl)} alt="" className="size-full object-cover" />
             ) : (
-              <span className="flex size-full items-center justify-center text-xs text-muted-foreground">Adicionar capa</span>
+              <span className="flex size-full flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground">
+                Adicionar capa
+                <span className="text-[11px]">Tamanho ideal: 1920 × 480 px</span>
+              </span>
             )}
             <button
               type="button"
@@ -434,6 +445,7 @@ export function LojaInfoDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <BannerCropDialog src={capaCropSrc} onCancelar={() => setCapaCropSrc(null)} onConfirmar={aplicarCapaRecortada} />
     </Dialog>
   );
 }
