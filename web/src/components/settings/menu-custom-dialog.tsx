@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { CORES_MENU_OPCOES } from "@/lib/settings";
 
-// Cor clara (ex.: Manteiga) pede ícone escuro por cima, senão o check some.
+// Cor clara pede ícone escuro por cima, senão o check some.
 function corClara(hex: string) {
   const n = parseInt(hex.slice(1), 16);
   const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;

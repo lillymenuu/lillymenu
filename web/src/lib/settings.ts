@@ -230,7 +230,7 @@ export const CORES_MENU_OPCOES: { valor: string; nome: string; desc: string }[] 
   { valor: "#c98bd9", nome: "Rosa Doce", desc: "Ótima para docerias temáticas e infantis." },
   { valor: "#7b5c3e", nome: "Marrom Rústico", desc: "Estilo rústico combina com pizzarias com forno à lenha." },
   { valor: "#651073", nome: "Roxo Açaí", desc: "Tom roxo vibrante, inspirado na polpa do açaí — ideal para açaiterias e sorveterias." },
-  { valor: "#f2e6b3", nome: "Manteiga", desc: "Amarelo suave e aconchegante, ótimo para padarias, cafeterias e confeitarias." },
+  { valor: "#4b2e21", nome: "Marrom Cookie", desc: "Chocolate profundo e acolhedor, ideal para docerias, cookies e cafeterias." },
   { valor: "#c08552", nome: "Caramelo", desc: "Quente e acolhedor, combina com padarias, cafés e docerias." },
 ];
 
