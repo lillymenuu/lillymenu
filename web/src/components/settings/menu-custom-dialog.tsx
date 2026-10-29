@@ -7,6 +7,13 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { CORES_MENU_OPCOES } from "@/lib/settings";
 
+// Cor clara (ex.: Manteiga) pede ícone escuro por cima, senão o check some.
+function corClara(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b > 186;
+}
+
 export function MenuCustomDialog({
   open,
   onOpenChange,
@@ -50,23 +57,26 @@ export function MenuCustomDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-md rounded-3xl sm:max-w-md">
+      <DialogContent className="max-h-[90vh] w-[900px] max-w-[calc(100%-2rem)] rounded-3xl sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>Customize o menu</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">Escolha a cor principal do seu cardápio online.</p>
-        <div className="scrollbar-hidden grid max-h-[50vh] grid-cols-1 gap-2 overflow-y-auto px-1">
+        <div className="scrollbar-hidden grid max-h-[60vh] grid-cols-1 gap-2 overflow-y-auto p-1 sm:grid-cols-2 md:grid-cols-3">
           {CORES_MENU_OPCOES.map((cor) => (
             <button
               key={cor.valor}
               type="button"
               onClick={() => setSelecionada(cor.valor)}
-              className={`flex items-center gap-3 rounded-lg border p-2.5 text-left ${
+              className={`flex items-start gap-3 rounded-xl border p-2.5 text-left ${
                 selecionada === cor.valor ? "border-primary ring-1 ring-primary" : ""
               }`}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: cor.valor }}>
-                {selecionada === cor.valor ? <Check className="size-4 text-white" /> : null}
+              <span
+                className="flex size-8 shrink-0 items-center justify-center rounded-full ring-1 ring-black/5"
+                style={{ backgroundColor: cor.valor }}
+              >
+                {selecionada === cor.valor ? <Check className={`size-4 ${corClara(cor.valor) ? "text-neutral-800" : "text-white"}`} /> : null}
               </span>
               <div className="min-w-0">
                 <div className="text-sm font-medium">{cor.nome}</div>
