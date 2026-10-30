@@ -1422,7 +1422,7 @@ function TipoCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between rounded-xl border-[1.5px] p-4 text-left transition-colors"
+      className="flex w-full items-center justify-between rounded-2xl border-[1.5px] p-4 text-left transition-colors"
       style={ativo ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#e5e7eb" }}
     >
       <div>
