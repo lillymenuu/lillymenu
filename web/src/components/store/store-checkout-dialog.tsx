@@ -790,7 +790,7 @@ export function StoreCheckoutDialog({
                           onClick={() => {
                             if (f.valor === "dinheiro") setTrocoModalAberto(true);
                           }}
-                          className="flex cursor-pointer items-center gap-3.5 rounded-xl border-[1.5px] p-3.5 transition-colors"
+                          className="flex cursor-pointer items-center gap-3.5 rounded-2xl border-[1.5px] p-3.5 transition-colors"
                           style={ativo ? { borderColor: brown, background: `${brown}0d` } : { borderColor: "#e5e7eb" }}
                         >
                           <Icon size={20} className="shrink-0 text-neutral-700" />
@@ -804,7 +804,7 @@ export function StoreCheckoutDialog({
                             {(f.valor === "credito" || f.valor === "debito") && (perfil.bandeirasCredito.length || perfil.bandeirasDebito.length) > 0 && (
                               <div className="mt-1.5 flex flex-wrap gap-1.5">
                                 {(f.valor === "credito" ? perfil.bandeirasCredito : perfil.bandeirasDebito).map((b) => (
-                                  <span key={b} className="rounded bg-neutral-100 px-2 py-0.5 text-[.68rem] font-medium text-neutral-600">
+                                  <span key={b} className="rounded-md bg-neutral-100 px-2 py-0.5 text-[.68rem] font-medium text-neutral-600">
                                     {b}
                                   </span>
                                 ))}
