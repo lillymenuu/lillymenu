@@ -33,7 +33,7 @@ function fieldClass() {
   /* text-base (16px) e nao um valor menor — abaixo de 16px o iOS/Android
      tratam o campo como "dificil de ler" e da zoom automatico na tela ao
      focar, obrigando o usuario a dar zoom out manualmente depois. */
-  return "w-full rounded-xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-3 text-base text-neutral-900 outline-none transition-colors focus:bg-white";
+  return "w-full rounded-2xl border-[1.5px] border-neutral-200 bg-neutral-50 px-3.5 py-3 text-base text-neutral-900 outline-none transition-colors focus:bg-white";
 }
 
 export function StoreCheckoutDialog({
