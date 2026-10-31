@@ -11,6 +11,7 @@ import {
   Package,
   Plus,
   Search,
+  Sparkles,
   Star,
   Trash2,
 } from "lucide-react";
@@ -397,6 +398,19 @@ export function ProdutosManager({
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={imagemUrl || PRODUTO_IMAGEM_PADRAO} alt={p.nome} className="size-full object-cover" />
                         }
+                        {((p.pontos_ganho ?? 0) > 0 || (p.pontos_custo ?? 0) > 0) && (
+                          <span
+                            title={[
+                              (p.pontos_ganho ?? 0) > 0 ? `Ganha ${p.pontos_ganho} pts por compra` : null,
+                              (p.pontos_custo ?? 0) > 0 ? `Troca por ${p.pontos_custo} pts` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                            className="absolute top-1.5 left-1.5 flex size-7 items-center justify-center rounded-full bg-purple-700 text-white shadow-sm"
+                          >
+                            <Sparkles size={14} />
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={(e) => {
