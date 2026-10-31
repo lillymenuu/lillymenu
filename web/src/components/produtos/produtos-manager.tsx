@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   CheckCircle2,
+  Gift,
   Layers,
   ListOrdered,
   MoreVertical,
   Package,
   Plus,
+  Repeat,
   Search,
   Sparkles,
   Star,
@@ -19,6 +21,7 @@ import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -399,17 +402,40 @@ export function ProdutosManager({
                           <img src={imagemUrl || PRODUTO_IMAGEM_PADRAO} alt={p.nome} className="size-full object-cover" />
                         }
                         {((p.pontos_ganho ?? 0) > 0 || (p.pontos_custo ?? 0) > 0) && (
-                          <span
-                            title={[
-                              (p.pontos_ganho ?? 0) > 0 ? `Ganha ${p.pontos_ganho} pts por compra` : null,
-                              (p.pontos_custo ?? 0) > 0 ? `Troca por ${p.pontos_custo} pts` : null,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ")}
-                            className="absolute top-1.5 left-1.5 flex size-7 items-center justify-center rounded-full bg-purple-700 text-white shadow-sm"
-                          >
-                            <Sparkles size={14} />
-                          </span>
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <span className="absolute top-1.5 left-1.5 flex size-7 items-center justify-center rounded-full bg-purple-700 text-white shadow-sm" />
+                              }
+                            >
+                              <Sparkles size={14} />
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              align="start"
+                              className="min-w-44 rounded-xl border border-purple-100 bg-background dark:border-purple-500/30 p-2.5 text-foreground shadow-lg"
+                            >
+                              <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-purple-700 uppercase">
+                                <Sparkles size={12} /> Clube de pontos
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                {(p.pontos_ganho ?? 0) > 0 && (
+                                  <div className="flex items-center gap-2 rounded-lg bg-purple-50 px-2 py-1.5 dark:bg-purple-500/15">
+                                    <Gift size={13} className="shrink-0 text-purple-700" />
+                                    <span className="text-muted-foreground">Ganha</span>
+                                    <span className="ml-auto font-semibold text-purple-700">+{p.pontos_ganho} pts</span>
+                                  </div>
+                                )}
+                                {(p.pontos_custo ?? 0) > 0 && (
+                                  <div className="flex items-center gap-2 rounded-lg bg-purple-50 px-2 py-1.5 dark:bg-purple-500/15">
+                                    <Repeat size={13} className="shrink-0 text-purple-700" />
+                                    <span className="text-muted-foreground">Troca por</span>
+                                    <span className="ml-auto font-semibold text-purple-700">{p.pontos_custo} pts</span>
+                                  </div>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                         <button
                           type="button"
