@@ -290,7 +290,7 @@ function montarSecoes(brand: string, email: string): Secao[] {
             "A " +
               brand +
               " pode encerrar contas que violem estes termos ou que fiquem suspensas por falta de pagamento por um período prolongado, após aviso ao Lojista.",
-            "Antes de cancelar, o Lojista pode pedir ao suporte uma cópia dos seus dados.",
+            
           ]}
         />
       ),
