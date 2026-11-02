@@ -8,6 +8,7 @@ import type { GrupoResumo } from "@/db/queries/complementos";
 import { BOTAO_PRIMARIO_CLASSE } from "./estilos";
 import { VincularGrupoDialog } from "./vincular-grupo-dialog";
 import { GrupoConfigDialog } from "./grupo-config-dialog";
+import { GrupoEditarDialog } from "./grupo-editar-dialog";
 
 function plural(n: number, singular: string, pluralTexto: string) {
   return `${n} ${n === 1 ? singular : pluralTexto}`;
@@ -27,6 +28,7 @@ export function ProdutoComplementosAba({ produtoId }: { produtoId: number | null
   const [dados, setDados] = useState<{ vinculados: GrupoResumo[]; todos: GrupoResumo[] } | null>(null);
   const [vincularAberto, setVincularAberto] = useState(false);
   const [novoGrupoAberto, setNovoGrupoAberto] = useState(false);
+  const [editandoGrupoId, setEditandoGrupoId] = useState<number | null>(null);
 
   const carregar = useCallback(async () => {
     if (!produtoId) return;
@@ -80,13 +82,24 @@ export function ProdutoComplementosAba({ produtoId }: { produtoId: number | null
       {dados?.vinculados.length === 0 && <p className="mt-2 text-sm">Você não vinculou nenhum grupo de adicionais para este produto.</p>}
 
       {dados?.vinculados.map((g) => (
-        <div key={g.id} className="flex flex-col gap-0.5 rounded-xl border p-4 shadow-xs">
+        <div
+          key={g.id}
+          onClick={() => setEditandoGrupoId(g.id)}
+          className="flex cursor-pointer flex-col gap-0.5 rounded-xl border p-4 shadow-xs transition-colors hover:bg-muted/30"
+        >
           <div className="text-sm font-semibold">{g.nome}</div>
           <div className="text-sm text-muted-foreground">
             {g.ativo ? "disponível" : "indisponível"} em {plural(g.totalProdutos, "produto", "produtos")} e{" "}
             {plural(g.totalCategorias, "categoria", "categorias")}
           </div>
-          <button type="button" onClick={() => desvincular(g)} className="mt-1 w-fit text-sm text-primary hover:underline">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              void desvincular(g);
+            }}
+            className="mt-1 w-fit text-sm text-primary hover:underline"
+          >
             Desvincular grupo
           </button>
         </div>
@@ -117,6 +130,15 @@ export function ProdutoComplementosAba({ produtoId }: { produtoId: number | null
             setVincularAberto(false);
             await carregar();
           }}
+        />
+      )}
+
+      {editandoGrupoId !== null && (
+        <GrupoEditarDialog
+          open
+          onOpenChange={(v) => !v && setEditandoGrupoId(null)}
+          grupoId={editandoGrupoId}
+          onAlterado={() => void carregar()}
         />
       )}
 
