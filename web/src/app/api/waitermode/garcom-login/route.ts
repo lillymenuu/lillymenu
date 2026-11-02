@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verificarCredenciaisGarcom, criarSessaoGarcom } from "@/db/queries/garcomAuth";
 import { GARCOM_TOKEN_COOKIE } from "@/lib/garcomAuthCookie";
+import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
 
 /* Equivalente de public/api/garcom_login.php. */
 export async function POST(request: Request) {
@@ -11,6 +12,10 @@ export async function POST(request: Request) {
 
   if (!email.trim() || !codigo.trim() || lojaId <= 0) {
     return NextResponse.json({ ok: false, msg: "Informe o e-mail e o código de acesso." }, { status: 400 });
+  }
+
+  if (await lojaPublicaBloqueada(lojaId)) {
+    return NextResponse.json({ ok: false, msg: "Esta loja não está disponível no momento." }, { status: 403 });
   }
 
   const garcom = await verificarCredenciaisGarcom(lojaId, email, codigo);

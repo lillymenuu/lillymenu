@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { resolverLojaIdPorSlug } from "@/db/queries/lojaPerfil";
 import { perfilGarcomLoja } from "@/db/queries/modoGarcom";
 import { getSessaoGarcom } from "@/lib/session";
+import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
+import { LojaIndisponivel } from "@/app/store/[slug]/loja-indisponivel";
 import { GarcomLoginForm } from "@/components/waitermode/garcom-login-form";
 
 async function baseUrlAtual(): Promise<string> {
@@ -17,6 +19,7 @@ export default async function GarcomLoginPage({ params }: { params: Promise<{ sl
   const { slug } = await params;
   const lojaId = await resolverLojaIdPorSlug(slug);
   if (!lojaId) notFound();
+  if (await lojaPublicaBloqueada(lojaId)) return <LojaIndisponivel />;
 
   const sessao = await getSessaoGarcom();
   if (sessao && sessao.lojaId === lojaId) redirect(`/${slug}/garcom`);

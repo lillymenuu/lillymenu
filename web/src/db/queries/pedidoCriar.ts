@@ -1,8 +1,8 @@
 import "server-only";
 import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
 import { db, withTransaction, type NeonTx } from "@/db";
+import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
 import {
-  lojas,
   mesas,
   clientes,
   pedidos,
@@ -133,8 +133,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
   if (!nome || !telefone) return { ok: false, msg: "Nome e telefone são obrigatórios" };
   if (!input.itens || input.itens.length === 0) return { ok: false, msg: "Nenhum item no carrinho" };
 
-  const lojaAtiva = await db.select({ ativo: lojas.ativo }).from(lojas).where(eq(lojas.id, lojaId)).limit(1);
-  if (lojaAtiva.length > 0 && lojaAtiva[0].ativo === false) {
+  if (await lojaPublicaBloqueada(lojaId)) {
     return { ok: false, msg: "Esta loja nao esta aceitando pedidos no momento." };
   }
 

@@ -4,6 +4,8 @@ import { resolverLojaIdPorSlug } from "@/db/queries/lojaPerfil";
 import { perfilGarcomLoja, mesasAtivasGarcom } from "@/db/queries/modoGarcom";
 import { catalogoPdv, type ProdutoPdv, type ComboPdv } from "@/db/queries/pdvCatalogo";
 import { getSessaoGarcom } from "@/lib/session";
+import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
+import { LojaIndisponivel } from "@/app/store/[slug]/loja-indisponivel";
 import { GarcomApp } from "@/components/waitermode/garcom-app";
 import type { StoreCategoria, StoreCombo, StoreProduto } from "@/lib/store/types";
 
@@ -57,6 +59,7 @@ export default async function GarcomPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const lojaId = await resolverLojaIdPorSlug(slug);
   if (!lojaId) notFound();
+  if (await lojaPublicaBloqueada(lojaId)) return <LojaIndisponivel />;
 
   const sessao = await getSessaoGarcom();
   if (!sessao || sessao.lojaId !== lojaId) redirect(`/${slug}/garcom_login`);

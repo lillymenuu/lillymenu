@@ -6,7 +6,7 @@ import { GARCOM_TOKEN_COOKIE } from "@/lib/garcomAuthCookie";
 import { validarSessao, type AdminAutenticado } from "@/db/queries/auth";
 import { exigirSuperadmin } from "@/db/queries/superadminAuth";
 import { validarSessaoGarcom, type GarcomAutenticado } from "@/db/queries/garcomAuth";
-import { bloquearSeAssinaturaExpirada } from "@/db/queries/assinatura";
+import { bloquearSeAssinaturaExpirada, lojaPublicaBloqueada } from "@/db/queries/assinatura";
 
 /*
  * Substitui phpApiFetch/superApiFetch como fonte de identidade do
@@ -66,5 +66,7 @@ export async function getSessaoGarcom(): Promise<GarcomAutenticado | null> {
   const store = await cookies();
   const token = store.get(GARCOM_TOKEN_COOKIE)?.value;
   if (!token) return null;
-  return validarSessaoGarcom(token);
+  const garcom = await validarSessaoGarcom(token);
+  if (!garcom || (await lojaPublicaBloqueada(garcom.lojaId))) return null;
+  return garcom;
 }

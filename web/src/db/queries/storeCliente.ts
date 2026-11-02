@@ -5,6 +5,7 @@ import { clientes, pedidos, pedidoItens, avaliacoes, mesas } from "@/db/schema";
 import { apenasDigitos, telefoneSemMascara } from "@/db/queries/telefone";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { timestampFortaleza } from "@/db/queries/tempo";
+import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
 
 /*
  * Equivalente de public/api/pedidos_por_cliente.php e pedido_status.php:
@@ -335,6 +336,7 @@ export async function statusMesaPublico(lojaId: number, mesaId: number): Promise
 
 export async function solicitarContaMesaPublico(lojaId: number, mesaId: number): Promise<{ ok: true } | { ok: false; msg: string }> {
   if (!mesaId || mesaId <= 0) return { ok: false, msg: "Mesa inválida." };
+  if (await lojaPublicaBloqueada(lojaId)) return { ok: false, msg: "Esta loja não está disponível no momento." };
 
   const [mesa] = await db.select({ id: mesas.id }).from(mesas).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId), eq(mesas.ativo, true))).limit(1);
   if (!mesa) return { ok: false, msg: "Mesa não encontrada ou desativada." };

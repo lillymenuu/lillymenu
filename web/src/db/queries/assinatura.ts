@@ -106,6 +106,20 @@ export async function bloquearSeAssinaturaExpirada(lojaId: number): Promise<bool
   return true;
 }
 
+/**
+ * Gate das superficies publicas (loja /store/[slug], pedido-criar, modo garcom, conta da mesa):
+ * true se a loja esta suspensa -- seja pelo bloqueio manual do superadmin (lojas.ativo=false),
+ * seja pelo plano vencido. Chama bloquearSeAssinaturaExpirada() pra efetivar o vencimento na
+ * hora: sem isso a loja so era bloqueada quando o lojista fazia login, e ate la continuava
+ * aberta ao publico (o superadmin ja mostrava "suspensa", calculando pelas datas).
+ */
+export async function lojaPublicaBloqueada(lojaId: number): Promise<boolean> {
+  const [loja] = await db.select({ ativo: lojas.ativo }).from(lojas).where(eq(lojas.id, lojaId)).limit(1);
+  if (!loja) return false;
+  if (loja.ativo === false) return true;
+  return bloquearSeAssinaturaExpirada(lojaId);
+}
+
 export type CobrancaPendente = {
   id: number;
   planoId: number | null;

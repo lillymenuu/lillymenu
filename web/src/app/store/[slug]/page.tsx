@@ -6,6 +6,8 @@ import { getConfigs } from "@/db/queries/config";
 import { montarCatalogoLoja } from "@/db/queries/catalogo";
 import type { StorePerfil, StoreCatalogo, StoreProduto, StoreCombo } from "@/lib/store/types";
 import { StoreView } from "@/components/store/store-view";
+import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
+import { LojaIndisponivel } from "./loja-indisponivel";
 
 async function baseUrlAtual(): Promise<string> {
   const store = await headers();
@@ -95,6 +97,7 @@ export default async function StorePage({
 
   const lojaId = await resolverLojaIdPorSlug(slug);
   if (!lojaId) notFound();
+  if (await lojaPublicaBloqueada(lojaId)) return <LojaIndisponivel />;
 
   const baseUrl = await baseUrlAtual();
   const [perfilNeon, catalogoNeon] = await Promise.all([
