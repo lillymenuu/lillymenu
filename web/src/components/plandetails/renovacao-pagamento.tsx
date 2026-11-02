@@ -233,7 +233,7 @@ export function RenovacaoPagamento({
         {pixEstado === "erro" && (
           <>
             <p className="text-sm text-destructive">{pixErro}</p>
-            <Button className="rounded-lg font-normal" onClick={() => gerarPix(planoEscolhidoId)}>
+            <Button className="rounded-xl font-normal" onClick={() => gerarPix(planoEscolhidoId)}>
               Tentar novamente
             </Button>
           </>
@@ -248,7 +248,7 @@ export function RenovacaoPagamento({
             />
             <div className="flex w-full min-w-0 items-center gap-2">
               <span className="min-w-0 flex-1 truncate rounded-lg bg-background px-2 py-1.5 text-xs">{qrCode}</span>
-              <Button variant="outline" size="sm" className="rounded-lg font-normal" onClick={copiarPixAuto}>
+              <Button variant="outline" size="sm" className="rounded-xl font-normal" onClick={copiarPixAuto}>
                 Copiar
               </Button>
             </div>
@@ -281,7 +281,7 @@ export function RenovacaoPagamento({
                   <span className="text-xs font-medium text-muted-foreground uppercase">Chave PIX para pagamento</span>
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="min-w-0 flex-1 truncate rounded-lg bg-muted/40 px-2 py-1.5 text-xs">{saasPixChave}</span>
-                    <Button variant="outline" size="sm" className="rounded-lg font-normal" onClick={copiarPixManual}>
+                    <Button variant="outline" size="sm" className="rounded-xl font-normal" onClick={copiarPixManual}>
                       Copiar
                     </Button>
                   </div>
@@ -319,7 +319,7 @@ export function RenovacaoPagamento({
               )}
 
               <a href={whatsLink} target="_blank" rel="noopener" className="w-full">
-                <Button variant="outline" className="w-full rounded-lg font-normal">
+                <Button variant="outline" className="w-full rounded-xl font-normal">
                   Enviar comprovante no WhatsApp
                 </Button>
               </a>

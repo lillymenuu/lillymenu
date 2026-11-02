@@ -146,7 +146,7 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
               )}
             </div>
             {assinatura.status !== "trial" && podeRenovar && (
-              <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={() => setRenovarAberto(true)}>
+              <Button variant="outline" size="sm" className="gap-1.5 rounded-xl font-normal" onClick={() => setRenovarAberto(true)}>
                 <RefreshCw className="size-3.5" /> Renovar
               </Button>
             )}
@@ -184,7 +184,7 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
               <div className="flex flex-col gap-2">
                 <p className="text-sm text-muted-foreground">Você tem um pagamento em aberto. Finalize-o para trocar de plano.</p>
                 <Button
-                  className="rounded-lg font-normal"
+                  className="rounded-xl font-normal"
                   onClick={() => {
                     setTrocarAberto(false);
                     setRenovarAberto(true);
@@ -218,7 +218,7 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
                   ))}
                 </div>
                 {trocarMsg && <p className="text-sm text-destructive">{trocarMsg}</p>}
-                <Button className="rounded-lg font-normal" onClick={confirmarTrocaPlano} disabled={trocando}>
+                <Button className="rounded-xl font-normal" onClick={confirmarTrocaPlano} disabled={trocando}>
                   {trocando ? "Confirmando..." : "Confirmar troca"}
                 </Button>
               </>
@@ -252,7 +252,7 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
                   <Input id="perfil-telefone" placeholder="(00) 00000-0000" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
                 </div>
               </div>
-              <Button type="submit" className="rounded-lg font-normal" disabled={salvandoPerfil}>
+              <Button type="submit" className="rounded-xl font-normal" disabled={salvandoPerfil}>
                 {salvandoPerfil ? "Salvando..." : "Salvar perfil"}
               </Button>
             </form>
