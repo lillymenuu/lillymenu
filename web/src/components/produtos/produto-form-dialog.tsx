@@ -442,8 +442,8 @@ export function ProdutoFormDialog({
 
         <div className="scrollbar-hidden flex max-h-[65vh] flex-col overflow-y-auto overflow-x-hidden px-1 pb-1">
         <Tabs value={aba} onValueChange={(v) => v && setAba(v)}>
-          <div className="overflow-x-auto">
-            <TabsList variant="line" className="w-max">
+          <div className="scrollbar-hidden overflow-x-auto">
+            <TabsList variant="line" className="w-max [&_[data-slot=tabs-trigger]]:text-[13px]">
               <TabsTrigger value="detalhes">
                 <Grid2x2 size={14} /> Detalhes
               </TabsTrigger>
