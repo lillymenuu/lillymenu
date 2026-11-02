@@ -312,6 +312,13 @@ export function HeroSignupForm({
             >
               {enviando ? "Enviando..." : labels.botao}
             </button>
+            <p className="text-center text-xs text-muted-foreground">
+              Ao se cadastrar, você concorda com os{" "}
+              <a href="/termos" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                Termos de uso
+              </a>
+              .
+            </p>
           </div>
         )}
       </form>
