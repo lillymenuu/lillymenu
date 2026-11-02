@@ -143,7 +143,7 @@ export function ItemComplementoDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={MODAL_CLASSE}>
+        <DialogContent overlayForceRender className={MODAL_CLASSE}>
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">{item ? "Editando item" : "Criando item"}</DialogTitle>
           </DialogHeader>

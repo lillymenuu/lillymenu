@@ -87,7 +87,7 @@ export function GrupoEditarDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(MODAL_CLASSE, "max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden")}>
+      <DialogContent overlayForceRender className={cn(MODAL_CLASSE, "max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden")}>
         <DialogHeader>
           <DialogTitle className="text-base font-semibold">Editando grupo de complemento</DialogTitle>
         </DialogHeader>

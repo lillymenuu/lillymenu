@@ -42,7 +42,7 @@ export function VincularItensDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(MODAL_CLASSE, "sm:max-w-md")}>
+      <DialogContent overlayForceRender className={cn(MODAL_CLASSE, "sm:max-w-md")}>
         <DialogHeader>
           <DialogTitle className="text-base font-semibold">Vincular outros itens</DialogTitle>
           <DialogDescription>Os itens marcados vão usar este mesmo estoque.</DialogDescription>

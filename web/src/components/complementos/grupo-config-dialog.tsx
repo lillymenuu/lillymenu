@@ -157,7 +157,7 @@ export function GrupoConfigDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={MODAL_CLASSE}>
+        <DialogContent overlayForceRender className={MODAL_CLASSE}>
           <DialogHeader>
             <span className="text-xs font-medium text-muted-foreground">
               Etapa {indiceEtapa + 1} de {etapas.length}

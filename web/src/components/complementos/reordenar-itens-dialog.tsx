@@ -57,7 +57,7 @@ export function ReordenarItensDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={MODAL_CLASSE}>
+      <DialogContent overlayForceRender className={MODAL_CLASSE}>
         <DialogHeader>
           <DialogTitle className="text-base font-semibold">Reordenar itens</DialogTitle>
           <DialogDescription>Defina a ordem em que os itens de &quot;{grupo?.nome}&quot; aparecem para o cliente.</DialogDescription>

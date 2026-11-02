@@ -33,7 +33,7 @@ export function EscolherGrupoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={MODAL_CLASSE}>
+      <DialogContent overlayForceRender className={MODAL_CLASSE}>
         <DialogHeader>
           <DialogTitle className="text-base font-semibold">{clonar ? "Clonar grupo de adicionais" : "Escolha um grupo de adicionais"}</DialogTitle>
           <DialogDescription>

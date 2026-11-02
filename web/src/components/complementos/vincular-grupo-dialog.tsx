@@ -46,7 +46,7 @@ export function VincularGrupoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(MODAL_CLASSE, "sm:max-w-md")}>
+      <DialogContent overlayForceRender className={cn(MODAL_CLASSE, "sm:max-w-md")}>
         <DialogHeader>
           <DialogTitle className="text-base font-semibold">Vincular a um grupo</DialogTitle>
         </DialogHeader>
