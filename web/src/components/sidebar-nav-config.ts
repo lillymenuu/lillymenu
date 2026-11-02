@@ -35,6 +35,7 @@ import {
   FileBarChart,
   Store,
   UserCheck,
+  Layers,
 } from "lucide-react";
 
 export type NavItem = {
@@ -67,6 +68,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "pedidosAgendados", label: "Agendamentos", icon: CalendarCheck, href: "/scheduled-orders", migrated: true },
       { menuKey: "orcamentos", label: "Gerar orçamentos", icon: FileText, href: "/quotes", migrated: true },
       { menuKey: "produtos", label: "Produtos", icon: Package, href: "/produtos", migrated: true },
+      { menuKey: "produtos", label: "Complementos", icon: Layers, href: "/product-complement", migrated: true },
       { menuKey: "promo", label: "Promo", icon: Gift, href: "/promotion", migrated: true },
       { menuKey: "estoque", label: "Estoque", icon: Boxes, href: "/stock", migrated: true },
       { menuKey: "clientes", label: "Clientes", icon: Grid3x3, href: "/clients", migrated: true },

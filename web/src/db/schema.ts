@@ -365,6 +365,11 @@ export const complementosItens = pgTable(
     atualizado_em: timestamp("atualizado_em", { mode: "string" }),
     ordem: integer("ordem").notNull().default(0),
     loja_id: integer("loja_id").notNull().default(1),
+    imagem: varchar("imagem", { length: 255 }),
+    controla_estoque: boolean("controla_estoque").notNull().default(false),
+    estoque_quantidade: integer("estoque_quantidade").notNull().default(0),
+    pontos_ganho: integer("pontos_ganho").notNull().default(0),
+    pontos_custo: integer("pontos_custo").notNull().default(0),
   },
   (t) => [
     index("complementos_itens_idx_comp_grupo").on(t.grupo_id),

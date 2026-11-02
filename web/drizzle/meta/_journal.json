@@ -141,6 +141,13 @@
       "when": 1792877814854,
       "tag": "0019_mesas_conta_solicitada",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793660065405,
+      "tag": "0020_complementos_itens_extras",
+      "breakpoints": true
     }
   ]
 }
