@@ -26,7 +26,9 @@ function apenasNumero(v: string) {
 }
 
 /* Criacao/edicao do grupo em 3 etapas: nome -> quantidades (min/max/obrigatorio) -> produtos e categorias vinculados.
-   O estado nasce das props: quem usa remonta o dialog (key) a cada abertura. */
+   O estado nasce das props: quem usa remonta o dialog (key) a cada abertura.
+   Com `produtoFixoId` (criado de dentro do modal de produto) o grupo ja nasce vinculado a esse
+   produto e a etapa de vinculo some. */
 export function GrupoConfigDialog({
   open,
   onOpenChange,
@@ -34,13 +36,15 @@ export function GrupoConfigDialog({
   produtos,
   categorias,
   onSalvo,
+  produtoFixoId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   grupo: ComplementoGrupo | null;
   produtos: OpcaoVinculo[];
   categorias: OpcaoVinculo[];
-  onSalvo: () => void;
+  onSalvo: (grupoId: number) => void;
+  produtoFixoId?: number;
 }) {
   const [etapa, setEtapa] = useState<Etapa>("nome");
   const [nome, setNome] = useState(grupo?.nome ?? "");
@@ -48,7 +52,7 @@ export function GrupoConfigDialog({
   const [obrigatorio, setObrigatorio] = useState(grupo?.obrigatorio ?? false);
   const [minimo, setMinimo] = useState(String(grupo?.quantidadeMinima ?? 0));
   const [maximo, setMaximo] = useState(String(grupo ? grupo.quantidadeMaxima : 1));
-  const [produtoIds, setProdutoIds] = useState<number[]>(grupo?.produtoIds ?? []);
+  const [produtoIds, setProdutoIds] = useState<number[]>(grupo?.produtoIds ?? (produtoFixoId ? [produtoFixoId] : []));
   const [categoriaIds, setCategoriaIds] = useState<number[]>(grupo?.categoriaIds ?? []);
   const [abaVinculo, setAbaVinculo] = useState<"produtos" | "categorias">("produtos");
   const [buscaVinculo, setBuscaVinculo] = useState("");
@@ -57,7 +61,9 @@ export function GrupoConfigDialog({
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
 
-  const indiceEtapa = ETAPAS.findIndex((e) => e.chave === etapa);
+  const etapas = produtoFixoId ? ETAPAS.filter((e) => e.chave !== "vinculo") : ETAPAS;
+  const indiceEtapa = etapas.findIndex((e) => e.chave === etapa);
+  const ultimaEtapa = indiceEtapa === etapas.length - 1;
   const min = Number(minimo || 0);
   const max = Number(maximo || 0);
 
@@ -76,15 +82,17 @@ export function GrupoConfigDialog({
         setErro("A quantidade mínima não pode ser maior que a máxima.");
         return;
       }
-      setEtapa("vinculo");
-      return;
+      if (!ultimaEtapa) {
+        setEtapa("vinculo");
+        return;
+      }
     }
     void salvar();
   }
 
   function voltar() {
     setErro(null);
-    setEtapa(ETAPAS[Math.max(0, indiceEtapa - 1)].chave);
+    setEtapa(etapas[Math.max(0, indiceEtapa - 1)].chave);
   }
 
   async function salvar() {
@@ -111,7 +119,7 @@ export function GrupoConfigDialog({
       }
       toast.success(grupo ? "Grupo atualizado" : "Grupo criado");
       onOpenChange(false);
-      onSalvo();
+      onSalvo(data.id);
     } finally {
       setSalvando(false);
     }
@@ -134,7 +142,7 @@ export function GrupoConfigDialog({
       toast.success("Grupo excluído");
       setConfirmarExclusao(false);
       onOpenChange(false);
-      onSalvo();
+      onSalvo(grupo.id);
     } finally {
       setExcluindo(false);
     }
@@ -152,9 +160,9 @@ export function GrupoConfigDialog({
         <DialogContent className={MODAL_CLASSE}>
           <DialogHeader>
             <span className="text-xs font-medium text-muted-foreground">
-              Etapa {indiceEtapa + 1} de {ETAPAS.length}
+              Etapa {indiceEtapa + 1} de {etapas.length}
             </span>
-            <DialogTitle className="text-base font-semibold">{ETAPAS[indiceEtapa].titulo}</DialogTitle>
+            <DialogTitle className="text-base font-semibold">{etapas[indiceEtapa].titulo}</DialogTitle>
           </DialogHeader>
 
           {etapa === "nome" && (
@@ -305,7 +313,7 @@ export function GrupoConfigDialog({
                 </Button>
               )}
               <Button className={BOTAO_PRIMARIO_CLASSE} onClick={avancar} disabled={salvando}>
-                {etapa === "vinculo" ? (salvando ? "Salvando..." : "Salvar") : "Avançar"}
+                {ultimaEtapa ? (salvando ? "Salvando..." : "Salvar") : "Avançar"}
               </Button>
             </div>
           </div>

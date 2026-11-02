@@ -317,3 +317,37 @@ export async function reordenarItensComplemento(lojaId: number, grupoId: number,
   });
   return { ok: true };
 }
+
+export type GrupoResumo = { id: number; nome: string; ativo: boolean; totalProdutos: number; totalCategorias: number };
+
+/** Aba Complementos do produto: grupos vinculados direto a ele + todos os grupos da loja (para vincular). */
+export async function gruposDoProduto(lojaId: number, produtoId: number): Promise<{ vinculados: GrupoResumo[]; todos: GrupoResumo[] }> {
+  const [grupos, vinculosProdutos, vinculosCategorias] = await Promise.all([
+    db.select({ id: complementosGrupos.id, nome: complementosGrupos.nome, ativo: complementosGrupos.ativo }).from(complementosGrupos).where(eq(complementosGrupos.loja_id, lojaId)).orderBy(asc(complementosGrupos.nome)),
+    db.select({ grupoId: complementosGruposProdutos.grupo_id, produtoId: complementosGruposProdutos.produto_id }).from(complementosGruposProdutos).where(eq(complementosGruposProdutos.loja_id, lojaId)),
+    db.select({ grupoId: complementosGruposCategorias.grupo_id }).from(complementosGruposCategorias).where(eq(complementosGruposCategorias.loja_id, lojaId)),
+  ]);
+
+  const todos = grupos.map((g) => ({
+    ...g,
+    totalProdutos: vinculosProdutos.filter((v) => v.grupoId === g.id).length,
+    totalCategorias: vinculosCategorias.filter((v) => v.grupoId === g.id).length,
+  }));
+  const idsDoProduto = new Set(vinculosProdutos.filter((v) => v.produtoId === produtoId).map((v) => v.grupoId));
+  return { vinculados: todos.filter((g) => idsDoProduto.has(g.id)), todos };
+}
+
+export async function vincularGrupoProduto(lojaId: number, produtoId: number, grupoId: number): Promise<Resultado> {
+  if (!(await grupoDaLoja(lojaId, grupoId))) return { ok: false, msg: "Grupo não encontrado." };
+  const [produto] = await db.select({ id: produtos.id }).from(produtos).where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId))).limit(1);
+  if (!produto) return { ok: false, msg: "Produto não encontrado." };
+  await db.insert(complementosGruposProdutos).values({ grupo_id: grupoId, produto_id: produtoId, loja_id: lojaId }).onConflictDoNothing();
+  return { ok: true };
+}
+
+export async function desvincularGrupoProduto(lojaId: number, produtoId: number, grupoId: number): Promise<Resultado> {
+  await db
+    .delete(complementosGruposProdutos)
+    .where(and(eq(complementosGruposProdutos.grupo_id, grupoId), eq(complementosGruposProdutos.produto_id, produtoId), eq(complementosGruposProdutos.loja_id, lojaId)));
+  return { ok: true };
+}

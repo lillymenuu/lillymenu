@@ -18,6 +18,7 @@ import {
   ArrowRightLeft,
   Plus,
   Pencil,
+  SquarePlus,
 } from "lucide-react";
 import {
   Dialog,
@@ -45,6 +46,7 @@ import { EstoqueDialog } from "./estoque-dialog";
 import { ProdutoVariacoesManageDialog } from "./produto-variacoes-manage-dialog";
 import { ProdutoGrupoOpcoesDialog } from "./produto-grupo-opcoes-dialog";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
+import { ProdutoComplementosAba } from "@/components/complementos/produto-complementos-aba";
 import type { Categoria, Produto, ProdutoVariacaoItem, ProdutoGrupoOpcoes, ProdutoVariacoesDetalheResposta } from "@/lib/produtos";
 import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 
@@ -56,6 +58,17 @@ const DIAS_LABEL: Record<string, string> = {
   qui: "Qui",
   sex: "Sex",
   sab: "Sáb",
+};
+
+const TITULO_ABA: Record<string, string> = {
+  detalhes: "detalhes",
+  preco: "preço e variações",
+  pontos: "pontos",
+  disponibilidade: "disponibilidade",
+  complementos: "complementos",
+  estoque: "estoque",
+  validade: "prazo de validade",
+  outros: "outros",
 };
 
 export function ProdutoFormDialog({
@@ -422,7 +435,9 @@ export function ProdutoFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] max-w-4xl overflow-hidden rounded-3xl sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{produto ? "Editar produto" : "Novo produto"} - detalhes</DialogTitle>
+          <DialogTitle>
+            {produto ? nome || produto.nome : "Novo produto"} - {TITULO_ABA[aba] ?? "detalhes"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="scrollbar-hidden flex max-h-[65vh] flex-col overflow-y-auto overflow-x-hidden px-1 pb-1">
@@ -440,6 +455,9 @@ export function ProdutoFormDialog({
               </TabsTrigger>
               <TabsTrigger value="disponibilidade">
                 <CalendarCheck size={14} /> Disponibilidade
+              </TabsTrigger>
+              <TabsTrigger value="complementos">
+                <SquarePlus size={14} /> Complementos
               </TabsTrigger>
               <TabsTrigger value="estoque">
                 <Box size={14} /> Estoque
@@ -797,6 +815,10 @@ export function ProdutoFormDialog({
             </div>
           </TabsContent>
 
+          <TabsContent value="complementos">
+            <ProdutoComplementosAba produtoId={produto?.id ?? null} />
+          </TabsContent>
+
           <TabsContent value="estoque">
             {!produto ? (
               <div className="flex flex-col items-center gap-2 py-14 text-center text-muted-foreground">
@@ -928,6 +950,8 @@ export function ProdutoFormDialog({
         {erro && <p className="text-sm text-destructive">{erro}</p>}
         </div>
 
+        {/* a aba Complementos salva na hora (vincular/desvincular), sem o Salvar do produto */}
+        {aba !== "complementos" && (
         <DialogFooter className={`border-t-0 bg-transparent ${produto ? "sm:justify-between" : ""}`}>
           {produto && (
             <Button
@@ -943,6 +967,7 @@ export function ProdutoFormDialog({
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
     <ImageCropDialog open={cropOpen} onOpenChange={setCropOpen} file={cropFile} onConfirm={handleCropConfirm} />
