@@ -16,8 +16,6 @@ export async function POST(request: Request) {
     descricao: typeof body.descricao === "string" ? body.descricao : "",
     preco: Number(body.preco ?? 0),
     podeRepetir: body.pode_repetir !== false,
-    controlaEstoque: body.controla_estoque === true,
-    estoqueQuantidade: Number(body.estoque_quantidade ?? 0),
     pontosGanho: Number(body.pontos_ganho ?? 0),
     pontosCusto: Number(body.pontos_custo ?? 0),
     imagemBase64: typeof body.imagem_base64 === "string" && body.imagem_base64 ? body.imagem_base64 : undefined,

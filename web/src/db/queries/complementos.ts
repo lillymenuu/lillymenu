@@ -4,6 +4,7 @@ import { db, withTransaction } from "@/db";
 import { complementosGrupos, complementosGruposCategorias, complementosGruposProdutos, complementosItens, categorias, produtos } from "@/db/schema";
 import { storageDelete, storageSaveBase64 } from "@/db/queries/storage";
 import { timestampFortaleza } from "@/db/queries/tempo";
+import { resolverEstoquesItens, type EstoqueComplemento } from "@/db/queries/complementosEstoque";
 
 /*
  * Tela Complementos (/product-complement): grupos de adicionais reaproveitaveis
@@ -22,10 +23,9 @@ export type ComplementoItem = {
   ativo: boolean;
   ordem: number;
   imagem: string | null;
-  controlaEstoque: boolean;
-  estoqueQuantidade: number;
   pontosGanho: number;
   pontosCusto: number;
+  estoque: EstoqueComplemento | null;
 };
 
 export type ComplementoGrupo = {
@@ -50,6 +50,7 @@ export async function listarComplementos(lojaId: number): Promise<ComplementoGru
     db.select({ grupoId: complementosGruposProdutos.grupo_id, produtoId: complementosGruposProdutos.produto_id }).from(complementosGruposProdutos).where(eq(complementosGruposProdutos.loja_id, lojaId)),
     db.select({ grupoId: complementosGruposCategorias.grupo_id, categoriaId: complementosGruposCategorias.categoria_id }).from(complementosGruposCategorias).where(eq(complementosGruposCategorias.loja_id, lojaId)),
   ]);
+  const estoques = await resolverEstoquesItens(lojaId, itens);
 
   return grupos.map((g) => ({
     id: g.id,
@@ -73,10 +74,9 @@ export async function listarComplementos(lojaId: number): Promise<ComplementoGru
         ativo: i.ativo,
         ordem: i.ordem,
         imagem: i.imagem,
-        controlaEstoque: i.controla_estoque,
-        estoqueQuantidade: i.estoque_quantidade,
         pontosGanho: i.pontos_ganho,
         pontosCusto: i.pontos_custo,
+        estoque: estoques.get(i.id) ?? null,
       })),
   }));
 }
@@ -216,8 +216,9 @@ export async function clonarGrupoComplemento(lojaId: number, grupoId: number): P
           ordem: i.ordem,
           loja_id: lojaId,
           imagem: i.imagem,
-          controla_estoque: i.controla_estoque,
-          estoque_quantidade: i.estoque_quantidade,
+          /* a copia usa o mesmo estoque do original (estoque unico) */
+          estoque_produto_id: i.estoque_produto_id,
+          estoque_complemento_id: i.estoque_complemento_id,
           pontos_ganho: i.pontos_ganho,
           pontos_custo: i.pontos_custo,
         }))
@@ -242,8 +243,6 @@ export type SalvarItemInput = {
   descricao: string;
   preco: number;
   podeRepetir: boolean;
-  controlaEstoque: boolean;
-  estoqueQuantidade: number;
   pontosGanho: number;
   pontosCusto: number;
   imagemBase64?: string;
@@ -264,8 +263,6 @@ export async function salvarItemComplemento(lojaId: number, input: SalvarItemInp
     descricao: input.descricao.trim().slice(0, 255) || null,
     preco: Math.round(preco * 100) / 100,
     pode_repetir: input.podeRepetir,
-    controla_estoque: input.controlaEstoque,
-    estoque_quantidade: Math.max(0, Math.floor(input.estoqueQuantidade || 0)),
     pontos_ganho: Math.max(0, Math.floor(input.pontosGanho || 0)),
     pontos_custo: Math.max(0, Math.floor(input.pontosCusto || 0)),
   };

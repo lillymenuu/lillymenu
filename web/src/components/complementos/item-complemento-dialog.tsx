@@ -11,7 +11,8 @@ import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 import { ImageCropDialog } from "@/components/produtos/image-crop-dialog";
 import { MoneyInput } from "@/components/produtos/money-input";
 import type { ComplementoItem } from "@/db/queries/complementos";
-import { BOTAO_PRIMARIO_CLASSE, CAMPO_CLASSE, MODAL_CLASSE } from "./estilos";
+import { BOTAO_PRIMARIO_CLASSE, BOTAO_SECUNDARIO_CLASSE, CAMPO_CLASSE, MODAL_CLASSE } from "./estilos";
+import { ItemEstoqueAba } from "./item-estoque-aba";
 
 type Aba = "detalhes" | "pontos" | "estoque";
 
@@ -60,8 +61,6 @@ export function ItemComplementoDialog({
   const [pontosGanho, setPontosGanho] = useState(String(item?.pontosGanho || 1));
   const [pontosCustoAtivo, setPontosCustoAtivo] = useState((item?.pontosCusto ?? 0) > 0);
   const [pontosCusto, setPontosCusto] = useState(String(item?.pontosCusto || 1));
-  const [controlaEstoque, setControlaEstoque] = useState(item?.controlaEstoque ?? false);
-  const [estoque, setEstoque] = useState(String(item?.estoqueQuantidade ?? 0));
   const [imagemPreview, setImagemPreview] = useState<string | null>(item?.imagem ?? null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [imagemRemover, setImagemRemover] = useState(false);
@@ -101,8 +100,6 @@ export function ItemComplementoDialog({
           pode_repetir: podeRepetir,
           pontos_ganho: pontosGanhoAtivo ? Math.max(1, parseInt(pontosGanho, 10) || 1) : 0,
           pontos_custo: pontosCustoAtivo ? Math.max(1, parseInt(pontosCusto, 10) || 1) : 0,
-          controla_estoque: controlaEstoque,
-          estoque_quantidade: parseInt(estoque, 10) || 0,
           imagem_base64: imagemBase64 ?? "",
           imagem_remover: imagemRemover,
         }),
@@ -263,34 +260,17 @@ export function ItemComplementoDialog({
             </div>
           )}
 
-          {aba === "estoque" && (
-            <div className="flex flex-col gap-4">
-              <LinhaSwitch
-                titulo="Controlar estoque"
-                texto="Mostra a quantidade disponível no card do item."
-                checked={controlaEstoque}
-                onChange={setControlaEstoque}
-              />
-              {controlaEstoque && (
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="item-estoque" className="text-sm font-medium">
-                    Quantidade em estoque
-                  </label>
-                  <input id="item-estoque" inputMode="numeric" className={CAMPO_CLASSE} value={estoque} onChange={(e) => setEstoque(apenasNumero(e.target.value))} />
-                </div>
-              )}
-            </div>
-          )}
+          {aba === "estoque" && <ItemEstoqueAba item={item} onAlterado={onSalvo} />}
 
           {erro && <p className="text-sm text-destructive">{erro}</p>}
 
-          <div className="flex items-center gap-2">
+          <div className="flex justify-end gap-2">
             {item && (
-              <button type="button" onClick={() => setConfirmarExclusao(true)} className="text-sm font-medium text-destructive hover:underline">
+              <Button variant="ghost" className={BOTAO_SECUNDARIO_CLASSE} onClick={() => setConfirmarExclusao(true)}>
                 Excluir item
-              </button>
+              </Button>
             )}
-            <Button className={cn(BOTAO_PRIMARIO_CLASSE, "ml-auto")} onClick={salvar} disabled={salvando}>
+            <Button className={BOTAO_PRIMARIO_CLASSE} onClick={salvar} disabled={salvando}>
               {salvando ? "Salvando..." : "Salvar"}
             </Button>
           </div>

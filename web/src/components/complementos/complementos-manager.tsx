@@ -241,14 +241,14 @@ export function ComplementosManager({
                       </div>
                       <div className="flex flex-col gap-1 p-2.5">
                         <span className="truncate text-sm font-semibold">{item.nome}</span>
-                        {item.controlaEstoque && (
+                        {item.estoque && (
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                            {item.estoqueQuantidade > 0 ? (
+                            {item.estoque.quantidade > 0 ? (
                               <CheckCircle2 size={13} className="text-emerald-600" />
                             ) : (
                               <X size={13} className="text-destructive" />
                             )}
-                            <strong className="font-semibold text-foreground">{item.estoqueQuantidade}</strong> em estoque
+                            <strong className="font-semibold text-foreground">{item.estoque.quantidade}</strong> em estoque
                           </span>
                         )}
                         <span className="text-sm text-muted-foreground">{formatBRL(item.preco)}</span>

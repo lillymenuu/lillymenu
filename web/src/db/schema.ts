@@ -366,16 +366,31 @@ export const complementosItens = pgTable(
     ordem: integer("ordem").notNull().default(0),
     loja_id: integer("loja_id").notNull().default(1),
     imagem: varchar("imagem", { length: 255 }),
-    controla_estoque: boolean("controla_estoque").notNull().default(false),
-    estoque_quantidade: integer("estoque_quantidade").notNull().default(0),
     pontos_ganho: integer("pontos_ganho").notNull().default(0),
     pontos_custo: integer("pontos_custo").notNull().default(0),
+    /* Estoque do item (no maximo um dos dois): o de um produto (tabela estoque, compartilhado com
+       o produto) ou um estoque proprio de complementos, que outros itens tambem podem usar. */
+    estoque_produto_id: integer("estoque_produto_id"),
+    estoque_complemento_id: integer("estoque_complemento_id"),
   },
   (t) => [
     index("complementos_itens_idx_comp_grupo").on(t.grupo_id),
     foreignKey({ columns: [t.grupo_id], foreignColumns: [complementosGrupos.id], name: "complementos_itens_fk_comp_grupo" }).onDelete("cascade"),
+    foreignKey({ columns: [t.estoque_produto_id], foreignColumns: [produtos.id], name: "complementos_itens_fk_estoque_produto" }).onDelete("set null"),
+    foreignKey({ columns: [t.estoque_complemento_id], foreignColumns: [complementosEstoques.id], name: "complementos_itens_fk_estoque_complemento" }).onDelete("set null"),
   ]
 );
+
+/* Estoque proprio de complementos (item que nao e vendido como produto, ex.: "Nutella"). */
+export const complementosEstoques = pgTable("complementos_estoques", {
+  id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+  loja_id: integer("loja_id").notNull(),
+  nome: varchar("nome", { length: 120 }).notNull(),
+  quantidade: integer("quantidade").notNull().default(0),
+  quantidade_minima: integer("quantidade_minima").notNull().default(0),
+  criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+  atualizado_em: timestamp("atualizado_em", { mode: "string" }),
+});
 
 export const configuracoes = pgTable(
   "configuracoes",

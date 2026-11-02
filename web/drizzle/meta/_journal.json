@@ -148,6 +148,20 @@
       "when": 1793660065405,
       "tag": "0020_complementos_itens_extras",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793661232889,
+      "tag": "0021_complementos_sem_estoque_simples",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793661236630,
+      "tag": "0022_complementos_estoque",
+      "breakpoints": true
     }
   ]
 }
