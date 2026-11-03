@@ -200,7 +200,7 @@ export function StoreComboDialog({
         type="button"
         disabled={!podeAdicionar}
         onClick={adicionar}
-        className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+        className="flex-1 rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
         style={{ background: podeAdicionar ? brown : "#c0a88a" }}
       >
         {passosFaltando.length > 0 ? `Selecione "${passosFaltando[0].nome}"` : `Adicionar ${formatarPreco(combo.preco_final * qtd)}`}
