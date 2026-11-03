@@ -11,6 +11,7 @@ import type {
   PosProduto,
   PosTipoPedido as PosTipoPedidoValor,
 } from "@/lib/pos";
+import { abreModalOpcoes } from "@/lib/pos";
 import type { CaixaResumoResposta } from "@/lib/caixa";
 import { usePosCart } from "@/components/pos/use-pos-cart";
 import { consumoDoCarrinho, estoqueRestanteProduto } from "@/components/pos/estoque-carrinho";
@@ -180,7 +181,7 @@ export function usePosPedido({
           quantidade: number;
           preco: number;
           observacoes: string | null;
-          opcoes: { tipo: "variacao" | "grupo"; grupo_id: number | null; referencia_id: number; titulo: string; nome: string }[];
+          opcoes: { tipo: "variacao" | "grupo" | "complemento"; grupo_id: number | null; referencia_id: number; titulo: string; nome: string; quantidade?: number }[];
         }[] = data.itens ?? [];
 
         setPedidoEditandoCodigo(pedido.codigo ?? pedido.id);
@@ -242,6 +243,7 @@ export function usePosPedido({
             estoque: produtoCatalogo?.estoque,
             variacaoId,
             selecoesGrupos,
+            complementos: i.opcoes.filter((o) => o.tipo === "complemento").map((o) => ({ id: o.referencia_id, qtd: o.quantidade ?? 1 })),
             opcoesSnapshot: i.opcoes.map((o) => ({ tipo: o.tipo, titulo: o.titulo, nome: o.nome })),
           });
         });
@@ -262,7 +264,7 @@ export function usePosPedido({
     if (comboDoItem) {
       setComboItemEditando(item);
       setComboAberto(comboDoItem);
-    } else if (produtoDoItem?.tem_variacoes) {
+    } else if (produtoDoItem && abreModalOpcoes(produtoDoItem)) {
       setItemVariacaoEditando(item);
       setProdutoVariacao(produtoDoItem);
     } else {
@@ -388,6 +390,7 @@ export function usePosPedido({
         ...(i.combosels ? { combosels: i.combosels } : {}),
         ...(i.variacaoId ? { variacao_id: i.variacaoId } : {}),
         ...(i.selecoesGrupos && Object.keys(i.selecoesGrupos).length > 0 ? { selecoes_grupos: i.selecoesGrupos } : {}),
+        ...(i.complementos && i.complementos.length > 0 ? { complementos: i.complementos } : {}),
       }));
 
       const res = await fetch("/api/pos/salvar", {

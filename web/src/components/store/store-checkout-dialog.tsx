@@ -458,6 +458,7 @@ export function StoreCheckoutDialog({
             pontosPendente: i.pontosCusto != null,
             variacao_id: i.variacaoId ?? undefined,
             selecoes_grupos: i.selecoesGrupos,
+            complementos: i.complementos,
           })),
           troco_solicitado: formaPagamento === "dinheiro" && trocoPara.trim() !== "",
           troco_valor: formaPagamento === "dinheiro" ? parseValorMascarado(trocoPara) || 0 : 0,

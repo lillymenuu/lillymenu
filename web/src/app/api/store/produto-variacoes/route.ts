@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { variacoesProdutoPdv } from "@/db/queries/produtoVariacoesPdv";
+import { complementosDoProduto } from "@/db/queries/complementosVenda";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, msg: "Parametros invalidos" }, { status: 400 });
   }
 
-  const resultado = await variacoesProdutoPdv(lojaId, produtoId);
+  const [resultado, complementos] = await Promise.all([variacoesProdutoPdv(lojaId, produtoId), complementosDoProduto(lojaId, produtoId)]);
 
   return NextResponse.json({
     ok: resultado.ok,
@@ -25,5 +26,6 @@ export async function GET(request: Request) {
       max_selecao: g.maxSelecao,
       itens: g.itens.map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
     })),
+    complementos,
   });
 }

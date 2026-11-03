@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Expand, Plus, Shrink, X } from "lucide-react";
+import { Check, Expand, Minus, Plus, Shrink, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { PontosBadge } from "@/components/store/pontos-badge";
@@ -11,6 +11,19 @@ import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
 import { formatarPreco } from "@/lib/store/format";
 import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { StoreCartItem, StoreProduto, StoreProdutoVariacoes } from "@/lib/store/types";
+import {
+  alterarSelecao,
+  complementosParaEnvio,
+  dicaDoGrupo,
+  grupoPendente,
+  itensEscolhidos,
+  precoComplementos,
+  qtdNoGrupo,
+  rotuloComplementos,
+  type ComplementoGrupoVenda,
+  type ComplementoItemVenda,
+  type SelecaoComplementos,
+} from "@/lib/complementos";
 
 export function StoreProdutoDialog({
   produto,
@@ -38,6 +51,7 @@ export function StoreProdutoDialog({
   const [carregando, setCarregando] = useState(false);
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
   const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
+  const [selecaoComplementos, setSelecaoComplementos] = useState<SelecaoComplementos>({});
   /* Comeca ja expandida (foto inteira, sem cortar) tanto no desktop quanto no mobile —
      o botao "Recolher" continua disponivel pra quem preferir a miniatura cortada. */
   const [imagemAmpliada, setImagemAmpliada] = useState(true);
@@ -47,6 +61,8 @@ export function StoreProdutoDialog({
   const secaoRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const temVariacoes = produto?.tem_variacoes === 1;
+  /* Produto com grupos da tela Complementos: usa o mesmo modal de opcoes, mesmo sem variacoes. */
+  const temOpcoes = temVariacoes || produto?.tem_complementos === 1;
 
   useEffect(() => {
     if (!open || !produto) return;
@@ -57,10 +73,11 @@ export function StoreProdutoDialog({
     setAspectRatio(null);
     setVariacaoId(null);
     setSelecoesGrupos({});
+    setSelecaoComplementos({});
     setDetalhe(null);
     setErroCarregar(false);
 
-    if (produto.tem_variacoes === 1) {
+    if (produto.tem_variacoes === 1 || produto.tem_complementos === 1) {
       setCarregando(true);
       fetch(`/api/store/produto-variacoes?produto_id=${produto.id}&loja_id=${lojaId}`)
         .then((r) => r.json())
@@ -94,18 +111,25 @@ export function StoreProdutoDialog({
         : produto.preco_produto
     : produto.preco_final;
   const precoGrupos = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
-  const precoUnitario = precoBase + precoGrupos;
+  const complementos: ComplementoGrupoVenda[] = detalhe?.complementos ?? [];
+  const precoUnitario = precoBase + precoGrupos + precoComplementos(complementos, selecaoComplementos);
   const total = precoUnitario * qtd;
 
   const faltaVariacao = variacaoObrigatoria && !variacaoSelecionada;
-  const faltaGrupoObrigatorio = temVariacoes && (detalhe?.grupos_opcoes ?? []).some((g) => g.obrigatorio === 1 && (selecoesGrupos[g.id]?.length ?? 0) === 0);
+  const faltaGrupoObrigatorio =
+    (temVariacoes && (detalhe?.grupos_opcoes ?? []).some((g) => g.obrigatorio === 1 && (selecoesGrupos[g.id]?.length ?? 0) === 0)) ||
+    complementos.some((g) => grupoPendente(g, selecaoComplementos));
   /* Estoque que ainda cabe: o do produto menos o que ja esta no carrinho. */
   const estoqueRestante = Math.max(0, produto.estoque - jaNoCarrinho);
   const podeAdicionar =
     !produto.esgotado && estoqueRestante > 0 && qtd <= estoqueRestante && !carregando && !faltaVariacao && !faltaGrupoObrigatorio;
 
   /* Ordem das secoes exibidas (variacao, depois cada grupo) — define pra onde rolar ao concluir uma. */
-  const secaoOrder = [...(temVariacoes ? ["variacao"] : []), ...(detalhe?.grupos_opcoes ?? []).map((g) => `grupo-${g.id}`)];
+  const secaoOrder = [
+    ...(temVariacoes ? ["variacao"] : []),
+    ...(detalhe?.grupos_opcoes ?? []).map((g) => `grupo-${g.id}`),
+    ...complementos.map((g) => `complemento-${g.id}`),
+  ];
 
   function rolarParaProximaSecao(idAtual: string) {
     const idx = secaoOrder.indexOf(idAtual);
@@ -135,10 +159,16 @@ export function StoreProdutoDialog({
     });
   }
 
+  function alterarComplemento(grupo: ComplementoGrupoVenda, item: ComplementoItemVenda, delta: 1 | -1) {
+    const nova = alterarSelecao(selecaoComplementos, grupo, item, delta);
+    setSelecaoComplementos(nova);
+    if (delta === 1 && grupo.maximo > 0 && qtdNoGrupo(nova, grupo.id) >= grupo.maximo) rolarParaProximaSecao(`complemento-${grupo.id}`);
+  }
+
   function adicionar() {
     if (!produto || !podeAdicionar) return;
 
-    if (!temVariacoes) {
+    if (!temOpcoes) {
       onAdicionar({
         id: produto.id,
         tipo: "produto",
@@ -154,13 +184,16 @@ export function StoreProdutoDialog({
       const nomeVariacao = variacaoSelecionada ? [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ") : "";
       const gruposLabel = gruposSelecionados
         .flatMap((g) => g.itens.map((it) => ` + ${it.nome}`))
-        .join("");
+        .join("") + rotuloComplementos(complementos, selecaoComplementos);
       const opcoesSelecionadas: { titulo: string; nome: string }[] = [];
       if (variacaoSelecionada) {
         opcoesSelecionadas.push({ titulo: detalhe?.variacao_titulo ?? "Variações do produto", nome: nomeVariacao || "Opção" });
       }
       for (const g of gruposSelecionados) {
         for (const it of g.itens) opcoesSelecionadas.push({ titulo: g.grupo.titulo, nome: it.nome });
+      }
+      for (const { grupo, item, qtd: q } of itensEscolhidos(complementos, selecaoComplementos)) {
+        opcoesSelecionadas.push({ titulo: grupo.nome, nome: q > 1 ? `${q}x ${item.nome}` : item.nome });
       }
       onAdicionar({
         id: produto.id,
@@ -175,6 +208,7 @@ export function StoreProdutoDialog({
         variacaoId,
         selecoesGrupos,
         opcoesSelecionadas,
+        complementos: complementosParaEnvio(complementos, selecaoComplementos),
       });
     }
 
@@ -213,7 +247,7 @@ export function StoreProdutoDialog({
 
   const footer = (
     <div>
-      {!temVariacoes && <div className="min-[940px]:hidden">{obsField}</div>}
+      {!temOpcoes && <div className="min-[940px]:hidden">{obsField}</div>}
       <div className="flex items-center justify-between gap-3">
         <QtyStepper
           value={qtd}
@@ -227,7 +261,7 @@ export function StoreProdutoDialog({
           disabled={!podeAdicionar}
           onClick={adicionar}
           className="flex-1 rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
-          style={{ background: podeAdicionar ? brown : temVariacoes ? "#a3a3a3" : "#c0a88a" }}
+          style={{ background: podeAdicionar ? brown : temOpcoes ? "#a3a3a3" : "#c0a88a" }}
         >
           {produto.esgotado
             ? "Esgotado"
@@ -245,6 +279,7 @@ export function StoreProdutoDialog({
     <p className="text-[.86rem] text-red-600">Não foi possível carregar as opções. Feche e tente novamente.</p>
   ) : (
     <>
+      {temVariacoes && (
       <div ref={(el) => { secaoRefs.current["variacao"] = el; }}>
         <div className="mb-1 flex items-center justify-between">
           <h3 className="text-[.86rem] font-bold text-neutral-900">{detalhe?.variacao_titulo ?? "Escolha uma das opções"}</h3>
@@ -276,6 +311,7 @@ export function StoreProdutoDialog({
           {detalhe?.variacoes.length === 0 && <p className="py-2 text-[.8rem] text-neutral-400">Sem variações cadastradas.</p>}
         </div>
       </div>
+      )}
 
       {(detalhe?.grupos_opcoes ?? []).map((grupo) => {
         const selecionados = selecoesGrupos[grupo.id] ?? [];
@@ -307,10 +343,43 @@ export function StoreProdutoDialog({
           </div>
         );
       })}
+
+      {complementos.map((grupo, indice) => {
+        const pendente = grupoPendente(grupo, selecaoComplementos);
+        const noLimite = grupo.maximo > 0 && qtdNoGrupo(selecaoComplementos, grupo.id) >= grupo.maximo;
+        const primeiraSecao = indice === 0 && !temVariacoes && (detalhe?.grupos_opcoes ?? []).length === 0;
+        return (
+          <div
+            key={`complemento-${grupo.id}`}
+            ref={(el) => { secaoRefs.current[`complemento-${grupo.id}`] = el; }}
+            className={primeiraSecao ? "" : "mt-4 border-t border-neutral-100 pt-3"}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">{grupo.nome}</h3>
+              {(grupo.obrigatorio || grupo.minimo > 0) && (
+                <span className={`text-[.72rem] font-bold ${pendente ? "text-red-500" : "text-emerald-600"}`}>{pendente ? "Obrigatório" : "Ok"}</span>
+              )}
+            </div>
+            <p className="mb-1.5 text-[.74rem] text-neutral-500">{dicaDoGrupo(grupo)}</p>
+            {grupo.itens.map((it) => (
+              <LinhaComplemento
+                key={it.id}
+                item={it}
+                qtd={selecaoComplementos[grupo.id]?.[it.id] ?? 0}
+                escolhaUnica={grupo.maximo === 1}
+                noLimite={noLimite}
+                cor={brown}
+                nomeRadio={`complemento-${grupo.id}`}
+                onAlterar={(delta) => alterarComplemento(grupo, it, delta)}
+              />
+            ))}
+          </div>
+        );
+      })}
     </>
   );
 
-  if (temVariacoes) {
+  if (temOpcoes) {
     /* Dialogo centralizado igual ao varModalLoja do sistema legado: imagem a esquerda
        (topo no mobile) e opcoes rolando ao lado; observacao e rodape fixos embaixo. */
     return (
@@ -344,7 +413,7 @@ export function StoreProdutoDialog({
                 </h2>
                 {produto.descricao && <p className="mb-2 text-[.8rem] leading-normal text-neutral-500">{produto.descricao}</p>}
                 <p className="mb-3.5 flex items-center gap-2 text-[.86rem] font-bold text-neutral-900">
-                  a partir de {formatarPreco(produto.preco_produto)}
+                  {temVariacoes ? `a partir de ${formatarPreco(produto.preco_produto)}` : formatarPreco(produto.preco_final)}
                   <PontosBadge pontos={pontosTotal} />
                 </p>
                 {opcoesConteudo}
@@ -484,6 +553,104 @@ function OpcaoExtra({
       >
         {ativo ? <Check size={15} /> : <Plus size={15} />}
       </button>
+    </div>
+  );
+}
+
+/**
+ * Item de complemento na loja: escolha unica vira radio; nos demais o "+" adiciona e, se o item
+ * pode repetir, aparece o contador (- qtd +) no lugar do botao.
+ */
+function LinhaComplemento({
+  item,
+  qtd,
+  escolhaUnica,
+  noLimite,
+  cor,
+  nomeRadio,
+  onAlterar,
+}: {
+  item: ComplementoItemVenda;
+  qtd: number;
+  escolhaUnica: boolean;
+  /** O grupo ja chegou no maximo de escolhas. */
+  noLimite: boolean;
+  cor: string;
+  nomeRadio: string;
+  onAlterar: (delta: 1 | -1) => void;
+}) {
+  const esgotado = item.estoque !== null && item.estoque <= 0;
+  const ativo = qtd > 0;
+  const podeSomar = !esgotado && !noLimite && (item.podeRepetir || qtd === 0) && (item.estoque === null || qtd < item.estoque);
+  const travado = !ativo && (esgotado || (noLimite && !escolhaUnica));
+
+  const texto = (
+    <div className="text-base text-neutral-900">
+      {item.nome}
+      <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{esgotado ? "Esgotado" : formatarPreco(item.preco)}</small>
+    </div>
+  );
+
+  if (escolhaUnica) {
+    return (
+      <label
+        className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${
+          esgotado && !ativo ? "cursor-not-allowed opacity-40" : "cursor-pointer"
+        }`}
+      >
+        {texto}
+        <input
+          type="radio"
+          name={nomeRadio}
+          checked={ativo}
+          disabled={esgotado && !ativo}
+          onChange={() => onAlterar(1)}
+          onClick={() => ativo && onAlterar(1)}
+          className="size-[18px] shrink-0"
+          style={{ accentColor: cor }}
+        />
+      </label>
+    );
+  }
+
+  return (
+    <div className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${travado ? "opacity-40" : ""}`}>
+      {texto}
+      {ativo && item.podeRepetir ? (
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onAlterar(-1)}
+            aria-label={`Remover um ${item.nome}`}
+            className="flex size-8 items-center justify-center rounded-[10px] bg-neutral-100 text-neutral-900"
+          >
+            <Minus size={15} />
+          </button>
+          <span className="w-4 text-center text-[.9rem] font-bold tabular-nums">{qtd}</span>
+          <button
+            type="button"
+            onClick={() => onAlterar(1)}
+            disabled={!podeSomar}
+            aria-label={`Adicionar mais um ${item.nome}`}
+            className="flex size-8 items-center justify-center rounded-[10px] text-white disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ background: cor }}
+          >
+            <Plus size={15} />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onAlterar(ativo ? -1 : 1)}
+          disabled={!ativo && !podeSomar}
+          aria-pressed={ativo}
+          aria-label={ativo ? `Remover ${item.nome}` : `Adicionar ${item.nome}`}
+          className="flex size-8 shrink-0 items-center justify-center rounded-[10px] text-white disabled:cursor-not-allowed"
+          style={{ background: ativo ? "#171717" : cor }}
+        >
+          {ativo ? <Check size={15} /> : <Plus size={15} />}
+        </button>
+      )}
     </div>
   );
 }

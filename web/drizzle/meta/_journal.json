@@ -162,6 +162,13 @@
       "when": 1793661236630,
       "tag": "0022_complementos_estoque",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793665455175,
+      "tag": "0023_pedido_item_opcoes_quantidade",
+      "breakpoints": true
     }
   ]
 }

@@ -304,7 +304,7 @@ export async function buscarPedidos(lojaId: number, termoBruto: string): Promise
   };
 }
 
-export type ItemOpcaoSelecionada = { tipo: "variacao" | "grupo"; grupoId: number | null; referenciaId: number; titulo: string; nome: string };
+export type ItemOpcaoSelecionada = { tipo: "variacao" | "grupo" | "complemento"; grupoId: number | null; referenciaId: number; titulo: string; nome: string; quantidade: number };
 export type ItemPedido = {
   produtoId: number | null;
   produtoNome: string | null;
@@ -416,6 +416,7 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
           referenciaId: pedidoItemOpcoes.referencia_id,
           titulo: pedidoItemOpcoes.titulo,
           nome: pedidoItemOpcoes.nome,
+          quantidade: pedidoItemOpcoes.quantidade,
         })
         .from(pedidoItemOpcoes)
         .where(and(inArray(pedidoItemOpcoes.pedido_item_id, itensRaw.map((i) => i.id)), eq(pedidoItemOpcoes.loja_id, lojaId)))
@@ -425,7 +426,7 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
   const itensLinhas: ItemPedido[] = itensRaw.map((i) => {
     const opcoes: ItemOpcaoSelecionada[] = opcoesRaw
       .filter((o) => o.pedidoItemId === i.id)
-      .map((o) => ({ tipo: o.tipo, grupoId: o.grupoId, referenciaId: o.referenciaId, titulo: o.titulo, nome: o.nome }));
+      .map((o) => ({ tipo: o.tipo, grupoId: o.grupoId, referenciaId: o.referenciaId, titulo: o.titulo, nome: o.nome, quantidade: o.quantidade }));
     return { produtoId: i.produtoId, produtoNome: i.produtoNome, quantidade: i.quantidade, preco: i.preco, observacoes: i.observacoes, opcoes };
   });
 

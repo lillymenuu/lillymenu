@@ -21,6 +21,7 @@ type ItemPayload = {
   combosels?: { id: number; qtd?: number }[] | null;
   variacao_id?: number | null;
   selecoes_grupos?: Record<string, number[]> | null;
+  complementos?: { id: number; qtd?: number }[] | null;
 };
 type PagamentoPayload = { forma?: string; valor?: number };
 
@@ -47,6 +48,9 @@ export async function POST(request: Request) {
     usarPontos: toBool01(i.usar_pontos),
     variacaoId: i.variacao_id ?? null,
     selecoesGrupos: i.selecoes_grupos ?? null,
+    complementos: Array.isArray(i.complementos)
+      ? i.complementos.map((c) => ({ id: Number(c.id), qtd: Number(c.qtd ?? 1) })).filter((c) => c.id > 0 && c.qtd > 0)
+      : null,
   }));
 
   let pagamentosRaw: PagamentoPayload[] = [];

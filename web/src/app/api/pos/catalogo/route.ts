@@ -22,6 +22,7 @@ export async function GET() {
       preco: p.preco,
       preco_promocional: p.precoPromocional,
       tem_variacoes: p.temVariacoes,
+      tem_complementos: p.temComplementos,
       imagem: p.imagem,
       pontos_ganho: p.pontosGanho,
       pontos_custo: p.pontosCusto,

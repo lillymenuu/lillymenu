@@ -1123,7 +1123,7 @@ export const pedidoItemOpcoes = pgTable(
   {
     id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
     pedido_item_id: integer("pedido_item_id").notNull(),
-    tipo: text("tipo").$type<"variacao" | "grupo">().notNull(),
+    tipo: text("tipo").$type<"variacao" | "grupo" | "complemento">().notNull(),
     grupo_id: integer("grupo_id"),
     referencia_id: integer("referencia_id").notNull(),
     /* Snapshot do titulo do grupo (ou do titulo de variacoes) e do nome da opcao escolhida,
@@ -1134,6 +1134,8 @@ export const pedidoItemOpcoes = pgTable(
     titulo: varchar("titulo", { length: 120 }).notNull().default(""),
     nome: varchar("nome", { length: 120 }).notNull().default(""),
     loja_id: integer("loja_id").notNull(),
+    /* Quantidade escolhida (complementos que podem repetir, ex.: 2x Nutella). Variacao/grupo sempre 1. */
+    quantidade: integer("quantidade").notNull().default(1),
   },
   (t) => [
     index("pedido_item_opcoes_idx_pedido_item_opcoes_item").on(t.pedido_item_id),

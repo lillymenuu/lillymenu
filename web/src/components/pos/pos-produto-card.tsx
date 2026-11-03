@@ -5,6 +5,7 @@ import { AlertCircle, Minus, Package, Plus } from "lucide-react";
 import { formatBRL } from "@/components/ordermanager/constants";
 import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { PosProduto } from "@/lib/pos";
+import { abreModalOpcoes } from "@/lib/pos";
 
 export function PosProdutoCard({
   produto,
@@ -41,10 +42,10 @@ export function PosProdutoCard({
 
   return (
     <div
-      onClick={() => produto.tem_variacoes && !semEstoque && restante > 0 && onAdicionar(produto)}
+      onClick={() => abreModalOpcoes(produto) && !semEstoque && restante > 0 && onAdicionar(produto)}
       className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card transition-colors ${
         selecionado ? "border-primary bg-primary/5" : ""
-      } ${semEstoque ? "opacity-50" : ""} ${produto.tem_variacoes && !semEstoque && restante > 0 ? "cursor-pointer" : ""}`}
+      } ${semEstoque ? "opacity-50" : ""} ${abreModalOpcoes(produto) && !semEstoque && restante > 0 ? "cursor-pointer" : ""}`}
     >
       <div className="relative h-[124px] shrink-0 bg-muted">
         {
@@ -78,13 +79,13 @@ export function PosProdutoCard({
       <div className="flex shrink-0 items-center justify-between p-1.5">
         <button
           type="button"
-          disabled={semEstoque || qtd === 0 || produto.tem_variacoes}
+          disabled={semEstoque || qtd === 0 || abreModalOpcoes(produto)}
           onClick={() => onAlterarQtd(-1)}
           className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Minus className="size-4" />
         </button>
-        {produto.tem_variacoes ? (
+        {abreModalOpcoes(produto) ? (
           <span className="w-7 text-center text-sm font-semibold tabular-nums">{qtd}</span>
         ) : (
           <input
@@ -108,7 +109,7 @@ export function PosProdutoCard({
           disabled={semEstoque || restante <= 0}
           onClick={(e) => {
             e.stopPropagation();
-            produto.tem_variacoes ? onAdicionar(produto) : onAlterarQtd(1);
+            abreModalOpcoes(produto) ? onAdicionar(produto) : onAlterarQtd(1);
           }}
           className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
         >

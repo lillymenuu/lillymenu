@@ -1,3 +1,5 @@
+import type { ComplementoEscolhido, ComplementoGrupoVenda } from "@/lib/complementos";
+
 export type StorePerfil = {
   loja_id: number;
   nomeLoja: string;
@@ -110,6 +112,8 @@ export type StoreProduto = {
   estoque: number;
   esgotado: boolean;
   tem_variacoes: 0 | 1;
+  /** Produto com grupos de complementos (tela Complementos) — abre o modal de opcoes mesmo sem variacoes. */
+  tem_complementos?: 0 | 1;
   quantidade_minima?: number;
   pontos_ganho?: number;
   destaque?: number;
@@ -153,6 +157,8 @@ export type StoreProdutoVariacoes = {
   variacao_titulo: string | null;
   variacao_obrigatorio: 0 | 1;
   grupos_opcoes: StoreGrupoOpcoes[];
+  /** Grupos da tela Complementos que valem para o produto. */
+  complementos?: ComplementoGrupoVenda[];
 };
 
 export type StoreComboPassoOpcao = {
@@ -213,6 +219,8 @@ export type StoreCartItem = {
   selecoesGrupos?: Record<number, number[]>;
   /** Mesma selecao de variacaoId/selecoesGrupos, ja resolvida em titulo+nome pra exibir no carrinho (igual ao `combosels` com `passoNome`, so que pra produtos com grupos de opcoes em vez de combo). */
   opcoesSelecionadas?: { titulo: string; nome: string }[];
+  /** Complementos escolhidos (tela Complementos), com a quantidade de cada um. */
+  complementos?: ComplementoEscolhido[];
 };
 
 export type StoreCrossSellProduto = {

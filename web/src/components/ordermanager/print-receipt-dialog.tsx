@@ -16,7 +16,7 @@ const ORIGEM_LABELS: Record<string, string> = {
   whatsapp: "pelo WhatsApp",
 };
 
-type ItemOpcaoSelecionada = { tipo: "variacao" | "grupo"; grupo_id: number | null; referencia_id: number; titulo: string; nome: string };
+type ItemOpcaoSelecionada = { tipo: "variacao" | "grupo" | "complemento"; grupo_id: number | null; referencia_id: number; titulo: string; nome: string; quantidade?: number };
 type ItemPedido = { produto_id: number | null; produto_nome: string; quantidade: number; preco: number; observacoes: string | null; opcoes: ItemOpcaoSelecionada[] };
 type Pagamento = { forma: string; valor: number };
 type PedidoDetalhe = {
@@ -57,7 +57,7 @@ function agruparOpcoes(opcoes: ItemOpcaoSelecionada[]): { titulo: string; nomes:
       grupo = { titulo: o.titulo, nomes: [] };
       grupos.push(grupo);
     }
-    grupo.nomes.push(o.nome);
+    grupo.nomes.push((o.quantidade ?? 1) > 1 ? `${o.quantidade}x ${o.nome}` : o.nome);
   }
   return grupos;
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "pedido_item_opcoes" ADD COLUMN "quantidade" integer DEFAULT 1 NOT NULL;

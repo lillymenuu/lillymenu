@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessaoAdmin } from "@/lib/session";
 import { variacoesProdutoPdv } from "@/db/queries/produtoVariacoesPdv";
+import { complementosDoProduto } from "@/db/queries/complementosVenda";
 
 export async function GET(request: Request) {
   const sessao = await getSessaoAdmin();
@@ -8,7 +9,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const id = Number(searchParams.get("id") ?? "0");
-  const resultado = await variacoesProdutoPdv(sessao.lojaId, id);
+  const [resultado, complementos] = await Promise.all([variacoesProdutoPdv(sessao.lojaId, id), complementosDoProduto(sessao.lojaId, id)]);
 
   return NextResponse.json({
     ok: resultado.ok,
@@ -24,5 +25,6 @@ export async function GET(request: Request) {
       max_selecao: g.maxSelecao,
       itens: g.itens.map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
     })),
+    complementos,
   });
 }

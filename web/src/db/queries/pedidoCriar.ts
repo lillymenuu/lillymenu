@@ -2,6 +2,8 @@ import "server-only";
 import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
 import { db, withTransaction, type NeonTx } from "@/db";
 import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
+import { registrarComplementosItem } from "@/db/queries/complementosVenda";
+import type { ComplementoEscolhido } from "@/lib/complementos";
 import {
   mesas,
   clientes,
@@ -52,6 +54,7 @@ export type ItemCarrinho = {
   pontosPendente?: boolean;
   variacaoId?: number | null;
   selecoesGrupos?: Record<number, number[]> | null;
+  complementos?: ComplementoEscolhido[] | null;
 };
 
 export type CriarPedidoInput = {
@@ -247,6 +250,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           .returning({ id: pedidoItens.id });
 
         await registrarItemOpcoes(tx, novoItem.id, item.id ?? null, item.variacaoId, item.selecoesGrupos, lojaId);
+        await registrarComplementosItem(tx, novoItem.id, item.complementos, qtd, lojaId, pedidoId);
 
         if (!isCombo && item.id) {
           await baixarEstoque(tx, item.id, lojaId, qtd, "pedido", pedidoId);

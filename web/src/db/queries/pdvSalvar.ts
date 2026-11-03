@@ -19,6 +19,8 @@ import {
   taxasDinamicas,
   operacaoLogs,
 } from "@/db/schema";
+import { registrarComplementosItem } from "@/db/queries/complementosVenda";
+import type { ComplementoEscolhido } from "@/lib/complementos";
 import { getConfig } from "@/db/queries/config";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { timestampFortaleza, dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
@@ -100,6 +102,7 @@ export type ItemCarrinhoPdv = {
   usarPontos?: boolean;
   variacaoId?: number | null;
   selecoesGrupos?: Record<number, number[]> | null;
+  complementos?: ComplementoEscolhido[] | null;
 };
 
 export type PagamentoPdvInput = { forma: string; valor?: number };
@@ -661,6 +664,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
           .returning({ id: pedidoItens.id });
 
         await registrarItemOpcoes(tx, novoItem.id, produtoIdItem > 0 ? produtoIdItem : null, i.variacaoId, i.selecoesGrupos, lojaId);
+        await registrarComplementosItem(tx, novoItem.id, i.complementos, qtdItem, lojaId, pedidoId);
 
         if (produtoIdItem > 0 && !isCombo) {
           await tx.insert(estoque).values({ produto_id: produtoIdItem, quantidade: 0, loja_id: lojaId }).onConflictDoNothing({ target: estoque.produto_id });

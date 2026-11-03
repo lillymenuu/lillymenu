@@ -3,6 +3,7 @@
 import { trackStoreEvento } from "@/lib/store/tracking";
 import { useCallback, useEffect, useState } from "react";
 import type { StoreCartItem } from "@/lib/store/types";
+import { assinaturaComplementos } from "@/lib/complementos";
 
 function storageKey(lojaId: number): string {
   return `lillymenu_store_cart_${lojaId}`;
@@ -31,7 +32,15 @@ function assinaturaCombosels(combosels?: { id: number; qtd: number }[]): string 
    mas sao composicoes diferentes — sem isso, o segundo so somava na quantidade do primeiro
    e a composicao escolhida nele desaparecia do carrinho. */
 function assinaturaItem(item: Omit<StoreCartItem, "key" | "qtd">): string {
-  return [item.id, item.tipo, item.obs ?? "", item.variacaoId ?? "", assinaturaSelecoesGrupos(item.selecoesGrupos), assinaturaCombosels(item.combosels)].join("::");
+  return [
+    item.id,
+    item.tipo,
+    item.obs ?? "",
+    item.variacaoId ?? "",
+    assinaturaSelecoesGrupos(item.selecoesGrupos),
+    assinaturaCombosels(item.combosels),
+    assinaturaComplementos(item.complementos),
+  ].join("::");
 }
 
 export function useStoreCart(lojaId: number) {

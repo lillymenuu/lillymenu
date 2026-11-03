@@ -1,3 +1,5 @@
+import type { ComplementoEscolhido, ComplementoGrupoVenda } from "@/lib/complementos";
+
 export type PosCategoria = { id: number; nome: string };
 
 export type PosProduto = {
@@ -9,12 +11,18 @@ export type PosProduto = {
   preco: number;
   preco_promocional: number | null;
   tem_variacoes: boolean;
+  tem_complementos?: boolean;
   imagem: string | null;
   pontos_ganho: number;
   pontos_custo: number;
   estoque: number;
   grupo_estoque_id: number | null;
 };
+
+/** Produto que abre o modal de opcoes (variacoes e/ou complementos) em vez de entrar direto no carrinho. */
+export function abreModalOpcoes(p: Pick<PosProduto, "tem_variacoes" | "tem_complementos">): boolean {
+  return p.tem_variacoes || Boolean(p.tem_complementos);
+}
 
 export type PosCombo = {
   id: number;
@@ -51,6 +59,8 @@ export type PosVariacoesResposta = {
   variacao_titulo: string | null;
   variacao_obrigatorio: number;
   grupos_opcoes: PosGrupoOpcoes[];
+  /** Grupos da tela Complementos que valem para o produto. */
+  complementos?: ComplementoGrupoVenda[];
 };
 
 export type PosComboOpcao = {
@@ -101,7 +111,9 @@ export type PosCartItem = {
    * usado pra re-resolver variacaoId/selecoesGrupos contra o catalogo ATUAL por nome — produto_variacoes/
    * produto_opcoes_grupos/_itens sao reescritos (ids novos) a cada "Salvar" do produto, entao os ids
    * gravados no pedido original podem nao existir mais mesmo que o conteudo seja o mesmo. */
-  opcoesSnapshot?: { tipo: "variacao" | "grupo"; titulo: string; nome: string }[];
+  opcoesSnapshot?: { tipo: "variacao" | "grupo" | "complemento"; titulo: string; nome: string }[];
+  /** Complementos escolhidos (tela Complementos), com a quantidade de cada um. */
+  complementos?: ComplementoEscolhido[];
 };
 
 export type PosClienteBusca = { id: number; nome: string; telefone: string };

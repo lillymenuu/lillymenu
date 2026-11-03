@@ -21,6 +21,7 @@ import { formatBRL } from "@/components/ordermanager/constants";
 import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
 import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { PosCartItem, PosCombo, PosProduto } from "@/lib/pos";
+import { abreModalOpcoes } from "@/lib/pos";
 import { consumoDoCarrinho, estoqueRestanteProduto } from "@/components/pos/estoque-carrinho";
 import { PosVariacaoDialog } from "@/components/pos/pos-variacao-dialog";
 import { PosComboDialog } from "@/components/pos/pos-combo-dialog";
@@ -389,7 +390,7 @@ function TelaCardapio({ pos, qtdItens, onVerCarrinho }: { pos: Pos; qtdItens: nu
   function tocarProduto(p: PosProduto) {
     if ((restantePorProduto[p.id] ?? 0) <= 0) return;
     vibrar();
-    if (p.tem_variacoes) pos.abrirVariacaoOuAdicionar(p);
+    if (abreModalOpcoes(p)) pos.abrirVariacaoOuAdicionar(p);
     else pos.alterarQtdProduto(p, 1);
   }
 
@@ -512,7 +513,7 @@ function ProdutoLinha({
 }) {
   const emPromo = produto.preco_promocional !== null;
   const esgotou = restante <= 0 && qtd === 0;
-  const mostraStepper = qtd > 0 && !produto.tem_variacoes;
+  const mostraStepper = qtd > 0 && !abreModalOpcoes(produto);
 
   return (
     <li className={cn("relative mx-4 flex gap-3 border-b border-border/60 py-3.5 last:border-b-0", esgotou && "opacity-50")}>

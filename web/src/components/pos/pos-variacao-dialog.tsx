@@ -7,6 +7,19 @@ import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
 import { cn } from "cn";
 import type { PosCartItem, PosGrupoOpcoes, PosProduto, PosVariacao, PosVariacoesResposta } from "@/lib/pos";
+import {
+  alterarSelecao,
+  complementosParaEnvio,
+  dicaDoGrupo,
+  grupoPendente,
+  precoComplementos,
+  qtdNoGrupo,
+  rotuloComplementos,
+  selecaoDeEscolhidos,
+  type ComplementoGrupoVenda,
+  type ComplementoItemVenda,
+  type SelecaoComplementos,
+} from "@/lib/complementos";
 
 /** Bolinha de selecao unica (variacao ou grupo "unica") — so o indicador visual, o <input> real fica sr-only. */
 function Marcador({ marcado }: { marcado: boolean }) {
@@ -43,6 +56,8 @@ export function PosVariacaoDialog({
   const [variacaoTitulo, setVariacaoTitulo] = useState<string | null>(null);
   const [variacaoObrigatorio, setVariacaoObrigatorio] = useState(true);
   const [gruposOpcoes, setGruposOpcoes] = useState<PosGrupoOpcoes[]>([]);
+  const [complementos, setComplementos] = useState<ComplementoGrupoVenda[]>([]);
+  const [selecaoComplementos, setSelecaoComplementos] = useState<SelecaoComplementos>({});
 
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
   const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
@@ -60,6 +75,8 @@ export function PosVariacaoDialog({
     setVariacaoTitulo(null);
     setVariacaoObrigatorio(true);
     setGruposOpcoes([]);
+    setComplementos([]);
+    setSelecaoComplementos({});
     setVariacaoId(itemEditando?.variacaoId ?? null);
     setSelecoesGrupos(itemEditando?.selecoesGrupos ?? {});
     setQtd(itemEditando?.qtd ?? 1);
@@ -75,6 +92,9 @@ export function PosVariacaoDialog({
           setVariacaoTitulo(data.variacao_titulo ?? null);
           setVariacaoObrigatorio(!!data.variacao_obrigatorio);
           setGruposOpcoes(gruposLista);
+          const complementosLista = data.complementos ?? [];
+          setComplementos(complementosLista);
+          setSelecaoComplementos(selecaoDeEscolhidos(complementosLista, itemEditando?.complementos));
 
           // Reabrindo um pedido existente pra editar: os ids gravados no pedido podem nao
           // existir mais no catalogo (produto_variacoes/produto_opcoes_grupos/_itens sao
@@ -115,7 +135,9 @@ export function PosVariacaoDialog({
   const precoBase = variacaoSelecionada ? (variacaoSelecionada.preco > 0 ? variacaoSelecionada.preco : produto.preco) : produto.preco;
   const gruposSelecionados = gruposOpcoes.map((g) => ({ grupo: g, itens: g.itens.filter((it) => selecoesGrupos[g.id]?.includes(it.id)) }));
   const gruposTotal = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
-  const precoUnitario = precoBase + gruposTotal;
+  const precoUnitario = precoBase + gruposTotal + precoComplementos(complementos, selecaoComplementos);
+  /* Produto so com complementos (sem variacoes cadastradas) nao exige variacao. */
+  const exigeVariacao = variacaoObrigatorio && variacoes.length > 0;
 
   const emPromo = produto.preco_promocional !== null;
 
@@ -127,10 +149,17 @@ export function PosVariacaoDialog({
   const gruposFiltrados = termo
     ? gruposOpcoes.map((g) => ({ ...g, itens: g.itens.filter((it) => it.nome.toLowerCase().includes(termo)) })).filter((g) => g.itens.length > 0)
     : gruposOpcoes;
-  const semResultado = termo && variacoesFiltradas.length === 0 && gruposFiltrados.length === 0;
+  const complementosFiltrados = termo
+    ? complementos.map((g) => ({ ...g, itens: g.itens.filter((it) => it.nome.toLowerCase().includes(termo)) })).filter((g) => g.itens.length > 0)
+    : complementos;
+  const semResultado = termo && variacoesFiltradas.length === 0 && gruposFiltrados.length === 0 && complementosFiltrados.length === 0;
 
   /* Ordem das secoes exibidas (variacao, depois cada grupo) — define pra onde rolar ao concluir uma. */
-  const secaoOrder = [...(variacoes.length > 0 ? ["variacao"] : []), ...gruposOpcoes.map((g) => `grupo-${g.id}`)];
+  const secaoOrder = [
+    ...(variacoes.length > 0 ? ["variacao"] : []),
+    ...gruposOpcoes.map((g) => `grupo-${g.id}`),
+    ...complementos.map((g) => `complemento-${g.id}`),
+  ];
 
   function rolarParaProximaSecao(idAtual: string) {
     const idx = secaoOrder.indexOf(idAtual);
@@ -160,11 +189,18 @@ export function PosVariacaoDialog({
     });
   }
 
+  function alterarComplemento(grupo: ComplementoGrupoVenda, item: ComplementoItemVenda, delta: 1 | -1) {
+    const nova = alterarSelecao(selecaoComplementos, grupo, item, delta);
+    setSelecaoComplementos(nova);
+    if (delta === 1 && grupo.maximo > 0 && qtdNoGrupo(nova, grupo.id) >= grupo.maximo) rolarParaProximaSecao(`complemento-${grupo.id}`);
+  }
+
   const podeAdicionar =
     !carregando &&
     qtd <= estoqueDisponivel &&
-    (!variacaoObrigatorio || variacaoId !== null) &&
-    gruposOpcoes.every((g) => !g.obrigatorio || (selecoesGrupos[g.id]?.length ?? 0) > 0);
+    (!exigeVariacao || variacaoId !== null) &&
+    gruposOpcoes.every((g) => !g.obrigatorio || (selecoesGrupos[g.id]?.length ?? 0) > 0) &&
+    complementos.every((g) => !grupoPendente(g, selecaoComplementos));
 
   function confirmar() {
     if (!produto || !podeAdicionar) return;
@@ -173,6 +209,7 @@ export function PosVariacaoDialog({
     for (const g of gruposSelecionados) {
       if (g.itens.length > 0) nome += ` + ${g.itens.map((it) => it.nome).join(", ")}`;
     }
+    nome += rotuloComplementos(complementos, selecaoComplementos);
 
     const dadosItem: Omit<PosCartItem, "rowKey"> = {
       produtoId: produto.id,
@@ -184,6 +221,7 @@ export function PosVariacaoDialog({
       imagem: produto.imagem,
       variacaoId,
       selecoesGrupos,
+      complementos: complementosParaEnvio(complementos, selecaoComplementos),
     };
 
     if (itemEditando && onSalvar) {
@@ -399,6 +437,48 @@ export function PosVariacaoDialog({
                     </section>
                   );
                 })}
+
+                {complementosFiltrados.map((grupo) => {
+                  const pendente = grupoPendente(grupo, selecaoComplementos);
+                  const exigido = grupo.obrigatorio || grupo.minimo > 0;
+                  const noLimite = grupo.maximo > 0 && qtdNoGrupo(selecaoComplementos, grupo.id) >= grupo.maximo;
+                  return (
+                    <section
+                      key={`complemento-${grupo.id}`}
+                      ref={(el) => {
+                        secaoRefs.current[`complemento-${grupo.id}`] = el;
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-sm font-bold">{grupo.nome}</h3>
+                        {exigido && (
+                          <span
+                            className={cn(
+                              "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                              pendente ? "bg-destructive/10 text-destructive" : "bg-emerald-500/15 text-emerald-700"
+                            )}
+                          >
+                            {pendente ? "Obrigatório" : "Ok"}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 mb-2.5 text-xs text-muted-foreground">{dicaDoGrupo(grupo)}</p>
+
+                      <div className={cn("grid gap-3", visualizacaoGrade ? "grid-cols-2" : "grid-cols-1")}>
+                        {grupo.itens.map((it) => (
+                          <CardComplemento
+                            key={it.id}
+                            item={it}
+                            qtd={selecaoComplementos[grupo.id]?.[it.id] ?? 0}
+                            escolhaUnica={grupo.maximo === 1}
+                            noLimite={noLimite}
+                            onAlterar={(delta) => alterarComplemento(grupo, it, delta)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
               </>
             )}
           </div>
@@ -441,7 +521,7 @@ export function PosVariacaoDialog({
                 disabled={!podeAdicionar}
                 className="h-11 flex-1 cursor-pointer rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {variacaoObrigatorio && variacaoId === null
+                {exigeVariacao && variacaoId === null
                   ? "Selecionar variação"
                   : `${itemEditando ? "Salvar" : "Adicionar"} ${formatBRL(precoUnitario * qtd)}`}
               </button>
@@ -450,5 +530,101 @@ export function PosVariacaoDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Card de um item de complemento: escolha unica vira bolinha; nos demais o "+" adiciona e,
+ * se o item pode repetir, aparece o contador (- qtd +).
+ */
+function CardComplemento({
+  item,
+  qtd,
+  escolhaUnica,
+  noLimite,
+  onAlterar,
+}: {
+  item: ComplementoItemVenda;
+  qtd: number;
+  escolhaUnica: boolean;
+  /** O grupo ja chegou no maximo de escolhas. */
+  noLimite: boolean;
+  onAlterar: (delta: 1 | -1) => void;
+}) {
+  const esgotado = item.estoque !== null && item.estoque <= 0;
+  const ativo = qtd > 0;
+  const podeSomar = !esgotado && !noLimite && (item.podeRepetir || qtd === 0) && (item.estoque === null || qtd < item.estoque);
+  const travado = !ativo && (esgotado || (noLimite && !escolhaUnica));
+
+  const conteudo = (
+    <span className="min-w-0">
+      <span className="block text-sm leading-tight font-medium">{item.nome}</span>
+      <span className="mt-0.5 block text-xs text-muted-foreground">{esgotado ? "Esgotado" : formatBRL(item.preco)}</span>
+    </span>
+  );
+
+  if (escolhaUnica) {
+    return (
+      <button
+        type="button"
+        role="radio"
+        aria-checked={ativo}
+        disabled={esgotado && !ativo}
+        onClick={() => onAlterar(1)}
+        className={cn(
+          "flex cursor-pointer items-center justify-between gap-3 rounded-xl border bg-background p-3.5 text-left transition-colors disabled:cursor-not-allowed",
+          ativo && "border-primary/30 bg-primary/5",
+          travado && "opacity-40"
+        )}
+      >
+        {conteudo}
+        <Marcador marcado={ativo} />
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-3 rounded-xl border bg-background p-3.5 transition-colors",
+        ativo && "border-primary/30 bg-primary/5",
+        travado && "opacity-40"
+      )}
+    >
+      {conteudo}
+      {ativo && item.podeRepetir ? (
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onAlterar(-1)}
+            aria-label={`Remover um ${item.nome}`}
+            className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted/70"
+          >
+            <Minus className="size-4" />
+          </button>
+          <span className="w-5 text-center text-sm font-semibold tabular-nums">{qtd}</span>
+          <button
+            type="button"
+            onClick={() => onAlterar(1)}
+            disabled={!podeSomar}
+            aria-label={`Adicionar mais um ${item.nome}`}
+            className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Plus className="size-4" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onAlterar(ativo ? -1 : 1)}
+          disabled={!ativo && !podeSomar}
+          aria-pressed={ativo}
+          aria-label={ativo ? `Remover ${item.nome}` : `Adicionar ${item.nome}`}
+          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed"
+        >
+          {ativo ? <Check className="size-4" /> : <Plus className="size-4" />}
+        </button>
+      )}
+    </div>
   );
 }

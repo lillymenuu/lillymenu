@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categorias, produtos, produtoVariacoes, combos, estoque } from "@/db/schema";
+import { produtosComComplementos } from "@/db/queries/complementosVenda";
 import { aplicarReservaPdv, reservaMapaPdv } from "@/db/queries/pdvReservas";
 
 /*
@@ -81,6 +82,7 @@ export type CatalogoProduto = {
   quantidadeMinima: number;
   pontosGanho: number;
   temVariacoes: boolean;
+  temComplementos: boolean;
   destaque: boolean;
   estoque: number;
   esgotado: boolean;
@@ -190,6 +192,7 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
     .where(and(eq(produtos.loja_id, lojaId), eq(produtos.ativo, true), inArray(produtos.categoria_id, idsCategorias)))
     .orderBy(sql`${produtos.ordem} is null, ${produtos.ordem}, ${produtos.nome}`);
 
+  const comComplementos = await produtosComComplementos(lojaId);
   const produtosPorCategoria: Record<number, CatalogoProduto[]> = {};
   for (const p of produtosLinhas) {
     if (p.categoriaId == null) continue;
@@ -217,6 +220,7 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
       quantidadeMinima: p.quantidadeMinima,
       pontosGanho: p.pontosGanho,
       temVariacoes: p.temVariacoes,
+      temComplementos: comComplementos.has(p.id),
       destaque: p.destaque,
       estoque: estoqueDisponivel,
       esgotado: estoqueDisponivel <= 0,

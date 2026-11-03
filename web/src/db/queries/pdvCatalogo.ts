@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, asc, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categorias, produtos, estoque, estoqueGrupoMembros, combos } from "@/db/schema";
+import { produtosComComplementos } from "@/db/queries/complementosVenda";
 
 /* Equivalente de admin/api/v1/pdv_catalogo.php: catalogo completo pro POS (/pos). */
 
@@ -16,6 +17,7 @@ export type ProdutoPdv = {
   preco: number;
   precoPromocional: number | null;
   temVariacoes: boolean;
+  temComplementos: boolean;
   imagem: string | null;
   pontosGanho: number;
   pontosCusto: number;
@@ -67,6 +69,7 @@ export async function catalogoPdv(lojaId: number): Promise<CatalogoPdvResultado>
     .where(and(eq(produtos.loja_id, lojaId), eq(produtos.disponivel_catalogo, true)))
     .orderBy(sql`${produtos.ordem} is null`, asc(produtos.ordem), asc(produtos.nome));
 
+  const comComplementos = await produtosComComplementos(lojaId);
   const produtosResultado: ProdutoPdv[] = produtosRaw.map((p) => {
     const emPromo = p.precoPromocional !== null && Number(p.precoPromocional) > 0 && !p.promoDesativado;
     return {
@@ -78,6 +81,7 @@ export async function catalogoPdv(lojaId: number): Promise<CatalogoPdvResultado>
       preco: Number(p.preco ?? 0),
       precoPromocional: emPromo ? Number(p.precoPromocional) : null,
       temVariacoes: p.temVariacoes,
+      temComplementos: comComplementos.has(p.id),
       imagem: p.imagem,
       pontosGanho: p.pontosGanho ?? 0,
       pontosCusto: p.pontosCusto ?? 0,
