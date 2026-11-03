@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Expand, Minus, Plus, Shrink, X } from "lucide-react";
+import { Check, Expand, ImageIcon, Minus, Plus, Shrink, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { PontosBadge } from "@/components/store/pontos-badge";
@@ -379,6 +379,152 @@ export function StoreProdutoDialog({
     </>
   );
 
+  if (!temVariacoes && produto.tem_complementos === 1) {
+    /* So complementos (sem variacoes): mesmo visual do StoreComboDialog — passos com cabecalho
+       cinza e cada item com foto e contador. */
+    const grupoFaltando = complementos.find((g) => grupoPendente(g, selecaoComplementos));
+    return (
+      <StoreSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        maxWidth={613}
+        footer={
+          <div className="flex items-center justify-between gap-3">
+            <QtyStepper
+              value={qtd}
+              min={Math.max(1, produto.quantidade_minima ?? 0)}
+              max={estoqueRestante}
+              onChange={setQtd}
+              onMaxAtingido={avisarEstoqueIndisponivel}
+            />
+            <button
+              type="button"
+              disabled={!podeAdicionar}
+              onClick={adicionar}
+              className="flex-1 rounded-[10px] py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+              style={{ background: podeAdicionar ? brown : "#c0a88a" }}
+            >
+              {produto.esgotado
+                ? "Esgotado"
+                : grupoFaltando
+                  ? `Selecione "${grupoFaltando.nome}"`
+                  : `Adicionar ${formatarPreco(total)}`}
+            </button>
+          </div>
+        }
+      >
+        <div className="p-4">
+          <div
+            className={`group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 ease-out sm:max-h-[280px] ${
+              imagemAmpliada ? "" : "h-[190px]"
+            }`}
+            style={imagemAmpliada ? { aspectRatio: aspectRatio ?? 4 / 3 } : undefined}
+          >
+            <button
+              type="button"
+              onClick={() => setImagemAmpliada((v) => !v)}
+              className={`block size-full ${imagemAmpliada ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={produto.imagem || PRODUTO_IMAGEM_PADRAO}
+                alt=""
+                onLoad={(e) => {
+                  const img = e.currentTarget;
+                  if (img.naturalWidth && img.naturalHeight) setAspectRatio(img.naturalWidth / img.naturalHeight);
+                }}
+                className="size-full object-cover"
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => setImagemAmpliada((v) => !v)}
+              className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-[.72rem] font-semibold text-white"
+            >
+              {imagemAmpliada ? <Shrink size={12} /> : <Expand size={12} />}
+              {imagemAmpliada ? "Recolher" : "Ver maior"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Fechar"
+              className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-neutral-600"
+            >
+              <X size={14} />
+            </button>
+          </div>
+          <h2 className="mb-1 text-[.95rem] font-bold text-neutral-900">{produto.nome}</h2>
+          {produto.descricao && <p className="mb-2.5 text-[.76rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {produto.em_promo ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[.8rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
+                <span className="text-[1rem] font-bold text-emerald-600">{formatarPreco(produto.preco_final)}</span>
+              </div>
+            ) : (
+              <span className="text-[1rem] font-bold text-neutral-900">{formatarPreco(produto.preco_final)}</span>
+            )}
+            <PontosBadge pontos={pontosTotal} />
+          </div>
+          {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
+
+          {carregando ? (
+            <p className="text-[.86rem] text-neutral-500">Carregando opções...</p>
+          ) : erroCarregar ? (
+            <p className="text-[.86rem] text-red-600">Não foi possível carregar as opções. Feche e tente novamente.</p>
+          ) : (
+            <div className="space-y-3">
+              {complementos.map((grupo) => {
+                const noLimite = grupo.maximo > 0 && qtdNoGrupo(selecaoComplementos, grupo.id) >= grupo.maximo;
+                return (
+                  <div
+                    key={grupo.id}
+                    ref={(el) => {
+                      secaoRefs.current[`complemento-${grupo.id}`] = el;
+                    }}
+                  >
+                    <div className="mb-1 rounded-[10px] bg-neutral-100 px-3 py-2">
+                      <div className="flex flex-wrap items-center gap-1.5 text-[.8rem] font-bold text-neutral-900">
+                        {grupo.nome}
+                        {(grupo.obrigatorio || grupo.minimo > 0) && (
+                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.62rem] font-bold text-amber-700">Obrigatório</span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-[.68rem] text-neutral-500">{dicaDoGrupo(grupo)}</p>
+                    </div>
+                    <div>
+                      {grupo.itens.map((it) => (
+                        <LinhaComplementoCombo
+                          key={it.id}
+                          item={it}
+                          qtd={selecaoComplementos[grupo.id]?.[it.id] ?? 0}
+                          escolhaUnica={grupo.maximo === 1}
+                          noLimite={noLimite}
+                          onAlterar={(delta) => alterarComplemento(grupo, it, delta)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-5">
+            <label className="mb-1.5 block text-[.8rem] font-bold text-neutral-900">Alguma observação?</label>
+            <textarea
+              value={obs}
+              onChange={(e) => setObs(e.target.value)}
+              placeholder="Observações do cliente"
+              rows={2}
+              className="w-full resize-none rounded-[10px] border-[1.5px] border-neutral-200 p-2.5 text-base outline-none"
+            />
+          </div>
+        </div>
+      </StoreSheet>
+    );
+  }
+
   if (temOpcoes) {
     /* Dialogo centralizado igual ao varModalLoja do sistema legado: imagem a esquerda
        (topo no mobile) e opcoes rolando ao lado; observacao e rodape fixos embaixo. */
@@ -553,6 +699,79 @@ function OpcaoExtra({
       >
         {ativo ? <Check size={15} /> : <Plus size={15} />}
       </button>
+    </div>
+  );
+}
+
+/**
+ * Item de complemento no visual do combo: nome, preco, foto e contador (- qtd +). Em grupo de
+ * escolha unica o "+" de outro item troca a opcao escolhida.
+ */
+function LinhaComplementoCombo({
+  item,
+  qtd,
+  escolhaUnica,
+  noLimite,
+  onAlterar,
+}: {
+  item: ComplementoItemVenda;
+  qtd: number;
+  escolhaUnica: boolean;
+  noLimite: boolean;
+  onAlterar: (delta: 1 | -1) => void;
+}) {
+  const esgotado = item.estoque !== null && item.estoque <= 0;
+  const semEstoqueParaMais = item.estoque !== null && qtd >= item.estoque;
+  const podeSomar = escolhaUnica
+    ? !esgotado && qtd === 0
+    : !esgotado && !noLimite && (item.podeRepetir || qtd === 0) && !semEstoqueParaMais;
+
+  return (
+    <div className={`flex items-center gap-2.5 border-b border-neutral-100 py-2 last:border-0 ${esgotado && qtd === 0 ? "opacity-55" : ""}`}>
+      <div className="min-w-0 flex-1">
+        <div className="text-[.8rem] leading-tight text-neutral-900">{item.nome}</div>
+        {item.descricao && <div className="mt-0.5 text-[.68rem] leading-snug text-neutral-500">{item.descricao}</div>}
+        <div className="mt-0.5 text-[.68rem] text-neutral-400">
+          {esgotado ? "Esgotado" : item.preco > 0 ? `+ ${formatarPreco(item.preco)}` : "Sem custo adicional"}
+        </div>
+      </div>
+      <div className="size-[64px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+        {item.imagem ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.imagem} alt="" className="size-full object-cover" />
+        ) : (
+          <div className="flex size-full items-center justify-center text-neutral-300">
+            <ImageIcon size={20} />
+          </div>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-neutral-200">
+        <button
+          type="button"
+          disabled={qtd <= 0}
+          onClick={() => onAlterar(-1)}
+          aria-label={`Remover um ${item.nome}`}
+          className="flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 disabled:text-neutral-300"
+        >
+          <Minus size={13} />
+        </button>
+        <span className="min-w-[22px] px-0.5 text-center text-[.78rem] font-medium text-neutral-900">{qtd}</span>
+        <button
+          type="button"
+          aria-disabled={!podeSomar}
+          onClick={() => {
+            if (!podeSomar) {
+              if (!esgotado && semEstoqueParaMais) avisarEstoqueIndisponivel();
+              return;
+            }
+            onAlterar(1);
+          }}
+          aria-label={`Adicionar ${item.nome}`}
+          className={`flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 ${!podeSomar ? "text-neutral-300" : ""}`}
+        >
+          <Plus size={13} />
+        </button>
+      </div>
     </div>
   );
 }
