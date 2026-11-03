@@ -11,7 +11,7 @@ import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 import { ImageCropDialog } from "@/components/produtos/image-crop-dialog";
 import { MoneyInput } from "@/components/produtos/money-input";
 import type { ComplementoItem } from "@/db/queries/complementos";
-import { BOTAO_PRIMARIO_CLASSE, BOTAO_SECUNDARIO_CLASSE, CAMPO_CLASSE, MODAL_CLASSE } from "./estilos";
+import { BOTAO_PRIMARIO_CLASSE, BOTAO_SECUNDARIO_CLASSE, CAMPO_CLASSE } from "./estilos";
 import { ItemEstoqueAba } from "./item-estoque-aba";
 
 type Aba = "detalhes" | "pontos" | "estoque";
@@ -28,7 +28,7 @@ function apenasNumero(v: string) {
 
 function LinhaSwitch({ titulo, texto, checked, onChange }: { titulo: string; texto: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border p-4">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border px-4 py-3">
       <div>
         <div className="text-sm font-semibold">{titulo}</div>
         <div className="text-sm text-muted-foreground">{texto}</div>
@@ -143,7 +143,7 @@ export function ItemComplementoDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent overlayForceRender className={MODAL_CLASSE}>
+        <DialogContent overlayForceRender className="max-h-[calc(100dvh-2rem)] gap-4 overflow-y-auto rounded-3xl p-5 sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">{item ? "Editando item" : "Criando item"}</DialogTitle>
           </DialogHeader>
@@ -165,20 +165,20 @@ export function ItemComplementoDialog({
           </div>
 
           {aba === "detalhes" && (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               <div className="flex items-end gap-3">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   title="Clique para escolher uma imagem"
-                  className="relative flex size-36 items-center justify-center overflow-hidden rounded-xl bg-muted"
+                  className="relative flex size-24 items-center justify-center overflow-hidden rounded-xl bg-muted"
                 >
                   {imagemPreview && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={imagemPreview} alt="" className="size-full object-cover" />
                   )}
-                  <span className="absolute right-2 bottom-2 flex size-8 items-center justify-center rounded-full bg-background text-foreground shadow-md">
-                    <Camera size={15} />
+                  <span className="absolute right-1.5 bottom-1.5 flex size-7 items-center justify-center rounded-full bg-background text-foreground shadow-md">
+                    <Camera size={14} />
                   </span>
                 </button>
                 {imagemPreview && (
@@ -200,13 +200,13 @@ export function ItemComplementoDialog({
                 />
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <label htmlFor="item-nome" className="text-sm font-medium">
                   Nome
                 </label>
                 <input id="item-nome" className={CAMPO_CLASSE} placeholder="Ex.: Coca Cola" maxLength={120} value={nome} onChange={(e) => setNome(e.target.value)} />
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <label htmlFor="item-descricao" className="text-sm font-medium">
                   Descrição do item
                 </label>
@@ -219,7 +219,7 @@ export function ItemComplementoDialog({
                   onChange={(e) => setDescricao(e.target.value)}
                 />
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <label htmlFor="item-preco" className="text-sm font-medium">
                   Preço
                 </label>
