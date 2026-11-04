@@ -148,7 +148,7 @@ export function ItemComplementoDialog({
             <DialogTitle className="text-base font-semibold">{item ? "Editando item" : "Criando item"}</DialogTitle>
           </DialogHeader>
 
-          <div className="flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-full bg-muted p-1 text-sm">
+          <div className="scrollbar-hidden flex w-fit max-w-full shrink-0 items-center gap-1 overflow-x-auto rounded-full bg-muted p-1 text-sm">
             {ABAS.map((a) => (
               <button
                 key={a.valor}

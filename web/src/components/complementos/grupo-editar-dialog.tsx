@@ -235,7 +235,7 @@ function ConteudoGrupo({
   return (
     <>
       <div className="-mx-6 flex min-h-0 flex-col gap-4 overflow-y-auto px-6">
-        <div className="flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-full bg-muted p-1 text-sm">
+        <div className="scrollbar-hidden flex w-fit max-w-full shrink-0 items-center gap-1 overflow-x-auto rounded-full bg-muted p-1 text-sm">
           {ABAS.map((a) => (
             <button
               key={a.valor}
