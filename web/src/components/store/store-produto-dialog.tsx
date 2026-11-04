@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Expand, ImageIcon, Minus, Plus, Shrink, X } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Expand, ImageIcon, Minus, Plus, Shrink, X } from "lucide-react";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { PontosBadge } from "@/components/store/pontos-badge";
 import { QtyStepper } from "@/components/store/qty-stepper";
@@ -249,7 +248,7 @@ export function StoreProdutoDialog({
 
   const footer = (
     <div>
-      {!temOpcoes && <div className="min-[940px]:hidden">{obsField}</div>}
+      <div className="min-[940px]:hidden">{obsField}</div>
       <div className="flex items-center justify-between gap-3">
         <QtyStepper
           value={qtd}
@@ -263,132 +262,24 @@ export function StoreProdutoDialog({
           disabled={!podeAdicionar}
           onClick={adicionar}
           className="flex-1 rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
-          style={{ background: podeAdicionar ? brown : temOpcoes ? "#a3a3a3" : "#c0a88a" }}
+          style={{ background: podeAdicionar ? brown : "#c0a88a" }}
         >
-          {produto.esgotado
-            ? "Esgotado"
-            : faltaVariacao
-              ? "Selecionar variação"
-              : `Adicionar ${formatarPreco(total)}`}
+          {produto.esgotado ? "Esgotado" : `Adicionar ${formatarPreco(total)}`}
         </button>
       </div>
     </div>
   );
 
-  const opcoesConteudo = carregando ? (
-    <p className="text-[.86rem] text-neutral-500">Carregando opções...</p>
-  ) : erroCarregar ? (
-    <p className="text-[.86rem] text-red-600">Não foi possível carregar as opções. Feche e tente novamente.</p>
-  ) : (
-    <>
-      {temVariacoes && (
-      <div ref={(el) => { secaoRefs.current["variacao"] = el; }}>
-        <div className="mb-1 flex items-center justify-between">
-          <h3 className="text-[.86rem] font-bold text-neutral-900">{detalhe?.variacao_titulo ?? "Escolha uma das opções"}</h3>
-          {variacaoObrigatoria && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
-        </div>
-        <div>
-          {(detalhe?.variacoes ?? []).map((v) => {
-            const nome = [v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opção";
-            const esgotada = v.estoque !== null && v.estoque <= 0;
-            return (
-              <label
-                key={v.id}
-                className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${
-                  esgotada ? "cursor-not-allowed opacity-40" : "cursor-pointer"
-                }`}
-              >
-                <div className="text-base text-neutral-900">
-                  {nome}
-                  <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{esgotada ? "Esgotado" : formatarPreco(v.preco)}</small>
-                </div>
-                <input
-                  type="radio"
-                  name="variacao"
-                  checked={variacaoId === v.id}
-                  disabled={esgotada}
-                  onChange={() => selecionarVariacao(v.id)}
-                  className="size-[18px] shrink-0"
-                  style={{ accentColor: brown }}
-                />
-              </label>
-            );
-          })}
-          {detalhe?.variacoes.length === 0 && <p className="py-2 text-[.8rem] text-neutral-400">Sem variações cadastradas.</p>}
-        </div>
-      </div>
-      )}
-
-      {(detalhe?.grupos_opcoes ?? []).map((grupo) => {
-        const selecionados = selecoesGrupos[grupo.id] ?? [];
-        const atingiuMax = grupo.tipo_selecao === "multipla" && grupo.max_selecao > 0 && selecionados.length >= grupo.max_selecao;
-        return (
-          <div key={grupo.id} ref={(el) => { secaoRefs.current[`grupo-${grupo.id}`] = el; }} className="mt-4 border-t border-neutral-100 pt-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">{grupo.titulo}</h3>
-              {grupo.obrigatorio === 1 && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
-            </div>
-            <p className="mb-1.5 text-[.74rem] text-neutral-500">
-              {grupo.tipo_selecao === "multipla"
-                ? grupo.max_selecao > 0
-                  ? `Escolha até ${grupo.max_selecao} opç${grupo.max_selecao > 1 ? "ões" : "ão"}.`
-                  : "Escolha 1 ou mais opções."
-                : "Escolha 1 opção."}
-            </p>
-            {grupo.itens.map((it) => (
-              <OpcaoExtra
-                key={it.id}
-                nome={it.nome}
-                preco={it.preco}
-                ativo={selecionados.includes(it.id)}
-                desabilitado={atingiuMax && !selecionados.includes(it.id)}
-                cor={brown}
-                onClick={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao, grupo.max_selecao)}
-              />
-            ))}
-          </div>
-        );
-      })}
-
-      {complementos.map((grupo, indice) => {
-        const pendente = grupoPendente(grupo, selecaoComplementos);
-        const noLimite = grupo.maximo > 0 && qtdNoGrupo(selecaoComplementos, grupo.id) >= grupo.maximo;
-        const primeiraSecao = indice === 0 && !temVariacoes && (detalhe?.grupos_opcoes ?? []).length === 0;
-        return (
-          <div
-            key={`complemento-${grupo.id}`}
-            ref={(el) => { secaoRefs.current[`complemento-${grupo.id}`] = el; }}
-            className={primeiraSecao ? "" : "mt-4 border-t border-neutral-100 pt-3"}
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-[.86rem] font-bold text-neutral-900 uppercase">{grupo.nome}</h3>
-              {(grupo.obrigatorio || grupo.minimo > 0) && (
-                <span className={`text-[.72rem] font-bold ${pendente ? "text-red-500" : "text-emerald-600"}`}>{pendente ? "Obrigatório" : "Ok"}</span>
-              )}
-            </div>
-            <p className="mb-1.5 text-[.74rem] text-neutral-500">{dicaDoGrupo(grupo)}</p>
-            {grupo.itens.map((it) => (
-              <LinhaComplemento
-                key={it.id}
-                item={it}
-                qtd={selecaoComplementos[grupo.id]?.[it.id] ?? 0}
-                escolhaUnica={grupo.maximo === 1}
-                noLimite={noLimite}
-                cor={brown}
-                nomeRadio={`complemento-${grupo.id}`}
-                onAlterar={(delta) => alterarComplemento(grupo, it, delta)}
-              />
-            ))}
-          </div>
-        );
-      })}
-    </>
-  );
-
-  if (!temVariacoes && produto.tem_complementos === 1) {
-    /* So complementos (sem variacoes): mesmo visual do StoreComboDialog — passos com cabecalho
-       cinza e cada item com foto e contador. */
-    const grupoFaltando = complementos.find((g) => grupoPendente(g, selecaoComplementos));
+  if (temOpcoes) {
+    /* Variacoes e complementos: mesmo visual do StoreComboDialog — passos com cabecalho cinza e
+       cada opcao com contador (e foto, nos complementos). */
+    const tituloVariacao = detalhe?.variacao_titulo?.trim() || "Escolha uma das opções";
+    const grupoAntigoFaltando = temVariacoes
+      ? (detalhe?.grupos_opcoes ?? []).find((g) => g.obrigatorio === 1 && (selecoesGrupos[g.id]?.length ?? 0) === 0)
+      : undefined;
+    const pendente = faltaVariacao
+      ? tituloVariacao
+      : (grupoAntigoFaltando?.titulo ?? complementos.find((g) => grupoPendente(g, selecaoComplementos))?.nome);
     return (
       <StoreSheet
         open={open}
@@ -412,8 +303,8 @@ export function StoreProdutoDialog({
             >
               {produto.esgotado
                 ? "Esgotado"
-                : grupoFaltando
-                  ? `Selecione "${grupoFaltando.nome}"`
+                : pendente
+                  ? `Selecione "${pendente}"`
                   : `Adicionar ${formatarPreco(total)}`}
             </button>
           </div>
@@ -462,7 +353,9 @@ export function StoreProdutoDialog({
           <h2 className="mb-1 text-[.95rem] font-bold text-neutral-900">{produto.nome}</h2>
           {produto.descricao && <p className="mb-2.5 text-[.76rem] leading-relaxed text-neutral-500">{produto.descricao}</p>}
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            {produto.em_promo ? (
+            {temVariacoes ? (
+              <span className="text-[1rem] font-bold text-neutral-900">a partir de {formatarPreco(produto.preco_produto)}</span>
+            ) : produto.em_promo ? (
               <div className="flex items-center gap-2">
                 <span className="text-[.8rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
                 <span className="text-[1rem] font-bold text-emerald-600">{formatarPreco(produto.preco_final)}</span>
@@ -480,6 +373,77 @@ export function StoreProdutoDialog({
             <p className="text-[.86rem] text-red-600">Não foi possível carregar as opções. Feche e tente novamente.</p>
           ) : (
             <div className="space-y-3">
+              {temVariacoes && (
+                <div
+                  ref={(el) => {
+                    secaoRefs.current["variacao"] = el;
+                  }}
+                >
+                  <CabecalhoPasso titulo={tituloVariacao} obrigatorio={variacaoObrigatoria} dica="Escolha 1 opção." />
+                  <div>
+                    {(detalhe?.variacoes ?? []).map((v) => {
+                      const esgotada = v.estoque !== null && v.estoque <= 0;
+                      const marcada = variacaoId === v.id;
+                      return (
+                        <LinhaPassoCombo
+                          key={v.id}
+                          nome={[v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opção"}
+                          detalhe={esgotada ? "Esgotado" : formatarPreco(v.preco)}
+                          apagada={esgotada && !marcada}
+                          qtd={marcada ? 1 : 0}
+                          podeSomar={!marcada && !esgotada}
+                          onMenos={() => setVariacaoId(null)}
+                          onMais={() => selecionarVariacao(v.id)}
+                        />
+                      );
+                    })}
+                    {detalhe?.variacoes.length === 0 && <p className="py-2 text-[.8rem] text-neutral-400">Sem variações cadastradas.</p>}
+                  </div>
+                </div>
+              )}
+
+              {(detalhe?.grupos_opcoes ?? []).map((grupo) => {
+                const selecionados = selecoesGrupos[grupo.id] ?? [];
+                const atingiuMax = grupo.tipo_selecao === "multipla" && grupo.max_selecao > 0 && selecionados.length >= grupo.max_selecao;
+                return (
+                  <div
+                    key={`grupo-${grupo.id}`}
+                    ref={(el) => {
+                      secaoRefs.current[`grupo-${grupo.id}`] = el;
+                    }}
+                  >
+                    <CabecalhoPasso
+                      titulo={grupo.titulo}
+                      obrigatorio={grupo.obrigatorio === 1}
+                      dica={
+                        grupo.tipo_selecao === "multipla"
+                          ? grupo.max_selecao > 0
+                            ? `Escolha até ${grupo.max_selecao} opç${grupo.max_selecao > 1 ? "ões" : "ão"}.`
+                            : "Escolha 1 ou mais opções."
+                          : "Escolha 1 opção."
+                      }
+                    />
+                    <div>
+                      {grupo.itens.map((it) => {
+                        const ativo = selecionados.includes(it.id);
+                        return (
+                          <LinhaPassoCombo
+                            key={it.id}
+                            nome={it.nome}
+                            detalhe={it.preco > 0 ? `+ ${formatarPreco(it.preco)}` : "Sem custo adicional"}
+                            apagada={atingiuMax && !ativo}
+                            qtd={ativo ? 1 : 0}
+                            podeSomar={!ativo && !atingiuMax}
+                            onMenos={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao, grupo.max_selecao)}
+                            onMais={() => alternarOpcao(grupo.id, it.id, grupo.tipo_selecao, grupo.max_selecao)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
               {complementos.map((grupo) => {
                 const noLimite = grupo.maximo > 0 && qtdNoGrupo(selecaoComplementos, grupo.id) >= grupo.maximo;
                 return (
@@ -489,15 +453,7 @@ export function StoreProdutoDialog({
                       secaoRefs.current[`complemento-${grupo.id}`] = el;
                     }}
                   >
-                    <div className="mb-1 rounded-[10px] bg-neutral-100 px-3 py-2">
-                      <div className="flex flex-wrap items-center gap-1.5 text-[.8rem] font-bold text-neutral-900">
-                        {grupo.nome}
-                        {(grupo.obrigatorio || grupo.minimo > 0) && (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.62rem] font-bold text-amber-700">Obrigatório</span>
-                        )}
-                      </div>
-                      <p className="mt-0.5 text-[.68rem] text-neutral-500">{dicaDoGrupo(grupo)}</p>
-                    </div>
+                    <CabecalhoPasso titulo={grupo.nome} obrigatorio={grupo.obrigatorio || grupo.minimo > 0} dica={dicaDoGrupo(grupo)} />
                     <div>
                       {grupo.itens.map((it) => (
                         <LinhaComplementoCombo
@@ -528,63 +484,6 @@ export function StoreProdutoDialog({
           </div>
         </div>
       </StoreSheet>
-    );
-  }
-
-  if (temOpcoes) {
-    /* Dialogo centralizado igual ao varModalLoja do sistema legado: imagem a esquerda
-       (topo no mobile) e opcoes rolando ao lado; observacao e rodape fixos embaixo. */
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          showCloseButton={false}
-          className="flex max-h-[92dvh] w-[calc(100%-24px)] max-w-[460px] flex-col gap-0 overflow-hidden rounded-[20px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)] sm:max-w-[460px] min-[940px]:h-[min(597px,calc(100dvh-24px))] min-[940px]:max-h-[597px] min-[940px]:w-[900px]! min-[940px]:max-w-[900px]!"
-        >
-          <DialogTitle className="sr-only">{produto.nome}</DialogTitle>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            aria-label="Fechar"
-            className="absolute top-3 right-3 z-10 flex size-7 items-center justify-center rounded-full bg-black/25 text-white hover:bg-black/35"
-          >
-            <X size={15} />
-          </button>
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto min-[940px]:overflow-hidden">
-            <div className="flex flex-col min-[940px]:min-h-0 min-[940px]:flex-1 min-[940px]:flex-row min-[940px]:items-stretch">
-              <div className="aspect-[16/11] w-full shrink-0 min-[940px]:aspect-auto min-[940px]:w-[380px] min-[940px]:py-6 min-[940px]:pl-6">
-                <div className="size-full overflow-hidden bg-neutral-100 min-[940px]:rounded-2xl">
-                  {
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
-                  }
-                </div>
-              </div>
-              <div className="min-w-0 px-[18px] pt-4 pb-1 min-[940px]:flex-1 min-[940px]:overflow-y-auto min-[940px]:px-8 min-[940px]:pt-7">
-                <h2 className="mb-1 pr-8 text-[1rem] leading-tight font-bold text-neutral-900 min-[940px]:pr-10">
-                  {produto.nome}
-                </h2>
-                {produto.descricao && <p className="mb-2 text-[.8rem] leading-normal text-neutral-500">{produto.descricao}</p>}
-                <p className="mb-3.5 flex items-center gap-2 text-[.86rem] font-bold text-neutral-900">
-                  {temVariacoes ? `a partir de ${formatarPreco(produto.preco_produto)}` : formatarPreco(produto.preco_final)}
-                  <PontosBadge pontos={pontosTotal} />
-                </p>
-                {opcoesConteudo}
-              </div>
-            </div>
-            <div className="border-t border-neutral-100 px-4 pt-2 pb-2.5">
-              <label className="mb-1.5 block text-[.82rem] font-semibold text-neutral-900">Alguma observação?</label>
-              <textarea
-                value={obs}
-                onChange={(e) => setObs(e.target.value)}
-                placeholder="Observações do cliente"
-                rows={1}
-                className="w-full resize-none rounded-2xl border-[1.5px] border-neutral-200 px-3 py-2 text-base outline-none"
-              />
-            </div>
-          </div>
-          <div className="shrink-0 border-t border-neutral-100 px-4 py-3">{footer}</div>
-        </DialogContent>
-      </Dialog>
     );
   }
 
@@ -672,47 +571,92 @@ export function StoreProdutoDialog({
   );
 }
 
-/** Linha de extra/tipo com botão "+" que vira check preto quando selecionado (igual ao loja.php legado). */
-function OpcaoExtra({
-  nome,
-  preco,
-  ativo,
-  desabilitado = false,
-  cor,
-  onClick,
-}: {
-  nome: string;
-  preco: number;
-  ativo: boolean;
-  /** Limite de selecao do grupo atingido e este item nao esta entre os escolhidos — fica visivelmente travado. */
-  desabilitado?: boolean;
-  cor: string;
-  onClick: () => void;
-}) {
+/** Cabecalho cinza de cada passo, igual ao do combo. */
+function CabecalhoPasso({ titulo, obrigatorio, dica }: { titulo: string; obrigatorio: boolean; dica: string }) {
   return (
-    <div className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${desabilitado ? "opacity-40" : ""}`}>
-      <div className="text-base text-neutral-900">
-        {nome}
-        <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{formatarPreco(preco)}</small>
+    <div className="mb-1 rounded-[10px] bg-neutral-100 px-3 py-2">
+      <div className="flex flex-wrap items-center gap-1.5 text-[.8rem] font-bold text-neutral-900">
+        {titulo}
+        {obrigatorio && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.62rem] font-bold text-amber-700">Obrigatório</span>}
       </div>
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={desabilitado}
-        aria-pressed={ativo}
-        className="flex size-8 shrink-0 items-center justify-center rounded-[10px] text-white disabled:cursor-not-allowed"
-        style={{ background: ativo ? "#171717" : cor }}
-      >
-        {ativo ? <Check size={15} /> : <Plus size={15} />}
-      </button>
+      <p className="mt-0.5 text-[.68rem] text-neutral-500">{dica}</p>
     </div>
   );
 }
 
 /**
- * Item de complemento no visual do combo: nome, preco, foto e contador (- qtd +). Em grupo de
- * escolha unica o "+" de outro item troca a opcao escolhida.
+ * Opcao no visual do combo: nome, detalhe (preco/esgotado), foto opcional e contador (- qtd +).
+ * imagem undefined = sem espaco de foto (variacoes nao tem foto).
  */
+function LinhaPassoCombo({
+  nome,
+  descricao,
+  detalhe,
+  imagem,
+  apagada,
+  qtd,
+  podeSomar,
+  onMenos,
+  onMais,
+  onBloqueado,
+}: {
+  nome: string;
+  descricao?: string | null;
+  detalhe: string;
+  imagem?: string | null;
+  apagada: boolean;
+  qtd: number;
+  podeSomar: boolean;
+  onMenos: () => void;
+  onMais: () => void;
+  /** Clique no "+" travado (ex.: avisar falta de estoque). */
+  onBloqueado?: () => void;
+}) {
+  return (
+    <div className={`flex items-center gap-2.5 border-b border-neutral-100 py-2 last:border-0 ${apagada ? "opacity-55" : ""}`}>
+      <div className="min-w-0 flex-1">
+        <div className="text-[.8rem] leading-tight text-neutral-900">{nome}</div>
+        {descricao && <div className="mt-0.5 text-[.68rem] leading-snug text-neutral-500">{descricao}</div>}
+        <div className="mt-0.5 text-[.68rem] text-neutral-400">{detalhe}</div>
+      </div>
+      {imagem !== undefined && (
+        <div className="size-[64px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+          {imagem ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imagem} alt="" className="size-full object-cover" />
+          ) : (
+            <div className="flex size-full items-center justify-center text-neutral-300">
+              <ImageIcon size={20} />
+            </div>
+          )}
+        </div>
+      )}
+      <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-neutral-200">
+        <button
+          type="button"
+          disabled={qtd <= 0}
+          onClick={onMenos}
+          aria-label={`Remover ${nome}`}
+          className="flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 disabled:text-neutral-300"
+        >
+          <Minus size={13} />
+        </button>
+        <span className="min-w-[22px] px-0.5 text-center text-[.78rem] font-medium text-neutral-900">{qtd}</span>
+        <button
+          type="button"
+          aria-disabled={!podeSomar}
+          onClick={() => (podeSomar ? onMais() : onBloqueado?.())}
+          aria-label={`Adicionar ${nome}`}
+          className={`flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 ${!podeSomar ? "text-neutral-300" : ""}`}
+        >
+          <Plus size={13} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Item de complemento no visual do combo. Em grupo de escolha unica o "+" de outro item troca a opcao. */
 function LinhaComplementoCombo({
   item,
   qtd,
@@ -733,149 +677,19 @@ function LinhaComplementoCombo({
     : !esgotado && !noLimite && (item.podeRepetir || qtd === 0) && !semEstoqueParaMais;
 
   return (
-    <div className={`flex items-center gap-2.5 border-b border-neutral-100 py-2 last:border-0 ${esgotado && qtd === 0 ? "opacity-55" : ""}`}>
-      <div className="min-w-0 flex-1">
-        <div className="text-[.8rem] leading-tight text-neutral-900">{item.nome}</div>
-        {item.descricao && <div className="mt-0.5 text-[.68rem] leading-snug text-neutral-500">{item.descricao}</div>}
-        <div className="mt-0.5 text-[.68rem] text-neutral-400">
-          {esgotado ? "Esgotado" : item.preco > 0 ? `+ ${formatarPreco(item.preco)}` : "Sem custo adicional"}
-        </div>
-      </div>
-      <div className="size-[64px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
-        {item.imagem ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.imagem} alt="" className="size-full object-cover" />
-        ) : (
-          <div className="flex size-full items-center justify-center text-neutral-300">
-            <ImageIcon size={20} />
-          </div>
-        )}
-      </div>
-      <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-neutral-200">
-        <button
-          type="button"
-          disabled={qtd <= 0}
-          onClick={() => onAlterar(-1)}
-          aria-label={`Remover um ${item.nome}`}
-          className="flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 disabled:text-neutral-300"
-        >
-          <Minus size={13} />
-        </button>
-        <span className="min-w-[22px] px-0.5 text-center text-[.78rem] font-medium text-neutral-900">{qtd}</span>
-        <button
-          type="button"
-          aria-disabled={!podeSomar}
-          onClick={() => {
-            if (!podeSomar) {
-              if (!esgotado && semEstoqueParaMais) avisarEstoqueIndisponivel();
-              return;
-            }
-            onAlterar(1);
-          }}
-          aria-label={`Adicionar ${item.nome}`}
-          className={`flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 ${!podeSomar ? "text-neutral-300" : ""}`}
-        >
-          <Plus size={13} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Item de complemento na loja: escolha unica vira radio; nos demais o "+" adiciona e, se o item
- * pode repetir, aparece o contador (- qtd +) no lugar do botao.
- */
-function LinhaComplemento({
-  item,
-  qtd,
-  escolhaUnica,
-  noLimite,
-  cor,
-  nomeRadio,
-  onAlterar,
-}: {
-  item: ComplementoItemVenda;
-  qtd: number;
-  escolhaUnica: boolean;
-  /** O grupo ja chegou no maximo de escolhas. */
-  noLimite: boolean;
-  cor: string;
-  nomeRadio: string;
-  onAlterar: (delta: 1 | -1) => void;
-}) {
-  const esgotado = item.estoque !== null && item.estoque <= 0;
-  const ativo = qtd > 0;
-  const podeSomar = !esgotado && !noLimite && (item.podeRepetir || qtd === 0) && (item.estoque === null || qtd < item.estoque);
-  const travado = !ativo && (esgotado || (noLimite && !escolhaUnica));
-
-  const texto = (
-    <div className="text-base text-neutral-900">
-      {item.nome}
-      <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{esgotado ? "Esgotado" : formatarPreco(item.preco)}</small>
-    </div>
-  );
-
-  if (escolhaUnica) {
-    return (
-      <label
-        className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${
-          esgotado && !ativo ? "cursor-not-allowed opacity-40" : "cursor-pointer"
-        }`}
-      >
-        {texto}
-        <input
-          type="radio"
-          name={nomeRadio}
-          checked={ativo}
-          disabled={esgotado && !ativo}
-          onChange={() => onAlterar(1)}
-          onClick={() => ativo && onAlterar(1)}
-          className="size-[18px] shrink-0"
-          style={{ accentColor: cor }}
-        />
-      </label>
-    );
-  }
-
-  return (
-    <div className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${travado ? "opacity-40" : ""}`}>
-      {texto}
-      {ativo && item.podeRepetir ? (
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onAlterar(-1)}
-            aria-label={`Remover um ${item.nome}`}
-            className="flex size-8 items-center justify-center rounded-[10px] bg-neutral-100 text-neutral-900"
-          >
-            <Minus size={15} />
-          </button>
-          <span className="w-4 text-center text-[.9rem] font-bold tabular-nums">{qtd}</span>
-          <button
-            type="button"
-            onClick={() => onAlterar(1)}
-            disabled={!podeSomar}
-            aria-label={`Adicionar mais um ${item.nome}`}
-            className="flex size-8 items-center justify-center rounded-[10px] text-white disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ background: cor }}
-          >
-            <Plus size={15} />
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => onAlterar(ativo ? -1 : 1)}
-          disabled={!ativo && !podeSomar}
-          aria-pressed={ativo}
-          aria-label={ativo ? `Remover ${item.nome}` : `Adicionar ${item.nome}`}
-          className="flex size-8 shrink-0 items-center justify-center rounded-[10px] text-white disabled:cursor-not-allowed"
-          style={{ background: ativo ? "#171717" : cor }}
-        >
-          {ativo ? <Check size={15} /> : <Plus size={15} />}
-        </button>
-      )}
-    </div>
+    <LinhaPassoCombo
+      nome={item.nome}
+      descricao={item.descricao}
+      detalhe={esgotado ? "Esgotado" : item.preco > 0 ? `+ ${formatarPreco(item.preco)}` : "Sem custo adicional"}
+      imagem={item.imagem}
+      apagada={esgotado && qtd === 0}
+      qtd={qtd}
+      podeSomar={podeSomar}
+      onMenos={() => onAlterar(-1)}
+      onMais={() => onAlterar(1)}
+      onBloqueado={() => {
+        if (!esgotado && semEstoqueParaMais) avisarEstoqueIndisponivel();
+      }}
+    />
   );
 }
