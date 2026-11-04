@@ -799,9 +799,9 @@ function LinhaPassoCombo({
   return (
     <div className={`flex items-center gap-2.5 border-b border-neutral-100 py-2 last:border-0 ${apagada ? "opacity-55" : ""}`}>
       <div className="min-w-0 flex-1">
-        <div className="text-[.8rem] leading-tight text-neutral-900">{nome}</div>
-        {descricao && <div className="mt-0.5 text-[.68rem] leading-snug text-neutral-500">{descricao}</div>}
-        <div className="mt-0.5 text-[.68rem] text-neutral-400">{detalhe}</div>
+        <div className="text-[.95rem] leading-tight text-neutral-900">{nome}</div>
+        {descricao && <div className="mt-0.5 text-[.8rem] leading-snug text-neutral-500">{descricao}</div>}
+        <div className="mt-0.5 text-[.82rem] text-neutral-400">{detalhe}</div>
       </div>
       {imagem !== undefined && (
         <div className="size-[64px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
@@ -815,25 +815,25 @@ function LinhaPassoCombo({
           )}
         </div>
       )}
-      <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-neutral-200">
+      <div className="flex shrink-0 items-center gap-1">
         <button
           type="button"
           disabled={qtd <= 0}
           onClick={onMenos}
           aria-label={`Remover ${nome}`}
-          className="flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 disabled:text-neutral-300"
+          className="flex size-8 items-center justify-center text-neutral-600 hover:text-neutral-900 disabled:text-neutral-300"
         >
-          <Minus size={13} />
+          <Minus size={20} />
         </button>
-        <span className="min-w-[22px] px-0.5 text-center text-[.78rem] font-medium text-neutral-900">{qtd}</span>
+        <span className="min-w-[22px] px-0.5 text-center text-[.95rem] font-medium text-neutral-900">{qtd}</span>
         <button
           type="button"
           aria-disabled={!podeSomar}
           onClick={() => (podeSomar ? onMais() : onBloqueado?.())}
           aria-label={`Adicionar ${nome}`}
-          className={`flex size-7 items-center justify-center bg-white text-neutral-600 hover:bg-neutral-100 ${!podeSomar ? "text-neutral-300" : ""}`}
+          className={`flex size-8 items-center justify-center text-neutral-600 hover:text-neutral-900 ${!podeSomar ? "text-neutral-300" : ""}`}
         >
-          <Plus size={13} />
+          <Plus size={20} />
         </button>
       </div>
     </div>
