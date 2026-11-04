@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 import { VincularItensDialog } from "./vincular-itens-dialog";
 
 type Vinculado = { id: number; nome: string };
@@ -34,6 +35,7 @@ export function EstoqueDialog({
   const [vincularOpen, setVincularOpen] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
   useEffect(() => {
     if (!open || !produtoId) return;
@@ -86,7 +88,6 @@ export function EstoqueDialog({
 
   async function excluir() {
     if (!produtoId) return;
-    if (!confirm("Tem certeza que deseja deletar o controle de estoque deste produto? A quantidade e o vínculo com outros itens serão removidos.")) return;
     setExcluindo(true);
     try {
       const res = await fetch("/api/estoque", {
@@ -100,6 +101,7 @@ export function EstoqueDialog({
         return;
       }
       toast.success("Estoque deletado com sucesso");
+      setConfirmarExclusao(false);
       onDeleted?.();
       onOpenChange(false);
       router.refresh();
@@ -171,7 +173,7 @@ export function EstoqueDialog({
           )}
 
           <DialogFooter className="border-t-0 bg-transparent">
-            <Button variant="outline" className="rounded-full" onClick={excluir} disabled={excluindo}>
+            <Button variant="outline" className="rounded-full" onClick={() => setConfirmarExclusao(true)} disabled={excluindo}>
               {excluindo ? "Excluindo..." : "Deletar estoque"}
             </Button>
             <Button className="rounded-full" onClick={salvar} disabled={salvando || carregando}>
@@ -180,6 +182,16 @@ export function EstoqueDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmarExclusao}
+        onOpenChange={setConfirmarExclusao}
+        titulo="Deletar estoque?"
+        descricao="A quantidade e o vínculo com outros itens serão removidos. Essa ação não pode ser desfeita."
+        confirmando={excluindo}
+        textoConfirmar="Deletar"
+        onConfirmar={excluir}
+      />
 
       {produtoId && (
         <VincularItensDialog
