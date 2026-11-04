@@ -770,7 +770,7 @@ function CabecalhoPasso({ titulo, obrigatorio, dica }: { titulo: string; obrigat
 
 /**
  * Opcao no visual do combo: nome, detalhe (preco/esgotado), foto opcional e contador (- qtd +).
- * imagem undefined = sem espaco de foto (variacoes nao tem foto).
+ * imagem undefined = sem espaco de foto (variacoes e itens sem foto anexada).
  */
 function LinhaPassoCombo({
   nome,
@@ -865,7 +865,7 @@ function LinhaComplementoCombo({
       nome={item.nome}
       descricao={item.descricao}
       detalhe={esgotado ? "Esgotado" : item.preco > 0 ? `+ ${formatarPreco(item.preco)}` : "Sem custo adicional"}
-      imagem={item.imagem}
+      imagem={item.imagem || undefined}
       apagada={esgotado && qtd === 0}
       qtd={qtd}
       podeSomar={podeSomar}
