@@ -25,7 +25,8 @@ export function ConfirmDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
+      {/* overlayForceRender: costuma abrir por cima de outro modal, que tambem precisa ficar desfocado. */}
+      <DialogContent overlayForceRender className="max-w-sm rounded-3xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{titulo}</DialogTitle>
         </DialogHeader>
