@@ -1103,9 +1103,15 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         </a>
       </div>
 
-      {/* Cart bar */}
+      {/* Barra do carrinho + menu de baixo num bloco fixo so: no celular o carrinho encosta no menu
+          (sem vao) e os dois ficam com efeito de vidro; no desktop so o carrinho aparece, branco. */}
+      <div
+        className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/60 bg-white/70 shadow-[0_-6px_20px_rgba(0,0,0,.07)] backdrop-blur-xl backdrop-saturate-150 lg:border-neutral-100 lg:bg-white lg:backdrop-blur-none ${
+          cart.totalItens > 0 ? "" : "lg:hidden"
+        }`}
+      >
       {cart.totalItens > 0 && (
-        <div className="fixed inset-x-0 bottom-[60px] z-40 flex justify-center border-t border-neutral-100 bg-white px-4 py-2.5 shadow-[0_-6px_20px_rgba(0,0,0,.07)] lg:bottom-0">
+        <div className="flex justify-center border-b border-black/5 px-4 py-2.5 lg:border-b-0">
           <div className="flex w-full max-w-[901px] items-center justify-between gap-3">
             <div>
               <p className="text-[.72rem] text-neutral-500">Subtotal</p>
@@ -1127,7 +1133,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       )}
 
       {/* Bottom nav — so mobile, no desktop esses itens ja estao no topo */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center border-t border-neutral-200 bg-white shadow-[0_-6px_20px_rgba(0,0,0,.07)] lg:hidden">
+      <div className="flex justify-center lg:hidden">
         <div className="flex w-full max-w-[901px]">
           <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide" style={{ color: brown }}>
             <List size={20} />
@@ -1170,6 +1176,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             Pedidos
           </button>
         </div>
+      </div>
       </div>
 
       <StoreProdutoDialog
