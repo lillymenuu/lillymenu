@@ -63,6 +63,10 @@ export type ProdutoVariacaoItem = {
   tamanho: string;
   cor: string;
   preco: number | string;
+  /** Saldo da variacao (so usado com o estoque por variacao ligado). */
+  estoque?: number | string;
+  /** Saldo que veio do banco — o servidor so grava o estoque quando o usuario mudou. */
+  estoqueInicial?: number;
 };
 
 export type ProdutoOpcaoItem = {
@@ -83,9 +87,10 @@ export type ProdutoGrupoOpcoes = {
 
 export type ProdutoVariacoesDetalheResposta = {
   ok: true;
-  variacoes: { id: number; tamanho: string; cor: string; preco: number }[];
+  variacoes: { id: number; tamanho: string; cor: string; preco: number; estoque: number }[];
   variacoes_titulo: string | null;
   variacoes_obrigatorio: number;
+  variacoes_estoque: number;
   grupos_opcoes: { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: number; max_selecao: number; itens: { id: number; nome: string; preco: number }[] }[];
 };
 

@@ -5,7 +5,8 @@ import { produtos, produtoVariacoes, produtoOpcoesGrupos, produtoOpcoesItens } f
 
 /* Equivalente de admin/api/v1/pdv_produto_variacoes.php: variacoes/grupos de opcoes de um produto pro POS/loja. */
 
-export type VariacaoProdutoPdv = { id: number; tamanho: string | null; cor: string | null; preco: number };
+/** estoque: saldo da variacao; null = o produto nao controla estoque por variacao. */
+export type VariacaoProdutoPdv = { id: number; tamanho: string | null; cor: string | null; preco: number; estoque: number | null };
 export type OpcaoItemPdv = { id: number; nome: string; preco: number };
 export type GrupoOpcoesPdv = { id: number; titulo: string; tipoSelecao: "unica" | "multipla"; obrigatorio: boolean; maxSelecao: number; itens: OpcaoItemPdv[] };
 
@@ -29,12 +30,18 @@ export async function variacoesProdutoPdv(
      pra so 1, que era a causa do carregamento lento ao abrir um produto com variacoes. */
   const [[produto], variacoesRaw, gruposRaw] = await Promise.all([
     db
-      .select({ variacaoTitulo: produtos.variacoes_titulo, variacaoObrigatorio: produtos.variacoes_obrigatorio })
+      .select({ variacaoTitulo: produtos.variacoes_titulo, variacaoObrigatorio: produtos.variacoes_obrigatorio, variacoesEstoque: produtos.variacoes_estoque })
       .from(produtos)
       .where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId)))
       .limit(1),
     db
-      .select({ id: produtoVariacoes.id, tamanho: produtoVariacoes.tamanho, cor: produtoVariacoes.cor, preco: produtoVariacoes.preco })
+      .select({
+        id: produtoVariacoes.id,
+        tamanho: produtoVariacoes.tamanho,
+        cor: produtoVariacoes.cor,
+        preco: produtoVariacoes.preco,
+        estoque: produtoVariacoes.estoque_quantidade,
+      })
       .from(produtoVariacoes)
       .where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.ativo, true), eq(produtoVariacoes.loja_id, lojaId)))
       .orderBy(asc(produtoVariacoes.ordem), asc(produtoVariacoes.id)),
@@ -50,7 +57,11 @@ export async function variacoesProdutoPdv(
       .where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)))
       .orderBy(asc(produtoOpcoesGrupos.ordem), asc(produtoOpcoesGrupos.id)),
   ]);
-  const variacoes = variacoesRaw.map((v) => ({ ...v, preco: Number(v.preco ?? 0) }));
+  const variacoes = variacoesRaw.map((v) => ({
+    ...v,
+    preco: Number(v.preco ?? 0),
+    estoque: produto?.variacoesEstoque ? Math.max(0, v.estoque) : null,
+  }));
 
   const itensRaw = gruposRaw.length
     ? await db

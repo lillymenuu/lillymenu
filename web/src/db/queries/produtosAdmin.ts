@@ -3,6 +3,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { produtos, categorias, estoque, estoqueGrupoMembros, produtoVariacoes, produtoOpcoesGrupos, produtoOpcoesItens, configuracoes } from "@/db/schema";
 import { storageSaveBase64, storageDelete } from "@/db/queries/storage";
+import { sincronizarEstoqueProdutoComVariacoes } from "@/db/queries/variacaoEstoque";
 
 /*
  * Equivalente de admin/api/v1/produtos.php (GET/POST/PATCH/DELETE): CRUD do
@@ -133,21 +134,47 @@ export async function excluirProduto(lojaId: number, id: number): Promise<{ ok: 
   return { ok: true };
 }
 
-export type VariacaoInput = { tamanho?: string; cor?: string; preco?: number };
+/* estoque/estoqueInicial: saldo da variacao e o que o form carregou — so grava o saldo quando o
+   usuario mudou, pra nao desfazer uma venda que aconteceu com o modal aberto. */
+export type VariacaoInput = { id?: number; tamanho?: string; cor?: string; preco?: number; estoque?: number; estoqueInicial?: number };
 export type OpcaoItemInput = { nome?: string; preco?: number };
 export type GrupoOpcoesInput = { titulo?: string; tipoSelecao?: "unica" | "multipla"; obrigatorio?: boolean; maxSelecao?: number; itens?: OpcaoItemInput[] };
 
-async function salvarVariacoes(produtoId: number, lojaId: number, variacoes: VariacaoInput[]): Promise<void> {
-  await db.delete(produtoVariacoes).where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.loja_id, lojaId)));
+/* Atualiza no lugar (mantem o id das variacoes existentes): pedido_item_opcoes guarda o id da
+   variacao vendida, e o cancelamento usa esse id pra devolver o estoque dela. */
+async function salvarVariacoes(produtoId: number, lojaId: number, variacoes: VariacaoInput[], controlaEstoque: boolean): Promise<void> {
+  const existentes = await db
+    .select({ id: produtoVariacoes.id })
+    .from(produtoVariacoes)
+    .where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.loja_id, lojaId)));
+  const idsExistentes = new Set(existentes.map((v) => v.id));
+  const mantidos: number[] = [];
+
   let ordem = 1;
   for (const v of variacoes) {
     const tamanho = (v.tamanho ?? "").trim();
     const cor = (v.cor ?? "").trim();
     const preco = Number(v.preco ?? 0);
     if (tamanho === "" && cor === "" && preco <= 0) continue;
-    await db.insert(produtoVariacoes).values({ produto_id: produtoId, tamanho, cor, preco, ordem, loja_id: lojaId });
+    const estoqueNovo = Math.max(0, Math.floor(Number(v.estoque ?? 0)) || 0);
+
+    if (v.id && idsExistentes.has(v.id)) {
+      const set: Partial<typeof produtoVariacoes.$inferInsert> = { tamanho, cor, preco, ordem };
+      if (controlaEstoque && v.estoque !== undefined && estoqueNovo !== v.estoqueInicial) set.estoque_quantidade = estoqueNovo;
+      await db.update(produtoVariacoes).set(set).where(and(eq(produtoVariacoes.id, v.id), eq(produtoVariacoes.loja_id, lojaId)));
+      mantidos.push(v.id);
+    } else {
+      await db.insert(produtoVariacoes).values({ produto_id: produtoId, tamanho, cor, preco, ordem, loja_id: lojaId, estoque_quantidade: controlaEstoque ? estoqueNovo : 0 });
+    }
     ordem++;
   }
+
+  const removidos = [...idsExistentes].filter((id) => !mantidos.includes(id));
+  if (removidos.length > 0) {
+    await db.delete(produtoVariacoes).where(and(inArray(produtoVariacoes.id, removidos), eq(produtoVariacoes.loja_id, lojaId)));
+  }
+
+  if (controlaEstoque) await sincronizarEstoqueProdutoComVariacoes(db, produtoId, lojaId);
 }
 
 /* Grupos de opcoes configuraveis (ex.: "Escolha seu extra", "Coberturas") — substitui os antigos
@@ -219,6 +246,7 @@ export type SalvarProdutoInput = {
   variacoesTitulo?: string;
   variacoesObrigatorio?: boolean;
   variacoes?: VariacaoInput[];
+  variacoesEstoque?: boolean;
   gruposOpcoes?: GrupoOpcoesInput[];
 };
 
@@ -240,6 +268,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
   const diasSemanaJson = input.diasSemana && input.diasSemana.length > 0 ? JSON.stringify(input.diasSemana) : null;
   const temVariacoes = Boolean(input.temVariacoes);
   const variacoesArr = input.variacoes ?? [];
+  const variacoesEstoque = temVariacoes && Boolean(input.variacoesEstoque);
   const gruposOpcoesArr = input.gruposOpcoes ?? [];
 
   const campos = {
@@ -274,6 +303,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     tem_variacoes: temVariacoes,
     variacoes_titulo: input.variacoesTitulo?.trim() || null,
     variacoes_obrigatorio: input.variacoesObrigatorio !== undefined ? Boolean(input.variacoesObrigatorio) : true,
+    variacoes_estoque: variacoesEstoque,
   };
 
   if (input.id && input.id > 0) {
@@ -296,7 +326,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
 
     await db.update(produtos).set(set).where(and(eq(produtos.id, idInt), eq(produtos.loja_id, lojaId)));
 
-    await salvarVariacoes(idInt, lojaId, temVariacoes ? variacoesArr : []);
+    await salvarVariacoes(idInt, lojaId, temVariacoes ? variacoesArr : [], variacoesEstoque);
     await salvarGruposOpcoes(idInt, lojaId, gruposOpcoesArr);
 
     await bumpCatalogoVersao(lojaId);
@@ -318,7 +348,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     .values({ ...campos, loja_id: lojaId, ordem: novaOrdem, imagem: imagemSalva })
     .returning({ id: produtos.id });
 
-  await salvarVariacoes(inserido.id, lojaId, temVariacoes ? variacoesArr : []);
+  await salvarVariacoes(inserido.id, lojaId, temVariacoes ? variacoesArr : [], variacoesEstoque);
   await salvarGruposOpcoes(inserido.id, lojaId, gruposOpcoesArr);
 
   await bumpCatalogoVersao(lojaId);
@@ -343,7 +373,8 @@ export async function duplicarProduto(lojaId: number, produtoId: number): Promis
   for (const v of variacoesOriginais) {
     const vResto = { ...v };
     delete (vResto as { id?: number }).id;
-    await db.insert(produtoVariacoes).values({ ...vResto, produto_id: copia.id });
+    /* A copia nasce sem estoque (o estoque do produto tambem nao e copiado). */
+    await db.insert(produtoVariacoes).values({ ...vResto, produto_id: copia.id, estoque_quantidade: 0 });
   }
 
   const gruposOriginais = await db.select().from(produtoOpcoesGrupos).where(and(eq(produtoOpcoesGrupos.produto_id, produtoId), eq(produtoOpcoesGrupos.loja_id, lojaId)));
@@ -363,7 +394,7 @@ export async function duplicarProduto(lojaId: number, produtoId: number): Promis
   return { ok: true, id: copia.id };
 }
 
-export type VariacaoDetalhe = { id: number; tamanho: string | null; cor: string | null; preco: number };
+export type VariacaoDetalhe = { id: number; tamanho: string | null; cor: string | null; preco: number; estoque: number };
 export type OpcaoItemDetalhe = { id: number; nome: string; preco: number };
 export type GrupoOpcoesDetalhe = { id: number; titulo: string; tipoSelecao: "unica" | "multipla"; obrigatorio: boolean; maxSelecao: number; itens: OpcaoItemDetalhe[] };
 
@@ -373,18 +404,25 @@ export async function detalheVariacoesProduto(
   produtoId: number
 ): Promise<
   | { ok: false; msg: string }
-  | { ok: true; variacoes: VariacaoDetalhe[]; variacoesTitulo: string | null; variacoesObrigatorio: boolean; gruposOpcoes: GrupoOpcoesDetalhe[] }
+  | {
+      ok: true;
+      variacoes: VariacaoDetalhe[];
+      variacoesTitulo: string | null;
+      variacoesObrigatorio: boolean;
+      variacoesEstoque: boolean;
+      gruposOpcoes: GrupoOpcoesDetalhe[];
+    }
 > {
   if (produtoId <= 0) return { ok: false, msg: "Produto invalido." };
   const existe = await db
-    .select({ id: produtos.id, variacoesTitulo: produtos.variacoes_titulo, variacoesObrigatorio: produtos.variacoes_obrigatorio })
+    .select({ id: produtos.id, variacoesTitulo: produtos.variacoes_titulo, variacoesObrigatorio: produtos.variacoes_obrigatorio, variacoesEstoque: produtos.variacoes_estoque })
     .from(produtos)
     .where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId)))
     .limit(1);
   if (existe.length === 0) return { ok: false, msg: "Produto nao encontrado." };
 
   const variacoes = await db
-    .select({ id: produtoVariacoes.id, tamanho: produtoVariacoes.tamanho, cor: produtoVariacoes.cor, preco: produtoVariacoes.preco })
+    .select({ id: produtoVariacoes.id, tamanho: produtoVariacoes.tamanho, cor: produtoVariacoes.cor, preco: produtoVariacoes.preco, estoque: produtoVariacoes.estoque_quantidade })
     .from(produtoVariacoes)
     .where(and(eq(produtoVariacoes.produto_id, produtoId), eq(produtoVariacoes.loja_id, lojaId)))
     .orderBy(produtoVariacoes.ordem, produtoVariacoes.id);
@@ -418,7 +456,7 @@ export async function detalheVariacoesProduto(
     itens: itens.filter((it) => it.grupoId === g.id).map((it) => ({ id: it.id, nome: it.nome, preco: it.preco })),
   }));
 
-  return { ok: true, variacoes, variacoesTitulo: existe[0].variacoesTitulo, variacoesObrigatorio: existe[0].variacoesObrigatorio, gruposOpcoes };
+  return { ok: true, variacoes, variacoesTitulo: existe[0].variacoesTitulo, variacoesObrigatorio: existe[0].variacoesObrigatorio, variacoesEstoque: existe[0].variacoesEstoque, gruposOpcoes };
 }
 
 export type ProdutoValidadeAviso = { id: number; nome: string | null; dataValidade: string; diasRestantes: number; vencido: boolean };

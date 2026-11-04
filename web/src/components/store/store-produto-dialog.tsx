@@ -120,7 +120,9 @@ export function StoreProdutoDialog({
     (temVariacoes && (detalhe?.grupos_opcoes ?? []).some((g) => g.obrigatorio === 1 && (selecoesGrupos[g.id]?.length ?? 0) === 0)) ||
     complementos.some((g) => grupoPendente(g, selecaoComplementos));
   /* Estoque que ainda cabe: o do produto menos o que ja esta no carrinho. */
-  const estoqueRestante = Math.max(0, produto.estoque - jaNoCarrinho);
+  /* Variacao com estoque proprio tambem limita pelo saldo dela. */
+  const estoqueVariacao = variacaoSelecionada?.estoque ?? null;
+  const estoqueRestante = Math.min(Math.max(0, produto.estoque - jaNoCarrinho), estoqueVariacao ?? Infinity);
   const podeAdicionar =
     !produto.esgotado && estoqueRestante > 0 && qtd <= estoqueRestante && !carregando && !faltaVariacao && !faltaGrupoObrigatorio;
 
@@ -203,7 +205,7 @@ export function StoreProdutoDialog({
         qtd,
         obs: obs.trim(),
         imagem: produto.imagem,
-        estoqueMax: produto.estoque,
+        estoqueMax: estoqueVariacao ?? produto.estoque,
         pontosGanho: produto.pontos_ganho,
         variacaoId,
         selecoesGrupos,
@@ -288,19 +290,23 @@ export function StoreProdutoDialog({
         <div>
           {(detalhe?.variacoes ?? []).map((v) => {
             const nome = [v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opção";
+            const esgotada = v.estoque !== null && v.estoque <= 0;
             return (
               <label
                 key={v.id}
-                className="flex cursor-pointer items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0"
+                className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${
+                  esgotada ? "cursor-not-allowed opacity-40" : "cursor-pointer"
+                }`}
               >
                 <div className="text-base text-neutral-900">
                   {nome}
-                  <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{formatarPreco(v.preco)}</small>
+                  <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{esgotada ? "Esgotado" : formatarPreco(v.preco)}</small>
                 </div>
                 <input
                   type="radio"
                   name="variacao"
                   checked={variacaoId === v.id}
+                  disabled={esgotada}
                   onChange={() => selecionarVariacao(v.id)}
                   className="size-[18px] shrink-0"
                   style={{ accentColor: brown }}

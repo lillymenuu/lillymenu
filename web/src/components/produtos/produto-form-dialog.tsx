@@ -110,6 +110,7 @@ export function ProdutoFormDialog({
   const [variacoes, setVariacoes] = useState<ProdutoVariacaoItem[]>([]);
   const [variacoesTitulo, setVariacoesTitulo] = useState("Variações do produto");
   const [variacoesObrigatorio, setVariacoesObrigatorio] = useState(true);
+  const [variacoesEstoque, setVariacoesEstoque] = useState(false);
   const [gruposOpcoes, setGruposOpcoes] = useState<ProdutoGrupoOpcoes[]>([]);
   const [variacoesDialogOpen, setVariacoesDialogOpen] = useState(false);
   /** Indice do grupo em edicao em `gruposOpcoes`, ou -1 pra criar um grupo novo. */
@@ -187,14 +188,18 @@ export function ProdutoFormDialog({
       setVariacoes([]);
       setVariacoesTitulo("Variações do produto");
       setVariacoesObrigatorio(true);
+      setVariacoesEstoque(false);
       setGruposOpcoes([]);
       fetch(`/api/produtos/variacoes-detalhe?id=${produto.id}`)
         .then((r) => r.json())
         .then((data: ProdutoVariacoesDetalheResposta | { ok: false }) => {
           if (!data.ok) return;
-          setVariacoes(data.variacoes.map((v) => ({ id: v.id, tamanho: v.tamanho, cor: v.cor, preco: v.preco })));
+          setVariacoes(
+            data.variacoes.map((v) => ({ id: v.id, tamanho: v.tamanho, cor: v.cor, preco: v.preco, estoque: v.estoque, estoqueInicial: v.estoque }))
+          );
           setVariacoesTitulo(data.variacoes_titulo?.trim() || "Variações do produto");
           setVariacoesObrigatorio(data.variacoes_obrigatorio === 1);
+          setVariacoesEstoque(data.variacoes_estoque === 1);
           setGruposOpcoes(
             data.grupos_opcoes.map((g) => ({
               id: g.id,
@@ -322,8 +327,16 @@ export function ProdutoFormDialog({
         variacoes_titulo: variacoesTitulo.trim(),
         variacoes_obrigatorio: variacoesObrigatorio,
         variacoes: temVariacoes
-          ? variacoes.map((v) => ({ tamanho: v.tamanho, cor: v.cor, preco: Number(String(v.preco).replace(",", ".")) || 0 }))
+          ? variacoes.map((v) => ({
+              id: v.id,
+              tamanho: v.tamanho,
+              cor: v.cor,
+              preco: Number(String(v.preco).replace(",", ".")) || 0,
+              estoque: Math.max(0, parseInt(String(v.estoque ?? 0), 10) || 0),
+              estoqueInicial: v.estoqueInicial,
+            }))
           : [],
+        variacoes_estoque: temVariacoes && variacoesEstoque,
         grupos_opcoes: gruposOpcoes.map((g) => ({
           titulo: g.titulo,
           tipo_selecao: g.tipoSelecao,
@@ -661,6 +674,7 @@ export function ProdutoFormDialog({
                         ? "Nenhuma variação cadastrada."
                         : `${variacoes.length} variação${variacoes.length > 1 ? "ões" : ""} cadastrada${variacoes.length > 1 ? "s" : ""}.`}
                       <span className="text-muted-foreground">· {variacoesObrigatorio ? "Obrigatório" : "Opcional"}</span>
+                      {variacoesEstoque && <span className="text-muted-foreground">· Estoque por variação</span>}
                     </div>
                   </div>
                   <Button type="button" size="sm" variant="outline" onClick={() => setVariacoesDialogOpen(true)} className="shrink-0">
@@ -824,6 +838,30 @@ export function ProdutoFormDialog({
               <div className="flex flex-col items-center gap-2 py-14 text-center text-muted-foreground">
                 <Box size={24} />
                 <p className="text-sm">Salve o produto primeiro para gerenciar o estoque.</p>
+              </div>
+            ) : temVariacoes && variacoesEstoque ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Este produto controla o estoque por variação. O estoque do produto é a soma das variações.
+                </p>
+                {variacoes.map((v, idx) => {
+                  const qtd = Math.max(0, parseInt(String(v.estoque ?? 0), 10) || 0);
+                  return (
+                    <div key={v.id ?? `nova-${idx}`} className="rounded-lg border p-3">
+                      <div className="text-sm font-semibold">
+                        {nome || produto.nome} · {[v.tamanho, v.cor].filter(Boolean).join(" - ") || "Variação"}
+                      </div>
+                      <div className={`mt-1 flex items-center gap-1 text-xs ${qtd > 0 ? "text-emerald-600" : "text-destructive"}`}>
+                        {qtd > 0 ? "✓" : "✕"} {qtd} em estoque
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="flex justify-end">
+                  <Button size="sm" className="rounded-full" onClick={() => setVariacoesDialogOpen(true)}>
+                    Editar estoque das variações
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="rounded-lg border p-3">
@@ -1005,10 +1043,12 @@ export function ProdutoFormDialog({
       onOpenChange={setVariacoesDialogOpen}
       titulo={variacoesTitulo}
       obrigatorio={variacoesObrigatorio}
+      controlaEstoque={variacoesEstoque}
       variacoes={variacoes}
       onSalvar={(dados) => {
         setVariacoesTitulo(dados.titulo);
         setVariacoesObrigatorio(dados.obrigatorio);
+        setVariacoesEstoque(dados.controlaEstoque);
         setVariacoes(dados.variacoes);
       }}
     />

@@ -106,6 +106,7 @@ export async function POST(request: Request) {
     variacoesTitulo: typeof body.variacoes_titulo === "string" ? body.variacoes_titulo : undefined,
     variacoesObrigatorio: body.variacoes_obrigatorio === undefined ? undefined : Boolean(body.variacoes_obrigatorio),
     variacoes: Array.isArray(body.variacoes) ? body.variacoes : [],
+    variacoesEstoque: Boolean(body.variacoes_estoque),
     gruposOpcoes: Array.isArray(body.grupos_opcoes)
       ? body.grupos_opcoes.map(
           (g: { titulo?: string; tipo_selecao?: string; obrigatorio?: boolean; max_selecao?: number; itens?: { nome?: string; preco?: number }[] }) => ({

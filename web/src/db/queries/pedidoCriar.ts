@@ -21,6 +21,7 @@ import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { estaAberto } from "@/db/queries/lojaStatus";
 import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
 import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
+import { baixarEstoqueVariacao } from "@/db/queries/variacaoEstoque";
 import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
 import { saldoCashbackLiberado } from "@/db/queries/cashback";
@@ -253,6 +254,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
         await registrarComplementosItem(tx, novoItem.id, item.complementos, qtd, lojaId, pedidoId);
 
         if (!isCombo && item.id) {
+          await baixarEstoqueVariacao(tx, item.id, item.variacaoId, qtd, lojaId);
           await baixarEstoque(tx, item.id, lojaId, qtd, "pedido", pedidoId);
         }
         if (isCombo && item.combosels) {

@@ -148,7 +148,8 @@ export type StoreCatalogo = {
   promoAutoPopup: StoreProduto | null;
 };
 
-export type StoreVariacao = { id: number; tamanho: string; cor: string; preco: number };
+/** estoque: saldo da variacao; null = o produto nao controla estoque por variacao. */
+export type StoreVariacao = { id: number; tamanho: string; cor: string; preco: number; estoque: number | null };
 export type StoreOpcaoItem = { id: number; nome: string; preco: number };
 export type StoreGrupoOpcoes = { id: number; titulo: string; tipo_selecao: "unica" | "multipla"; obrigatorio: 0 | 1; max_selecao: number; itens: StoreOpcaoItem[] };
 

@@ -132,6 +132,8 @@ export function PosVariacaoDialog({
   if (!produto) return null;
 
   const variacaoSelecionada = variacoes.find((v) => v.id === variacaoId) ?? null;
+  /* Variacao com estoque proprio limita a quantidade pelo saldo dela. */
+  const limiteQtd = variacaoSelecionada?.estoque != null ? Math.min(estoqueDisponivel, variacaoSelecionada.estoque) : estoqueDisponivel;
   const precoBase = variacaoSelecionada ? (variacaoSelecionada.preco > 0 ? variacaoSelecionada.preco : produto.preco) : produto.preco;
   const gruposSelecionados = gruposOpcoes.map((g) => ({ grupo: g, itens: g.itens.filter((it) => selecoesGrupos[g.id]?.includes(it.id)) }));
   const gruposTotal = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
@@ -197,7 +199,7 @@ export function PosVariacaoDialog({
 
   const podeAdicionar =
     !carregando &&
-    qtd <= estoqueDisponivel &&
+    qtd <= limiteQtd &&
     (!exigeVariacao || variacaoId !== null) &&
     gruposOpcoes.every((g) => !g.obrigatorio || (selecoesGrupos[g.id]?.length ?? 0) > 0) &&
     complementos.every((g) => !grupoPendente(g, selecaoComplementos));
@@ -323,19 +325,31 @@ export function PosVariacaoDialog({
                       {variacoesFiltradas.map((v) => {
                         const label = [v.tamanho, v.cor].filter(Boolean).join(" - ") || `Opção #${v.id}`;
                         const marcado = variacaoId === v.id;
+                        const esgotada = v.estoque !== null && v.estoque <= 0;
                         return (
                           <label
                             key={v.id}
                             className={cn(
                               "flex cursor-pointer items-center justify-between gap-3 rounded-xl border p-3.5 transition-colors",
-                              marcado && "border-primary/30 bg-primary/5"
+                              marcado && "border-primary/30 bg-primary/5",
+                              esgotada && !marcado && "cursor-not-allowed opacity-50"
                             )}
                           >
                             <span className="min-w-0">
                               <span className="block text-sm leading-tight font-medium">{label}</span>
-                              <span className="mt-0.5 block text-xs text-muted-foreground">{formatBRL(v.preco)}</span>
+                              <span className="mt-0.5 block text-xs text-muted-foreground">
+                                {formatBRL(v.preco)}
+                                {v.estoque !== null && (esgotada ? " · Esgotado" : ` · ${v.estoque} em estoque`)}
+                              </span>
                             </span>
-                            <input type="radio" name="variacao" checked={marcado} onChange={() => selecionarVariacao(v.id)} className="sr-only" />
+                            <input
+                              type="radio"
+                              name="variacao"
+                              checked={marcado}
+                              disabled={esgotada && !marcado}
+                              onChange={() => selecionarVariacao(v.id)}
+                              className="sr-only"
+                            />
                             <Marcador marcado={marcado} />
                           </label>
                         );
@@ -508,8 +522,8 @@ export function PosVariacaoDialog({
                 <span className="w-8 text-center text-sm font-semibold tabular-nums">{qtd}</span>
                 <button
                   type="button"
-                  disabled={qtd >= estoqueDisponivel}
-                  onClick={() => setQtd((q) => Math.min(q + 1, estoqueDisponivel))}
+                  disabled={qtd >= limiteQtd}
+                  onClick={() => setQtd((q) => Math.min(q + 1, limiteQtd))}
                   className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Plus className="size-4" />

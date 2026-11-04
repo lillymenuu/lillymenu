@@ -50,8 +50,14 @@ export async function detalheEstoque(lojaId: number, produtoId: number): Promise
 export async function salvarEstoque(lojaId: number, produtoId: number, quantidade: number, quantidadeMinima: number): Promise<{ ok: true; quantidade: number; quantidadeMinima: number } | { ok: false; msg: string }> {
   if (produtoId <= 0 || quantidade < 0 || quantidadeMinima < 0) return { ok: false, msg: "Dados invalidos." };
 
-  const [produto] = await db.select({ id: produtos.id }).from(produtos).where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId))).limit(1);
+  const [produto] = await db
+    .select({ id: produtos.id, variacoesEstoque: produtos.variacoes_estoque })
+    .from(produtos)
+    .where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId)))
+    .limit(1);
   if (!produto) return { ok: false, msg: "Produto nao encontrado." };
+  /* Com estoque por variacao, o do produto e a soma delas — edita-se pelas variacoes. */
+  if (produto.variacoesEstoque) return { ok: false, msg: "Este produto controla o estoque por variação. Altere o estoque em Preço e variações." };
 
   try {
     await withTransaction(async (tx) => {

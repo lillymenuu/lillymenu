@@ -1,0 +1,2 @@
+ALTER TABLE "produto_variacoes" ADD COLUMN "estoque_quantidade" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "produtos" ADD COLUMN "variacoes_estoque" boolean DEFAULT false NOT NULL;

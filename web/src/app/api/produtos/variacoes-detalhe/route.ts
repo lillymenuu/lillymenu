@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     variacoes: resultado.variacoes,
     variacoes_titulo: resultado.variacoesTitulo,
     variacoes_obrigatorio: resultado.variacoesObrigatorio ? 1 : 0,
+    variacoes_estoque: resultado.variacoesEstoque ? 1 : 0,
     grupos_opcoes: resultado.gruposOpcoes.map((g) => ({
       id: g.id,
       titulo: g.titulo,

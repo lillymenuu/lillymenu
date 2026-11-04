@@ -9,6 +9,7 @@ import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
 import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
 import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
+import { baixarEstoqueVariacao } from "@/db/queries/variacaoEstoque";
 import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 
 /*
@@ -613,6 +614,7 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
         await registrarItemOpcoes(tx, novoItem.id, item.id ?? null, item.variacaoId, item.selecoesGrupos, lojaId);
 
         if (!isCombo && item.id) {
+          await baixarEstoqueVariacao(tx, item.id, item.variacaoId, qtd, lojaId);
           await baixarEstoque(tx, item.id, lojaId, qtd, "pedido", pedidoId);
         }
         if (isCombo && item.combosels) {
@@ -624,8 +626,8 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
         }
       }
     });
-  } catch {
-    return { ok: false, msg: "Erro ao enviar o pedido." };
+  } catch (e) {
+    return { ok: false, msg: e instanceof Error && e.message.includes("sem estoque") ? e.message : "Erro ao enviar o pedido." };
   }
 
   const base = await pedidoCodigoBase(lojaId);

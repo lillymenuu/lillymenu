@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Box, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ export function ProdutoVariacoesManageDialog({
   onOpenChange,
   titulo,
   obrigatorio,
+  controlaEstoque,
   variacoes,
   onSalvar,
 }: {
@@ -26,21 +27,25 @@ export function ProdutoVariacoesManageDialog({
   onOpenChange: (v: boolean) => void;
   titulo: string;
   obrigatorio: boolean;
+  /** Estoque por variacao ligado: cada linha ganha o campo Estoque. */
+  controlaEstoque: boolean;
   variacoes: ProdutoVariacaoItem[];
-  onSalvar: (dados: { titulo: string; obrigatorio: boolean; variacoes: ProdutoVariacaoItem[] }) => void;
+  onSalvar: (dados: { titulo: string; obrigatorio: boolean; controlaEstoque: boolean; variacoes: ProdutoVariacaoItem[] }) => void;
 }) {
   const [tituloEditado, setTituloEditado] = useState("Variações do produto");
   const [obrigatorioEditado, setObrigatorioEditado] = useState(true);
+  const [estoqueEditado, setEstoqueEditado] = useState(false);
   const [linhas, setLinhas] = useState<ProdutoVariacaoItem[]>([]);
 
   useEffect(() => {
     if (open) {
       setTituloEditado(titulo.trim() || "Variações do produto");
       setObrigatorioEditado(obrigatorio);
+      setEstoqueEditado(controlaEstoque);
       setLinhas(variacoes.length ? variacoes : [{ tamanho: "", cor: "", preco: "" }]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, variacoes, titulo, obrigatorio]);
+  }, [open, variacoes, titulo, obrigatorio, controlaEstoque]);
 
   function adicionarLinha() {
     setLinhas((prev) => [...prev, { tamanho: "", cor: "", preco: "" }]);
@@ -56,13 +61,15 @@ export function ProdutoVariacoesManageDialog({
 
   function salvar() {
     const validas = linhas.filter((l) => l.tamanho.trim() !== "" || l.cor.trim() !== "" || Number(l.preco) > 0);
-    onSalvar({ titulo: tituloEditado.trim() || "Variações do produto", obrigatorio: obrigatorioEditado, variacoes: validas });
+    onSalvar({ titulo: tituloEditado.trim() || "Variações do produto", obrigatorio: obrigatorioEditado, controlaEstoque: estoqueEditado, variacoes: validas });
     onOpenChange(false);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] w-[520px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[520px]">
+      <DialogContent
+        className={`flex max-h-[80vh] max-w-[calc(100%-2rem)] flex-col rounded-3xl ${estoqueEditado ? "w-[620px] sm:max-w-[620px]" : "w-[520px] sm:max-w-[520px]"}`}
+      >
         <DialogHeader className="flex-row items-start justify-between gap-2 pr-8">
           <DialogTitle className="sr-only">Variações do produto</DialogTitle>
           <div className="flex-1 space-y-2.5">
@@ -77,6 +84,24 @@ export function ProdutoVariacoesManageDialog({
               <Switch checked={obrigatorioEditado} onCheckedChange={(v) => setObrigatorioEditado(v === true)} />
               Obrigatório escolher uma opção
             </label>
+            {estoqueEditado ? (
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 font-medium text-emerald-700">
+                  <Box size={13} /> Estoque por variação ativo
+                </span>
+                <button type="button" onClick={() => setEstoqueEditado(false)} className="text-muted-foreground hover:text-destructive hover:underline">
+                  Remover estoque das variações
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEstoqueEditado(true)}
+                className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium text-primary hover:bg-muted"
+              >
+                <Box size={13} /> Criar estoque das variações
+              </button>
+            )}
           </div>
           <button
             type="button"
@@ -120,6 +145,19 @@ export function ProdutoVariacoesManageDialog({
                     className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
                   />
                 </div>
+                {estoqueEditado && (
+                  <div className="w-20 space-y-1">
+                    <label className="text-xs text-muted-foreground">Estoque</label>
+                    <Input
+                      type="number"
+                      min={0}
+                      inputMode="numeric"
+                      value={String(linha.estoque ?? 0)}
+                      onChange={(e) => atualizarLinha(idx, { estoque: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                      className="h-10 w-full rounded-full border-0 bg-muted/60 px-3 text-sm"
+                    />
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => removerLinha(idx)}

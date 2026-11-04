@@ -26,6 +26,7 @@ import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 import { timestampFortaleza, dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
 import { sincronizarEstoqueVinculo, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
 import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
+import { baixarEstoqueVariacao } from "@/db/queries/variacaoEstoque";
 import { pedidoRestaurarEstoqueCancelado } from "@/db/queries/pedidoEstoque";
 import { syncOrderRevenue, reverseCanceledOrder } from "@/db/queries/financeiroSync";
 import { finalizarPedido } from "@/db/queries/pedidosStatus";
@@ -667,6 +668,8 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         await registrarComplementosItem(tx, novoItem.id, i.complementos, qtdItem, lojaId, pedidoId);
 
         if (produtoIdItem > 0 && !isCombo) {
+          // edicao nao bloqueia por saldo (o pedido antigo so devolve o estoque no fim desta transacao)
+          await baixarEstoqueVariacao(tx, produtoIdItem, i.variacaoId, qtdItem, lojaId, !pedidoEdicaoId);
           await tx.insert(estoque).values({ produto_id: produtoIdItem, quantidade: 0, loja_id: lojaId }).onConflictDoNothing({ target: estoque.produto_id });
           await tx.update(estoque).set({ quantidade: sql`${estoque.quantidade} - ${qtdItem}` }).where(and(eq(estoque.produto_id, produtoIdItem), eq(estoque.loja_id, lojaId)));
           await tx.insert(estoqueMovimentacoes).values({ produto_id: produtoIdItem, tipo: "saida", quantidade: qtdItem, origem: "pedido", referencia_id: pedidoId, loja_id: lojaId });

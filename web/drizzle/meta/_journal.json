@@ -169,6 +169,13 @@
       "when": 1793665455175,
       "tag": "0023_pedido_item_opcoes_quantidade",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793824119681,
+      "tag": "0024_variacoes_estoque",
+      "breakpoints": true
     }
   ]
 }

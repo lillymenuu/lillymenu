@@ -1261,6 +1261,8 @@ export const produtos = pgTable(
     tem_variacoes: boolean("tem_variacoes").notNull().default(false),
     variacoes_titulo: varchar("variacoes_titulo", { length: 120 }),
     variacoes_obrigatorio: boolean("variacoes_obrigatorio").notNull().default(true),
+    /* Estoque por variacao: cada variacao tem saldo proprio e o estoque do produto vira a soma delas. */
+    variacoes_estoque: boolean("variacoes_estoque").notNull().default(false),
     disponivel_catalogo: boolean("disponivel_catalogo").notNull().default(true),
     disponivel_mesa: boolean("disponivel_mesa").notNull().default(true),
     loja_id: integer("loja_id").notNull().default(1),
@@ -1347,6 +1349,8 @@ export const produtoVariacoes = pgTable(
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
     atualizado_em: timestamp("atualizado_em", { mode: "string" }),
     loja_id: integer("loja_id").notNull().default(1),
+    /* Saldo da variacao; so vale quando produtos.variacoes_estoque esta ligado. */
+    estoque_quantidade: integer("estoque_quantidade").notNull().default(0),
   },
   (t) => [
     index("produto_variacoes_idx_produto_variacoes_produto").on(t.produto_id),

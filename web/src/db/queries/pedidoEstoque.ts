@@ -1,8 +1,9 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { NeonTx } from "@/db";
-import { pedidoItens, pedidoComboItens, estoque, estoqueMovimentacoes } from "@/db/schema";
+import { pedidoItens, pedidoComboItens, pedidoItemOpcoes, estoque, estoqueMovimentacoes } from "@/db/schema";
 import { sincronizarEstoqueVinculo } from "@/db/queries/estoqueVinculo";
+import { reporEstoqueVariacao } from "@/db/queries/variacaoEstoque";
 
 /*
  * Equivalente de admin/helpers/pedido_estoque_module.php
@@ -43,11 +44,23 @@ export async function pedidoRestaurarEstoqueCancelado(tx: NeonTx, pedidoId: numb
     await sincronizarEstoqueVinculo(tx, produtoId, lojaId, { tipo: "entrada", quantidade, origem: "pedido_cancelado", referenciaId: pedidoId });
   }
 
+  /* Variacao vendida de cada item (pedido_item_opcoes) — devolve tambem o estoque dela. */
+  const itemIds = itens.map((i) => i.id);
+  const variacoes = itemIds.length
+    ? await tx
+        .select({ pedidoItemId: pedidoItemOpcoes.pedido_item_id, variacaoId: pedidoItemOpcoes.referencia_id })
+        .from(pedidoItemOpcoes)
+        .where(and(inArray(pedidoItemOpcoes.pedido_item_id, itemIds), eq(pedidoItemOpcoes.tipo, "variacao"), eq(pedidoItemOpcoes.loja_id, lojaId)))
+    : [];
+  const variacaoPorItem = new Map(variacoes.map((v) => [v.pedidoItemId, v.variacaoId]));
+
   for (const item of itens) {
     if (itensComboIds.has(item.id)) continue;
     const produtoId = item.produtoId ?? 0;
     const quantidade = item.quantidade ?? 0;
     await repor(produtoId, quantidade);
+    const variacaoId = variacaoPorItem.get(item.id);
+    if (produtoId > 0 && variacaoId) await reporEstoqueVariacao(tx, variacaoId, quantidade, lojaId);
   }
 
   for (const componente of componentesLinhas) {

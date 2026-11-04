@@ -47,6 +47,8 @@ export type PosVariacao = {
   tamanho: string | null;
   cor: string | null;
   preco: number;
+  /** Saldo da variacao; null = o produto nao controla estoque por variacao. */
+  estoque: number | null;
 };
 
 export type PosOpcaoItem = { id: number; nome: string; preco: number };
