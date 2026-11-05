@@ -19,6 +19,20 @@ function nomeBaseItem(nome: string): string {
   return idx === -1 ? nome : nome.slice(0, idx);
 }
 
+/* Junta as linhas do mesmo produto (ex.: sabores diferentes de uma variacao) na ordem em que o
+   produto apareceu primeiro — o carrinho mostra a foto e o nome uma vez so por produto. Combos e
+   resgates de pontos ficam sempre separados. */
+function agruparPorProduto(itens: StoreCartItem[]): StoreCartItem[][] {
+  const grupos = new Map<string, StoreCartItem[]>();
+  for (const item of itens) {
+    const chave = item.tipo === "produto" && item.pontosCusto == null ? `produto-${item.id}` : item.key;
+    const lista = grupos.get(chave);
+    if (lista) lista.push(item);
+    else grupos.set(chave, [item]);
+  }
+  return [...grupos.values()];
+}
+
 /* Agrupa `opcoesSelecionadas` por titulo (Sabores, Cremes, Mix...), preservando a ordem em que cada
    grupo apareceu pela primeira vez — mesma logica do resumo do pedido no admin. */
 function agruparOpcoes(opcoes: { titulo: string; nome: string }[]): { titulo: string; nomes: string[] }[] {
@@ -316,86 +330,96 @@ export function StoreCartSheet({
         ) : (
           <>
             <div>
-              {itens.map((item) => {
-                const grupos = item.combosels
-                  ? item.combosels.reduce<Record<string, typeof item.combosels>>((acc, s) => {
-                      const chave = s.passoNome ?? "";
-                      (acc[chave] ??= []).push(s);
-                      return acc;
-                    }, {})
-                  : null;
-                const gruposOpcoes = !grupos && item.opcoesSelecionadas?.length ? agruparOpcoes(item.opcoesSelecionadas) : null;
-                const obsLivre = grupos ? (item.obsUsuario ?? "") : item.obs;
-                const nomeExibido = gruposOpcoes ? nomeBaseItem(item.nome) : item.nome;
+              {agruparPorProduto(itens).map((linhas) => (
+                <div key={linhas[0].key} className="border-b border-neutral-100 py-3 last:border-0">
+                  {linhas.map((item, indice) => {
+                    const primeira = indice === 0;
+                    const grupos = item.combosels
+                      ? item.combosels.reduce<Record<string, typeof item.combosels>>((acc, s) => {
+                          const chave = s.passoNome ?? "";
+                          (acc[chave] ??= []).push(s);
+                          return acc;
+                        }, {})
+                      : null;
+                    const gruposOpcoes = !grupos && item.opcoesSelecionadas?.length ? agruparOpcoes(item.opcoesSelecionadas) : null;
+                    const obsLivre = grupos ? (item.obsUsuario ?? "") : item.obs;
+                    const nomeExibido = gruposOpcoes ? nomeBaseItem(item.nome) : item.nome;
 
-                return (
-                  <div key={item.key} className="border-b border-neutral-100 py-3 last:border-0">
-                    <div className="flex gap-2.5">
-                      <div className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-neutral-100">
-                        {
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
-                        }
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-[.82rem] font-semibold text-neutral-900">{nomeExibido}</p>
-                          <button
-                            type="button"
-                            onClick={() => onRemover(item.key)}
-                            className="shrink-0 text-[.72rem] text-neutral-400 hover:text-red-600"
-                          >
-                            Remover
-                          </button>
-                        </div>
-                        <p className="mt-0.5 text-[.82rem] font-bold" style={{ color: brown }}>
-                          {formatarPreco(item.precoUnit)}
-                        </p>
-                        {perfil.clubePontosAtivo && item.pontosCusto == null && (
-                          <div className="mt-1">
-                            <PontosBadge pontos={(item.pontosGanho ?? 0) * item.qtd} />
+                    return (
+                      <div key={item.key} className={primeira ? "" : "mt-3 border-t border-dashed border-neutral-100 pt-3"}>
+                        <div className="flex gap-2.5">
+                          {primeira ? (
+                            <div className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+                              {
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={item.imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                              }
+                            </div>
+                          ) : (
+                            /* Mesmo produto da linha de cima (outro sabor): sem repetir foto e nome. */
+                            <div className="w-[50px] shrink-0" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              {primeira ? <p className="text-[.82rem] font-semibold text-neutral-900">{nomeExibido}</p> : <span />}
+                              <button
+                                type="button"
+                                onClick={() => onRemover(item.key)}
+                                className="shrink-0 text-[.72rem] text-neutral-400 hover:text-red-600"
+                              >
+                                Remover
+                              </button>
+                            </div>
+                            <p className="mt-0.5 text-[.82rem] font-bold" style={{ color: brown }}>
+                              {formatarPreco(item.precoUnit)}
+                            </p>
+                            {perfil.clubePontosAtivo && item.pontosCusto == null && (
+                              <div className="mt-1">
+                                <PontosBadge pontos={(item.pontosGanho ?? 0) * item.qtd} />
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="shrink-0">
-                        <QtyStepper
-                          size="sm"
-                          value={item.qtd}
-                          min={0}
-                          max={item.pontosCusto != null ? 1 : limiteDaLinha(item)}
-                          onChange={(v) => (v <= 0 ? onRemover(item.key) : onAtualizarQtd(item.key, v))}
-                          onMaxAtingido={item.pontosCusto == null ? avisarEstoqueIndisponivel : undefined}
-                        />
-                      </div>
-                    </div>
+                          <div className="shrink-0">
+                            <QtyStepper
+                              size="sm"
+                              value={item.qtd}
+                              min={0}
+                              max={item.pontosCusto != null ? 1 : limiteDaLinha(item)}
+                              onChange={(v) => (v <= 0 ? onRemover(item.key) : onAtualizarQtd(item.key, v))}
+                              onMaxAtingido={item.pontosCusto == null ? avisarEstoqueIndisponivel : undefined}
+                            />
+                          </div>
+                        </div>
 
-                    {grupos &&
-                      Object.entries(grupos).map(([passoNome, sels]) => (
-                        <div key={passoNome} className="mt-2 pl-[60px]">
-                          {passoNome && <p className="text-[.7rem] font-semibold text-neutral-500">{passoNome}</p>}
-                          {sels?.map((s) => (
-                            <p key={s.id} className="text-[.76rem] text-neutral-600">
-                              <span className="mr-1 text-neutral-400">{s.qtd}</span>
-                              {s.nome}
-                            </p>
+                        {grupos &&
+                          Object.entries(grupos).map(([passoNome, sels]) => (
+                            <div key={passoNome} className="mt-2 pl-[60px]">
+                              {passoNome && <p className="text-[.7rem] font-semibold text-neutral-500">{passoNome}</p>}
+                              {sels?.map((s) => (
+                                <p key={s.id} className="text-[.76rem] text-neutral-600">
+                                  <span className="mr-1 text-neutral-400">{s.qtd}</span>
+                                  {s.nome}
+                                </p>
+                              ))}
+                            </div>
                           ))}
-                        </div>
-                      ))}
-                    {gruposOpcoes &&
-                      gruposOpcoes.map((g) => (
-                        <div key={g.titulo} className="mt-2 pl-[60px]">
-                          <p className="text-[.7rem] font-semibold text-neutral-500">{g.titulo}</p>
-                          {g.nomes.map((nome, ni) => (
-                            <p key={ni} className="text-[.76rem] text-neutral-600">
-                              - {nome}
-                            </p>
+                        {gruposOpcoes &&
+                          gruposOpcoes.map((g) => (
+                            <div key={g.titulo} className="mt-2 pl-[60px]">
+                              <p className="text-[.7rem] font-semibold text-neutral-500">{g.titulo}</p>
+                              {g.nomes.map((nome, ni) => (
+                                <p key={ni} className="text-[.76rem] text-neutral-600">
+                                  - {nome}
+                                </p>
+                              ))}
+                            </div>
                           ))}
-                        </div>
-                      ))}
-                    {obsLivre && <p className="mt-1.5 pl-[60px] text-[.74rem] whitespace-pre-line text-neutral-400">{obsLivre}</p>}
-                  </div>
-                );
-              })}
+                        {obsLivre && <p className="mt-1.5 pl-[60px] text-[.74rem] whitespace-pre-line text-neutral-400">{obsLivre}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
 
             {sugestoes.length > 0 && (
