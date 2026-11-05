@@ -16,8 +16,10 @@ import { ValidadeAviso } from "@/components/produtos/validade-aviso";
 import { cn } from "cn";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
+/* Camadas translucidas: o aside tem backdrop-blur, entao o que estiver atras (a pagina, no celular)
+   aparece desfocado — efeito de vidro nos dois estados do menu. */
 const SIDEBAR_BRAND_BG =
-  "radial-gradient(130% 55% at 12% 0%, rgba(255,255,255,.16), transparent 60%), linear-gradient(190deg, #9c5523 0%, #7a3f10 100%)";
+  "radial-gradient(130% 55% at 12% 0%, rgba(255,255,255,.22), transparent 60%), linear-gradient(190deg, rgba(156,85,35,.84) 0%, rgba(122,63,16,.88) 100%)";
 
 export function AppShell(props: {
   sidebarData: SidebarData;
@@ -227,6 +229,8 @@ function AppShellInner({
         onTouchCancel={onToqueFim}
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-52 shrink-0 overflow-hidden transition-[transform,width] duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0",
+          /* Vidro: desfoque do fundo + filete claro na borda direita e brilho interno no topo. */
+          "backdrop-blur-2xl backdrop-saturate-150 shadow-[inset_-1px_0_0_rgba(255,255,255,.55),inset_0_1px_0_rgba(255,255,255,.35)]",
           /* Celular: gaveta larga, cantos arredondados e curva de abertura de app. */
           "max-md:w-[62vw] max-md:max-w-[240px] max-md:rounded-r-3xl max-md:ease-[cubic-bezier(0.32,0.72,0,1)]",
           mobileOpen ? "translate-x-0 max-md:shadow-2xl" : "-translate-x-full",
@@ -246,7 +250,7 @@ function AppShellInner({
         <div
           aria-hidden
           className={cn(
-            "pointer-events-none absolute inset-0 bg-white transition-opacity duration-300",
+            "pointer-events-none absolute inset-0 bg-gradient-to-b from-white/80 to-white/65 transition-opacity duration-300",
             collapsed ? "opacity-0" : "opacity-100"
           )}
         />
