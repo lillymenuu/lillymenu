@@ -346,7 +346,7 @@ export function StoreCartSheet({
                     const nomeExibido = gruposOpcoes ? nomeBaseItem(item.nome) : item.nome;
 
                     return (
-                      <div key={item.key} className={primeira ? "" : "mt-3 border-t border-dashed border-neutral-100 pt-3"}>
+                      <div key={item.key} className={primeira ? "" : "mt-1.5 border-t border-dashed border-neutral-100 pt-1.5"}>
                         <div className="flex gap-2.5">
                           {primeira ? (
                             <div className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-neutral-100">
@@ -405,8 +405,9 @@ export function StoreCartSheet({
                           ))}
                         {gruposOpcoes &&
                           gruposOpcoes.map((g) => (
-                            <div key={g.titulo} className="mt-2 pl-[60px]">
-                              <p className="text-[.7rem] font-semibold text-neutral-500">{g.titulo}</p>
+                            <div key={g.titulo} className={`pl-[60px] ${primeira ? "mt-2" : "-mt-1"}`}>
+                              {/* Nos outros sabores o titulo ja apareceu no primeiro — so o nome escolhido. */}
+                              {primeira && <p className="text-[.7rem] font-semibold text-neutral-500">{g.titulo}</p>}
                               {g.nomes.map((nome, ni) => (
                                 <p key={ni} className="text-[.76rem] text-neutral-600">
                                   - {nome}
