@@ -347,7 +347,7 @@ export function StoreCartSheet({
 
                     return (
                       <div key={item.key} className={primeira ? "" : "mt-1.5 border-t border-dashed border-neutral-100 pt-1.5"}>
-                        <div className="flex gap-2.5">
+                        <div className={`flex gap-2.5 ${primeira ? "" : "items-center"}`}>
                           {primeira ? (
                             <div className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-neutral-100">
                               {
@@ -359,9 +359,28 @@ export function StoreCartSheet({
                             /* Mesmo produto da linha de cima (outro sabor): sem repetir foto e nome. */
                             <div className="w-[50px] shrink-0" />
                           )}
+                          {!primeira ? (
+                            /* Outro sabor do mesmo produto: uma linha so, "Mista · R$ 3,50". */
+                            <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                              <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 text-[.8rem] text-neutral-700">
+                                <span className="truncate">{gruposOpcoes ? gruposOpcoes.flatMap((g) => g.nomes).join(", ") : nomeExibido}</span>
+                                <span className="font-bold" style={{ color: brown }}>
+                                  · {formatarPreco(item.precoUnit)}
+                                </span>
+                                {perfil.clubePontosAtivo && item.pontosCusto == null && <PontosBadge pontos={(item.pontosGanho ?? 0) * item.qtd} />}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => onRemover(item.key)}
+                                className="shrink-0 text-[.72rem] text-neutral-400 hover:text-red-600"
+                              >
+                                Remover
+                              </button>
+                            </div>
+                          ) : (
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-2">
-                              {primeira ? <p className="text-[.82rem] font-semibold text-neutral-900">{nomeExibido}</p> : <span />}
+                              <p className="text-[.82rem] font-semibold text-neutral-900">{nomeExibido}</p>
                               <button
                                 type="button"
                                 onClick={() => onRemover(item.key)}
@@ -379,6 +398,7 @@ export function StoreCartSheet({
                               </div>
                             )}
                           </div>
+                          )}
                           <div className="shrink-0">
                             <QtyStepper
                               size="sm"
@@ -404,10 +424,10 @@ export function StoreCartSheet({
                             </div>
                           ))}
                         {gruposOpcoes &&
+                          primeira &&
                           gruposOpcoes.map((g) => (
-                            <div key={g.titulo} className={`pl-[60px] ${primeira ? "mt-2" : "-mt-1"}`}>
-                              {/* Nos outros sabores o titulo ja apareceu no primeiro — so o nome escolhido. */}
-                              {primeira && <p className="text-[.7rem] font-semibold text-neutral-500">{g.titulo}</p>}
+                            <div key={g.titulo} className="mt-2 pl-[60px]">
+                              <p className="text-[.7rem] font-semibold text-neutral-500">{g.titulo}</p>
                               {g.nomes.map((nome, ni) => (
                                 <p key={ni} className="text-[.76rem] text-neutral-600">
                                   - {nome}
