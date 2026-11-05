@@ -33,6 +33,22 @@ function agruparPorProduto(itens: StoreCartItem[]): StoreCartItem[][] {
   return [...grupos.values()];
 }
 
+/* Titulo da escolha quando todas as linhas do produto sao uma escolha simples (so um grupo de
+   opcoes, o mesmo em todas — ex.: "Escolha o sabor"); null quando ha combo, resgate por pontos ou
+   mais de um grupo, que continuam no layout detalhado. */
+function tituloEscolhaUnica(linhas: StoreCartItem[]): string | null {
+  let titulo: string | null = null;
+  for (const item of linhas) {
+    if (item.combosels?.length || item.pontosCusto != null || !item.opcoesSelecionadas?.length) return null;
+    const titulos = new Set(item.opcoesSelecionadas.map((o) => o.titulo));
+    if (titulos.size !== 1) return null;
+    const t = [...titulos][0];
+    if (titulo !== null && t !== titulo) return null;
+    titulo = t;
+  }
+  return titulo;
+}
+
 /* Agrupa `opcoesSelecionadas` por titulo (Sabores, Cremes, Mix...), preservando a ordem em que cada
    grupo apareceu pela primeira vez — mesma logica do resumo do pedido no admin. */
 function agruparOpcoes(opcoes: { titulo: string; nome: string }[]): { titulo: string; nomes: string[] }[] {
@@ -330,7 +346,61 @@ export function StoreCartSheet({
         ) : (
           <>
             <div>
-              {agruparPorProduto(itens).map((linhas) => (
+              {agruparPorProduto(itens).map((linhas) => {
+                /* Produto de uma escolha so (ex.: sabor): cabecalho com foto, nome e o titulo da escolha,
+                   e cada sabor numa linha "Queijo · R$ 3,50" com Remover e quantidade. */
+                const tituloEscolha = tituloEscolhaUnica(linhas);
+                if (tituloEscolha !== null) {
+                  return (
+                    <div key={linhas[0].key} className="border-b border-neutral-100 py-3 last:border-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+                          {
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={linhas[0].imagem || PRODUTO_IMAGEM_PADRAO} alt="" className="size-full object-cover" />
+                          }
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[.82rem] font-semibold text-neutral-900">{nomeBaseItem(linhas[0].nome)}</p>
+                          <p className="mt-0.5 text-[.7rem] font-semibold text-neutral-500">{tituloEscolha}</p>
+                        </div>
+                      </div>
+                      {linhas.map((item) => (
+                        <div key={item.key} className="mt-1.5 border-t border-dashed border-neutral-100 pt-1.5 pl-[60px]">
+                          <div className="flex items-center gap-2">
+                            <p className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 text-[.8rem] text-neutral-700">
+                              <span className="truncate">{(item.opcoesSelecionadas ?? []).map((o) => o.nome).join(", ")}</span>
+                              <span className="font-bold" style={{ color: brown }}>
+                                · {formatarPreco(item.precoUnit)}
+                              </span>
+                              {perfil.clubePontosAtivo && item.pontosCusto == null && <PontosBadge pontos={(item.pontosGanho ?? 0) * item.qtd} />}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => onRemover(item.key)}
+                              className="shrink-0 text-[.72rem] text-neutral-400 hover:text-red-600"
+                            >
+                              Remover
+                            </button>
+                            <div className="shrink-0">
+                              <QtyStepper
+                                size="sm"
+                                value={item.qtd}
+                                min={0}
+                                max={limiteDaLinha(item)}
+                                onChange={(v) => (v <= 0 ? onRemover(item.key) : onAtualizarQtd(item.key, v))}
+                                onMaxAtingido={avisarEstoqueIndisponivel}
+                              />
+                            </div>
+                          </div>
+                          {item.obs && <p className="mt-1 text-[.74rem] whitespace-pre-line text-neutral-400">{item.obs}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                return (
                 <div key={linhas[0].key} className="border-b border-neutral-100 py-3 last:border-0">
                   {linhas.map((item, indice) => {
                     const primeira = indice === 0;
@@ -346,8 +416,8 @@ export function StoreCartSheet({
                     const nomeExibido = gruposOpcoes ? nomeBaseItem(item.nome) : item.nome;
 
                     return (
-                      <div key={item.key} className={primeira ? "" : "mt-1.5 border-t border-dashed border-neutral-100 pt-1.5"}>
-                        <div className={`flex gap-2.5 ${primeira ? "" : "items-center"}`}>
+                      <div key={item.key} className={primeira ? "" : "mt-3 border-t border-dashed border-neutral-100 pt-3"}>
+                        <div className="flex gap-2.5">
                           {primeira ? (
                             <div className="size-[50px] shrink-0 overflow-hidden rounded-lg bg-neutral-100">
                               {
@@ -356,31 +426,12 @@ export function StoreCartSheet({
                               }
                             </div>
                           ) : (
-                            /* Mesmo produto da linha de cima (outro sabor): sem repetir foto e nome. */
+                            /* Mesmo produto da linha de cima (outra combinacao de opcoes): sem repetir foto e nome. */
                             <div className="w-[50px] shrink-0" />
                           )}
-                          {!primeira ? (
-                            /* Outro sabor do mesmo produto: uma linha so, "Mista · R$ 3,50". */
-                            <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                              <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 text-[.8rem] text-neutral-700">
-                                <span className="truncate">{gruposOpcoes ? gruposOpcoes.flatMap((g) => g.nomes).join(", ") : nomeExibido}</span>
-                                <span className="font-bold" style={{ color: brown }}>
-                                  · {formatarPreco(item.precoUnit)}
-                                </span>
-                                {perfil.clubePontosAtivo && item.pontosCusto == null && <PontosBadge pontos={(item.pontosGanho ?? 0) * item.qtd} />}
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => onRemover(item.key)}
-                                className="shrink-0 text-[.72rem] text-neutral-400 hover:text-red-600"
-                              >
-                                Remover
-                              </button>
-                            </div>
-                          ) : (
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-2">
-                              <p className="text-[.82rem] font-semibold text-neutral-900">{nomeExibido}</p>
+                              {primeira ? <p className="text-[.82rem] font-semibold text-neutral-900">{nomeExibido}</p> : <span />}
                               <button
                                 type="button"
                                 onClick={() => onRemover(item.key)}
@@ -398,7 +449,6 @@ export function StoreCartSheet({
                               </div>
                             )}
                           </div>
-                          )}
                           <div className="shrink-0">
                             <QtyStepper
                               size="sm"
@@ -424,7 +474,6 @@ export function StoreCartSheet({
                             </div>
                           ))}
                         {gruposOpcoes &&
-                          primeira &&
                           gruposOpcoes.map((g) => (
                             <div key={g.titulo} className="mt-2 pl-[60px]">
                               <p className="text-[.7rem] font-semibold text-neutral-500">{g.titulo}</p>
@@ -440,7 +489,8 @@ export function StoreCartSheet({
                     );
                   })}
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {sugestoes.length > 0 && (
