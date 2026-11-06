@@ -203,14 +203,14 @@ export function LancarPerdaDialog({
   }
 
   const listaItens = (
-    <div className="flex min-h-0 flex-1 flex-col rounded-2xl border bg-muted/20">
+    <div className={`flex flex-col rounded-2xl border bg-muted/20 ${editando ? "" : "min-h-0 flex-1"}`}>
       <div className="flex items-center justify-between border-b px-3.5 py-2.5">
         <span className="text-sm font-medium">{editando ? "Item" : "Itens deste lançamento"}</span>
         {!editando && (
           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary tabular-nums">{itens.length}</span>
         )}
       </div>
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5">
+      <div className={`space-y-2 p-2.5 ${editando ? "" : "min-h-0 flex-1 overflow-y-auto"}`}>
         {itens.length === 0 ? (
           <div className="flex h-full min-h-40 flex-col items-center justify-center gap-2 text-center text-muted-foreground">
             <ShoppingBasket className="size-7 opacity-40" />
@@ -302,13 +302,18 @@ export function LancarPerdaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[min(720px,calc(100dvh-2rem))] w-[920px] max-w-[calc(100%-2rem)] flex-col gap-4 rounded-3xl sm:max-w-[920px]">
+      {/* Edicao (um item so): modal estreito e da altura do conteudo; lancamento novo: duas colunas, altura fixa. */}
+      <DialogContent
+        className={`flex max-w-[calc(100%-2rem)] flex-col gap-4 rounded-3xl ${
+          editando ? "max-h-[calc(100dvh-2rem)] w-[480px] sm:max-w-[480px]" : "h-[min(720px,calc(100dvh-2rem))] w-[920px] sm:max-w-[920px]"
+        }`}
+      >
         <DialogHeader>
           <DialogTitle>{editando ? "Editar lançamento de perda" : "Lançar perda"}</DialogTitle>
           <p className="text-xs text-muted-foreground">Lançamentos de perda não alteram o estoque dos produtos.</p>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-[160px_220px_1fr]">
+        <div className={`grid grid-cols-2 gap-3 ${editando ? "" : "sm:grid-cols-[160px_220px_1fr]"}`}>
           <div>
             <label className="mb-1 block text-xs font-medium">Data da perda</label>
             <input type="date" value={data} max={hojeFortaleza()} onChange={(e) => setData(e.target.value)} className={CAMPO} />
@@ -328,13 +333,13 @@ export function LancarPerdaDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="col-span-2 sm:col-span-1">
+          <div className={editando ? "col-span-2" : "col-span-2 sm:col-span-1"}>
             <label className="mb-1 block text-xs font-medium">Observação</label>
             <input value={observacao} onChange={(e) => setObservacao(e.target.value)} maxLength={255} placeholder="Opcional" className={CAMPO} />
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto md:flex-row md:overflow-hidden">
+        <div className={editando ? "min-h-0 overflow-y-auto" : "flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto md:flex-row md:overflow-hidden"}>
           {!editando && (
             <div className="flex min-h-[320px] flex-col md:min-h-0 md:w-[46%]">
               <div className="mb-2.5 flex w-fit gap-1 rounded-full bg-muted p-1 text-xs">
@@ -480,7 +485,7 @@ export function LancarPerdaDialog({
             </div>
           )}
 
-          <div className={`flex min-h-[280px] flex-col md:min-h-0 ${editando ? "md:mx-auto md:w-[460px]" : "md:flex-1"}`}>{listaItens}</div>
+          {editando ? listaItens : <div className="flex min-h-[280px] flex-col md:min-h-0 md:flex-1">{listaItens}</div>}
         </div>
 
         <DialogFooter className="border-t-0 bg-transparent">
