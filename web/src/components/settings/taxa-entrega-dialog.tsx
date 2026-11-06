@@ -385,57 +385,78 @@ export function TaxaEntregaDialog({
           ) : null}
 
           {tab === "area" ? (
-            <div className="space-y-3">
-              <div className="rounded-xl border border-primary/30 bg-primary/5 p-2.5 text-xs">
+            <div className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="py-3 pr-3 font-medium">Área</th>
+                      <th className="py-3 pr-3 font-medium">Valor da taxa</th>
+                      <th className="py-3 pr-3 font-medium">Tempo mínimo</th>
+                      <th className="py-3 pr-3 font-medium">Tempo máximo</th>
+                      <th className="py-3 pr-3 font-medium">Pontos</th>
+                      <th className="py-3 font-medium">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {carregandoAreas ? (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-muted-foreground">
+                          Carregando...
+                        </td>
+                      </tr>
+                    ) : areas.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-muted-foreground">
+                          Nenhuma área cadastrada.
+                        </td>
+                      </tr>
+                    ) : (
+                      areas.map((a) => (
+                        <tr key={a.id} className="border-b last:border-0">
+                          <td className="py-3.5 pr-3">{a.nome}</td>
+                          <td className="py-3.5 pr-3">R$ {Number(a.taxa).toFixed(2).replace(".", ",")}</td>
+                          <td className="py-3.5 pr-3">{a.tempo_min != null ? `${a.tempo_min} minutos` : "-"}</td>
+                          <td className="py-3.5 pr-3">{a.tempo_max != null ? `${a.tempo_max} minutos` : "-"}</td>
+                          <td className="py-3.5 pr-3">{a.poligono.length}</td>
+                          <td className="py-3.5">
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => excluirArea(a.id)}
+                                aria-label={`Excluir ${a.nome}`}
+                                className="flex size-8 items-center justify-center rounded-full border bg-background text-foreground/80 transition-colors hover:bg-muted"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFormArea({
+                                    id: a.id,
+                                    nome: a.nome,
+                                    taxa: String(a.taxa),
+                                    min: String(a.tempo_min ?? ""),
+                                    max: String(a.tempo_max ?? ""),
+                                    poligono: a.poligono,
+                                  })
+                                }
+                                aria-label={`Editar ${a.nome}`}
+                                className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
+                              >
+                                <Pencil className="size-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-sm">
                 <strong>Como usar:</strong> desenhe a área num mapa grande, clicando ponto a ponto (mínimo 3). Arraste um ponto pra ajustar e dê duplo clique nele pra remover.
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 rounded-full"
-                onClick={() => setFormArea({ id: 0, nome: "", taxa: "", min: "", max: "", poligono: [] })}
-              >
-                <Plus className="size-3.5" /> Adicionar área
-              </Button>
-              <div className="space-y-1.5">
-                {carregandoAreas ? (
-                  <div className="py-4 text-center text-sm text-muted-foreground">Carregando...</div>
-                ) : areas.length === 0 ? (
-                  <div className="py-4 text-center text-sm text-muted-foreground">Nenhuma área cadastrada.</div>
-                ) : (
-                  areas.map((a) => (
-                    <div key={a.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
-                      <div>
-                        <div className="font-medium">{a.nome}</div>
-                        <div className="text-xs text-muted-foreground">
-                          R$ {Number(a.taxa).toFixed(2).replace(".", ",")} · {a.tempo_min ?? "-"} a {a.tempo_max ?? "-"} min · {a.poligono.length} pontos
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            setFormArea({
-                              id: a.id,
-                              nome: a.nome,
-                              taxa: String(a.taxa),
-                              min: String(a.tempo_min ?? ""),
-                              max: String(a.tempo_max ?? ""),
-                              poligono: a.poligono,
-                            })
-                          }
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => excluirArea(a.id)}>
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              </p>
             </div>
           ) : null}
 
@@ -702,6 +723,11 @@ export function TaxaEntregaDialog({
           <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
+          {tab === "area" && (
+            <Button className="gap-1.5 rounded-full" onClick={() => setFormArea({ id: 0, nome: "", taxa: "", min: "", max: "", poligono: [] })}>
+              <Plus className="size-3.5" /> Adicionar área
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
