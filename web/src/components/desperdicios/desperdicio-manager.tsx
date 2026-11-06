@@ -163,7 +163,7 @@ function GraficoEvolucao({ evolucao, mes, ano }: { evolucao: DesperdicioDashboar
 
   return (
     <div>
-      <div className="relative flex h-44 items-end gap-1.5 border-b pb-px sm:gap-2">
+      <div className="relative mt-7 flex h-44 items-end gap-1.5 border-b pb-px sm:gap-2">
         {media > 0 && (
           <div className="pointer-events-none absolute inset-x-0 border-t border-dashed border-primary/30" style={{ bottom: `${(media / max) * 100}%` }}>
             <span className="absolute -top-4 left-0 rounded bg-background px-1 text-[10px] text-muted-foreground">média {formatBRLMilhar(media)}</span>
@@ -173,7 +173,12 @@ function GraficoEvolucao({ evolucao, mes, ano }: { evolucao: DesperdicioDashboar
           const atual = e.mes === mes && e.ano === ano;
           return (
             <div key={`${e.ano}-${e.mes}`} className="group relative flex h-full flex-1 flex-col justify-end">
-              <div className="pointer-events-none absolute -top-1 left-1/2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-[11px] font-medium text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100">
+              {/* Nas pontas o balao alinha pra dentro, senao passa da borda do card e e cortado. */}
+              <div
+                className={`pointer-events-none absolute -top-1 z-10 -translate-y-full whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-[11px] font-medium text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100 ${
+                  i < 2 ? "left-0" : i > evolucao.length - 3 ? "right-0" : "left-1/2 -translate-x-1/2"
+                }`}
+              >
                 {MESES_CURTOS[e.mes - 1]}/{String(e.ano).slice(2)} · {formatBRLMilhar(e.total)}
               </div>
               <div
