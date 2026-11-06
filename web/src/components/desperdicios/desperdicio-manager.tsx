@@ -395,9 +395,14 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
                       style={{ animationDelay: `${300 + i * 50}ms`, animationDuration: "400ms" }}
                     >
                       <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: COR_TIPO[f.id as TipoDesperdicio] }} />
-                      <span className="min-w-0 flex-1 truncate">{f.label}</span>
-                      <span className="shrink-0 text-muted-foreground">{resumo.total > 0 ? ((f.total / resumo.total) * 100).toFixed(1) : "0"}%</span>
-                      <span className="w-20 shrink-0 text-right font-medium tabular-nums">{formatBRLMilhar(f.total)}</span>
+                      {/* Nome inteiro (sem cortar); percentual e valor empilhados a direita. */}
+                      <span className="min-w-0 flex-1 leading-tight">{f.label}</span>
+                      <span className="shrink-0 text-right leading-tight">
+                        <span className="block font-medium tabular-nums">{formatBRLMilhar(f.total)}</span>
+                        <span className="block text-[11px] text-muted-foreground tabular-nums">
+                          {resumo.total > 0 ? ((f.total / resumo.total) * 100).toFixed(1).replace(".", ",") : "0"}%
+                        </span>
+                      </span>
                     </div>
                   ))
                 )}
