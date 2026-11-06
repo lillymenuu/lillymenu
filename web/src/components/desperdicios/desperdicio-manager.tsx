@@ -304,7 +304,7 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
           </div>
           <div>
             <h1 className="text-xl font-semibold">Controle de desperdício</h1>
-            <p className="text-sm text-muted-foreground">Perdas de produtos, insumos e embalagens — sem mexer no estoque.</p>
+            <p className="text-sm text-muted-foreground">Perdas de produtos, insumos e embalagens.</p>
           </div>
         </div>
         {/* sm:flex-nowrap + shrink-0: nada quebra de linha; as listas de mes/ano abrem abaixo do botao, na largura dele,
