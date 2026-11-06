@@ -96,17 +96,20 @@ function SectionCard({
   icon: Icon,
   delay,
   acao,
+  preencher = false,
   children,
 }: {
   titulo: string;
   icon: React.ComponentType<{ className?: string }>;
   delay: number;
   acao?: React.ReactNode;
+  /** Ocupa a altura toda da linha da grade e centraliza o conteudo no espaco que sobrar. */
+  preencher?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <Card
-      className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both p-4 transition-shadow duration-300 hover:shadow-md"
+      className={`animate-in fade-in slide-in-from-bottom-2 fill-mode-both p-4 transition-shadow duration-300 hover:shadow-md ${preencher ? "h-full" : ""}`}
       style={{ animationDelay: `${delay}ms`, animationDuration: "500ms" }}
     >
       <CardHeader className="flex-row items-center justify-between p-0 pb-3">
@@ -116,7 +119,7 @@ function SectionCard({
         </div>
         {acao}
       </CardHeader>
-      <CardContent className="p-0">{children}</CardContent>
+      <CardContent className={`p-0 ${preencher ? "flex flex-1 flex-col justify-center" : ""}`}>{children}</CardContent>
     </Card>
   );
 }
@@ -163,7 +166,7 @@ function GraficoEvolucao({ evolucao, mes, ano }: { evolucao: DesperdicioDashboar
       <div className="relative flex h-44 items-end gap-1.5 border-b pb-px sm:gap-2">
         {media > 0 && (
           <div className="pointer-events-none absolute inset-x-0 border-t border-dashed border-primary/30" style={{ bottom: `${(media / max) * 100}%` }}>
-            <span className="absolute -top-4 right-0 rounded bg-background px-1 text-[10px] text-muted-foreground">média {formatBRLMilhar(media)}</span>
+            <span className="absolute -top-4 left-0 rounded bg-background px-1 text-[10px] text-muted-foreground">média {formatBRLMilhar(media)}</span>
           </div>
         )}
         {evolucao.map((e, i) => {
@@ -374,7 +377,7 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
       {/* Graficos */}
       <div className={`grid grid-cols-1 gap-4 transition-opacity duration-200 lg:grid-cols-5 ${carregando ? "opacity-60" : ""}`}>
         <div className="lg:col-span-2">
-          <SectionCard titulo="Perdas por tipo" icon={PieChart} delay={220}>
+          <SectionCard titulo="Perdas por tipo" icon={PieChart} delay={220} preencher>
             <div className="flex flex-col items-center gap-5 sm:flex-row lg:flex-col xl:flex-row">
               <div
                 className="relative size-40 shrink-0 animate-in zoom-in-75 rounded-full fade-in transition-transform duration-500 ease-out hover:scale-105"
@@ -412,7 +415,7 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
           </SectionCard>
         </div>
         <div className="lg:col-span-3">
-          <SectionCard titulo="Evolução — últimos 12 meses" icon={BarChart3} delay={260}>
+          <SectionCard titulo="Evolução — últimos 12 meses" icon={BarChart3} delay={260} preencher>
             <GraficoEvolucao evolucao={dados.evolucao} mes={dados.mes} ano={dados.ano} />
           </SectionCard>
         </div>
