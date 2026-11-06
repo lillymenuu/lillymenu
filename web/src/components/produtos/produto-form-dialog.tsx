@@ -528,6 +528,18 @@ export function ProdutoFormDialog({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="p-descricao">Descrição do produto</Label>
+                  <textarea
+                    id="p-descricao"
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value)}
+                    rows={2}
+                    placeholder="Descreva o produto"
+                    className="rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
                   <Label htmlFor="p-codigo">Código do produto (PDV)</Label>
                   <Input
                     id="p-codigo"
@@ -569,18 +581,6 @@ export function ProdutoFormDialog({
                       className="h-10 max-w-36 rounded-full border-0 bg-muted/60 px-4 text-sm"
                     />
                   </div>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="p-descricao">Descrição do produto</Label>
-                  <textarea
-                    id="p-descricao"
-                    value={descricao}
-                    onChange={(e) => setDescricao(e.target.value)}
-                    rows={2}
-                    placeholder="Descreva o produto"
-                    className="rounded-2xl border-0 bg-muted/60 px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-3 focus-visible:ring-primary/60"
-                  />
                 </div>
 
                 <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
