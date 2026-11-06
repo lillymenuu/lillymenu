@@ -379,7 +379,8 @@ export function LancarPerdaDialog({
                         <SelectTrigger className="h-9 w-36 shrink-0 rounded-full border-0 bg-muted/60 px-3 text-xs">
                           <SelectValue>{() => (categoria === "todas" ? "Categorias" : categoria)}</SelectValue>
                         </SelectTrigger>
-                        <SelectContent>
+                        {/* Lista mais larga que o botao: nomes de categoria longos aparecem inteiros. */}
+                        <SelectContent className="w-auto min-w-(--anchor-width) max-w-[min(20rem,calc(100vw-2rem))]">
                           <SelectItem value="todas">Todas</SelectItem>
                           {categorias.map((c) => (
                             <SelectItem key={c} value={c}>
