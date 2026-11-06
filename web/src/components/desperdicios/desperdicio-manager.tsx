@@ -307,12 +307,13 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
             <p className="text-sm text-muted-foreground">Perdas de produtos, insumos e embalagens — sem mexer no estoque.</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5 rounded-lg font-normal" onClick={abrirRelatorio}>
+        {/* sm:flex-nowrap + shrink-0: abrir um seletor nao pode empurrar o "Lancar perda" pra outra linha. */}
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+          <Button variant="outline" size="sm" className="shrink-0 gap-1.5 rounded-full px-3.5 font-normal" onClick={abrirRelatorio}>
             <FileDown size={14} /> Relatórios
           </Button>
           <Select value={String(dados.mes)} onValueChange={(v) => v && carregar(Number(v), dados.ano)} disabled={carregando}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-36 shrink-0 rounded-full px-3.5">
               <SelectValue>{() => MESES_NOMES[dados.mes - 1]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -324,7 +325,7 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
             </SelectContent>
           </Select>
           <Select value={String(dados.ano)} onValueChange={(v) => v && carregar(dados.mes, Number(v))} disabled={carregando}>
-            <SelectTrigger className="w-24">
+            <SelectTrigger className="w-24 shrink-0 rounded-full px-3.5">
               <SelectValue>{() => dados.ano}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -335,7 +336,7 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
               ))}
             </SelectContent>
           </Select>
-          <Button size="sm" className="gap-1.5 rounded-lg shadow-[0_10px_22px_-8px_rgba(156,85,35,.55)]" onClick={abrirLancamento}>
+          <Button size="sm" className="shrink-0 gap-1.5 rounded-full px-4 shadow-[0_10px_22px_-8px_rgba(156,85,35,.55)]" onClick={abrirLancamento}>
             <Plus size={15} /> Lançar perda
           </Button>
         </div>
