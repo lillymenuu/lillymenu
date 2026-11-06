@@ -634,7 +634,12 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
             setEditando(null);
           }
         }}
-        onSalvo={() => carregar()}
+        onSalvo={(data) => {
+          /* Perda lancada em outro mes: a tela vai pra ele, senao o lancamento "some" da tabela. */
+          const [a, m] = data.split("-").map(Number);
+          if (a !== dados.ano || m !== dados.mes) toast.info(`Lançamento registrado em ${MESES_NOMES[m - 1]} de ${a} — mostrando esse mês.`);
+          carregar(m, a);
+        }}
       />
       <RelatorioDesperdicioDialog key={`r${aberturas}`} open={relatorioAberto} onOpenChange={setRelatorioAberto} mes={dados.mes} ano={dados.ano} anos={dados.anos} />
       <ConfirmDialog

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MoneyInput } from "@/components/produtos/money-input";
 import { formatBRLMilhar } from "@/components/ordermanager/constants";
 import {
+  MESES_NOMES,
   MOTIVOS,
   MOTIVO_LABEL,
   TIPOS,
@@ -71,7 +72,8 @@ export function LancarPerdaDialog({
   /** Lancamento existente: o modal abre so com ele, para editar. */
   editando: Desperdicio | null;
   onOpenChange: (v: boolean) => void;
-  onSalvo: () => void;
+  /** Recebe a data da perda salva (YYYY-MM-DD) — a tela vai pro mes dela. */
+  onSalvo: (data: string) => void;
 }) {
   const [data, setData] = useState(editando?.data ?? hojeFortaleza());
   const [motivo, setMotivo] = useState<MotivoDesperdicio>(editando?.motivo ?? "vencido");
@@ -194,7 +196,7 @@ export function LancarPerdaDialog({
       }
       toast.success(editando ? "Lançamento atualizado" : `${itens.length} ${itens.length === 1 ? "perda lançada" : "perdas lançadas"}`);
       onOpenChange(false);
-      onSalvo();
+      onSalvo(data);
     } catch {
       toast.error("Erro ao salvar a perda.");
     } finally {
@@ -317,6 +319,11 @@ export function LancarPerdaDialog({
           <div>
             <label className="mb-1 block text-xs font-medium">Data da perda</label>
             <input type="date" value={data} max={hojeFortaleza()} onChange={(e) => setData(e.target.value)} className={CAMPO} />
+            {/^\d{4}-\d{2}/.test(data) && data.slice(0, 7) !== hojeFortaleza().slice(0, 7) && (
+              <p className="mt-1 text-[11px] font-medium text-amber-700">
+                Entra em {MESES_NOMES[Number(data.slice(5, 7)) - 1]} de {data.slice(0, 4)}
+              </p>
+            )}
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium">Motivo</label>
