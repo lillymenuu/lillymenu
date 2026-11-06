@@ -408,7 +408,10 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
     taxa = 0;
   }
   const taxaGratisAtivo = (await getConfig(lojaId, "taxa_entrega_gratis", "0")) === "1";
-  const pedidoMinimo = toFloat(await getConfig(lojaId, "pedido_minimo", "0"));
+  const pedidoMinimo =
+    (await getConfig(lojaId, "pedido_minimo_entrega_ativo", "0")) === "1"
+      ? toFloat(await getConfig(lojaId, "pedido_minimo_entrega", "0"))
+      : toFloat(await getConfig(lojaId, "pedido_minimo", "0"));
   if (taxaGratisAtivo && pedidoMinimo > 0 && subtotal >= pedidoMinimo) taxa = 0;
 
   const desconto = descontoValor > 0 ? (descontoTipo === "percent" ? subtotal * (descontoValor / 100) : descontoValor) : 0;

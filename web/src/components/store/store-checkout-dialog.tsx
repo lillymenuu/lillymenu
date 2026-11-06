@@ -137,9 +137,14 @@ export function StoreCheckoutDialog({
   const bairroNaoAtendido = perfil.taxaEntregaTipo === "bairro" && bairro.trim() !== "" && bairroChaveEncontrada === undefined;
   const areaNaoAtendida = perfil.taxaEntregaTipo === "area" && areaTaxaInfo !== null && !areaTaxaInfo.atendido;
 
+  /* "Entrega gratis para pedidos com valor minimo": so vale com o minimo de entrega configurado
+     e o subtotal chegando nele (mesma regra do PDV). */
+  const entregaGratis =
+    perfil.taxaEntregaGratis && perfil.pedidoMinEntregaAtivo && perfil.pedidoMinEntrega > 0 && subtotal >= perfil.pedidoMinEntrega;
+
   const taxaEntrega = useMemo(() => {
     if (!isEntregaTipo) return 0;
-    if (perfil.taxaEntregaGratis) return 0;
+    if (entregaGratis) return 0;
     if (perfil.taxaEntregaTipo === "bairro") {
       return bairroChaveEncontrada !== undefined ? perfil.taxasBairro[bairroChaveEncontrada] : 0;
     }
@@ -147,12 +152,12 @@ export function StoreCheckoutDialog({
       return areaTaxaInfo?.atendido ? areaTaxaInfo.taxa : 0;
     }
     return perfil.taxaEntrega;
-  }, [isEntregaTipo, perfil, bairroChaveEncontrada, areaTaxaInfo]);
+  }, [isEntregaTipo, entregaGratis, perfil, bairroChaveEncontrada, areaTaxaInfo]);
 
   /* Texto exibido pro cliente (resumo do endereco confirmado + dentro do modal
      enquanto digita), espelhando calcularTaxaEntrega() do loja.js legado. */
   const taxaInfo = useMemo(() => {
-    if (perfil.taxaEntregaGratis) return { texto: "Entrega gratis! 🎉", gratis: true };
+    if (entregaGratis) return { texto: "Entrega gratis! 🎉", gratis: true };
     if (perfil.taxaEntregaTipo === "bairro") {
       if (!bairro.trim()) return { texto: "Informe seu bairro para calcular a taxa.", gratis: false };
       if (bairroChaveEncontrada === undefined) return null;
@@ -170,7 +175,7 @@ export function StoreCheckoutDialog({
         : { texto: `Taxa de entrega: ${formatarPreco(areaTaxaInfo.taxa)}`, gratis: false };
     }
     return taxaEntrega === 0 ? { texto: "Entrega gratis!", gratis: true } : { texto: `Taxa de entrega: ${formatarPreco(taxaEntrega)}`, gratis: false };
-  }, [perfil, bairro, bairroChaveEncontrada, taxaEntrega, cep, areaTaxaInfo, calculandoAreaTaxa]);
+  }, [entregaGratis, perfil, bairro, bairroChaveEncontrada, taxaEntrega, cep, areaTaxaInfo, calculandoAreaTaxa]);
 
   const { desconto, taxaFinal } = useMemo(() => {
     if (!cupomAplicado) return { desconto: 0, taxaFinal: taxaEntrega };

@@ -348,6 +348,7 @@ export function SettingsManager({
         open={aberto === "taxa-entrega"}
         onOpenChange={(v) => setAberto(v ? "taxa-entrega" : null)}
         taxaEntrega={dados.taxa_entrega}
+        minimoEntrega={dados.pedidos.pedido_minimo_entrega_ativo ? dados.pedidos.pedido_minimo_entrega : 0}
         onSalvo={recarregar}
       />
       <ImpressaoDialog

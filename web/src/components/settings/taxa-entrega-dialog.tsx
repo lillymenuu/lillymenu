@@ -39,7 +39,7 @@ function paginar<T>(lista: T[], pagina: number): { itens: T[]; pagina: number; t
 function Paginacao({ pagina, totalPaginas, onMudar }: { pagina: number; totalPaginas: number; onMudar: (p: number) => void }) {
   if (totalPaginas <= 1) return null;
   return (
-    <div className="flex items-center justify-end gap-1 pt-1 text-sm">
+    <div className="flex items-center gap-1 text-sm">
       <button
         type="button"
         onClick={() => onMudar(pagina - 1)}
@@ -79,11 +79,14 @@ export function TaxaEntregaDialog({
   open,
   onOpenChange,
   taxaEntrega,
+  minimoEntrega,
   onSalvo,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   taxaEntrega: TaxaEntregaCfg;
+  /** Valor minimo de entrega (card "Valor minimo do pedido"); 0 = nao configurado. */
+  minimoEntrega: number;
   onSalvo: () => void;
 }) {
   const [tab, setTab] = useState<Tab>((taxaEntrega.tipo as Tab) || "dinamica");
@@ -154,7 +157,7 @@ export function TaxaEntregaDialog({
     }
   }
 
-  async function persistirBasico(tipoOverride?: Tab) {
+  async function persistirBasico(tipoOverride?: Tab): Promise<boolean> {
     setSalvandoBasico(true);
     try {
       const res = await fetch("/api/settings/salvar", {
@@ -171,19 +174,24 @@ export function TaxaEntregaDialog({
       const data = await res.json();
       if (!data.ok) {
         toast.error(data.msg ?? "Erro ao salvar.");
-        return;
+        return false;
       }
       onSalvo();
+      return true;
     } catch {
       toast.error("Erro ao salvar.");
+      return false;
     } finally {
       setSalvandoBasico(false);
     }
   }
 
-  function trocarTab(novo: Tab) {
+  async function trocarTab(novo: Tab) {
+    if (novo === tab) return;
     setTab(novo);
-    persistirBasico(novo);
+    if (await persistirBasico(novo)) {
+      toast.success(`Tipo de entrega selecionado: ${TABS.find((t) => t.id === novo)?.label ?? novo}`);
+    }
   }
 
   async function alternarGratis(v: boolean) {
@@ -202,7 +210,16 @@ export function TaxaEntregaDialog({
         }),
       });
       const data = await res.json();
-      if (!data.ok) toast.error(data.msg ?? "Erro ao salvar.");
+      if (!data.ok) {
+        setGratis(!v);
+        toast.error(data.msg ?? "Erro ao salvar.");
+        return;
+      }
+      toast.success(v ? "Entrega grátis ativada" : "Entrega grátis desativada");
+      onSalvo();
+    } catch {
+      setGratis(!v);
+      toast.error("Erro ao salvar.");
     } finally {
       setSalvandoBasico(false);
     }
@@ -410,7 +427,15 @@ export function TaxaEntregaDialog({
         <div className="flex items-center justify-between rounded-xl border p-3">
           <div>
             <div className="text-sm font-medium">Entrega grátis para pedidos com valor mínimo</div>
-            <div className="text-xs text-muted-foreground">Combine com o valor mínimo configurado no card correspondente.</div>
+            {minimoEntrega > 0 ? (
+              <div className="text-xs text-muted-foreground">
+                Pedidos de entrega a partir de R$ {minimoEntrega.toFixed(2).replace(".", ",")} não pagam taxa (valor do card Valor mínimo do pedido).
+              </div>
+            ) : (
+              <div className={`text-xs ${gratis ? "text-amber-700" : "text-muted-foreground"}`}>
+                Configure o valor mínimo para entrega no card Valor mínimo do pedido — sem ele, essa opção não tem efeito.
+              </div>
+            )}
           </div>
           <Switch checked={gratis} onCheckedChange={alternarGratis} disabled={salvandoBasico} />
         </div>
@@ -465,12 +490,12 @@ export function TaxaEntregaDialog({
                     ) : (
                       paginar(areas, paginaArea).itens.map((a) => (
                         <tr key={a.id} className="border-b last:border-0">
-                          <td className="py-3.5 pr-3">{a.nome}</td>
-                          <td className="py-3.5 pr-3">R$ {Number(a.taxa).toFixed(2).replace(".", ",")}</td>
-                          <td className="py-3.5 pr-3">{a.tempo_min != null ? `${a.tempo_min} minutos` : "-"}</td>
-                          <td className="py-3.5 pr-3">{a.tempo_max != null ? `${a.tempo_max} minutos` : "-"}</td>
-                          <td className="py-3.5 pr-3">{a.poligono.length}</td>
-                          <td className="py-3.5">
+                          <td className="py-2.5 pr-3">{a.nome}</td>
+                          <td className="py-2.5 pr-3">R$ {Number(a.taxa).toFixed(2).replace(".", ",")}</td>
+                          <td className="py-2.5 pr-3">{a.tempo_min != null ? `${a.tempo_min} minutos` : "-"}</td>
+                          <td className="py-2.5 pr-3">{a.tempo_max != null ? `${a.tempo_max} minutos` : "-"}</td>
+                          <td className="py-2.5 pr-3">{a.poligono.length}</td>
+                          <td className="py-2.5">
                             <div className="flex gap-2">
                               <button
                                 type="button"
@@ -505,7 +530,6 @@ export function TaxaEntregaDialog({
                   </tbody>
                 </table>
               </div>
-              <Paginacao {...paginar(areas, paginaArea)} onMudar={setPaginaArea} />
               <p className="text-sm">
                 <strong>Como usar:</strong> desenhe a área num mapa grande, clicando ponto a ponto (mínimo 3). Arraste um ponto pra ajustar e dê duplo clique nele pra remover.
               </p>
@@ -582,11 +606,11 @@ export function TaxaEntregaDialog({
                     ) : (
                       paginar(bairros, paginaBairro).itens.map((b) => (
                         <tr key={b.id} className="border-b last:border-0">
-                          <td className="py-3.5 pr-3">{b.bairro}</td>
-                          <td className="py-3.5 pr-3">R$ {Number(b.taxa).toFixed(2).replace(".", ",")}</td>
-                          <td className="py-3.5 pr-3">{b.tempo_min != null ? `${b.tempo_min} minutos` : "-"}</td>
-                          <td className="py-3.5 pr-3">{b.tempo_max != null ? `${b.tempo_max} minutos` : "-"}</td>
-                          <td className="py-3.5">
+                          <td className="py-2.5 pr-3">{b.bairro}</td>
+                          <td className="py-2.5 pr-3">R$ {Number(b.taxa).toFixed(2).replace(".", ",")}</td>
+                          <td className="py-2.5 pr-3">{b.tempo_min != null ? `${b.tempo_min} minutos` : "-"}</td>
+                          <td className="py-2.5 pr-3">{b.tempo_max != null ? `${b.tempo_max} minutos` : "-"}</td>
+                          <td className="py-2.5">
                             <div className="flex gap-2">
                               <button
                                 type="button"
@@ -614,7 +638,6 @@ export function TaxaEntregaDialog({
                   </tbody>
                 </table>
               </div>
-              <Paginacao {...paginar(bairros, paginaBairro)} onMudar={setPaginaBairro} />
             </div>
           ) : null}
 
@@ -740,7 +763,12 @@ export function TaxaEntregaDialog({
           ) : null}
         </div>
 
-        <DialogFooter className="border-t-0 bg-transparent">
+        <DialogFooter className="border-t-0 bg-transparent sm:items-center">
+          {/* Paginacao no rodape (a esquerda): fica sempre visivel, sem ser cortada pela rolagem. */}
+          <div className="sm:mr-auto">
+            {tab === "area" && <Paginacao {...paginar(areas, paginaArea)} onMudar={setPaginaArea} />}
+            {tab === "bairro" && <Paginacao {...paginar(bairros, paginaBairro)} onMudar={setPaginaBairro} />}
+          </div>
           <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
