@@ -552,47 +552,65 @@ export function TaxaEntregaDialog({
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5 rounded-full"
-                  onClick={() => setFormBairro({ id: 0, bairro: "", taxa: "", min: "", max: "" })}
-                >
-                  <Plus className="size-3.5" /> Adicionar taxa por bairro
-                </Button>
-              )}
-              <div className="space-y-1.5">
-                {carregandoBairros ? (
-                  <div className="py-4 text-center text-sm text-muted-foreground">Carregando...</div>
-                ) : bairros.length === 0 ? (
-                  <div className="py-4 text-center text-sm text-muted-foreground">Nenhuma taxa por bairro cadastrada.</div>
-                ) : (
-                  bairros.map((b) => (
-                    <div key={b.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
-                      <div>
-                        <div className="font-medium">{b.bairro}</div>
-                        <div className="text-xs text-muted-foreground">
-                          R$ {Number(b.taxa).toFixed(2).replace(".", ",")} · {b.tempo_min ?? "-"} a {b.tempo_max ?? "-"} min
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            setFormBairro({ id: b.id, bairro: b.bairro, taxa: String(b.taxa), min: String(b.tempo_min ?? ""), max: String(b.tempo_max ?? "") })
-                          }
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => excluirBairro(b.id)}>
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
+              ) : null}
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[500px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="py-3 pr-3 font-medium">Bairro</th>
+                      <th className="py-3 pr-3 font-medium">Valor da taxa</th>
+                      <th className="py-3 pr-3 font-medium">Tempo mínimo</th>
+                      <th className="py-3 pr-3 font-medium">Tempo máximo</th>
+                      <th className="py-3 font-medium">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {carregandoBairros ? (
+                      <tr>
+                        <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                          Carregando...
+                        </td>
+                      </tr>
+                    ) : bairros.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                          Nenhuma taxa por bairro cadastrada.
+                        </td>
+                      </tr>
+                    ) : (
+                      bairros.map((b) => (
+                        <tr key={b.id} className="border-b last:border-0">
+                          <td className="py-3.5 pr-3">{b.bairro}</td>
+                          <td className="py-3.5 pr-3">R$ {Number(b.taxa).toFixed(2).replace(".", ",")}</td>
+                          <td className="py-3.5 pr-3">{b.tempo_min != null ? `${b.tempo_min} minutos` : "-"}</td>
+                          <td className="py-3.5 pr-3">{b.tempo_max != null ? `${b.tempo_max} minutos` : "-"}</td>
+                          <td className="py-3.5">
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => excluirBairro(b.id)}
+                                aria-label={`Excluir ${b.bairro}`}
+                                className="flex size-8 items-center justify-center rounded-full border bg-background text-foreground/80 transition-colors hover:bg-muted"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFormBairro({ id: b.id, bairro: b.bairro, taxa: String(b.taxa), min: String(b.tempo_min ?? ""), max: String(b.tempo_max ?? "") })
+                                }
+                                aria-label={`Editar ${b.bairro}`}
+                                className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
+                              >
+                                <Pencil className="size-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           ) : null}
@@ -723,6 +741,11 @@ export function TaxaEntregaDialog({
           <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
+          {tab === "bairro" && !formBairro && (
+            <Button className="gap-1.5 rounded-full" onClick={() => setFormBairro({ id: 0, bairro: "", taxa: "", min: "", max: "" })}>
+              <Plus className="size-3.5" /> Adicionar taxa por bairro
+            </Button>
+          )}
           {tab === "area" && (
             <Button className="gap-1.5 rounded-full" onClick={() => setFormArea({ id: 0, nome: "", taxa: "", min: "", max: "", poligono: [] })}>
               <Plus className="size-3.5" /> Adicionar área
