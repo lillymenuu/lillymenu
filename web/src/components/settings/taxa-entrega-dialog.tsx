@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -25,6 +25,55 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "fixa", label: "Fixa" },
   { id: "area", label: "Por área/distância" },
 ];
+
+/** Linhas por pagina nas tabelas de bairro e area. */
+const POR_PAGINA = 6;
+
+/** Fatia da pagina atual (a pagina e limitada ao total, pra nao ficar vazia depois de excluir). */
+function paginar<T>(lista: T[], pagina: number): { itens: T[]; pagina: number; totalPaginas: number } {
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / POR_PAGINA));
+  const atual = Math.min(Math.max(1, pagina), totalPaginas);
+  return { itens: lista.slice((atual - 1) * POR_PAGINA, atual * POR_PAGINA), pagina: atual, totalPaginas };
+}
+
+function Paginacao({ pagina, totalPaginas, onMudar }: { pagina: number; totalPaginas: number; onMudar: (p: number) => void }) {
+  if (totalPaginas <= 1) return null;
+  return (
+    <div className="flex items-center justify-end gap-1 pt-1 text-sm">
+      <button
+        type="button"
+        onClick={() => onMudar(pagina - 1)}
+        disabled={pagina <= 1}
+        aria-label="Página anterior"
+        className="flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
+      >
+        <ChevronLeft className="size-4" />
+      </button>
+      {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onMudar(n)}
+          aria-current={n === pagina ? "page" : undefined}
+          className={`flex size-8 items-center justify-center rounded-full text-xs font-medium ${
+            n === pagina ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+          }`}
+        >
+          {n}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={() => onMudar(pagina + 1)}
+        disabled={pagina >= totalPaginas}
+        aria-label="Próxima página"
+        className="flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
+      >
+        <ChevronRight className="size-4" />
+      </button>
+    </div>
+  );
+}
 
 export function TaxaEntregaDialog({
   open,
@@ -57,6 +106,8 @@ export function TaxaEntregaDialog({
   const [centroMapa, setCentroMapa] = useState<(PontoMapa & { zoom: number }) | null>(null);
   const [formArea, setFormArea] = useState<TaxaAreaForm | null>(null);
   const [salvandoArea, setSalvandoArea] = useState(false);
+  const [paginaArea, setPaginaArea] = useState(1);
+  const [paginaBairro, setPaginaBairro] = useState(1);
 
   useEffect(() => {
     if (!open) return;
@@ -351,7 +402,7 @@ export function TaxaEntregaDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[776px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[776px]">
+      <DialogContent className="flex h-[min(712px,calc(100dvh-2rem))] w-[692px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[692px]">
         <DialogHeader>
           <DialogTitle>Taxa de entrega</DialogTitle>
         </DialogHeader>
@@ -412,7 +463,7 @@ export function TaxaEntregaDialog({
                         </td>
                       </tr>
                     ) : (
-                      areas.map((a) => (
+                      paginar(areas, paginaArea).itens.map((a) => (
                         <tr key={a.id} className="border-b last:border-0">
                           <td className="py-3.5 pr-3">{a.nome}</td>
                           <td className="py-3.5 pr-3">R$ {Number(a.taxa).toFixed(2).replace(".", ",")}</td>
@@ -454,6 +505,7 @@ export function TaxaEntregaDialog({
                   </tbody>
                 </table>
               </div>
+              <Paginacao {...paginar(areas, paginaArea)} onMudar={setPaginaArea} />
               <p className="text-sm">
                 <strong>Como usar:</strong> desenhe a área num mapa grande, clicando ponto a ponto (mínimo 3). Arraste um ponto pra ajustar e dê duplo clique nele pra remover.
               </p>
@@ -578,7 +630,7 @@ export function TaxaEntregaDialog({
                         </td>
                       </tr>
                     ) : (
-                      bairros.map((b) => (
+                      paginar(bairros, paginaBairro).itens.map((b) => (
                         <tr key={b.id} className="border-b last:border-0">
                           <td className="py-3.5 pr-3">{b.bairro}</td>
                           <td className="py-3.5 pr-3">R$ {Number(b.taxa).toFixed(2).replace(".", ",")}</td>
@@ -612,6 +664,7 @@ export function TaxaEntregaDialog({
                   </tbody>
                 </table>
               </div>
+              <Paginacao {...paginar(bairros, paginaBairro)} onMudar={setPaginaBairro} />
             </div>
           ) : null}
 
