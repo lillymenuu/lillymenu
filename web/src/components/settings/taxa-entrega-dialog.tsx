@@ -555,56 +555,6 @@ export function TaxaEntregaDialog({
 
           {tab === "bairro" ? (
             <div className="space-y-3">
-              {formBairro ? (
-                <div className="space-y-2 rounded-xl border p-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Bairro</Label>
-                      <Input
-                        value={formBairro.bairro}
-                        onChange={(e) => setFormBairro({ ...formBairro, bairro: e.target.value })}
-                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Valor da taxa</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={formBairro.taxa}
-                        onChange={(e) => setFormBairro({ ...formBairro, taxa: e.target.value })}
-                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Tempo mín.</Label>
-                      <Input
-                        type="number"
-                        value={formBairro.min}
-                        onChange={(e) => setFormBairro({ ...formBairro, min: e.target.value })}
-                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Tempo máx.</Label>
-                      <Input
-                        type="number"
-                        value={formBairro.max}
-                        onChange={(e) => setFormBairro({ ...formBairro, max: e.target.value })}
-                        className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" className="rounded-full" onClick={() => setFormBairro(null)}>
-                      Cancelar
-                    </Button>
-                    <Button size="sm" className="rounded-full" onClick={salvarBairro}>
-                      Salvar taxa por bairro
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[500px] text-left text-sm">
                   <thead>
@@ -794,7 +744,7 @@ export function TaxaEntregaDialog({
           <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
-          {tab === "bairro" && !formBairro && (
+          {tab === "bairro" && (
             <Button className="gap-1.5 rounded-full" onClick={() => setFormBairro({ id: 0, bairro: "", taxa: "", min: "", max: "" })}>
               <Plus className="size-3.5" /> Adicionar taxa por bairro
             </Button>
@@ -804,6 +754,67 @@ export function TaxaEntregaDialog({
               <Plus className="size-3.5" /> Adicionar área
             </Button>
           )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={formBairro !== null} onOpenChange={(v) => !v && setFormBairro(null)}>
+      <DialogContent overlayForceRender className="max-w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{formBairro?.id ? "Editar taxa por bairro" : "Adicionar taxa por bairro"}</DialogTitle>
+        </DialogHeader>
+        {formBairro ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2 space-y-1">
+              <Label className="text-xs">Bairro</Label>
+              <Input
+                autoFocus
+                value={formBairro.bairro}
+                onChange={(e) => setFormBairro({ ...formBairro, bairro: e.target.value })}
+                placeholder="Ex.: Centro"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label className="text-xs">Valor da taxa</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formBairro.taxa}
+                onChange={(e) => setFormBairro({ ...formBairro, taxa: e.target.value })}
+                placeholder="0,00"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Tempo mínimo (min)</Label>
+              <Input
+                type="number"
+                value={formBairro.min}
+                onChange={(e) => setFormBairro({ ...formBairro, min: e.target.value })}
+                placeholder="40"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Tempo máximo (min)</Label>
+              <Input
+                type="number"
+                value={formBairro.max}
+                onChange={(e) => setFormBairro({ ...formBairro, max: e.target.value })}
+                placeholder="60"
+                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              />
+            </div>
+          </div>
+        ) : null}
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => setFormBairro(null)}>
+            Cancelar
+          </Button>
+          <Button className="rounded-full" onClick={salvarBairro}>
+            Salvar taxa por bairro
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
