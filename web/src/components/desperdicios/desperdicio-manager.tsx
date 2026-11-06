@@ -307,7 +307,8 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
             <p className="text-sm text-muted-foreground">Perdas de produtos, insumos e embalagens — sem mexer no estoque.</p>
           </div>
         </div>
-        {/* sm:flex-nowrap + shrink-0: abrir um seletor nao pode empurrar o "Lancar perda" pra outra linha. */}
+        {/* sm:flex-nowrap + shrink-0: nada quebra de linha; as listas de mes/ano abrem abaixo do botao, na largura dele,
+            pra nao cobrir o "Lancar perda". */}
         <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
           <Button variant="outline" size="sm" className="shrink-0 gap-1.5 rounded-full px-3.5 font-normal" onClick={abrirRelatorio}>
             <FileDown size={14} /> Relatórios
@@ -316,7 +317,7 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
             <SelectTrigger className="w-36 shrink-0 rounded-full px-3.5">
               <SelectValue>{() => MESES_NOMES[dados.mes - 1]}</SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent alignItemWithTrigger={false} className="min-w-(--anchor-width)">
               {MESES_NOMES.map((nome, i) => (
                 <SelectItem key={nome} value={String(i + 1)}>
                   {nome}
@@ -328,7 +329,7 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
             <SelectTrigger className="w-24 shrink-0 rounded-full px-3.5">
               <SelectValue>{() => dados.ano}</SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent alignItemWithTrigger={false} className="min-w-(--anchor-width)">
               {dados.anos.map((a) => (
                 <SelectItem key={a} value={String(a)}>
                   {a}
@@ -336,8 +337,8 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
               ))}
             </SelectContent>
           </Select>
-          <Button size="sm" className="shrink-0 gap-1.5 rounded-full px-4 shadow-[0_10px_22px_-8px_rgba(156,85,35,.55)]" onClick={abrirLancamento}>
-            <Plus size={15} /> Lançar perda
+          <Button className="h-10 shrink-0 gap-2 rounded-full px-6 text-sm font-semibold shadow-[0_10px_22px_-8px_rgba(156,85,35,.55)]" onClick={abrirLancamento}>
+            <Plus size={17} /> Lançar perda
           </Button>
         </div>
       </div>
