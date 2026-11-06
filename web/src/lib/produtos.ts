@@ -20,6 +20,7 @@ export type Produto = {
   categoria: string | null;
   estoque_quantidade: number;
   preco_promocional?: number | null;
+  preco_custo?: number | null;
   promo_desativado?: number;
   promo_dias?: number | null;
   promo_inicio?: string | null;
@@ -117,6 +118,7 @@ export async function getProdutos(lojaId: number): Promise<{ ok: true; produtos:
       categoria: p.categoria,
       estoque_quantidade: p.estoqueQuantidade,
       preco_promocional: p.precoPromocional,
+      preco_custo: p.precoCusto,
       promo_desativado: p.promoDesativado ? 1 : 0,
       imagem: p.imagem,
       descricao: p.descricao,

@@ -35,6 +35,7 @@ export type ProdutoAdmin = {
   categoria: string | null;
   estoqueQuantidade: number;
   precoPromocional: number | null;
+  precoCusto: number | null;
   promoDesativado: boolean;
   imagem: string | null;
   descricao: string | null;
@@ -72,6 +73,7 @@ export async function listarProdutosAdmin(lojaId: number): Promise<ProdutoAdmin[
       categoria: categorias.nome,
       estoqueQuantidade: sql<number>`coalesce(${estoque.quantidade}, 0)`,
       precoPromocional: produtos.preco_promocional,
+      precoCusto: produtos.preco_custo,
       promoDesativado: produtos.promo_desativado,
       imagem: produtos.imagem,
       descricao: produtos.descricao,
@@ -226,6 +228,8 @@ export type SalvarProdutoInput = {
   categoriaId?: number | null;
   descricao?: string;
   precoPromocional?: number | null;
+  /** undefined = nao mexe; null = limpa. */
+  precoCusto?: number | null;
   promoDesativado?: boolean;
   ativo?: boolean;
   imagemBase64?: string;
@@ -282,6 +286,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     ativo: Boolean(input.ativo),
     descricao,
     preco_promocional: precoPromocional,
+    ...(input.precoCusto !== undefined ? { preco_custo: input.precoCusto } : {}),
     promo_desativado: Boolean(input.promoDesativado),
     /* promo_dias/promo_inicio: feature legada de "promocao por N dias" sem
        equivalente neste form — zera pra uma promocao antiga com prazo

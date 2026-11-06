@@ -9,6 +9,7 @@ import {
   Package,
   Gift,
   Boxes,
+  PackageX,
   Grid3x3,
   BarChart3,
   Users,
@@ -71,6 +72,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "produtos", label: "Complementos", icon: Layers, href: "/product-complement", migrated: true },
       { menuKey: "promo", label: "Promo", icon: Gift, href: "/promotion", migrated: true },
       { menuKey: "estoque", label: "Estoque", icon: Boxes, href: "/stock", migrated: true },
+      /* Mesma permissao do Estoque ate existir um plano de acesso proprio. */
+      { menuKey: "estoque", label: "Desperdícios", icon: PackageX, href: "/desperdicios", migrated: true },
       { menuKey: "clientes", label: "Clientes", icon: Grid3x3, href: "/clients", migrated: true },
     ],
   },

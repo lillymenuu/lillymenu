@@ -1251,6 +1251,8 @@ export const produtos = pgTable(
     codigo: varchar("codigo", { length: 60 }),
     descricao: text("descricao"),
     preco: numeric("preco", { precision: 10, scale: 2, mode: "number" }),
+    /* Custo do produto (so referencia interna — usado no controle de desperdicio). */
+    preco_custo: numeric("preco_custo", { precision: 10, scale: 2, mode: "number" }),
     pontos_ganho: integer("pontos_ganho").notNull().default(0),
     pontos_custo: integer("pontos_custo").notNull().default(0),
     imagem: varchar("imagem", { length: 255 }),
@@ -1576,3 +1578,32 @@ export const notasFiscais = pgTable(
   ]
 );
 
+/*
+ * Controle de desperdicio (/desperdicios): perdas de produtos, insumos e embalagens com o custo.
+ * produto_id so referencia o produto pros relatorios — lancar perda NAO mexe no estoque.
+ */
+export const desperdicios = pgTable(
+  "desperdicios",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    loja_id: integer("loja_id").notNull(),
+    data: date("data", { mode: "string" }).notNull(),
+    tipo: text("tipo").$type<"produto_vencido" | "insumo" | "embalagem" | "outros">().notNull(),
+    motivo: text("motivo").$type<"vencido" | "estragou" | "quebra" | "erro_producao" | "outros">().notNull(),
+    origem: text("origem").$type<"produto" | "avulsa">().notNull(),
+    produto_id: integer("produto_id"),
+    /* Nome do produto (snapshot) ou descricao da despesa avulsa. */
+    descricao: varchar("descricao", { length: 160 }).notNull(),
+    quantidade: numeric("quantidade", { precision: 12, scale: 3, mode: "number" }).notNull(),
+    custo_unitario: numeric("custo_unitario", { precision: 10, scale: 2, mode: "number" }).notNull(),
+    total: numeric("total", { precision: 12, scale: 2, mode: "number" }).notNull(),
+    observacao: varchar("observacao", { length: 255 }),
+    admin_id: integer("admin_id"),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    atualizado_em: timestamp("atualizado_em", { mode: "string" }),
+  },
+  (t) => [
+    index("desperdicios_idx_loja_data").on(t.loja_id, t.data),
+    foreignKey({ columns: [t.produto_id], foreignColumns: [produtos.id], name: "desperdicios_fk_produto" }).onDelete("set null"),
+  ]
+);

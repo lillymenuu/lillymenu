@@ -103,6 +103,7 @@ export function ProdutoFormDialog({
   const [qtdMinima, setQtdMinima] = useState("1");
 
   const [preco, setPreco] = useState("");
+  const [precoCusto, setPrecoCusto] = useState("");
   const [promoAtiva, setPromoAtiva] = useState(false);
   const [precoPromocional, setPrecoPromocional] = useState("");
 
@@ -169,6 +170,7 @@ export function ProdutoFormDialog({
       setQtdMinimaAtiva((produto.quantidade_minima ?? 0) > 0);
       setQtdMinima(String(produto.quantidade_minima || 1));
       setPreco(String(produto.preco_base));
+      setPrecoCusto(produto.preco_custo ? String(produto.preco_custo) : "");
       setPromoAtiva(Boolean(produto.preco_promocional) && produto.promo_desativado !== 1);
       setPrecoPromocional(produto.preco_promocional ? String(produto.preco_promocional) : "");
       setAtivo(produto.ativo === 1);
@@ -233,6 +235,7 @@ export function ProdutoFormDialog({
       setQtdMinimaAtiva(false);
       setQtdMinima("1");
       setPreco("");
+      setPrecoCusto("");
       setPromoAtiva(false);
       setPrecoPromocional("");
       setAtivo(true);
@@ -309,6 +312,7 @@ export function ProdutoFormDialog({
         cfop: cfop.trim(),
         icms_situacao_tributaria: icmsSituacaoTributaria.trim(),
         preco_promocional: promoAtiva && precoPromocional ? parseFloat(precoPromocional.replace(",", ".")) : "",
+        preco_custo: precoCusto ? parseFloat(precoCusto.replace(",", ".")) : "",
         promo_desativado: promoAtiva ? 0 : 1,
         ativo,
         apenas_agendamento: apenasAgendamento,
@@ -631,9 +635,21 @@ export function ProdutoFormDialog({
 
           <TabsContent value="preco">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="p-preco">Preço</Label>
-                <MoneyInput id="p-preco" value={preco} onChange={setPreco} className="h-10 max-w-48 rounded-full border-0 bg-muted/60 px-4 text-sm" />
+              <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="p-preco">Preço</Label>
+                  <MoneyInput id="p-preco" value={preco} onChange={setPreco} className="h-10 w-48 rounded-full border-0 bg-muted/60 px-4 text-sm" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="p-preco-custo">Preço de custo</Label>
+                  <MoneyInput
+                    id="p-preco-custo"
+                    value={precoCusto}
+                    onChange={setPrecoCusto}
+                    className="h-10 w-48 rounded-full border-0 bg-muted/60 px-4 text-sm"
+                  />
+                  <span className="text-xs text-muted-foreground">Uso interno: preenche o custo no controle de desperdício.</span>
+                </div>
               </div>
 
               <div className="flex flex-col gap-3 rounded-lg border p-3">

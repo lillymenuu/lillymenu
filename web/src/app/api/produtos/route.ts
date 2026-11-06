@@ -20,6 +20,7 @@ export async function GET() {
       categoria: p.categoria,
       estoque_quantidade: p.estoqueQuantidade,
       preco_promocional: p.precoPromocional,
+      preco_custo: p.precoCusto,
       promo_desativado: p.promoDesativado ? 1 : 0,
       imagem: p.imagem,
       descricao: p.descricao,
@@ -86,6 +87,8 @@ export async function POST(request: Request) {
     categoriaId: categoriaIdRaw !== null && categoriaIdRaw !== undefined && categoriaIdRaw !== "" ? Number(categoriaIdRaw) : null,
     descricao: typeof body.descricao === "string" ? body.descricao : undefined,
     precoPromocional: precoPromoRaw !== "" && precoPromoRaw !== null && precoPromoRaw !== undefined ? Number(precoPromoRaw) : null,
+    precoCusto:
+      body.preco_custo === undefined ? undefined : body.preco_custo === "" || body.preco_custo === null ? null : Math.max(0, Number(body.preco_custo) || 0),
     promoDesativado: Boolean(body.promo_desativado),
     ativo: Boolean(body.ativo),
     imagemBase64: typeof body.imagem_base64 === "string" ? body.imagem_base64 : undefined,
