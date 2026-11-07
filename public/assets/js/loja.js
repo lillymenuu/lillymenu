@@ -3422,7 +3422,7 @@ function _atualizarLojaStatus(){
       if(d.aberto){
         novoTexto='Aberto agora';
       }else if(d.pausaTitulo){
-        novoTexto='Pausa programada: '+d.pausaTitulo;
+        novoTexto=/^\s*pausa/i.test(d.pausaTitulo)?d.pausaTitulo.trim():'Pausa programada: '+d.pausaTitulo;
       }else if(!d.receberPedidosAtivo){
         novoTexto='Loja não está recebendo pedidos no momento';
       }else{

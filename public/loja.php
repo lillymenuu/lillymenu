@@ -181,7 +181,7 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
     <div class="profile-meta-city"><?=htmlspecialchars($localidade)?></div>
   <?php endif; ?>
   <div class="profile-status-line <?=$lojaAberta?'open':'closed'?>" id="storeStatus">
-    <span id="storeStatusText"><?php if($lojaAberta): ?>Aberto agora<?php elseif($pausaAtivaTitulo!==''): ?>Pausa programada: <?=htmlspecialchars($pausaAtivaTitulo)?><?php elseif(!$receberPedidosAtivo): ?>Não está recebendo pedidos<?php else: ?>Fechado<?=$proximoHorario?', abriremos '.$proximoHorario:''?><?php endif; ?></span>
+    <span id="storeStatusText"><?php if($lojaAberta): ?>Aberto agora<?php elseif($pausaAtivaTitulo!==''): ?><?=htmlspecialchars(preg_match('/^\s*pausa/iu',$pausaAtivaTitulo) ? trim($pausaAtivaTitulo) : 'Pausa programada: '.$pausaAtivaTitulo)?><?php elseif(!$receberPedidosAtivo): ?>Não está recebendo pedidos<?php else: ?>Fechado<?=$proximoHorario?', abriremos '.$proximoHorario:''?><?php endif; ?></span>
   </div>
 </div>
 

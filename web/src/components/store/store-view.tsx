@@ -46,7 +46,11 @@ function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
 /* Mesma prioridade do loja.php: pausa programada ativa mostra o titulo dela. */
 function textoStatusLoja(perfil: StorePerfil) {
   if (perfil.lojaAberta) return "Aberto agora";
-  if (perfil.pausaAtivaTitulo) return `Pausa programada: ${perfil.pausaAtivaTitulo}`;
+  if (perfil.pausaAtivaTitulo) {
+    // Titulo que ja fala em pausa (ex.: "Pausa programada") dispensa o prefixo, senao repete.
+    const titulo = perfil.pausaAtivaTitulo.trim();
+    return /^pausa/i.test(titulo) ? titulo : `Pausa programada: ${titulo}`;
+  }
   return `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`;
 }
 
