@@ -206,9 +206,9 @@ export function OrderManager({
           <button
             type="button"
             onClick={() => abrirPos()}
-            className="inline-flex h-7 items-center gap-1 rounded-full bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
+            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/80"
           >
-            <Plus size={14} /> Novo pedido
+            <Plus size={16} /> Novo pedido
           </button>
         </div>
       </div>
