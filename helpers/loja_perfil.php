@@ -213,6 +213,11 @@ function montarPerfilLoja(PDO $conn, int $lojaId): array {
   }
 
   $lojaContato    = cfg($conn,$lojaId,'loja_contato','');
+  /* Numero que recebe os pedidos no WhatsApp (modal "Receber pedidos"); sem ele, cai no contato da loja.
+     Guardado sem o DDI 55, que o link wa.me ja acrescenta. */
+  $lojaWhatsappPedidos = preg_replace('/\D+/','',cfg($conn,$lojaId,'whatsapp_numero',''));
+  if ($lojaWhatsappPedidos === '') $lojaWhatsappPedidos = preg_replace('/\D+/','',$lojaContato);
+  if (strlen($lojaWhatsappPedidos) > 11 && substr($lojaWhatsappPedidos,0,2) === '55') $lojaWhatsappPedidos = substr($lojaWhatsappPedidos,2);
   $lojaInstagram  = cfg($conn,$lojaId,'loja_instagram','');
   $lojaInstagram  = trim(preg_replace('#^https?://(www\.)?instagram\.com/?#i','',$lojaInstagram),'/@');
   $lojaTiktok     = cfg($conn,$lojaId,'loja_tiktok','');
@@ -306,7 +311,7 @@ function montarPerfilLoja(PDO $conn, int $lojaId): array {
     'avaliacaoMedia','avaliacaoTotal',
     'receberPedidosAtivo','notificarPedidoWhatsappAtivo','lojaAberta',
     'pausaAtivaTitulo','pausaAtivaFim','proximoHorario',
-    'lojaContato','lojaInstagram','lojaTiktok',
+    'lojaContato','lojaWhatsappPedidos','lojaInstagram','lojaTiktok',
     'lojaRua','lojaNumero','lojaBairro','lojaCidade','lojaEstado','lojaCep','enderecoLoja',
     'agendDeliveryAtivo','agendRetiradaAtivo',
     'agendDeliveryMinTipo','agendDeliveryMinVal','agendDeliveryMaxVal','agendDeliveryMaxTipo',

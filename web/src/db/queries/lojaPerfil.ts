@@ -179,6 +179,7 @@ export type PerfilLoja = {
   pausaAtivaFim: string;
   proximoHorario: string;
   lojaContato: string;
+  lojaWhatsappPedidos: string;
   lojaInstagram: string;
   lojaTiktok: string;
   lojaRua: string;
@@ -253,6 +254,7 @@ const CHAVES = [
   "cashback_ativo",
   "receber_pedidos_ativo",
   "loja_contato",
+  "whatsapp_numero",
   "loja_instagram",
   "loja_tiktok",
   "loja_rua",
@@ -422,6 +424,10 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
   }
 
   const lojaContato = cfg.loja_contato || "";
+  // Numero que recebe os pedidos no WhatsApp (modal "Receber pedidos"); sem ele, cai no
+  // contato da loja. Sem o DDI 55, que o link wa.me ja acrescenta.
+  let lojaWhatsappPedidos = (cfg.whatsapp_numero || "").replace(/\D/g, "") || lojaContato.replace(/\D/g, "");
+  if (lojaWhatsappPedidos.length > 11 && lojaWhatsappPedidos.startsWith("55")) lojaWhatsappPedidos = lojaWhatsappPedidos.slice(2);
   const lojaInstagram = (cfg.loja_instagram || "").replace(/^https?:\/\/(www\.)?instagram\.com\/?/i, "").replace(/^\/+|\/+$|^@+/g, "");
   const lojaTiktok = cfg.loja_tiktok || "";
   const lojaRua = cfg.loja_rua || "";
@@ -543,6 +549,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
     pausaAtivaFim,
     proximoHorario,
     lojaContato,
+    lojaWhatsappPedidos,
     lojaInstagram,
     lojaTiktok,
     lojaRua,

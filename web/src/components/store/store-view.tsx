@@ -43,6 +43,13 @@ function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
   return "tipo" in item && item.tipo === "combo";
 }
 
+/* Mesma prioridade do loja.php: pausa programada ativa mostra o titulo dela. */
+function textoStatusLoja(perfil: StorePerfil) {
+  if (perfil.lojaAberta) return "Aberto agora";
+  if (perfil.pausaAtivaTitulo) return `Pausa programada: ${perfil.pausaAtivaTitulo}`;
+  return `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`;
+}
+
 export function StoreView({ perfil, catalogo }: { perfil: StorePerfil; catalogo: StoreCatalogo }) {
   return (
     <StoreThemeProvider brown={perfil.temaCorMenu}>
@@ -454,7 +461,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             </p>
           )}
           <p className={`text-[.82rem] font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`} style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}>
-            {perfil.lojaAberta ? "Aberto agora" : `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`}
+            {textoStatusLoja(perfil)}
           </p>
         </div>
       </div>
@@ -581,7 +588,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                 className={`font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`}
                 style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}
               >
-                {perfil.lojaAberta ? "Aberto agora" : `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`}
+                {textoStatusLoja(perfil)}
               </span>
               {(perfil.lojaBairro || perfil.lojaCidade) && (
                 <>

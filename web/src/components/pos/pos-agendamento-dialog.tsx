@@ -48,7 +48,7 @@ export function PosAgendamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-md overflow-hidden sm:max-w-md">
+      <DialogContent className="max-h-[85vh] max-w-md overflow-hidden rounded-3xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Selecione o dia e a hora para agendar o pedido</DialogTitle>
         </DialogHeader>
@@ -65,7 +65,7 @@ export function PosAgendamentoDialog({
                     setDiaSelecionado(d.data);
                     setHoraSelecionada(null);
                   }}
-                  className={`flex shrink-0 flex-col items-center gap-0.5 rounded-xl border px-3.5 py-2 text-sm transition-colors ${
+                  className={`flex shrink-0 flex-col items-center gap-0.5 rounded-2xl border px-3.5 py-2 text-sm transition-colors ${
                     ativo ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50"
                   }`}
                 >
@@ -95,7 +95,7 @@ export function PosAgendamentoDialog({
 
         <div className="max-h-[45vh] space-y-2 overflow-y-auto py-1">
           {slots.length === 0 ? (
-            <div className="rounded-xl border border-dashed py-6 text-center text-sm text-muted-foreground">
+            <div className="rounded-2xl border border-dashed py-6 text-center text-sm text-muted-foreground">
               Nenhum horário disponível para esse dia.
             </div>
           ) : (
@@ -106,7 +106,7 @@ export function PosAgendamentoDialog({
                   key={s.inicio}
                   type="button"
                   onClick={() => setHoraSelecionada(s.inicio)}
-                  className={`block w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors ${
+                  className={`block w-full rounded-full border px-4 py-3 text-center text-sm font-medium transition-colors ${
                     ativo ? "border-primary bg-primary/10 text-primary" : "hover:bg-muted/40"
                   }`}
                 >
@@ -117,8 +117,8 @@ export function PosAgendamentoDialog({
           )}
         </div>
 
-        <DialogFooter className="justify-end">
-          <Button onClick={confirmar} disabled={!diaSelecionado || !horaSelecionada}>
+        <DialogFooter className="justify-end border-t-0 bg-transparent">
+          <Button className="rounded-full" onClick={confirmar} disabled={!diaSelecionado || !horaSelecionada}>
             Salvar agendamento
           </Button>
         </DialogFooter>

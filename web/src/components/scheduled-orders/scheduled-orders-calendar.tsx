@@ -262,15 +262,21 @@ export function ScheduledOrdersCalendar({
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto lg:grid-cols-[1fr_360px] lg:overflow-visible">
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-card">
-          <div className="grid grid-cols-7 border-b bg-muted/30">
-            {DIAS_SEMANA.map((d) => (
-              <div key={d} className="px-2 py-2 text-center text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-card p-2">
+          <div className="grid grid-cols-7 pb-1">
+            {DIAS_SEMANA.map((d, i) => (
+              <div
+                key={d}
+                className={cn(
+                  "py-2 text-center text-[11px] font-semibold tracking-wider uppercase",
+                  i === 0 || i === 6 ? "text-muted-foreground/60" : "text-muted-foreground"
+                )}
+              >
                 {d}
               </div>
             ))}
           </div>
-          <div className={cn("grid flex-1 grid-cols-7 auto-rows-[minmax(5.25rem,1fr)]", carregando && "opacity-60")}>
+          <div className={cn("grid flex-1 grid-cols-7 auto-rows-[minmax(5.75rem,1fr)] gap-1 transition-opacity", carregando && "opacity-60")}>
             {celulas.map((cel) => {
               const pedidosDoDia = pedidosPorDia.get(cel.iso) ?? [];
               const temPedidos = pedidosDoDia.length > 0;
@@ -278,6 +284,8 @@ export function ScheduledOrdersCalendar({
               const ehPassado = cel.iso < hoje;
               const ehSelecionado = cel.iso === diaSelecionado;
               const temPendente = pedidosDoDia.some((p) => p.status === "pendente" || p.status === "aceito");
+              const visiveis = pedidosDoDia.slice(0, 2);
+              const restantes = pedidosDoDia.length - visiveis.length;
 
               return (
                 <button
@@ -285,36 +293,65 @@ export function ScheduledOrdersCalendar({
                   type="button"
                   onClick={() => clicarCelula(cel)}
                   className={cn(
-                    "flex flex-col items-start gap-1.5 border-r border-b border-border p-2 text-left transition-colors focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-inset",
-                    !cel.noMes && "bg-muted/20",
-                    cel.noMes && !ehSelecionado && "hover:bg-muted/40",
-                    ehSelecionado && "bg-primary/10"
+                    "group relative flex min-w-0 flex-col items-stretch gap-1 rounded-xl border p-1.5 text-left transition-all focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 md:p-2",
+                    !cel.noMes
+                      ? "border-transparent bg-transparent opacity-45 hover:opacity-70"
+                      : ehSelecionado
+                        ? "border-primary bg-primary/[0.07] shadow-sm"
+                        : ehHoje
+                          ? "border-primary/30 bg-primary/[0.04] hover:border-primary/50"
+                          : ehPassado
+                            ? "border-transparent bg-muted/30 hover:bg-muted/60"
+                            : "border-border/70 bg-background hover:border-primary/40 hover:shadow-sm"
                   )}
                 >
-                  <span
-                    className={cn(
-                      "flex size-6 items-center justify-center rounded-full text-xs font-semibold",
-                      ehHoje
-                        ? "bg-primary text-primary-foreground"
-                        : !cel.noMes
-                          ? "text-muted-foreground/50"
-                          : ehPassado
-                            ? "text-muted-foreground"
-                            : "text-foreground"
-                    )}
-                  >
-                    {cel.dia}
-                  </span>
-                  {temPedidos ? (
+                  <div className="flex items-center justify-between gap-1">
                     <span
                       className={cn(
-                        "mt-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                        temPendente ? "bg-amber-100 text-amber-800" : "bg-primary/10 text-primary"
+                        "flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
+                        ehHoje
+                          ? "bg-primary text-primary-foreground"
+                          : !cel.noMes || ehPassado
+                            ? "text-muted-foreground"
+                            : "text-foreground"
                       )}
                     >
-                      <CalendarClock className="size-3" />
-                      {pedidosDoDia.length}
+                      {cel.dia}
                     </span>
+                    {temPedidos ? (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
+                          temPendente ? "bg-amber-100 text-amber-800" : "bg-primary/10 text-primary"
+                        )}
+                      >
+                        <CalendarClock className="size-3" />
+                        {pedidosDoDia.length}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {temPedidos ? (
+                    <div className="hidden min-w-0 flex-col gap-0.5 md:flex">
+                      {visiveis.map((p) => {
+                        const cor = STATUS_CORES[p.status] ?? STATUS_CORES.pendente;
+                        return (
+                          <span
+                            key={p.id}
+                            className="flex min-w-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] leading-tight"
+                            style={{ background: cor.bg, color: cor.fg }}
+                          >
+                            <span className="shrink-0 font-semibold tabular-nums">
+                              {p.agendamento ? horaDoAgendamento(p.agendamento) : "--:--"}
+                            </span>
+                            <span className="truncate">{p.nome}</span>
+                          </span>
+                        );
+                      })}
+                      {restantes > 0 ? (
+                        <span className="px-1.5 text-[10.5px] font-medium text-muted-foreground">+{restantes} mais</span>
+                      ) : null}
+                    </div>
                   ) : null}
                 </button>
               );

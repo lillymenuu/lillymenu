@@ -97,7 +97,7 @@ export function StoreSuccessDialog({
   const previsaoLabel = isMesa ? "Mesa" : isAgendado ? (isEntrega ? "Entrega agendada" : "Retirada agendada") : isEntrega ? "Entrega em" : "Retirada em";
 
   function enviarWhatsapp() {
-    const numero = perfil.lojaContato.replace(/\D/g, "");
+    const numero = perfil.lojaWhatsappPedidos;
     if (!numero || !snapshot) return;
     window.open(`https://wa.me/55${numero}?text=${encodeURIComponent(montarMensagem(codigo, perfil, snapshot))}`, "_blank");
   }

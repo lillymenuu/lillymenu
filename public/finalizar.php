@@ -5,7 +5,9 @@ require_once '../helpers/loja_context.php';
 
 $pedidoId = (int) ($_GET['pedido'] ?? 0);
 $lojaId = definirLojaIdSessao($conn);
-$whatsapp = preg_replace('/\D+/', '', (string) config($conn, 'loja_contato', config($conn, 'whatsapp_numero', '')));
+$whatsapp = preg_replace('/\D+/', '', (string) config($conn, 'whatsapp_numero', ''));
+if ($whatsapp === '') $whatsapp = preg_replace('/\D+/', '', (string) config($conn, 'loja_contato', ''));
+if ($whatsapp !== '' && strlen($whatsapp) <= 11) $whatsapp = '55' . $whatsapp;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

@@ -71,7 +71,7 @@ $_SESSION['loja_id'] = $lojaId;
    (public/api/loja_catalogo.php) usado pela Store no Next. */
 extract(montarCatalogoLoja($conn, $lojaId));
 
-$cfgJS=json_encode(['lojaId'=>$lojaId,'nomeLoja'=>$nomeLoja,'lojaPerfil'=>$perfilLoja,'taxaEntrega'=>$taxaEntrega,'taxaEntregaTipo'=>$taxaEntregaTipo,'taxaEntregaGratis'=>$taxaEntregaGratis,'pedidoMinimo'=>$pedidoMin,'tEntMin'=>$tEntMin,'tEntMax'=>$tEntMax,'tRetMin'=>$tRetMin,'tRetMax'=>$tRetMax,'pixAtivo'=>$pixAtivo,'pixChave'=>$pixChave,'pixNome'=>$pixNome,'dinAtivo'=>$dinAtivo,'credAtivo'=>$credAtivo,'debAtivo'=>$debAtivo,'entAtiva'=>$entAtiva,'retAtiva'=>$retAtiva,'taxasBairro'=>$taxasBairro,'lojaAberta'=>$lojaAberta,'enderecoLoja'=>$enderecoLoja,'lojaWpp'=>preg_replace('/\D+/','',$lojaContato),
+$cfgJS=json_encode(['lojaId'=>$lojaId,'nomeLoja'=>$nomeLoja,'lojaPerfil'=>$perfilLoja,'taxaEntrega'=>$taxaEntrega,'taxaEntregaTipo'=>$taxaEntregaTipo,'taxaEntregaGratis'=>$taxaEntregaGratis,'pedidoMinimo'=>$pedidoMin,'tEntMin'=>$tEntMin,'tEntMax'=>$tEntMax,'tRetMin'=>$tRetMin,'tRetMax'=>$tRetMax,'pixAtivo'=>$pixAtivo,'pixChave'=>$pixChave,'pixNome'=>$pixNome,'dinAtivo'=>$dinAtivo,'credAtivo'=>$credAtivo,'debAtivo'=>$debAtivo,'entAtiva'=>$entAtiva,'retAtiva'=>$retAtiva,'taxasBairro'=>$taxasBairro,'lojaAberta'=>$lojaAberta,'enderecoLoja'=>$enderecoLoja,'lojaWpp'=>$lojaWhatsappPedidos,
 'cashbackPct'=>(float)cfg($conn,$lojaId,'cashback_percentual',0),
 'cashbackAtivo'=>$cashbackAtivo,
 'agendDeliveryAtivo'=>$agendDeliveryAtivo,'agendRetiradaAtivo'=>$agendRetiradaAtivo,
