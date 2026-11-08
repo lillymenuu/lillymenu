@@ -625,9 +625,26 @@ export function OrderDetailDialog({
                                 ))}
                               </div>
                             )}
-                            {item.observacoes && (
-                              <span className="block text-[10px] font-normal text-muted-foreground">{item.observacoes}</span>
-                            )}
+                            {item.observacoes ? (
+                              item.observacoes.startsWith("[combo]") ? (
+                                /* Combo: "[combo]" em destaque e cada componente numa linha. */
+                                <span className="mt-0.5 block text-[10px] font-normal text-muted-foreground">
+                                  <span className="font-semibold text-primary">[combo]</span>
+                                  {item.observacoes
+                                    .slice("[combo]".length)
+                                    .split("\n")
+                                    .map((l) => l.trim())
+                                    .filter(Boolean)
+                                    .map((linha, li) => (
+                                      <span key={li} className="block">
+                                        {linha}
+                                      </span>
+                                    ))}
+                                </span>
+                              ) : (
+                                <span className="block text-[10px] font-normal whitespace-pre-line text-muted-foreground">{item.observacoes}</span>
+                              )
+                            ) : null}
                           </span>
                           <span className="shrink-0 font-normal">{formatBRL(item.preco * item.quantidade)}</span>
                         </div>
