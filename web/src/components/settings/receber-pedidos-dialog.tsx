@@ -50,9 +50,8 @@ export function ReceberPedidosDialog({
           gestor_pedidos_ativo: gestor ? "1" : "0",
           notificar_pedido_whatsapp_ativo: notificar ? "1" : "0",
           aceite_automatico_diggy_ativo: aceiteAutomatico ? "1" : "0",
-          // Mesmo numero do "Numero de contato" em Informacoes da loja: os dois andam juntos.
+          // Numero que recebe os pedidos no WhatsApp (separado do contato publico da loja).
           whatsapp_numero: whatsappNumero,
-          ...(whatsappNumero.trim() ? { loja_contato: whatsappNumero } : {}),
         }),
       });
       const data = await res.json();

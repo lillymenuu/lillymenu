@@ -254,9 +254,8 @@ export function LojaInfoDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome_loja: nome,
-          // Mesmo numero do WhatsApp que recebe pedidos (modal Receber pedidos).
+          // Contato publico da loja para o cliente; o WhatsApp de pedidos fica em Receber pedidos.
           loja_contato: contato,
-          whatsapp_numero: contato,
           cobranca_cpf: cpf,
           loja_cnpj: cnpj,
           link_loja: linkCompleto,

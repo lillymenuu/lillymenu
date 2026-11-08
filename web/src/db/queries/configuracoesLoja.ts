@@ -268,7 +268,7 @@ async function montarDetalheConfiguracoes(lojaId: number, adminId: number, perfi
       gestorPedidosAtivo: cfg.gestor_pedidos_ativo !== "0",
       notificarPedidoWhatsappAtivo: cfg.notificar_pedido_whatsapp_ativo !== "0",
       aceiteAutomaticoDiggyAtivo: cfg.aceite_automatico_diggy_ativo === "1",
-      whatsappNumero: cfg.whatsapp_numero || cfg.loja_contato || "",
+      whatsappNumero: cfg.whatsapp_numero || "",
       entrega: { ativo: cfg.pedido_entrega_ativo !== "0", tempoMin: Number(cfg.tempo_entrega_min || 30), tempoMax: Number(cfg.tempo_entrega_max || 40), horarioIni: cfg.horario_entrega_ini || "", horarioFim: cfg.horario_entrega_fim || "" },
       retirada: { ativo: cfg.pedido_retirada_ativo !== "0", tempoMin: Number(cfg.tempo_retirada_min || 15), tempoMax: Number(cfg.tempo_retirada_max || 30) },
       localAtivo: cfg.pedido_local_ativo === "1",
