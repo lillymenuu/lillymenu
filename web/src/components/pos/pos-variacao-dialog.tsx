@@ -498,7 +498,7 @@ export function PosVariacaoDialog({
           </div>
 
           {/* Rodape: observacoes, quantidade e confirmar */}
-          <div className="shrink-0 space-y-2.5 border-t bg-background px-4 pt-3 pb-4">
+          <div className="shrink-0 space-y-2.5 bg-background px-4 pt-3 pb-4">
             <label className="block">
               <span className="mb-1 block text-xs font-semibold">Observações do cliente</span>
               <input
