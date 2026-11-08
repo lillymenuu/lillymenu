@@ -628,7 +628,7 @@ export function OrderDetailDialog({
                             {item.observacoes ? (
                               item.observacoes.startsWith("[combo]") ? (
                                 /* Combo: "[combo]" em destaque e cada componente numa linha. */
-                                <span className="mt-0.5 block text-[10px] font-normal text-muted-foreground">
+                                <span className="mt-0.5 block text-xs leading-snug font-normal text-muted-foreground">
                                   <span className="font-semibold text-primary">[combo]</span>
                                   {item.observacoes
                                     .slice("[combo]".length)
@@ -642,7 +642,7 @@ export function OrderDetailDialog({
                                     ))}
                                 </span>
                               ) : (
-                                <span className="block text-[10px] font-normal whitespace-pre-line text-muted-foreground">{item.observacoes}</span>
+                                <span className="block text-xs leading-snug font-normal whitespace-pre-line text-muted-foreground">{item.observacoes}</span>
                               )
                             ) : null}
                           </span>
