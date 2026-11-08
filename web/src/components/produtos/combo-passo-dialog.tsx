@@ -123,7 +123,7 @@ export function ComboPassoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] w-[520px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[520px]">
+      <DialogContent className="flex max-h-[85vh] rounded-3xl w-[520px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle>{passo ? "Editar passo" : "Novo passo"}</DialogTitle>
         </DialogHeader>
@@ -183,11 +183,11 @@ export function ComboPassoDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
-          <Button onClick={salvar} disabled={salvando}>
+          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
             {salvando ? "Salvando..." : "Salvar passo"}
           </Button>
         </DialogFooter>
