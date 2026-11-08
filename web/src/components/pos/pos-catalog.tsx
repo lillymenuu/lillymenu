@@ -192,7 +192,7 @@ export function PosCatalog({
             secoes.map((s) => (
               <div key={s.categoria.id} ref={(el) => void (secaoRefs.current[s.categoria.id] = el)}>
                 <h3 className="mb-2 text-sm font-semibold text-foreground">{s.categoria.nome}</h3>
-                <div className="flex max-w-[758px] flex-wrap gap-2.5">
+                <div className="flex flex-wrap gap-2.5">
                   {s.combos.map((c) => (
                     <PosComboCard key={`combo-${c.id}`} combo={c} qtd={qtdPorCombo[c.id] ?? 0} onAbrir={onAbrirCombo} />
                   ))}
