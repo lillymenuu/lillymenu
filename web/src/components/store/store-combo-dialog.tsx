@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Expand, ImageIcon, Layers, Minus, Plus, Shrink, X } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoreSheet } from "@/components/store/store-sheet";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -10,6 +11,28 @@ import { formatarPreco } from "@/lib/store/format";
 import type { StoreCartItem, StoreCombo, StoreComboPasso } from "@/lib/store/types";
 
 type Selecao = Record<number, number>;
+
+/* Computador (>= 940px): modal horizontal de duas colunas (igual ao do balcao); celular: sheet de sempre. */
+const MQ_DESKTOP = "(min-width: 940px)";
+function assinarDesktop(cb: () => void) {
+  const mq = window.matchMedia(MQ_DESKTOP);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+function useDesktop() {
+  return useSyncExternalStore(assinarDesktop, () => window.matchMedia(MQ_DESKTOP).matches, () => false);
+}
+
+function textoRegraPasso(passo: StoreComboPasso) {
+  const min = passo.min_itens || 0;
+  const max = passo.max_itens || 0;
+  let sub = "";
+  if (min > 0 && max > 0 && min === max) sub = `Escolha exatamente ${min} ${min === 1 ? "opção" : "opções"}`;
+  else if (min > 0 && max > 0) sub = `Escolha entre ${min} e ${max} opções`;
+  else if (min > 0) sub = `Escolha ao menos ${min} ${min === 1 ? "opção" : "opções"}`;
+  else if (max > 0) sub = `Escolha até ${max} ${max === 1 ? "opção" : "opções"}`;
+  return sub ? `${sub}.` : "";
+}
 
 export function StoreComboDialog({
   combo,
@@ -31,6 +54,7 @@ export function StoreComboDialog({
   somenteVisualizar?: boolean;
 }) {
   const { brown } = useStoreTheme();
+  const desktop = useDesktop();
   const [qtd, setQtd] = useState(1);
   const [obs, setObs] = useState("");
   const [passosBrutos, setPassos] = useState<StoreComboPasso[]>([]);
@@ -40,7 +64,7 @@ export function StoreComboDialog({
   const [imagemAmpliada, setImagemAmpliada] = useState(true);
   const [erroCarregar, setErroCarregar] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
-  const passoRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const passoRefs = useRef<Record<number, HTMLElement | null>>({});
   const ultimoPassoAlteradoRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -216,6 +240,172 @@ export function StoreComboDialog({
       </button>
     </div>
   );
+
+  function cliqueMais(passo: StoreComboPasso, opc: StoreComboPasso["opcoes"][number], podeAdd: boolean, qty: number) {
+    if (!podeAdd) {
+      if (!opc.esgotado && qty >= opc.estoque) avisarEstoqueIndisponivel();
+      return;
+    }
+    ultimoPassoAlteradoRef.current = passo.id;
+    alterarQty(passo, opc.id, opc.estoque, 1);
+  }
+
+  if (desktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          showCloseButton={false}
+          className="flex h-[min(650px,calc(100dvh-24px))] w-[1040px]! max-w-[calc(100%-24px)]! gap-0 overflow-hidden rounded-[24px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)]"
+        >
+          <DialogTitle className="sr-only">{combo.nome}</DialogTitle>
+
+          {/* Coluna fixa: foto, nome, preco e descricao */}
+          <div className="flex w-[320px] shrink-0 flex-col overflow-y-auto p-6">
+            <div className="aspect-square w-full shrink-0 overflow-hidden rounded-2xl bg-neutral-100">
+              {combo.imagem ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={combo.imagem} alt="" className="size-full object-cover" />
+              ) : (
+                <div className="flex size-full items-center justify-center text-neutral-300">
+                  <Layers size={36} />
+                </div>
+              )}
+            </div>
+            <h2 className="mt-4 text-[1rem] leading-tight font-bold text-neutral-900">{combo.nome}</h2>
+            <div className="mt-1.5 flex items-baseline gap-1.5">
+              {combo.em_promo && <span className="text-[.86rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>}
+              <span className="text-[1rem] font-bold" style={{ color: brown }}>
+                {formatarPreco(combo.preco_final)}
+              </span>
+            </div>
+            {combo.descricao && <p className="mt-2 text-[.86rem] leading-relaxed text-neutral-500">{combo.descricao}</p>}
+          </div>
+
+          {/* Coluna rolavel: passos do combo e rodape */}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex shrink-0 justify-end px-4 pt-4">
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                aria-label="Fechar"
+                className="flex size-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-800"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-3">
+              {carregando ? (
+                <p className="py-10 text-center text-[.86rem] text-neutral-500">Carregando opções...</p>
+              ) : erroCarregar ? (
+                <p className="py-10 text-center text-[.86rem] text-red-600">Não foi possível carregar as opções do combo. Feche e tente novamente.</p>
+              ) : (
+                passos.map((passo) => {
+                  const total = totalSelecionado(passo.id);
+                  const max = passo.max_itens || 0;
+                  const faltando = passosFaltando.some((p) => p.id === passo.id);
+                  return (
+                    <section
+                      key={passo.id}
+                      ref={(el) => {
+                        passoRefs.current[passo.id] = el;
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-[.9rem] font-bold text-neutral-900">{passo.nome}</h3>
+                        {passo.obrigatorio === 1 && (
+                          <span
+                            className={`shrink-0 rounded-full px-2.5 py-1 text-[.68rem] font-semibold ${
+                              faltando ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"
+                            }`}
+                          >
+                            {faltando ? "Obrigatório" : "Ok"}
+                          </span>
+                        )}
+                      </div>
+                      {textoRegraPasso(passo) && <p className="mt-0.5 mb-2.5 text-[.74rem] text-neutral-500">{textoRegraPasso(passo)}</p>}
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {passo.opcoes.map((opc) => {
+                          const qty = selecoes[passo.id]?.[opc.id] ?? 0;
+                          const podeAdd =
+                            !opc.esgotado && qty < opc.estoque && (max === 0 || total < max) && (passo.permite_repetir === 1 || qty === 0);
+                          const ativo = qty > 0;
+                          return (
+                            <div
+                              key={opc.id}
+                              className={`flex items-center gap-3 rounded-xl border p-2.5 transition-colors ${
+                                ativo ? "" : "border-neutral-200"
+                              } ${opc.esgotado ? "opacity-55" : ""}`}
+                              style={ativo ? { borderColor: `${brown}55`, background: `${brown}0d` } : undefined}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="line-clamp-2 text-[.84rem] leading-tight text-neutral-900">{opc.nome}</div>
+                                {opc.esgotado && <div className="mt-0.5 text-[.7rem] text-neutral-400">Esgotado</div>}
+                              </div>
+                              <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+                                {opc.imagem ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={opc.imagem} alt="" className="size-full object-cover" />
+                                ) : (
+                                  <div className="flex size-full items-center justify-center text-neutral-300">
+                                    <ImageIcon size={16} />
+                                  </div>
+                                )}
+                              </div>
+                              {!somenteVisualizar && (
+                                <div className="flex shrink-0 items-center gap-1">
+                                  <button
+                                    type="button"
+                                    disabled={qty <= 0}
+                                    onClick={() => alterarQty(passo, opc.id, opc.estoque, -1)}
+                                    aria-label={`Remover ${opc.nome}`}
+                                    className="flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 transition-colors hover:bg-neutral-200 disabled:text-neutral-300"
+                                  >
+                                    <Minus size={13} />
+                                  </button>
+                                  <span className="w-5 text-center text-[.84rem] font-semibold tabular-nums text-neutral-900">{qty}</span>
+                                  <button
+                                    type="button"
+                                    aria-disabled={!podeAdd}
+                                    onClick={() => cliqueMais(passo, opc, podeAdd, qty)}
+                                    aria-label={`Adicionar ${opc.nome}`}
+                                    className="flex size-7 items-center justify-center rounded-full text-white transition-opacity"
+                                    style={{ background: brown, opacity: podeAdd ? 1 : 0.4 }}
+                                  >
+                                    <Plus size={13} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="shrink-0 space-y-2.5 px-4 pt-2 pb-4">
+              {!somenteVisualizar && (
+                <label className="block">
+                  <span className="mb-1 block text-[.78rem] font-semibold text-neutral-900">Observações do cliente</span>
+                  <input
+                    value={obs}
+                    onChange={(e) => setObs(e.target.value)}
+                    placeholder="Ex.: sem cebola, molho à parte..."
+                    className="w-full rounded-full border-[1.5px] border-neutral-200 px-4 py-2.5 text-[.88rem] outline-none placeholder:text-neutral-400"
+                  />
+                </label>
+              )}
+              {footer}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <StoreSheet open={open} onOpenChange={onOpenChange} footer={footer} maxWidth={613}>
