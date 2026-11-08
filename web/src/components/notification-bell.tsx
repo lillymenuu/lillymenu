@@ -217,29 +217,9 @@ export function NotificationBell({
       } else if (maiorId > maiorIdPedidoRef.current) {
         const recemChegados = novos.filter((i) => i.id > maiorIdPedidoRef.current!);
         const recemChegadosLoja = recemChegados.filter((i) => i.origem === "loja");
-        const recemChegadosOutros = recemChegados.filter((i) => i.origem !== "loja");
 
-        recemChegadosOutros.forEach((item) => {
-          toast.custom(() => (
-            <button
-              onClick={() => abrirItem(item)}
-              className="flex w-full items-start gap-3 rounded-lg border bg-popover p-3 text-left shadow-lg"
-            >
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                <Receipt size={16} />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-medium">Novo pedido!</div>
-                <div className="truncate text-xs text-muted-foreground">
-                  Pedido #{item.codigo ?? item.id} · {item.cliente}
-                </div>
-              </div>
-            </button>
-          ));
-        });
-
-        /* Pedidos da loja ganham o card flutuante completo (ver render mais
-           abaixo) em vez do toast discreto — busca os dados completos na
+        /* So pedidos da loja geram aviso: o card flutuante completo (ver render mais
+           abaixo); os demais (balcao, garcom) nao mostram toast. Busca os dados completos na
            mesma lista que o Gestor de Pedidos usa, pra reaproveitar o
            OrderCard tal como ele aparece la. */
         if (recemChegadosLoja.length > 0) {
