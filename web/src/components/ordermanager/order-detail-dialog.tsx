@@ -170,6 +170,7 @@ export function OrderDetailDialog({
   motoboys,
   phpAdminUrl,
   onAtualizado,
+  overlayClassName,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -177,6 +178,8 @@ export function OrderDetailDialog({
   motoboys: Motoboy[];
   phpAdminUrl: string;
   onAtualizado: () => void;
+  /** Classe extra do fundo (ex.: desfoque mais forte quando aberto por cima do balcao). */
+  overlayClassName?: string;
 }) {
   const { abrir: abrirPos } = usePosOverlay();
   const [carregando, setCarregando] = useState(false);
@@ -344,7 +347,7 @@ export function OrderDetailDialog({
         {/* Celular: bottom sheet com altura limitada (cabecalho com o X sempre visivel, so o meio
             rola). Antes o meio tinha 75vh fixos + cabecalho + 3 botoes no rodape, passava da altura
             da tela e o X ficava fora dela. */}
-        <DialogContent className="max-w-lg gap-3 overflow-hidden rounded-3xl sm:max-w-lg max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:flex max-md:max-h-[92dvh] max-md:w-full max-md:max-w-full max-md:translate-x-0 max-md:translate-y-0 max-md:flex-col max-md:rounded-b-none max-md:pb-[max(1rem,env(safe-area-inset-bottom))] max-md:data-open:slide-in-from-bottom-10 max-md:data-open:zoom-in-100">
+        <DialogContent overlayClassName={overlayClassName} className="max-w-lg gap-3 overflow-hidden rounded-3xl sm:max-w-lg max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:flex max-md:max-h-[92dvh] max-md:w-full max-md:max-w-full max-md:translate-x-0 max-md:translate-y-0 max-md:flex-col max-md:rounded-b-none max-md:pb-[max(1rem,env(safe-area-inset-bottom))] max-md:data-open:slide-in-from-bottom-10 max-md:data-open:zoom-in-100">
           <DialogHeader className="pr-8 max-md:shrink-0">
             <div className="flex items-center justify-between gap-2">
               <DialogTitle className="whitespace-nowrap">Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>

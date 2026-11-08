@@ -25,6 +25,7 @@ import { PosCashbackDialog } from "@/components/pos/pos-cashback-dialog";
 import { PosSairEdicaoDialog } from "@/components/pos/pos-sair-edicao-dialog";
 import { PosCaixaGate } from "@/components/pos/pos-caixa-gate";
 import { PosImpressaoToggle } from "@/components/pos/pos-impressao-toggle";
+import { PosNotificacoes } from "@/components/pos/pos-notificacoes";
 import { ENDERECO_VAZIO, usePosPedido } from "@/components/pos/use-pos-pedido";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -194,6 +195,7 @@ export function PosOverlay({
                 </button>
               </div>
             ) : null}
+            <PosNotificacoes phpAdminUrl={phpAdminUrl} />
             <PosImpressaoToggle phpAdminUrl={phpAdminUrl} />
             <Button
               variant="ghost"
