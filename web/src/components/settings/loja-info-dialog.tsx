@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "cn";
 import type { ConfiguracoesDetalhe } from "@/lib/settings";
 import { BannerCropDialog } from "@/components/settings/banner-crop-dialog";
+import { maskTelefone } from "@/lib/telefone";
 
 type Loja = ConfiguracoesDetalhe["loja"];
 
@@ -96,7 +97,7 @@ export function LojaInfoDialog({
   onSalvo: () => void;
 }) {
   const [nome, setNome] = useState(loja.nome);
-  const [contato, setContato] = useState(loja.contato);
+  const [contato, setContato] = useState(maskTelefone(loja.contato));
   const [cpf, setCpf] = useState(maskCpf(loja.cpf));
   const [cnpj, setCnpj] = useState(maskCnpj(loja.cnpj));
   const [linkSlug, setLinkSlug] = useState(loja.link_slug);
@@ -128,7 +129,7 @@ export function LojaInfoDialog({
   useEffect(() => {
     if (!open) return;
     setNome(loja.nome);
-    setContato(loja.contato);
+    setContato(maskTelefone(loja.contato));
     setCpf(maskCpf(loja.cpf));
     setCnpj(maskCnpj(loja.cnpj));
     setLinkSlug(loja.link_slug);
@@ -253,7 +254,9 @@ export function LojaInfoDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome_loja: nome,
+          // Mesmo numero do WhatsApp que recebe pedidos (modal Receber pedidos).
           loja_contato: contato,
+          whatsapp_numero: contato,
           cobranca_cpf: cpf,
           loja_cnpj: cnpj,
           link_loja: linkCompleto,
@@ -366,7 +369,7 @@ export function LojaInfoDialog({
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Número de contato</Label>
-            <Input value={contato} onChange={(e) => setContato(e.target.value)} placeholder="(00) 00000-0000" className={campoClasse} />
+            <Input value={contato} onChange={(e) => setContato(maskTelefone(e.target.value))} inputMode="tel" placeholder="(00) 00000-0000" className={campoClasse} />
           </div>
 
           <div className="col-span-full mt-2 text-xs font-semibold tracking-wide text-primary uppercase">Documentos e link</div>
