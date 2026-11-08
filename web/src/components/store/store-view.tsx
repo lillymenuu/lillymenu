@@ -43,6 +43,16 @@ function isCombo(item: StoreProduto | StoreCombo): item is StoreCombo {
   return "tipo" in item && item.tipo === "combo";
 }
 
+/* Unidades de cada variacao de um produto que ja estao no carrinho (saem do estoque proprio da variacao). */
+function consumoVariacoesDoProduto(itens: { tipo: string; id: number; variacaoId?: number | null; qtd: number }[], produtoId: number) {
+  const consumo: Record<number, number> = {};
+  for (const i of itens) {
+    if (i.tipo !== "produto" || i.id !== produtoId || !i.variacaoId) continue;
+    consumo[i.variacaoId] = (consumo[i.variacaoId] ?? 0) + i.qtd;
+  }
+  return consumo;
+}
+
 /* Mesma prioridade do loja.php: pausa programada ativa mostra o titulo dela. */
 function textoStatusLoja(perfil: StorePerfil) {
   if (perfil.lojaAberta) return "Aberto agora";
@@ -1199,6 +1209,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         lojaId={perfil.loja_id}
         mostrarPontos={perfil.clubePontosAtivo}
         jaNoCarrinho={produtoAberto ? (consumoCarrinho[produtoAberto.id] ?? 0) : 0}
+        consumoVariacoes={produtoAberto ? consumoVariacoesDoProduto(cart.itens, produtoAberto.id) : undefined}
         open={produtoAberto !== null}
         onOpenChange={(v) => !v && setProdutoAberto(null)}
         onAdicionar={cart.adicionar}

@@ -41,6 +41,7 @@ export function StoreProdutoDialog({
   lojaId,
   mostrarPontos = false,
   jaNoCarrinho = 0,
+  consumoVariacoes,
   open,
   onOpenChange,
   onAdicionar,
@@ -52,6 +53,8 @@ export function StoreProdutoDialog({
   mostrarPontos?: boolean;
   /** Unidades deste produto que o carrinho ja tem (todas as linhas, inclusive variacoes) — saem do estoque disponivel. */
   jaNoCarrinho?: number;
+  /** Unidades de cada variacao deste produto que o carrinho ja tem — saem do estoque proprio da variacao. */
+  consumoVariacoes?: Record<number, number>;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
@@ -65,6 +68,8 @@ export function StoreProdutoDialog({
   const [detalhe, setDetalhe] = useState<StoreProdutoVariacoes | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
+  /** Quantidade escolhida de cada variacao (ex.: 2 Queijo + 3 Mista): cada uma vira um item no carrinho. */
+  const [qtdVariacoes, setQtdVariacoes] = useState<Record<number, number>>({});
   const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
   const [selecaoComplementos, setSelecaoComplementos] = useState<SelecaoComplementos>({});
   /* Comeca ja expandida (foto inteira, sem cortar) tanto no desktop quanto no mobile —
@@ -87,6 +92,7 @@ export function StoreProdutoDialog({
     setImagemAmpliada(true);
     setAspectRatio(null);
     setVariacaoId(null);
+    setQtdVariacoes({});
     setSelecoesGrupos({});
     setSelecaoComplementos({});
     setDetalhe(null);
@@ -128,9 +134,36 @@ export function StoreProdutoDialog({
   const precoGrupos = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
   const complementos: ComplementoGrupoVenda[] = detalhe?.complementos ?? [];
   const precoUnitario = precoBase + precoGrupos + precoComplementos(complementos, selecaoComplementos);
-  const total = precoUnitario * qtd;
 
-  const faltaVariacao = variacaoObrigatoria && !variacaoSelecionada;
+  /* Quantidade por variacao: cada sabor tem seu contador. O estoque de cada um desconta o que o
+     carrinho ja tem daquele sabor, e a soma de todos respeita o estoque do produto. */
+  type VariacaoLoja = StoreProdutoVariacoes["variacoes"][number];
+  const adicionaisUnit = precoGrupos + precoComplementos(complementos, selecaoComplementos);
+  const precoBaseDe = (v: VariacaoLoja) => (v.preco > 0 ? v.preco : produto.preco_produto);
+  const produtoRestante = Math.max(0, produto.estoque - jaNoCarrinho);
+  const disponivelVariacao = (v: VariacaoLoja) => (v.estoque === null ? Infinity : Math.max(0, v.estoque - (consumoVariacoes?.[v.id] ?? 0)));
+  function maxDaVariacao(v: VariacaoLoja, atual: Record<number, number>) {
+    const somaOutras = Object.entries(atual).reduce((s, [id, q]) => (Number(id) === v.id ? s : s + q), 0);
+    return Math.max(0, Math.min(disponivelVariacao(v), produtoRestante - somaOutras));
+  }
+  function alterarQtdVariacao(v: VariacaoLoja, delta: 1 | -1) {
+    if (delta === 1 && (qtdVariacoes[v.id] ?? 0) >= maxDaVariacao(v, qtdVariacoes)) {
+      avisarEstoqueIndisponivel();
+      return;
+    }
+    const nova = Math.max(0, (qtdVariacoes[v.id] ?? 0) + delta);
+    const proximo = { ...qtdVariacoes, [v.id]: nova };
+    setQtdVariacoes(proximo);
+    if (delta === 1 && nova === 1 && Object.values(qtdVariacoes).every((q) => !q)) rolarParaProximaSecao("variacao");
+  }
+  const variacoesEscolhidas = temVariacoes ? (detalhe?.variacoes ?? []).filter((v) => (qtdVariacoes[v.id] ?? 0) > 0) : [];
+  const usandoQtdPorVariacao = variacoesEscolhidas.length > 0;
+  const totalQtdVariacoes = variacoesEscolhidas.reduce((s, v) => s + (qtdVariacoes[v.id] ?? 0), 0);
+  const total = usandoQtdPorVariacao
+    ? variacoesEscolhidas.reduce((s, v) => s + (precoBaseDe(v) + adicionaisUnit) * (qtdVariacoes[v.id] ?? 0), 0)
+    : precoUnitario * qtd;
+
+  const faltaVariacao = variacaoObrigatoria && !usandoQtdPorVariacao;
   const faltaGrupoObrigatorio =
     (temVariacoes && (detalhe?.grupos_opcoes ?? []).some((g) => g.obrigatorio === 1 && (selecoesGrupos[g.id]?.length ?? 0) === 0)) ||
     complementos.some((g) => grupoPendente(g, selecaoComplementos));
@@ -139,7 +172,11 @@ export function StoreProdutoDialog({
   const estoqueVariacao = variacaoSelecionada?.estoque ?? null;
   const estoqueRestante = Math.min(Math.max(0, produto.estoque - jaNoCarrinho), estoqueVariacao ?? Infinity);
   const podeAdicionar =
-    !produto.esgotado && estoqueRestante > 0 && qtd <= estoqueRestante && !carregando && !faltaVariacao && !faltaGrupoObrigatorio;
+    !produto.esgotado &&
+    (usandoQtdPorVariacao ? totalQtdVariacoes <= produtoRestante : estoqueRestante > 0 && qtd <= estoqueRestante) &&
+    !carregando &&
+    !faltaVariacao &&
+    !faltaGrupoObrigatorio;
 
   /* Ordem das secoes exibidas (variacao, depois cada grupo) — define pra onde rolar ao concluir uma. */
   const secaoOrder = [
@@ -152,11 +189,6 @@ export function StoreProdutoDialog({
     const idx = secaoOrder.indexOf(idAtual);
     const proximoId = idx >= 0 ? secaoOrder[idx + 1] : undefined;
     if (proximoId) secaoRefs.current[proximoId]?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function selecionarVariacao(id: number) {
-    setVariacaoId(id);
-    rolarParaProximaSecao("variacao");
   }
 
   function alternarOpcao(grupoId: number, itemId: number, tipoSelecao: "unica" | "multipla", maxSelecao: number) {
@@ -197,6 +229,36 @@ export function StoreProdutoDialog({
         estoqueMax: produto.estoque,
         pontosGanho: produto.pontos_ganho,
       });
+    } else if (usandoQtdPorVariacao) {
+      /* Um item no carrinho por variacao escolhida, cada um com a sua quantidade. */
+      const gruposLabel = gruposSelecionados
+        .flatMap((g) => g.itens.map((it) => ` + ${it.nome}`))
+        .join("") + rotuloComplementos(complementos, selecaoComplementos);
+      const opcoesExtras: { titulo: string; nome: string }[] = [];
+      for (const g of gruposSelecionados) {
+        for (const it of g.itens) opcoesExtras.push({ titulo: g.grupo.titulo, nome: it.nome });
+      }
+      for (const { grupo, item, qtd: q } of itensEscolhidos(complementos, selecaoComplementos)) {
+        opcoesExtras.push({ titulo: grupo.nome, nome: q > 1 ? `${q}x ${item.nome}` : item.nome });
+      }
+      for (const v of variacoesEscolhidas) {
+        const nomeVariacao = [v.tamanho, v.cor].filter(Boolean).join(" - ");
+        onAdicionar({
+          id: produto.id,
+          tipo: "produto",
+          nome: `${produto.nome}${nomeVariacao ? ` - ${nomeVariacao}` : ""}${gruposLabel}`,
+          precoUnit: precoBaseDe(v) + adicionaisUnit,
+          qtd: qtdVariacoes[v.id] ?? 0,
+          obs: obs.trim(),
+          imagem: produto.imagem,
+          estoqueMax: v.estoque ?? produto.estoque,
+          pontosGanho: produto.pontos_ganho,
+          variacaoId: v.id,
+          selecoesGrupos,
+          opcoesSelecionadas: [{ titulo: detalhe?.variacao_titulo ?? "Variações do produto", nome: nomeVariacao || "Opção" }, ...opcoesExtras],
+          complementos: complementosParaEnvio(complementos, selecaoComplementos),
+        });
+      }
     } else {
       const nomeVariacao = variacaoSelecionada ? [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ") : "";
       const gruposLabel = gruposSelecionados
@@ -274,13 +336,15 @@ export function StoreProdutoDialog({
     <div>
       {!temOpcoes && <div className="min-[940px]:hidden">{obsField}</div>}
       <div className="flex items-center justify-between gap-3">
-        <QtyStepper
-          value={qtd}
-          min={Math.max(1, produto.quantidade_minima ?? 0)}
-          max={estoqueRestante}
-          onChange={setQtd}
-          onMaxAtingido={avisarEstoqueIndisponivel}
-        />
+        {!usandoQtdPorVariacao && (
+          <QtyStepper
+            value={qtd}
+            min={Math.max(1, produto.quantidade_minima ?? 0)}
+            max={estoqueRestante}
+            onChange={setQtd}
+            onMaxAtingido={avisarEstoqueIndisponivel}
+          />
+        )}
         <button
           type="button"
           disabled={!podeAdicionar}
@@ -291,8 +355,10 @@ export function StoreProdutoDialog({
           {produto.esgotado
             ? "Esgotado"
             : faltaVariacao
-              ? "Selecionar variação"
-              : `Adicionar ${formatarPreco(total)}`}
+              ? "Escolha a quantidade"
+              : usandoQtdPorVariacao
+                ? `Adicionar ${totalQtdVariacoes} ${totalQtdVariacoes === 1 ? "item" : "itens"} · ${formatarPreco(total)}`
+                : `Adicionar ${formatarPreco(total)}`}
         </button>
       </div>
     </div>
@@ -310,31 +376,23 @@ export function StoreProdutoDialog({
           <h3 className="text-[.86rem] font-bold text-neutral-900">{detalhe?.variacao_titulo ?? "Escolha uma das opções"}</h3>
           {variacaoObrigatoria && <span className="text-[.72rem] font-bold text-red-500">Obrigatório</span>}
         </div>
+        <p className="mb-1 text-[.76rem] text-neutral-500">Escolha a quantidade de cada opção.</p>
         <div>
           {(detalhe?.variacoes ?? []).map((v) => {
-            const nome = [v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opção";
-            const esgotada = v.estoque !== null && v.estoque <= 0;
+            const qtdV = qtdVariacoes[v.id] ?? 0;
+            const esgotada = disponivelVariacao(v) <= 0;
             return (
-              <label
+              <LinhaPassoCombo
                 key={v.id}
-                className={`flex items-center justify-between gap-3 border-t border-neutral-100 py-3 first:border-t-0 ${
-                  esgotada ? "cursor-not-allowed opacity-40" : "cursor-pointer"
-                }`}
-              >
-                <div className="text-base text-neutral-900">
-                  {nome}
-                  <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{esgotada ? "Esgotado" : formatarPreco(v.preco)}</small>
-                </div>
-                <input
-                  type="radio"
-                  name="variacao"
-                  checked={variacaoId === v.id}
-                  disabled={esgotada}
-                  onChange={() => selecionarVariacao(v.id)}
-                  className="size-[18px] shrink-0"
-                  style={{ accentColor: brown }}
-                />
-              </label>
+                nome={[v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opção"}
+                detalhe={esgotada && qtdV === 0 ? "Esgotado" : formatarPreco(precoBaseDe(v))}
+                apagada={esgotada && qtdV === 0}
+                qtd={qtdV}
+                podeSomar={qtdV < maxDaVariacao(v, qtdVariacoes)}
+                onMenos={() => alterarQtdVariacao(v, -1)}
+                onMais={() => alterarQtdVariacao(v, 1)}
+                onBloqueado={avisarEstoqueIndisponivel}
+              />
             );
           })}
           {detalhe?.variacoes.length === 0 && <p className="py-2 text-[.8rem] text-neutral-400">Sem variações cadastradas.</p>}
@@ -426,13 +484,15 @@ export function StoreProdutoDialog({
         footer={
           somenteVisualizar ? precoVitrine : (
           <div className="flex items-center justify-between gap-3">
-            <QtyStepper
-              value={qtd}
-              min={Math.max(1, produto.quantidade_minima ?? 0)}
-              max={estoqueRestante}
-              onChange={setQtd}
-              onMaxAtingido={avisarEstoqueIndisponivel}
-            />
+            {!usandoQtdPorVariacao && (
+              <QtyStepper
+                value={qtd}
+                min={Math.max(1, produto.quantidade_minima ?? 0)}
+                max={estoqueRestante}
+                onChange={setQtd}
+                onMaxAtingido={avisarEstoqueIndisponivel}
+              />
+            )}
             <button
               type="button"
               disabled={!podeAdicionar}
@@ -444,7 +504,9 @@ export function StoreProdutoDialog({
                 ? "Esgotado"
                 : pendente
                   ? `Selecione "${pendente}"`
-                  : `Adicionar ${formatarPreco(total)}`}
+                  : usandoQtdPorVariacao
+                    ? `Adicionar ${totalQtdVariacoes} ${totalQtdVariacoes === 1 ? "item" : "itens"} · ${formatarPreco(total)}`
+                    : `Adicionar ${formatarPreco(total)}`}
             </button>
           </div>
           )
@@ -519,21 +581,22 @@ export function StoreProdutoDialog({
                     secaoRefs.current["variacao"] = el;
                   }}
                 >
-                  <CabecalhoPasso titulo={tituloVariacao} obrigatorio={variacaoObrigatoria} dica="Escolha 1 opção." />
+                  <CabecalhoPasso titulo={tituloVariacao} obrigatorio={variacaoObrigatoria} dica="Escolha a quantidade de cada opção." />
                   <div>
                     {(detalhe?.variacoes ?? []).map((v) => {
-                      const esgotada = v.estoque !== null && v.estoque <= 0;
-                      const marcada = variacaoId === v.id;
+                      const qtdV = qtdVariacoes[v.id] ?? 0;
+                      const esgotada = disponivelVariacao(v) <= 0;
                       return (
                         <LinhaPassoCombo
                           key={v.id}
                           nome={[v.tamanho, v.cor].filter(Boolean).join(" - ") || "Opção"}
-                          detalhe={esgotada ? "Esgotado" : formatarPreco(v.preco)}
-                          apagada={esgotada && !marcada}
-                          qtd={marcada ? 1 : 0}
-                          podeSomar={!marcada && !esgotada}
-                          onMenos={() => setVariacaoId(null)}
-                          onMais={() => selecionarVariacao(v.id)}
+                          detalhe={esgotada && qtdV === 0 ? "Esgotado" : formatarPreco(precoBaseDe(v))}
+                          apagada={esgotada && qtdV === 0}
+                          qtd={qtdV}
+                          podeSomar={qtdV < maxDaVariacao(v, qtdVariacoes)}
+                          onMenos={() => alterarQtdVariacao(v, -1)}
+                          onMais={() => alterarQtdVariacao(v, 1)}
+                          onBloqueado={avisarEstoqueIndisponivel}
                         />
                       );
                     })}
