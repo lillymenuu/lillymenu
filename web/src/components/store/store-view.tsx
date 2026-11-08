@@ -163,6 +163,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         setPerfil((p) => ({
           ...p,
           lojaAberta: d.aberto,
+          receberPedidosAtivo: d.receberPedidosAtivo !== false,
+          notificarPedidoWhatsappAtivo: d.notificarPedidoWhatsappAtivo !== false,
           entAtiva: d.entAtiva,
           retAtiva: d.retAtiva,
           pausaAtivaTitulo: d.pausaTitulo || "",
@@ -226,6 +228,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
 
   /* Estoque que o carrinho ja consome: produto ja no limite do estoque nao abre de novo (ficaria "comprar o que acabou"). */
   const consumoCarrinho = consumoDoCarrinho(cart.itens);
+  /* "Receber pedidos" desligado: a loja vira vitrine (ve produto e valor, sem botao de adicionar). */
+  const somenteVitrine = !perfil.receberPedidosAtivo;
   const restanteDoProduto = (p: StoreProduto) => p.estoque - (consumoCarrinho[p.id] ?? 0);
 
   function abrirItem(item: StoreProduto | StoreCombo) {
@@ -928,7 +932,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                             )}
                           </div>
                           <span
-                            className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                            className={`absolute -right-1.5 -bottom-1.5 ${somenteVitrine ? "hidden" : "flex"} size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md`}
                             style={{ background: brown }}
                           >
                             +
@@ -978,7 +982,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                             </span>
                           ) : (
                             <span
-                              className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                              className={`absolute -right-1.5 -bottom-1.5 ${somenteVitrine ? "hidden" : "flex"} size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md`}
                               style={{ background: brown }}
                             >
                               +
@@ -1024,7 +1028,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                           )}
                         </div>
                         <span
-                          className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                          className={`absolute -right-1.5 -bottom-1.5 ${somenteVitrine ? "hidden" : "flex"} size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md`}
                           style={{ background: brown }}
                         >
                           +
@@ -1068,7 +1072,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                           </span>
                         ) : (
                           <span
-                            className="absolute -right-1.5 -bottom-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md"
+                            className={`absolute -right-1.5 -bottom-1.5 ${somenteVitrine ? "hidden" : "flex"} size-7 items-center justify-center rounded-full border-2 border-white text-white shadow-md`}
                             style={{ background: brown }}
                           >
                             +
@@ -1198,6 +1202,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         open={produtoAberto !== null}
         onOpenChange={(v) => !v && setProdutoAberto(null)}
         onAdicionar={cart.adicionar}
+        somenteVisualizar={somenteVitrine}
       />
 
       <StoreComboDialog
@@ -1207,6 +1212,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         open={comboAberto !== null}
         onOpenChange={(v) => !v && setComboAberto(null)}
         onAdicionar={cart.adicionar}
+        somenteVisualizar={somenteVitrine}
       />
 
       <StoreCartSheet

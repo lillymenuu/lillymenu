@@ -18,6 +18,7 @@ export function StoreComboDialog({
   open,
   onOpenChange,
   onAdicionar,
+  somenteVisualizar = false,
 }: {
   combo: StoreCombo | null;
   lojaId: number;
@@ -26,6 +27,8 @@ export function StoreComboDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
+  /** Loja com \"Receber pedidos\" desligado: mostra o combo e o valor, sem adicionar ao carrinho. */
+  somenteVisualizar?: boolean;
 }) {
   const { brown } = useStoreTheme();
   const [qtd, setQtd] = useState(1);
@@ -188,7 +191,13 @@ export function StoreComboDialog({
     onOpenChange(false);
   }
 
-  const footer = (
+  const footer = somenteVisualizar ? (
+    <div className="flex justify-end">
+      <div className="rounded-xl bg-neutral-100 px-4 py-3 text-[.9rem] font-medium text-neutral-900">
+        {formatarPreco(combo.preco_final)}
+      </div>
+    </div>
+  ) : (
     <div className="flex items-center justify-between gap-3">
       <QtyStepper
         value={qtd}

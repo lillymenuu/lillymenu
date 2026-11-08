@@ -96,6 +96,9 @@ export function StoreSuccessDialog({
         : `${perfil.tRetMin}-${perfil.tRetMax} min`;
   const previsaoLabel = isMesa ? "Mesa" : isAgendado ? (isEntrega ? "Entrega agendada" : "Retirada agendada") : isEntrega ? "Entrega em" : "Retirada em";
 
+  /* "Notificar por WhatsApp" (modal Receber pedidos) desligado: o cliente nao envia o pedido pro WhatsApp da loja. */
+  const mostrarWhatsapp = !isMesa && perfil.notificarPedidoWhatsappAtivo && perfil.lojaWhatsappPedidos !== "";
+
   function enviarWhatsapp() {
     const numero = perfil.lojaWhatsappPedidos;
     if (!numero || !snapshot) return;
@@ -175,7 +178,8 @@ export function StoreSuccessDialog({
           </div>
 
           <div className="flex w-full max-w-[420px] flex-col gap-3" style={rise(0.95)}>
-            {!isMesa && (
+            {/* "Notificar por WhatsApp" desligado em Receber pedidos: sem envio pro WhatsApp da loja. */}
+            {mostrarWhatsapp && (
               <button
                 type="button"
                 onClick={enviarWhatsapp}
@@ -195,9 +199,9 @@ export function StoreSuccessDialog({
               onClick={onAcompanhar}
               className={cn(
                 "flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[.86rem] font-semibold transition-colors",
-                isMesa ? "text-white" : "border-[1.5px] border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+                !mostrarWhatsapp ? "text-white" : "border-[1.5px] border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
               )}
-              style={isMesa ? { background: `linear-gradient(135deg, ${brown}, ${brown}dd)`, boxShadow: `0 10px 26px ${brown}55` } : undefined}
+              style={!mostrarWhatsapp ? { background: `linear-gradient(135deg, ${brown}, ${brown}dd)`, boxShadow: `0 10px 26px ${brown}55` } : undefined}
             >
               <ShoppingBag size={16} />
               Acompanhar pedido

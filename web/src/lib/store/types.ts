@@ -46,6 +46,8 @@ export type StorePerfil = {
   avaliacaoMedia: number;
   avaliacaoTotal: number;
   lojaAberta: boolean;
+  receberPedidosAtivo: boolean;
+  notificarPedidoWhatsappAtivo: boolean;
   pausaAtivaTitulo: string;
   pausaAtivaFim: string;
   proximoHorario: string;

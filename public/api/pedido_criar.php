@@ -212,7 +212,9 @@ try {
 
   /* ── Montar INSERT ── */
   $fields  = ['cliente_id','forma_pagamento','total','status','loja_id','criado_em'];
-  $values  = [$clienteId, $pagamento, $total, 'pendente', $lojaId, date('Y-m-d H:i:s')];
+  /* "Aceite automatico" (modal Receber pedidos): o pedido ja nasce aceito, sem passar por Pendente. */
+  $statusInicial = config($conn, 'aceite_automatico_diggy_ativo', '0', $lojaId) === '1' ? 'aceito' : 'pendente';
+  $values  = [$clienteId, $pagamento, $total, $statusInicial, $lojaId, date('Y-m-d H:i:s')];
 
   if ($temCodigo)   { $fields[]='codigo';            $values[]=null; }
   if ($temTipo)     { $fields[]='tipo';              $values[]=$tipo; }

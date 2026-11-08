@@ -15,6 +15,7 @@ import {
   cupons,
   cashbackMovimentacoes,
   pontosMovimentacoes,
+  pedidoStatusLog,
 } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
@@ -192,6 +193,9 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
   const cashbackUsar = Boolean(input.cashbackUsar) && (input.cashbackValor ?? 0) > 0;
   let cashbackValorUsar = cashbackUsar ? (input.cashbackValor ?? 0) : 0;
 
+  /* "Aceite automatico" (modal Receber pedidos): o pedido ja nasce aceito e pula a coluna Pendente do Gestor de pedidos. */
+  const aceiteAutomatico = (await getConfig(lojaId, "aceite_automatico_diggy_ativo", "0")) === "1";
+
   let pedidoId = 0;
   let clienteId = 0;
 
@@ -205,7 +209,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           cliente_id: clienteId,
           forma_pagamento: input.formaPagamento,
           total: input.total,
-          status: "pendente",
+          status: aceiteAutomatico ? "aceito" : "pendente",
           loja_id: lojaId,
           tipo: input.tipo,
           mesa_id: input.tipo === "mesa" ? input.mesaId : null,
@@ -226,6 +230,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
         })
         .returning({ id: pedidos.id });
       pedidoId = novoPedido.id;
+      if (aceiteAutomatico) await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: "aceito", loja_id: lojaId });
 
       /* codigo de exibicao (respeita sequencia zerada, se configurada) */
       const codigoBase = await pedidoCodigoBase(lojaId);

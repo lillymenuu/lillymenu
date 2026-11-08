@@ -44,6 +44,7 @@ export function StoreProdutoDialog({
   open,
   onOpenChange,
   onAdicionar,
+  somenteVisualizar = false,
 }: {
   produto: StoreProduto | null;
   lojaId: number;
@@ -54,6 +55,8 @@ export function StoreProdutoDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onAdicionar: (item: Omit<StoreCartItem, "key">) => void;
+  /** Loja com "Receber pedidos" desligado: mostra o produto e o valor, sem adicionar ao carrinho. */
+  somenteVisualizar?: boolean;
 }) {
   const { brown } = useStoreTheme();
   const desktop = useDesktop();
@@ -259,7 +262,15 @@ export function StoreProdutoDialog({
     </div>
   );
 
-  const footer = (
+  const precoVitrine = (
+    <div className="flex justify-end">
+      <div className="rounded-xl bg-neutral-100 px-4 py-3 text-[.9rem] font-medium text-neutral-900">
+        {formatarPreco(produto.preco_final)}
+      </div>
+    </div>
+  );
+
+  const footer = somenteVisualizar ? precoVitrine : (
     <div>
       {!temOpcoes && <div className="min-[940px]:hidden">{obsField}</div>}
       <div className="flex items-center justify-between gap-3">
@@ -413,6 +424,7 @@ export function StoreProdutoDialog({
         onOpenChange={onOpenChange}
         maxWidth={613}
         footer={
+          somenteVisualizar ? precoVitrine : (
           <div className="flex items-center justify-between gap-3">
             <QtyStepper
               value={qtd}
@@ -435,6 +447,7 @@ export function StoreProdutoDialog({
                   : `Adicionar ${formatarPreco(total)}`}
             </button>
           </div>
+          )
         }
       >
         <div className="p-4">
@@ -654,7 +667,7 @@ export function StoreProdutoDialog({
                 {opcoesConteudo}
               </div>
             </div>
-            <div className="border-t border-neutral-100 px-4 pt-2 pb-2.5">
+            <div className={`border-t border-neutral-100 px-4 pt-2 pb-2.5 ${somenteVisualizar ? "hidden" : ""}`}>
               <label className="mb-1.5 block text-[.82rem] font-semibold text-neutral-900">Alguma observação?</label>
               <textarea
                 value={obs}
@@ -747,7 +760,7 @@ export function StoreProdutoDialog({
             {produto.esgotado && <p className="mb-3 text-[.86rem] font-medium text-red-600">Produto esgotado no momento.</p>}
           </div>
         </div>
-        <div className="hidden min-[940px]:mt-2 min-[940px]:block min-[940px]:border-t min-[940px]:border-neutral-100 min-[940px]:pt-2">
+        <div className={`hidden min-[940px]:mt-2 min-[940px]:border-t min-[940px]:border-neutral-100 min-[940px]:pt-2 ${somenteVisualizar ? "" : "min-[940px]:block"}`}>
           {obsFieldCompacto}
         </div>
       </div>

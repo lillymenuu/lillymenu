@@ -22,6 +22,7 @@ export async function GET(request: Request) {
     ok: true,
     aberto: perfil.lojaAberta,
     receberPedidosAtivo: receberPedidosAtivo !== "0",
+    notificarPedidoWhatsappAtivo: perfil.notificarPedidoWhatsappAtivo,
     pausaTitulo: perfil.pausaAtivaTitulo,
     pausaFim: perfil.pausaAtivaFim,
     proximoHorario: perfil.proximoHorario,

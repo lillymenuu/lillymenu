@@ -1007,7 +1007,7 @@ $ogImagem = $perfilLoja ?: ($_bp . $_bh . $_bd . '../admin/assets/img/favicon_st
           <button class="btn-copy" onclick="copiarPix()"><i class="bi bi-clipboard"></i> Copiar chave PIX</button>
         </div>
         <!-- botões -->
-        <?php if($notificarPedidoWhatsappAtivo && preg_replace('/\D+/','',$lojaContato)): ?>
+        <?php if($notificarPedidoWhatsappAtivo && $lojaWhatsappPedidos !== ''): ?>
         <button class="success-btn-wpp" onclick="enviarWppPedido()">
           <i class="bi bi-whatsapp" style="font-size:1.2rem"></i> ENVIAR PARA O WHATSAPP DA LOJA
         </button>

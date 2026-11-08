@@ -175,6 +175,8 @@ export type PerfilLoja = {
   avaliacaoMedia: number;
   avaliacaoTotal: number;
   lojaAberta: boolean;
+  receberPedidosAtivo: boolean;
+  notificarPedidoWhatsappAtivo: boolean;
   pausaAtivaTitulo: string;
   pausaAtivaFim: string;
   proximoHorario: string;
@@ -253,6 +255,7 @@ const CHAVES = [
   "cashback_percentual",
   "cashback_ativo",
   "receber_pedidos_ativo",
+  "notificar_pedido_whatsapp_ativo",
   "loja_contato",
   "whatsapp_numero",
   "loja_instagram",
@@ -367,6 +370,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
   const avaliacaoMedia = avaliacaoTotal > 0 ? Number(avRow?.media ?? 0) : 0;
 
   const receberPedidosAtivo = cfg.receber_pedidos_ativo !== "0";
+  const notificarPedidoWhatsappAtivo = cfg.notificar_pedido_whatsapp_ativo !== "0";
   const lojaAberta = (await estaAberto(lojaId)) && receberPedidosAtivo;
 
   let pausaAtivaTitulo = "";
@@ -545,6 +549,8 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
     avaliacaoMedia,
     avaliacaoTotal,
     lojaAberta,
+    receberPedidosAtivo,
+    notificarPedidoWhatsappAtivo,
     pausaAtivaTitulo,
     pausaAtivaFim,
     proximoHorario,

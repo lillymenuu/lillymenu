@@ -152,6 +152,8 @@ export default async function StorePage({
     avaliacaoMedia: perfilNeon.avaliacaoMedia,
     avaliacaoTotal: perfilNeon.avaliacaoTotal,
     lojaAberta: perfilNeon.lojaAberta,
+    receberPedidosAtivo: perfilNeon.receberPedidosAtivo,
+    notificarPedidoWhatsappAtivo: perfilNeon.notificarPedidoWhatsappAtivo,
     pausaAtivaTitulo: perfilNeon.pausaAtivaTitulo,
     pausaAtivaFim: perfilNeon.pausaAtivaFim,
     proximoHorario: perfilNeon.proximoHorario,
