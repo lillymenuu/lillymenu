@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { pedidos, clientes, motoboys, mesas, garcons, pedidoPagamentos, pedidoItens, pedidoItemOpcoes, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
+import { pedidos, clientes, motoboys, mesas, garcons, pedidoPagamentos, pedidoItens, pedidoItemOpcoes, pedidoComboItens, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
 
 /*
@@ -312,6 +312,8 @@ export type ItemPedido = {
   preco: number | null;
   observacoes: string | null;
   opcoes: ItemOpcaoSelecionada[];
+  /** Componentes escolhidos no combo (quantidade por combo) — vazio quando o item nao e combo. */
+  comboItens: { produtoId: number; quantidade: number }[];
 };
 export type PagamentoDetalhado = { forma: string; valor: number; taxaMaquininha: number };
 
@@ -423,11 +425,25 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
         .orderBy(pedidoItemOpcoes.id)
     : [];
 
+  /* Componentes de combo gravados por item (pedido_combo_itens guarda o total = qtd da opcao x qtd de combos):
+     servem pra reabrir o combo no PDV com as mesmas opcoes marcadas. */
+  const comboRaw = itensRaw.length
+    ? await db
+        .select({ pedidoItemId: pedidoComboItens.pedido_item_id, produtoId: pedidoComboItens.produto_id, quantidade: pedidoComboItens.quantidade })
+        .from(pedidoComboItens)
+        .where(and(inArray(pedidoComboItens.pedido_item_id, itensRaw.map((i) => i.id)), eq(pedidoComboItens.loja_id, lojaId)))
+        .orderBy(pedidoComboItens.id)
+    : [];
+
   const itensLinhas: ItemPedido[] = itensRaw.map((i) => {
+    const qtdCombos = Math.max(1, i.quantidade ?? 1);
+    const comboItens = comboRaw
+      .filter((c) => c.pedidoItemId === i.id)
+      .map((c) => ({ produtoId: c.produtoId, quantidade: Math.max(1, Math.round(c.quantidade / qtdCombos)) }));
     const opcoes: ItemOpcaoSelecionada[] = opcoesRaw
       .filter((o) => o.pedidoItemId === i.id)
       .map((o) => ({ tipo: o.tipo, grupoId: o.grupoId, referenciaId: o.referenciaId, titulo: o.titulo, nome: o.nome, quantidade: o.quantidade }));
-    return { produtoId: i.produtoId, produtoNome: i.produtoNome, quantidade: i.quantidade, preco: i.preco, observacoes: i.observacoes, opcoes };
+    return { produtoId: i.produtoId, produtoNome: i.produtoNome, quantidade: i.quantidade, preco: i.preco, observacoes: i.observacoes, opcoes, comboItens };
   });
 
   const pagamentosLinhas = await db

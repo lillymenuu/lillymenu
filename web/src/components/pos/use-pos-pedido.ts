@@ -182,6 +182,7 @@ export function usePosPedido({
           preco: number;
           observacoes: string | null;
           opcoes: { tipo: "variacao" | "grupo" | "complemento"; grupo_id: number | null; referencia_id: number; titulo: string; nome: string; quantidade?: number }[];
+          combo_itens?: { produto_id: number; quantidade: number }[];
         }[] = data.itens ?? [];
 
         setPedidoEditandoCodigo(pedido.codigo ?? pedido.id);
@@ -221,7 +222,7 @@ export function usePosPedido({
           setCashbackOriginalEdicao({ clienteId: pedido.cliente_id, valor: cashbackUsadoOriginal });
         }
 
-        setTemItemComboNaEdicao(itens.some((i) => (i.observacoes ?? "").startsWith("[combo]")));
+        let comboSemComposicao = false;
 
         itens.forEach((i, idx) => {
           if (!i.produto_nome || i.quantidade <= 0) return;
@@ -231,6 +232,22 @@ export function usePosPedido({
           for (const o of i.opcoes) {
             if (o.tipo === "grupo" && o.grupo_id !== null) (selecoesGrupos[o.grupo_id] ??= []).push(o.referencia_id);
           }
+          /* Combo: o pedido guarda o nome e os componentes, nao o id do combo — acha o combo pelo nome
+             no catalogo e remonta a composicao, pra reabrir no modal de combo (e nao no de editar item). */
+          const ehCombo = (i.observacoes ?? "").startsWith("[combo]");
+          const linhasCombo = ehCombo ? (i.observacoes ?? "").split("\n").slice(1) : [];
+          const comboCatalogo =
+            ehCombo && (i.combo_itens?.length ?? 0) > 0
+              ? catalogo.combos.find((c) => c.nome.trim().toLowerCase() === i.produto_nome.trim().toLowerCase())
+              : undefined;
+          const combosels = comboCatalogo
+            ? (i.combo_itens ?? []).map((c, n) => ({
+                id: c.produto_id,
+                qtd: c.quantidade,
+                nome: (linhasCombo[n] ?? "").replace(/^\d+x\s*/, "") || catalogo.produtos.find((p) => p.id === c.produto_id)?.nome || "Item",
+              }))
+            : undefined;
+          if (ehCombo && !combosels) comboSemComposicao = true;
           cart.adicionar({
             rowKey: `edicao-${pedidoEditandoId}-${idx}`,
             produtoId: i.produto_id,
@@ -245,8 +262,11 @@ export function usePosPedido({
             selecoesGrupos,
             complementos: i.opcoes.filter((o) => o.tipo === "complemento").map((o) => ({ id: o.referencia_id, qtd: o.quantidade ?? 1 })),
             opcoesSnapshot: i.opcoes.map((o) => ({ tipo: o.tipo, titulo: o.titulo, nome: o.nome })),
+            ...(comboCatalogo && combosels ? { comboId: comboCatalogo.id, combosels, imagem: comboCatalogo.imagem } : {}),
           });
         });
+        /* Aviso so quando algum combo nao deu pra remontar (combo apagado/renomeado ou pedido antigo sem componentes). */
+        setTemItemComboNaEdicao(comboSemComposicao);
       })
       .catch(() => toast.error("Não foi possível carregar o pedido para edição."));
     // eslint-disable-next-line react-hooks/exhaustive-deps
