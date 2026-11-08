@@ -571,13 +571,16 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         // ter composicoes diferentes (ex.: trocou os cremes do acai sem mudar o produto nem a quantidade),
         // e usar so produtoId:quantidade fazia esse caso cair aqui sem nunca atualizar pedido_itens/
         // pedido_item_opcoes — o resumo do pedido ficava com a composicao antiga pra sempre.
+        // Itens sem produto vinculado (combo lancado no balcao, item avulso) tambem entram: filtrar so
+        // os com produtoId deixava um combo/avulso adicionado na edicao fora da comparacao, o pedido caia
+        // em "so pagamento" e o item novo nunca era gravado (o total subia, o resumo nao).
         const assinaturaAntiga = itensAtuais
-          .filter((it) => it.produtoId && it.quantidade)
-          .map((it) => `${it.produtoId}:${it.quantidade}:${it.produtoNome ?? ""}:${Number(it.preco ?? 0).toFixed(2)}:${it.observacoes ?? ""}`)
+          .filter((it) => (it.quantidade ?? 0) > 0)
+          .map((it) => `${it.produtoId ?? 0}:${it.quantidade}:${it.produtoNome ?? ""}:${Number(it.preco ?? 0).toFixed(2)}:${it.observacoes ?? ""}`)
           .sort();
         const assinaturaNova = itens
-          .filter((i) => (i.id ?? 0) > 0 && (i.qtd ?? 0) > 0)
-          .map((i) => `${i.id}:${i.qtd}:${i.nome}:${toFloat(i.preco).toFixed(2)}:${i.observacoes ?? ""}`)
+          .filter((i) => (i.nome ?? "").trim() !== "" && (i.qtd ?? 0) > 0)
+          .map((i) => `${i.id ?? 0}:${i.qtd}:${i.nome}:${toFloat(i.preco).toFixed(2)}:${i.observacoes ?? ""}`)
           .sort();
         const itensIguais = assinaturaAntiga.length > 0 && JSON.stringify(assinaturaAntiga) === JSON.stringify(assinaturaNova);
 
