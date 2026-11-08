@@ -22,6 +22,9 @@ export type NotificacaoPedido = {
   chave: string;
   nota?: number;
   pedidoId?: number;
+  /** Tipo do pedido (entrega, retirada, mesa...) — so nos itens de pedido. */
+  tipoPedido?: string | null;
+  total?: number;
 };
 
 export async function notificacoesPedidos(lojaId: number): Promise<NotificacaoPedido[]> {
@@ -46,7 +49,7 @@ export async function notificacoesPedidos(lojaId: number): Promise<NotificacaoPe
   }
 
   const pedidosHoje = await db
-    .select({ id: pedidos.id, criadoEm: pedidos.criado_em, cliente: clientes.nome, status: pedidos.status, origem: pedidos.origem })
+    .select({ id: pedidos.id, criadoEm: pedidos.criado_em, cliente: clientes.nome, status: pedidos.status, origem: pedidos.origem, tipoPedido: pedidos.tipo, total: pedidos.total })
     .from(pedidos)
     .leftJoin(clientes, eq(clientes.id, pedidos.cliente_id))
     .where(and(eq(pedidos.loja_id, lojaId), sql`${pedidos.criado_em}::date = ${hoje}::date`))
@@ -64,6 +67,8 @@ export async function notificacoesPedidos(lojaId: number): Promise<NotificacaoPe
     origem: p.origem,
     tipo: editados.has(p.id) ? "editado" : "novo",
     chave: `pedido-${p.id}`,
+    tipoPedido: p.tipoPedido,
+    total: Number(p.total ?? 0),
   }));
 
   const avaliacoesHoje = await db

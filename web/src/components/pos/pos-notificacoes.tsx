@@ -1,13 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, Receipt } from "lucide-react";
+import { Bell, Bike, ChevronRight, ShoppingBag, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { OrderDetailDialog } from "@/components/ordermanager/order-detail-dialog";
 import type { Motoboy } from "@/lib/pedidos";
 import { cn } from "cn";
 
-type NotifPedido = { id: number; codigo: string | null; cliente: string; criado_em: string; origem: string | null; tipo: string };
+type NotifPedido = {
+  id: number;
+  codigo: string | null;
+  cliente: string;
+  criado_em: string;
+  origem: string | null;
+  tipo: string;
+  tipo_pedido: string | null;
+};
+
+const TIPOS: Record<string, { label: string; icone: LucideIcon; classe: string }> = {
+  entrega: { label: "Entrega", icone: Bike, classe: "bg-amber-100 text-amber-800" },
+  retirada: { label: "Retirada", icone: ShoppingBag, classe: "bg-sky-100 text-sky-700" },
+  mesa: { label: "Mesa", icone: UtensilsCrossed, classe: "bg-violet-100 text-violet-700" },
+};
+
+function iniciais(nome: string) {
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  return (partes[0][0] + (partes.length > 1 ? partes[partes.length - 1][0] : "")).toUpperCase();
+}
 
 const VISTOS_KEY = "pos_notif_pedidos_vistos";
 
@@ -132,31 +152,59 @@ export function PosNotificacoes({ phpAdminUrl }: { phpAdminUrl: string }) {
             </span>
           ) : null}
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-72 p-0">
-          <div className="border-b px-3 py-2 text-xs font-semibold">Pedidos da loja hoje</div>
-          <div className="max-h-80 overflow-y-auto p-1">
+        <PopoverContent align="end" sideOffset={8} className="w-64 overflow-hidden rounded-2xl p-0 shadow-xl ring-foreground/[0.06]">
+          <div className="flex items-center justify-between gap-2 border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-3.5 pt-3 pb-2.5">
+            <div>
+              <div className="text-[13px] leading-tight font-semibold tracking-tight">Pedidos da loja</div>
+              <div className="text-[11px] text-muted-foreground">Hoje</div>
+            </div>
+            {pedidos.length > 0 ? (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10.5px] font-semibold text-primary tabular-nums">
+                {pedidos.length} pedido{pedidos.length === 1 ? "" : "s"}
+              </span>
+            ) : null}
+          </div>
+          <div className="max-h-80 space-y-0.5 overflow-y-auto p-1.5">
             {pedidos.length === 0 ? (
-              <div className="px-3 py-6 text-center text-xs text-muted-foreground">Nenhum pedido da loja hoje.</div>
+              <div className="flex flex-col items-center gap-2 px-3 py-7 text-center">
+                <span className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <Bell className="size-4" />
+                </span>
+                <span className="text-xs text-muted-foreground">Nenhum pedido da loja hoje.</span>
+              </div>
             ) : (
-              pedidos.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => abrirPedido(p.id)}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-muted"
-                >
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Receipt className="size-3.5" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-medium">
-                      Pedido #{p.codigo ?? p.id} · {p.cliente}
+              pedidos.map((p) => {
+                const tipo = TIPOS[p.tipo_pedido ?? ""] ?? TIPOS.retirada;
+                const TipoIcone = tipo.icone;
+                const novo = !vistos.has(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => abrirPedido(p.id)}
+                    className="group relative flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-all duration-200 hover:bg-primary/[0.06] hover:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_18%,transparent)] focus-visible:bg-primary/[0.06] focus-visible:outline-none"
+                  >
+                    <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/90 to-primary text-[12px] font-semibold text-primary-foreground shadow-sm transition-transform duration-200 group-hover:scale-105">
+                      {iniciais(p.cliente)}
+                      {novo ? <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-popover bg-emerald-500" /> : null}
                     </span>
-                    <span className="block text-[11px] text-muted-foreground">{horaCurta(p.criado_em)}</span>
-                  </span>
-                  {!vistos.has(p.id) ? <span className="size-2 shrink-0 rounded-full bg-primary" /> : null}
-                </button>
-              ))
+                    <span className="min-w-0 flex-1">
+                      <span className={cn("block truncate text-[13px] leading-tight", novo ? "font-semibold" : "font-medium")}>{p.cliente}</span>
+                      <span className="mt-1 flex items-center gap-1.5">
+                        <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px] font-semibold", tipo.classe)}>
+                          <TipoIcone className="size-2.5" />
+                          {tipo.label}
+                        </span>
+                        <span className="text-[10.5px] text-muted-foreground">#{p.codigo ?? p.id}</span>
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 flex-col items-end gap-1">
+                      <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{horaCurta(p.criado_em)}</span>
+                      <ChevronRight className="size-3.5 -translate-x-1 text-primary opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
+                    </span>
+                  </button>
+                );
+              })
             )}
           </div>
         </PopoverContent>
