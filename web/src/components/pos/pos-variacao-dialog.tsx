@@ -396,7 +396,19 @@ export function PosVariacaoDialog({
                                 <span className="block text-sm leading-tight font-medium">{label}</span>
                                 <span className="mt-0.5 block text-xs text-muted-foreground">
                                   {formatBRL(v.preco)}
-                                  {v.estoque !== null && (esgotada ? " · Esgotado" : ` · ${v.estoque} em estoque`)}
+                                  {/* Estoque restante ja descontando a quantidade escolhida aqui — atualiza a cada +/−. */}
+                                  {v.estoque !== null &&
+                                    (esgotada ? (
+                                      " · Esgotado"
+                                    ) : (
+                                      <>
+                                        {" · "}
+                                        <span className={cn("tabular-nums transition-colors", ativa && "font-medium text-primary")}>
+                                          {Math.max(0, v.estoque - qtdV)}
+                                        </span>
+                                        {" em estoque"}
+                                      </>
+                                    ))}
                                 </span>
                               </span>
                               {ativa ? (
