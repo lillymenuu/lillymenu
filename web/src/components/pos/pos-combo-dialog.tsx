@@ -430,7 +430,7 @@ export function PosComboDialog({
                 type="button"
                 onClick={confirmar}
                 disabled={carregando || !valido}
-                className="h-11 flex-1 cursor-pointer rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-11 flex-1 cursor-pointer rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {itemEditando ? "Salvar" : "Adicionar"} {formatBRL(precoUnit * qtdEfetiva)}
               </button>
