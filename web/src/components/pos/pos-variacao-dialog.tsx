@@ -60,6 +60,8 @@ export function PosVariacaoDialog({
   const [selecaoComplementos, setSelecaoComplementos] = useState<SelecaoComplementos>({});
 
   const [variacaoId, setVariacaoId] = useState<number | null>(null);
+  /** Quantidade escolhida por variacao (lancamento novo): cada variacao com qtd > 0 vira um item no carrinho. */
+  const [qtdVariacoes, setQtdVariacoes] = useState<Record<number, number>>({});
   const [selecoesGrupos, setSelecoesGrupos] = useState<Record<number, number[]>>({});
   const [qtd, setQtd] = useState(1);
   const [observacoes, setObservacoes] = useState("");
@@ -78,6 +80,7 @@ export function PosVariacaoDialog({
     setComplementos([]);
     setSelecaoComplementos({});
     setVariacaoId(itemEditando?.variacaoId ?? null);
+    setQtdVariacoes({});
     setSelecoesGrupos(itemEditando?.selecoesGrupos ?? {});
     setQtd(itemEditando?.qtd ?? 1);
     setObservacoes(itemEditando?.observacoes ?? "");
@@ -121,7 +124,6 @@ export function PosVariacaoDialog({
             setSelecoesGrupos(selecoesResolvidas);
           }
 
-          if (!itemEditando && lista.length > 0) setVariacaoId(lista[0].id);
         }
       })
       .catch(() => setVariacoes([]))
@@ -142,6 +144,31 @@ export function PosVariacaoDialog({
   const exigeVariacao = variacaoObrigatorio && variacoes.length > 0;
 
   const emPromo = produto.preco_promocional !== null;
+
+  /* Lancamento novo de produto com variacoes: cada opcao tem seu proprio contador de quantidade
+     (ex.: 2 Queijo + 3 Mista de uma vez). Editando um item do carrinho continua escolha unica. */
+  const modoQtdPorVariacao = !itemEditando && variacoes.length > 0;
+  const precoBaseDe = (v: PosVariacao) => (v.preco > 0 ? v.preco : produto.preco);
+  const adicionaisUnit = gruposTotal + precoComplementos(complementos, selecaoComplementos);
+  const variacoesEscolhidas = modoQtdPorVariacao ? variacoes.filter((v) => (qtdVariacoes[v.id] ?? 0) > 0) : [];
+  const totalQtdVariacoes = variacoesEscolhidas.reduce((s, v) => s + (qtdVariacoes[v.id] ?? 0), 0);
+  const totalValorVariacoes = variacoesEscolhidas.reduce((s, v) => s + (precoBaseDe(v) + adicionaisUnit) * (qtdVariacoes[v.id] ?? 0), 0);
+  /* Nenhuma variacao contada (e variacao opcional): cai no fluxo normal, produto sem variacao + quantidade do rodape. */
+  const usandoQtdPorVariacao = variacoesEscolhidas.length > 0;
+  const faltaVariacao = modoQtdPorVariacao ? exigeVariacao && !usandoQtdPorVariacao : exigeVariacao && variacaoId === null;
+
+  /** Limite de uma variacao: o estoque dela e o que sobra do estoque do produto depois das outras variacoes contadas. */
+  function maxDaVariacao(v: PosVariacao, atual: Record<number, number>) {
+    const somaOutras = Object.entries(atual).reduce((s, [id, q]) => (Number(id) === v.id ? s : s + q), 0);
+    return Math.max(0, Math.min(v.estoque ?? Infinity, estoqueDisponivel - somaOutras));
+  }
+
+  function alterarQtdVariacao(v: PosVariacao, delta: 1 | -1) {
+    setQtdVariacoes((atual) => {
+      const nova = Math.max(0, Math.min((atual[v.id] ?? 0) + delta, maxDaVariacao(v, atual)));
+      return { ...atual, [v.id]: nova };
+    });
+  }
 
   /* Lista exibida, filtrada pela busca — a validacao continua usando as listas sem filtro. */
   const termo = busca.trim().toLowerCase();
@@ -199,13 +226,37 @@ export function PosVariacaoDialog({
 
   const podeAdicionar =
     !carregando &&
-    qtd <= limiteQtd &&
-    (!exigeVariacao || variacaoId !== null) &&
+    (usandoQtdPorVariacao ? totalQtdVariacoes <= estoqueDisponivel : qtd <= limiteQtd) &&
+    !faltaVariacao &&
     gruposOpcoes.every((g) => !g.obrigatorio || (selecoesGrupos[g.id]?.length ?? 0) > 0) &&
     complementos.every((g) => !grupoPendente(g, selecaoComplementos));
 
   function confirmar() {
     if (!produto || !podeAdicionar) return;
+    if (usandoQtdPorVariacao) {
+      let sufixo = "";
+      for (const g of gruposSelecionados) {
+        if (g.itens.length > 0) sufixo += ` + ${g.itens.map((it) => it.nome).join(", ")}`;
+      }
+      sufixo += rotuloComplementos(complementos, selecaoComplementos);
+      for (const v of variacoesEscolhidas) {
+        const nomeVariacao = [v.tamanho, v.cor].filter(Boolean).join(" - ");
+        onAdicionar({
+          produtoId: produto.id,
+          nome: `${nomeVariacao ? `${produto.nome} - ${nomeVariacao}` : produto.nome}${sufixo}`,
+          qtd: qtdVariacoes[v.id] ?? 0,
+          preco: precoBaseDe(v) + adicionaisUnit,
+          observacoes: observacoes.trim(),
+          usarPontos: false,
+          imagem: produto.imagem,
+          variacaoId: v.id,
+          selecoesGrupos,
+          complementos: complementosParaEnvio(complementos, selecaoComplementos),
+        });
+      }
+      onOpenChange(false);
+      return;
+    }
     const nomeVariacao = variacaoSelecionada ? [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ") : "";
     let nome = nomeVariacao ? `${produto.nome} - ${nomeVariacao}` : produto.nome;
     for (const g of gruposSelecionados) {
@@ -312,20 +363,77 @@ export function PosVariacaoDialog({
                         <span
                           className={cn(
                             "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                            variacaoId === null ? "bg-destructive/10 text-destructive" : "bg-emerald-500/15 text-emerald-700"
+                            faltaVariacao ? "bg-destructive/10 text-destructive" : "bg-emerald-500/15 text-emerald-700"
                           )}
                         >
-                          {variacaoId === null ? "Obrigatório" : "Ok"}
+                          {faltaVariacao ? "Obrigatório" : "Ok"}
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 mb-2.5 text-xs text-muted-foreground">Escolha 1 opção.</p>
+                    <p className="mt-1 mb-2.5 text-xs text-muted-foreground">
+                      {modoQtdPorVariacao ? "Informe a quantidade de cada opção." : "Escolha 1 opção."}
+                    </p>
 
                     <div className={cn("grid gap-3", visualizacaoGrade ? "grid-cols-2" : "grid-cols-1")}>
                       {variacoesFiltradas.map((v) => {
                         const label = [v.tamanho, v.cor].filter(Boolean).join(" - ") || `Opção #${v.id}`;
                         const marcado = variacaoId === v.id;
                         const esgotada = v.estoque !== null && v.estoque <= 0;
+                        if (modoQtdPorVariacao) {
+                          const qtdV = qtdVariacoes[v.id] ?? 0;
+                          const ativa = qtdV > 0;
+                          const podeSomar = !esgotada && qtdV < maxDaVariacao(v, qtdVariacoes);
+                          return (
+                            <div
+                              key={v.id}
+                              className={cn(
+                                "flex items-center justify-between gap-3 rounded-xl border bg-background p-3.5 transition-colors",
+                                ativa && "border-primary/30 bg-primary/5",
+                                esgotada && !ativa && "opacity-50"
+                              )}
+                            >
+                              <span className="min-w-0">
+                                <span className="block text-sm leading-tight font-medium">{label}</span>
+                                <span className="mt-0.5 block text-xs text-muted-foreground">
+                                  {formatBRL(v.preco)}
+                                  {v.estoque !== null && (esgotada ? " · Esgotado" : ` · ${v.estoque} em estoque`)}
+                                </span>
+                              </span>
+                              {ativa ? (
+                                <div className="flex shrink-0 items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => alterarQtdVariacao(v, -1)}
+                                    aria-label={`Remover um ${label}`}
+                                    className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted/70"
+                                  >
+                                    <Minus className="size-4" />
+                                  </button>
+                                  <span className="w-5 text-center text-sm font-semibold tabular-nums">{qtdV}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => alterarQtdVariacao(v, 1)}
+                                    disabled={!podeSomar}
+                                    aria-label={`Adicionar mais um ${label}`}
+                                    className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+                                  >
+                                    <Plus className="size-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => alterarQtdVariacao(v, 1)}
+                                  disabled={!podeSomar}
+                                  aria-label={`Adicionar ${label}`}
+                                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                  <Plus className="size-4" />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        }
                         return (
                           <label
                             key={v.id}
@@ -509,7 +617,8 @@ export function PosVariacaoDialog({
               />
             </label>
             <div className="flex items-center gap-3">
-              <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted p-1">
+              {/* Com quantidade por opcao o contador geral some: cada opcao ja tem o seu. */}
+              <div className={cn("flex shrink-0 items-center gap-1 rounded-full bg-muted p-1", usandoQtdPorVariacao && "hidden")}>
                 <button
                   type="button"
                   disabled={qtd <= 1}
@@ -535,9 +644,13 @@ export function PosVariacaoDialog({
                 disabled={!podeAdicionar}
                 className="h-11 flex-1 cursor-pointer rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {exigeVariacao && variacaoId === null
-                  ? "Selecionar variação"
-                  : `${itemEditando ? "Salvar" : "Adicionar"} ${formatBRL(precoUnitario * qtd)}`}
+                {usandoQtdPorVariacao
+                  ? `Adicionar ${totalQtdVariacoes} ${totalQtdVariacoes === 1 ? "item" : "itens"} · ${formatBRL(totalValorVariacoes)}`
+                  : faltaVariacao
+                    ? modoQtdPorVariacao
+                      ? "Escolha a quantidade"
+                      : "Selecionar variação"
+                    : `${itemEditando ? "Salvar" : "Adicionar"} ${formatBRL(precoUnitario * qtd)}`}
               </button>
             </div>
           </div>
