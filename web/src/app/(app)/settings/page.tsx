@@ -5,8 +5,10 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getConfiguracoesDetalhe } from "@/lib/settingsServer";
 import { temRecursoPlano } from "@/db/queries/assinatura";
 import { SettingsManager } from "@/components/settings/settings-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function SettingsPage() {
+  await exigirRecurso("configuracoes");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

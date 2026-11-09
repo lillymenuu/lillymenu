@@ -5,8 +5,10 @@ import { getFiadoClientes } from "@/lib/fiado";
 import { getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy } from "@/lib/pedidos";
 import { StoreCreditManager } from "@/components/storecredittracking/store-credit-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function StoreCreditTrackingPage() {
+  await exigirRecurso("controleFiado");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

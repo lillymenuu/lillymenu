@@ -5,8 +5,10 @@ import { getMotoboysGerenciar } from "@/lib/motoboysGerenciar";
 import { getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy } from "@/lib/pedidos";
 import { MotoboysManager } from "@/components/motoboys/motoboys-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function MotoboysPage() {
+  await exigirRecurso("motoboys");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

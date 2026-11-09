@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { dashboardDesperdicio } from "@/db/queries/desperdicios";
 import { DesperdicioManager } from "@/components/desperdicios/desperdicio-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function DesperdiciosPage() {
+  await exigirRecurso("desperdicios");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getWlConversas } from "@/lib/whatslillyServer";
 import { WhatslillyManager } from "@/components/whatslilly/whatslilly-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function WhatslillyPage() {
+  await exigirRecurso("whatslilly");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

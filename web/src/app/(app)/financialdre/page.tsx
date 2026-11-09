@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getFinanceiroDre } from "@/lib/financeiroDreServer";
 import { FinancialDreManager } from "@/components/financialdre/financial-dre-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function FinancialDrePage() {
+  await exigirRecurso("financeiro");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

@@ -4,8 +4,10 @@ import { ScrollToTop } from "@/components/scroll-to-top";
 import { getSessaoAdmin } from "@/lib/session";
 import { getCaixaResumo } from "@/lib/caixa";
 import { CashControlManager } from "@/components/cashcontrol/cash-control-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function CashControlPage() {
+  await exigirRecurso("controleCaixa");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

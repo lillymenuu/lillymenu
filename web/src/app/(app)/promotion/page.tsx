@@ -4,8 +4,10 @@ import { ScrollToTop } from "@/components/scroll-to-top";
 import { getSessaoAdmin } from "@/lib/session";
 import { getPromoListar } from "@/lib/promo";
 import { PromotionManager } from "@/components/promotion/promotion-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function PromotionPage() {
+  await exigirRecurso("promo");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

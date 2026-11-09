@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { relatorioCanaisVenda } from "@/db/queries/relatorioCanaisVenda";
 import { SalesChannelsReportManager } from "@/components/saleschannels/sales-channels-report-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function SalesChannelsPage() {
+  await exigirRecurso("relatorios");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

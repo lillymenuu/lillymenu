@@ -18,6 +18,7 @@ import { buscarVersiculoDoDia } from "@/db/queries/versiculoDoDia";
 import { reacaoVersiculoDoDia } from "@/db/queries/versiculoReacao";
 import { dataFortaleza } from "@/db/queries/tempo";
 import { formatBRLMilhar } from "@/components/ordermanager/constants";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 async function resolverLinkLoja(lojaId: number): Promise<string> {
   const linkLojaRaw = await getConfig(lojaId, "link_loja", "");
@@ -47,6 +48,7 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ periodo?: string }>;
 }) {
+  await exigirRecurso("dashboard");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getRelatoriosFidelidade } from "@/lib/relatoriosFidelidade";
 import { LoyaltyReportsView } from "@/components/loyaltyreports/loyalty-reports-view";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function LoyaltyReportsPage() {
+  await exigirRecurso("fidelidade");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

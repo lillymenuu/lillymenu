@@ -4,8 +4,10 @@ import { getSessaoAdmin } from "@/lib/session";
 import { temRecursoPlano } from "@/db/queries/assinatura";
 import { listarNotasFiscais } from "@/db/queries/nfce";
 import { NfceReportManager } from "@/components/nfce/nfce-report-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function NfceReportPage() {
+  await exigirRecurso("nfceReport");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

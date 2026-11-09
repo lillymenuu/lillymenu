@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getBlListas } from "@/lib/broadcastlistServer";
 import { BroadcastlistManager } from "@/components/broadcastlist/broadcastlist-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function BroadcastlistPage() {
+  await exigirRecurso("listaTransmissao");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

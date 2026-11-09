@@ -5,8 +5,10 @@ import { getRelatorios } from "@/lib/relatorios";
 import { getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy } from "@/lib/pedidos";
 import { SalesManager } from "@/components/sales/sales-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function SalesPage() {
+  await exigirRecurso("relatorios");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

@@ -4,8 +4,10 @@ import { ScrollToTop } from "@/components/scroll-to-top";
 import { getSessaoAdmin } from "@/lib/session";
 import { getEstoqueListar } from "@/lib/estoque";
 import { StockManager } from "@/components/stock/stock-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function StockPage() {
+  await exigirRecurso("estoque");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

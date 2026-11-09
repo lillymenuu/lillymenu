@@ -4,8 +4,10 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getCategorias, getProdutos } from "@/lib/produtos";
 import { getCombos } from "@/lib/combosServer";
 import { ProdutosManager } from "@/components/produtos/produtos-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function ProdutosPage() {
+  await exigirRecurso("produtos");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

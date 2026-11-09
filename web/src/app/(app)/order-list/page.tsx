@@ -4,8 +4,10 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getPedidosListar, getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy } from "@/lib/pedidos";
 import { OrderListTable } from "@/components/order-list/order-list-table";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function OrderListPage() {
+  await exigirRecurso("pedidos");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

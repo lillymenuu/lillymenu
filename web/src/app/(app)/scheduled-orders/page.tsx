@@ -6,8 +6,10 @@ import type { Motoboy, Pedido } from "@/lib/pedidos";
 import { getConfiguracoesDetalhe } from "@/lib/settingsServer";
 import { temRecursoPlano } from "@/db/queries/assinatura";
 import { ScheduledOrdersCalendar } from "@/components/scheduled-orders/scheduled-orders-calendar";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function ScheduledOrdersPage() {
+  await exigirRecurso("pedidosAgendados");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

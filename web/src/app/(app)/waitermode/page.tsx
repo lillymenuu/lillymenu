@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getModoGarcomDetalhe } from "@/lib/modoGarcom";
 import { WaiterModeManager } from "@/components/waitermode/waiter-mode-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function WaiterModePage() {
+  await exigirRecurso("modoGarcom");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

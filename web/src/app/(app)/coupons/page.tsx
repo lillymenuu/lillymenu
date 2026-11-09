@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getCupons } from "@/lib/cuponsServer";
 import { CouponsManager } from "@/components/coupons/coupons-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function CouponsPage() {
+  await exigirRecurso("cupons");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

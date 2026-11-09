@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { listarComplementos, opcoesVinculoComplementos } from "@/db/queries/complementos";
 import { ComplementosManager } from "@/components/complementos/complementos-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function ProductComplementPage() {
+  await exigirRecurso("produtos");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

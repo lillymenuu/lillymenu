@@ -4,6 +4,7 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getPedidosKanban, getMotoboysAtivos } from "@/lib/pedidos";
 import type { Motoboy, Pedido } from "@/lib/pedidos";
 import { OrderManager } from "@/components/ordermanager/order-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 async function carregarDados(lojaId: number) {
   const [kanban, motoboysRes] = await Promise.all([getPedidosKanban(lojaId), getMotoboysAtivos(lojaId)]);
@@ -11,6 +12,7 @@ async function carregarDados(lojaId: number) {
 }
 
 export default async function OrderManagerPage() {
+  await exigirRecurso("gestor");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

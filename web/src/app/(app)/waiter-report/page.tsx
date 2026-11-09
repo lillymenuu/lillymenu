@@ -4,8 +4,10 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getWaiterReport } from "@/lib/waiterReport";
 import { listarGarconsAdmin } from "@/db/queries/relatorioGarcom";
 import { WaiterReportManager } from "@/components/waiterreport/waiter-report-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function WaiterReportPage() {
+  await exigirRecurso("modoGarcom");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

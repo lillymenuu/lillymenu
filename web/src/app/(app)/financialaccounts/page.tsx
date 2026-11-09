@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getFinanceiroContas } from "@/lib/financeiroContasServer";
 import { FinancialAccountsManager } from "@/components/financialaccounts/financial-accounts-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function FinancialAccountsPage() {
+  await exigirRecurso("financeiro");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

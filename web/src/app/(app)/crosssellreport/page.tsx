@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getCrossSellReport } from "@/lib/crossSellReport";
 import { CrossSellReportManager } from "@/components/crosssellreport/cross-sell-report-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function CrossSellReportPage() {
+  await exigirRecurso("crossSellRelatorio");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

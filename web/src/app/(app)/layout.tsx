@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { getSessaoAdmin } from "@/lib/session";
-import { getSidebarDataNeon } from "@/db/queries/sidebar";
+import { getSidebarDataCached } from "@/lib/acessoRecurso";
 import { getLandingConfig, lc } from "@/db/queries/landingConfig";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -9,7 +9,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!sessao) redirect("/login");
 
   const [sidebarData, landingCfg] = await Promise.all([
-    getSidebarDataNeon(sessao.id, sessao.lojaId, sessao.perfil),
+    getSidebarDataCached(sessao.id, sessao.lojaId, sessao.perfil),
     getLandingConfig(),
   ]);
 

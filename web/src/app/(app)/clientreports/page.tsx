@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getRelatoriosClientes } from "@/lib/relatoriosClientes";
 import { ClientReportsManager } from "@/components/clientreports/client-reports-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function ClientReportsPage() {
+  await exigirRecurso("relatorios");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 

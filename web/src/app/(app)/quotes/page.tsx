@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getSessaoAdmin } from "@/lib/session";
 import { getOrcamentos } from "@/lib/orcamentosServer";
 import { QuotesManager } from "@/components/quotes/quotes-manager";
+import { exigirRecurso } from "@/lib/acessoRecurso";
 
 export default async function QuotesPage() {
+  await exigirRecurso("orcamentos");
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 
