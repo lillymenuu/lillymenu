@@ -565,8 +565,10 @@ export function OrderDetailDialog({
                   {pagamentos.length > 0 ? (
                     pagamentos.map((p, i) => {
                       const isDinheiro = p.forma.toLowerCase() === "dinheiro";
-                      const clientePagaCom = pedido.valor_pago && pedido.valor_pago > 0 ? pedido.valor_pago : p.valor;
-                      const trocoValor = pedido.troco ?? 0;
+                      const trocoValor = Number(pedido.troco ?? 0);
+                      /* Pedido da loja antigo nao gravava valor_pago, so o troco: o cliente paga com o valor + o troco. */
+                      const clientePagaCom =
+                        pedido.valor_pago && Number(pedido.valor_pago) > 0 ? Number(pedido.valor_pago) : Number(p.valor) + (trocoValor > 0 ? trocoValor : 0);
                       return (
                         <div key={i} className="flex flex-col gap-0.5">
                           <div className="flex items-center justify-between">

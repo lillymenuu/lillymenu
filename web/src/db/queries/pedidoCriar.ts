@@ -221,6 +221,8 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           origem: "loja",
           criado_em: timestampFortaleza(),
           troco: input.trocoSolicitado && trocoValorRecebido > input.total ? trocoValorRecebido - input.total : null,
+          /* Valor com que o cliente vai pagar ("troco para 50") — o modal do pedido mostra em "Cliente pagara com". */
+          valor_pago: input.trocoSolicitado && trocoValorRecebido > input.total ? trocoValorRecebido : null,
           cashback_usado: cashbackUsar ? cashbackValorUsar : 0,
           cashback_aplicado: cashbackUsar,
           agendamento: agendamentoDt,
