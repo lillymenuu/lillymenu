@@ -29,6 +29,7 @@ const PERMS_MENU = [
   "menu.nfce",
   "menu.produtos",
   "menu.estoque",
+  "menu.desperdicios",
   "menu.clientes",
   "menu.relatorios",
   "menu.relatorios_fidelidade",

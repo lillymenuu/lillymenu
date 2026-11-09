@@ -23,6 +23,7 @@ const CHAVE_POR_MENU: Record<string, string> = {
   produtos: "menu.produtos",
   promo: "menu.promo",
   estoque: "menu.estoque",
+  desperdicios: "menu.desperdicios",
   clientes: "menu.clientes",
   relatorios: "menu.relatorios",
   fidelidade: "menu.relatorios_fidelidade",
@@ -124,7 +125,9 @@ export async function getSidebarDataNeon(adminId: number, lojaId: number, perfil
   }
 
   const pode = (chave: string) => {
-    const permitidoPorUsuario = !menuRestrito || menuPermitido.has(chave);
+    /* Niveis de usuario criados antes de Desperdicios ter chave propria so tem menu.estoque: herda dele. */
+    const permitidoPorUsuario =
+      !menuRestrito || menuPermitido.has(chave) || (chave === "menu.desperdicios" && menuPermitido.has("menu.estoque"));
     const permitidoPorPlano = recursosPlano === null || chave === "menu.dashboard" || recursosPlano.includes(chave);
     return permitidoPorUsuario && permitidoPorPlano;
   };
