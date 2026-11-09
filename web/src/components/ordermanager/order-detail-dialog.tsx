@@ -181,7 +181,7 @@ export function OrderDetailDialog({
   /** Classe extra do fundo (ex.: desfoque mais forte quando aberto por cima do balcao). */
   overlayClassName?: string;
 }) {
-  const { abrir: abrirPos } = usePosOverlay();
+  const { abrir: abrirPos, pdvPermitido } = usePosOverlay();
   const [carregando, setCarregando] = useState(false);
   const [pedido, setPedido] = useState<PedidoDetalhe | null>(null);
   const [stats, setStats] = useState<ClienteStats | null>(null);
@@ -353,16 +353,18 @@ export function OrderDetailDialog({
               <DialogTitle className="whitespace-nowrap">Pedido N. {pedido?.codigo ?? "-"}</DialogTitle>
               {pedido && (
                 <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      abrirPos(pedido.id);
-                      onOpenChange(false);
-                    }}
-                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
-                  >
-                    Editar pedido
-                  </button>
+                  {pdvPermitido && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        abrirPos(pedido.id);
+                        onOpenChange(false);
+                      }}
+                      className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
+                    >
+                      Editar pedido
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => window.print()}

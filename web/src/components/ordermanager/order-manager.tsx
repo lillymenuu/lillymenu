@@ -50,7 +50,7 @@ export function OrderManager({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { abrir: abrirPos } = usePosOverlay();
+  const { abrir: abrirPos, pdvPermitido } = usePosOverlay();
 
   const [pedidos, setPedidos] = useState(pedidosIniciais);
   const [filtros, setFiltros] = useState<Record<string, FiltroColuna>>(() =>
@@ -203,13 +203,15 @@ export function OrderManager({
           <Button variant="outline" size="sm" className="rounded-full" onClick={() => setBuscaOpen(true)}>
             <Search size={14} /> Buscar pedido
           </Button>
-          <button
-            type="button"
-            onClick={() => abrirPos()}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/80"
-          >
-            <Plus size={16} /> Novo pedido
-          </button>
+          {pdvPermitido && (
+            <button
+              type="button"
+              onClick={() => abrirPos()}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/80"
+            >
+              <Plus size={16} /> Novo pedido
+            </button>
+          )}
         </div>
       </div>
 

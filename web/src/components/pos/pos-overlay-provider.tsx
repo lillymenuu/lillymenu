@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState } from "react";
+import { toast } from "sonner";
 import { PosOverlay } from "@/components/pos/pos-overlay";
 import { PosMobile } from "@/components/pos/pos-mobile";
 
@@ -11,6 +12,8 @@ const MEDIA_CELULAR = "(max-width: 767px)";
 
 type PosOverlayContextValue = {
   aberto: boolean;
+  /** PDV (venda balcao) liberado no plano da loja e no nivel do usuario — sem ele o balcao nao abre. */
+  pdvPermitido: boolean;
   abrir: (pedidoIdParaEditar?: number, opts?: AbrirPosOpts) => void;
   fechar: () => void;
 };
@@ -27,10 +30,12 @@ export function PosOverlayProvider({
   children,
   adminPerfil,
   phpAdminUrl,
+  pdvPermitido = true,
 }: {
   children: React.ReactNode;
   adminPerfil: string;
   phpAdminUrl: string;
+  pdvPermitido?: boolean;
 }) {
   const [aberto, setAberto] = useState(false);
   const [pedidoEditandoId, setPedidoEditandoId] = useState<number | null>(null);
@@ -38,12 +43,16 @@ export function PosOverlayProvider({
   const [celular, setCelular] = useState(false);
 
   const abrir = useCallback((pedidoIdParaEditar?: number, opts?: AbrirPosOpts) => {
+    if (!pdvPermitido) {
+      toast.error("O PDV (venda balcão) não está disponível no seu plano.");
+      return;
+    }
     setPedidoEditandoId(pedidoIdParaEditar ?? null);
     setAgendamentoPrefillData(opts?.agendamentoPrefillData ?? null);
     /* Decidido so ao abrir: girar o celular com o PDV aberto nao troca de tela (perderia o carrinho). */
     setCelular(window.matchMedia(MEDIA_CELULAR).matches);
     setAberto(true);
-  }, []);
+  }, [pdvPermitido]);
   const fechar = useCallback(() => {
     setAberto(false);
     setPedidoEditandoId(null);
@@ -51,7 +60,7 @@ export function PosOverlayProvider({
   }, []);
 
   return (
-    <PosOverlayContext.Provider value={{ aberto, abrir, fechar }}>
+    <PosOverlayContext.Provider value={{ aberto, pdvPermitido, abrir, fechar }}>
       {children}
       {aberto && celular ? (
         <PosMobile

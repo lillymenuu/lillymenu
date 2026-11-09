@@ -29,7 +29,7 @@ export function AppShell(props: {
   children: React.ReactNode;
 }) {
   return (
-    <PosOverlayProvider adminPerfil={props.sidebarData.admin.perfil} phpAdminUrl={props.phpAdminUrl}>
+    <PosOverlayProvider adminPerfil={props.sidebarData.admin.perfil} phpAdminUrl={props.phpAdminUrl} pdvPermitido={!!props.sidebarData.menu.pdv}>
       <AppShellInner {...props} />
     </PosOverlayProvider>
   );

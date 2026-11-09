@@ -1,5 +1,5 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { TOKEN_COOKIE } from "@/lib/authCookie";
 import { SA_TOKEN_COOKIE } from "@/lib/superAuthCookie";
 import { GARCOM_TOKEN_COOKIE } from "@/lib/garcomAuthCookie";
@@ -7,6 +7,8 @@ import { validarSessao, type AdminAutenticado } from "@/db/queries/auth";
 import { exigirSuperadmin } from "@/db/queries/superadminAuth";
 import { validarSessaoGarcom, type GarcomAutenticado } from "@/db/queries/garcomAuth";
 import { bloquearSeAssinaturaExpirada, lojaPublicaBloqueada } from "@/db/queries/assinatura";
+import { getSidebarDataNeon } from "@/db/queries/sidebar";
+import { HEADER_ROTA_API, recursosExigidosApi } from "@/lib/recursosApi";
 
 /*
  * Substitui phpApiFetch/superApiFetch como fonte de identidade do
@@ -30,6 +32,15 @@ export async function getSessaoAdmin(): Promise<AdminAutenticado | null> {
   /* Perfil superadmin nao esta preso a assinatura de uma loja especifica (equivalente ao
      `if ($_SESSION['admin_perfil'] !== 'superadmin')` de protect.php). */
   if (admin.perfil !== "superadmin" && (await bloquearSeAssinaturaExpirada(admin.lojaId))) return null;
+
+  /* API do painel: o recurso precisa estar liberado no plano e no nivel do usuario (o proxy marca a
+     rota em x-lm-path; telas fazem a mesma conferencia com exigirRecurso). Sem recurso = sem sessao. */
+  const rotaApi = (await headers()).get(HEADER_ROTA_API);
+  const exigidos = rotaApi ? recursosExigidosApi(rotaApi) : null;
+  if (exigidos) {
+    const sidebar = await getSidebarDataNeon(admin.id, admin.lojaId, admin.perfil);
+    if (!exigidos.some((k) => sidebar.menu[k])) return null;
+  }
 
   return admin;
 }

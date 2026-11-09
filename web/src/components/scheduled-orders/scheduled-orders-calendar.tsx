@@ -100,7 +100,7 @@ export function ScheduledOrdersCalendar({
   agendamento: ConfiguracoesDetalhe["agendamento"];
   phpAdminUrl: string;
 }) {
-  const { abrir: abrirPos, aberto: posAberto } = usePosOverlay();
+  const { abrir: abrirPos, aberto: posAberto, pdvPermitido } = usePosOverlay();
 
   const [ano, setAno] = useState(anoInicial);
   const [mes, setMes] = useState(mesInicial);
@@ -229,13 +229,15 @@ export function ScheduledOrdersCalendar({
           <Button className="rounded-xl" variant="outline" size="sm" onClick={() => setConfigOpen(true)}>
             <Settings2 size={14} /> Configurar regras
           </Button>
-          <button
-            type="button"
-            onClick={() => abrirPos(undefined, { agendamentoPrefillData: diaSelecionado ?? undefined })}
-            className="inline-flex h-7 items-center gap-1 rounded-xl bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
-          >
-            <Plus size={14} /> Lançar pedido agendado
-          </button>
+          {pdvPermitido && (
+            <button
+              type="button"
+              onClick={() => abrirPos(undefined, { agendamentoPrefillData: diaSelecionado ?? undefined })}
+              className="inline-flex h-7 items-center gap-1 rounded-xl bg-primary px-2.5 text-[0.8rem] font-medium text-primary-foreground hover:bg-primary/80"
+            >
+              <Plus size={14} /> Lançar pedido agendado
+            </button>
+          )}
         </div>
       </div>
 
