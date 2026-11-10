@@ -45,14 +45,17 @@ const CHAVE_POR_MENU: Record<string, string> = {
 export async function getSidebarDataNeon(adminId: number, lojaId: number, perfil: string): Promise<SidebarData> {
   /* 1. permissoes por usuario (menu.*), se o admin tiver um nivel atribuido */
   const permLinhas = await db
-    .select({ permissoesJson: permissoesNiveis.permissoes_json })
+    .select({ permissoesJson: permissoesNiveis.permissoes_json, slug: permissoesNiveis.slug })
     .from(permissoesUsuarios)
     .innerJoin(permissoesNiveis, eq(permissoesNiveis.id, permissoesUsuarios.permissao_id))
     .where(eq(permissoesUsuarios.admin_id, adminId))
     .limit(1);
 
   const menuPermitido = new Set<string>();
-  const permissoesJsonBruto = permLinhas[0]?.permissoesJson;
+  /* "Nivel 1" (Admin) e o nivel de acesso total: a lista gravada nele e de quando foi criado e nao
+     recebe as telas novas (ex.: Midia Indoor). Pra ele vale so o que o plano libera. */
+  const nivelAcessoTotal = permLinhas[0]?.slug === "nivel-1";
+  const permissoesJsonBruto = nivelAcessoTotal ? null : permLinhas[0]?.permissoesJson;
   if (permissoesJsonBruto) {
     try {
       const lista = JSON.parse(permissoesJsonBruto) as unknown;
