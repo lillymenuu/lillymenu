@@ -208,7 +208,11 @@ export function MidiaIndoorManager({
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">Layout {LAYOUT_LABEL[tv.layout]}</span>
                   <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">{tv.config.tempoSlide}s por produto</span>
                   <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
-                    {tv.config.categorias.length === 0 ? "Todas as categorias" : `${tv.config.categorias.length} categoria(s)`}
+                    {tv.config.modo === "produtos"
+                      ? `${tv.config.produtos.length} produto(s) escolhido(s)`
+                      : tv.config.categorias.length === 0
+                        ? "Todas as categorias"
+                        : `${tv.config.categorias.length} categoria(s)`}
                   </span>
                 </div>
                 <div className="flex gap-2">

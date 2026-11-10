@@ -8,8 +8,12 @@ export type LayoutTv = "vitrine" | "grade" | "misto";
 export type ConfigTv = {
   /** Segundos que cada produto fica na tela. */
   tempoSlide: number;
-  /** Categorias exibidas; vazio = todas. */
+  /** "categorias": exibe as categorias marcadas; "produtos": so os produtos escolhidos um a um. */
+  modo: "categorias" | "produtos";
+  /** Categorias exibidas no modo "categorias"; vazio = todas. */
   categorias: number[];
+  /** Itens escolhidos no modo "produtos" ("p<id>" produto, "c<id>" combo). */
+  produtos: string[];
   somenteComFoto: boolean;
   esconderEsgotados: boolean;
   /** QR Code da loja no canto, pro cliente pedir pelo celular. */
@@ -19,7 +23,9 @@ export type ConfigTv = {
 
 export const CONFIG_TV_PADRAO: ConfigTv = {
   tempoSlide: 8,
+  modo: "categorias",
   categorias: [],
+  produtos: [],
   somenteComFoto: false,
   esconderEsgotados: true,
   mostrarQrLoja: true,
@@ -35,7 +41,9 @@ export function normalizarConfigTv(bruto: unknown): ConfigTv {
   const tempo = Number(c.tempoSlide);
   return {
     tempoSlide: Number.isFinite(tempo) ? Math.min(TEMPO_SLIDE_MAX, Math.max(TEMPO_SLIDE_MIN, Math.round(tempo))) : CONFIG_TV_PADRAO.tempoSlide,
+    modo: c.modo === "produtos" ? "produtos" : "categorias",
     categorias: Array.isArray(c.categorias) ? c.categorias.map(Number).filter((n) => Number.isInteger(n) && n > 0) : [],
+    produtos: Array.isArray(c.produtos) ? c.produtos.map(String).filter((s) => /^[pc]\d+$/.test(s)).slice(0, 2000) : [],
     somenteComFoto: typeof c.somenteComFoto === "boolean" ? c.somenteComFoto : CONFIG_TV_PADRAO.somenteComFoto,
     esconderEsgotados: typeof c.esconderEsgotados === "boolean" ? c.esconderEsgotados : CONFIG_TV_PADRAO.esconderEsgotados,
     mostrarQrLoja: typeof c.mostrarQrLoja === "boolean" ? c.mostrarQrLoja : CONFIG_TV_PADRAO.mostrarQrLoja,
@@ -95,3 +103,7 @@ export type CatalogoTv = {
   loja: { nome: string; logo: string | null; cor: string; aberta: boolean; link: string };
   produtos: ProdutoTv[];
 };
+
+/** Item da lista "Escolher produtos" na configuracao da TV. */
+export type ItemEscolhaTv = { id: string; nome: string; imagem: string | null; preco: number; combo: boolean };
+export type CategoriaEscolhaTv = { id: number; nome: string; itens: ItemEscolhaTv[] };

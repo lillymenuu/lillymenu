@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EscolherProdutosTv } from "./escolher-produtos-tv";
 import { TEMPO_SLIDE_MAX, TEMPO_SLIDE_MIN, type ConfigTv, type LayoutTv, type TvAdmin } from "@/lib/midiaIndoor";
 
 const LAYOUTS: { id: LayoutTv; nome: string; descricao: string; icon: React.ComponentType<{ className?: string }>; disponivel: boolean }[] = [
@@ -64,6 +65,10 @@ function Formulario({
       toast.error("Informe o nome da TV.");
       return;
     }
+    if (config.modo === "produtos" && config.produtos.length === 0) {
+      toast.error("Escolha pelo menos um produto para aparecer na TV.");
+      return;
+    }
     setSalvando(true);
     try {
       const res = await fetch(`/api/midia-indoor/${tv.id}`, {
@@ -87,7 +92,7 @@ function Formulario({
 
   return (
     <>
-      <div className="scrollbar-hidden -mx-1.5 flex max-h-[65vh] flex-col gap-4 overflow-y-auto px-1.5 py-1">
+      <div className="scrollbar-hidden -mx-1.5 flex max-h-[calc(100dvh-11rem)] sm:max-h-[65vh] flex-col gap-4 overflow-y-auto px-1.5 py-1">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="tv-nome">Nome da TV</Label>
           <Input id="tv-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={60} className="h-10 rounded-xl" />
@@ -135,26 +140,58 @@ function Formulario({
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <Label>Categorias exibidas</Label>
-            {!todas && (
-              <button type="button" className="text-xs text-primary hover:underline" onClick={() => set("categorias", [])}>
-                Marcar todas
+        <div className="flex flex-col gap-2">
+          <Label>O que aparece na TV</Label>
+          <div className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
+            {(
+              [
+                ["categorias", "Por categoria"],
+                ["produtos", "Escolher produtos"],
+              ] as const
+            ).map(([id, rotulo]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => set("modo", id)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                  config.modo === id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {rotulo}
               </button>
-            )}
+            ))}
           </div>
-          {categorias.length === 0 ? (
-            <div className="rounded-2xl border border-dashed px-3 py-3 text-xs text-muted-foreground">Nenhuma categoria ativa cadastrada.</div>
+
+          {config.modo === "categorias" ? (
+            <>
+              <div className="flex items-center justify-between px-1 text-xs">
+                <span className="text-muted-foreground">{todas ? "Todas as categorias" : `${config.categorias.length} de ${categorias.length} categorias`}</span>
+                {!todas && (
+                  <button type="button" className="text-primary hover:underline" onClick={() => set("categorias", [])}>
+                    Marcar todas
+                  </button>
+                )}
+              </div>
+              {categorias.length === 0 ? (
+                <div className="rounded-2xl border border-dashed px-3 py-3 text-xs text-muted-foreground">Nenhuma categoria ativa cadastrada.</div>
+              ) : (
+                <div className="grid gap-0.5 rounded-2xl border p-1.5 sm:grid-cols-2">
+                  {categorias.map((c) => (
+                    <label key={c.id} className="flex cursor-pointer items-start gap-2.5 rounded-xl px-2 py-2 text-sm hover:bg-muted">
+                      <Checkbox
+                        className="mt-0.5"
+                        checked={todas || config.categorias.includes(c.id)}
+                        onCheckedChange={(v) => alternarCategoria(c.id, v === true)}
+                      />
+                      <span className="min-w-0 break-words">{c.nome}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
-            <div className="grid max-h-44 grid-cols-2 gap-1 overflow-y-auto rounded-2xl border p-2">
-              {categorias.map((c) => (
-                <label key={c.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted">
-                  <Checkbox checked={todas || config.categorias.includes(c.id)} onCheckedChange={(v) => alternarCategoria(c.id, v === true)} />
-                  <span className="truncate">{c.nome}</span>
-                </label>
-              ))}
-            </div>
+            <EscolherProdutosTv selecionados={config.produtos} onChange={(ids) => set("produtos", ids)} />
           )}
         </div>
 

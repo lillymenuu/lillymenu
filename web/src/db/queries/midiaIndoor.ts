@@ -2,7 +2,7 @@ import "server-only";
 import { randomBytes, randomInt } from "node:crypto";
 import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { assinaturas, midiaPareamentos, midiaTvs, planos } from "@/db/schema";
+import { assinaturas, categorias, combos, midiaPareamentos, midiaTvs, planos, produtos as tabelaProdutos } from "@/db/schema";
 import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
 import { montarCatalogoLoja } from "@/db/queries/catalogo";
 import { montarPerfilLoja } from "@/db/queries/lojaPerfil";
@@ -12,6 +12,7 @@ import {
   TV_ONLINE_SEGUNDOS,
   normalizarConfigTv,
   type CatalogoTv,
+  type CategoriaEscolhaTv,
   type ConfigTv,
   type LayoutTv,
   type ProdutoTv,
@@ -157,6 +158,53 @@ export async function removerTv(lojaId: number, tvId: number): Promise<void> {
   await db.delete(midiaTvs).where(and(eq(midiaTvs.id, tvId), eq(midiaTvs.loja_id, lojaId)));
 }
 
+/* ---------- Lista "Escolher produtos" (Admin) ---------- */
+
+function urlImagem(caminho: string | null, baseUrl: string): string | null {
+  if (!caminho) return null;
+  if (/^https?:\/\//i.test(caminho) || caminho.startsWith("/")) return caminho;
+  return `${baseUrl.replace(/\/$/, "")}/${caminho}`;
+}
+
+/** Produtos e combos ativos agrupados por categoria (na ordem do cardapio), pra escolher o que vai pra TV. */
+export async function listarItensParaTv(lojaId: number, baseUrl: string): Promise<CategoriaEscolhaTv[]> {
+  const precoProduto = sql<number>`case when ${tabelaProdutos.promo_desativado} = false and ${tabelaProdutos.preco_promocional} > 0 then ${tabelaProdutos.preco_promocional} else ${tabelaProdutos.preco} end`;
+  const precoCombo = sql<number>`case when ${combos.promo_desativado} = false and ${combos.preco_promocional} > 0 then ${combos.preco_promocional} else ${combos.preco} end`;
+
+  const [cats, prods, cmbs] = await Promise.all([
+    db
+      .select({ id: categorias.id, nome: categorias.nome })
+      .from(categorias)
+      .where(and(eq(categorias.loja_id, lojaId), eq(categorias.ativo, true)))
+      .orderBy(sql`${categorias.ordem} is null`, categorias.ordem, categorias.nome),
+    db
+      .select({ id: tabelaProdutos.id, nome: tabelaProdutos.nome, imagem: tabelaProdutos.imagem, categoriaId: tabelaProdutos.categoria_id, preco: precoProduto })
+      .from(tabelaProdutos)
+      .where(and(eq(tabelaProdutos.loja_id, lojaId), eq(tabelaProdutos.ativo, true)))
+      .orderBy(sql`${tabelaProdutos.ordem} is null`, tabelaProdutos.ordem, tabelaProdutos.nome),
+    db
+      .select({ id: combos.id, nome: combos.nome, imagem: combos.imagem, categoriaId: combos.categoria_id, preco: precoCombo })
+      .from(combos)
+      .where(and(eq(combos.loja_id, lojaId), eq(combos.ativo, true)))
+      .orderBy(sql`${combos.ordem} is null`, combos.ordem, combos.nome),
+  ]);
+
+  return cats
+    .map((c) => ({
+      id: c.id,
+      nome: c.nome ?? "Sem nome",
+      itens: [
+        ...prods
+          .filter((p) => p.categoriaId === c.id)
+          .map((p) => ({ id: `p${p.id}`, nome: p.nome ?? "Produto", imagem: urlImagem(p.imagem, baseUrl), preco: Number(p.preco) || 0, combo: false })),
+        ...cmbs
+          .filter((p) => p.categoriaId === c.id)
+          .map((p) => ({ id: `c${p.id}`, nome: p.nome ?? "Combo", imagem: urlImagem(p.imagem, baseUrl), preco: Number(p.preco) || 0, combo: true })),
+      ],
+    }))
+    .filter((c) => c.itens.length > 0);
+}
+
 /* ---------- Catalogo (player da TV) ---------- */
 
 export type CatalogoTvResultado = { ok: true; catalogo: CatalogoTv } | { ok: false; motivo: "tv_removida" | "loja_bloqueada" | "sem_recurso" };
@@ -177,7 +225,9 @@ export async function catalogoDaTv(token: string, baseUrl: string): Promise<Cata
   const config = normalizarConfigTv(tv.config);
   const [perfil, catalogo] = await Promise.all([montarPerfilLoja(tv.lojaId, { baseUrl }), montarCatalogoLoja(tv.lojaId, baseUrl)]);
 
-  const filtroCategorias = new Set(config.categorias);
+  const porProduto = config.modo === "produtos";
+  const filtroCategorias = new Set(porProduto ? [] : config.categorias);
+  const escolhidos = new Set(config.produtos);
   const produtos: ProdutoTv[] = [];
   for (const cat of catalogo.categorias) {
     if (filtroCategorias.size > 0 && !filtroCategorias.has(cat.id)) continue;
@@ -215,7 +265,9 @@ export async function catalogoDaTv(token: string, baseUrl: string): Promise<Cata
     }
   }
 
-  const filtrados = produtos.filter((p) => (!config.somenteComFoto || p.imagem) && (!config.esconderEsgotados || !p.esgotado));
+  const filtrados = produtos.filter(
+    (p) => (!porProduto || escolhidos.has(p.id)) && (!config.somenteComFoto || p.imagem) && (!config.esconderEsgotados || !p.esgotado)
+  );
 
   return {
     ok: true,
