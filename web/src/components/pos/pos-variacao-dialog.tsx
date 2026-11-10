@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/components/ordermanager/constants";
 import { cn } from "cn";
-import type { PosCartItem, PosGrupoOpcoes, PosProduto, PosVariacao, PosVariacoesResposta } from "@/lib/pos";
+import type { PosCartDetalheGrupo, PosCartItem, PosGrupoOpcoes, PosProduto, PosVariacao, PosVariacoesResposta } from "@/lib/pos";
 import {
   alterarSelecao,
   complementosParaEnvio,
@@ -17,6 +17,7 @@ import {
   rotuloComplementos,
   selecaoDeEscolhidos,
   type ComplementoGrupoVenda,
+  itensEscolhidos,
   type ComplementoItemVenda,
   type SelecaoComplementos,
 } from "@/lib/complementos";
@@ -231,8 +232,24 @@ export function PosVariacaoDialog({
     gruposOpcoes.every((g) => !g.obrigatorio || (selecoesGrupos[g.id]?.length ?? 0) > 0) &&
     complementos.every((g) => !grupoPendente(g, selecaoComplementos));
 
+  /* Opcoes escolhidas por grupo (titulo do grupo + itens), pro card do Resumo do pedido. */
+  function montarDetalhes(): PosCartDetalheGrupo[] {
+    const lista: PosCartDetalheGrupo[] = [];
+    for (const g of gruposSelecionados) {
+      if (g.itens.length > 0) lista.push({ titulo: g.grupo.titulo, itens: g.itens.map((it) => ({ qtd: 1, nome: it.nome, preco: it.preco })) });
+    }
+    for (const { grupo, item, qtd: q } of itensEscolhidos(complementos, selecaoComplementos)) {
+      const existente = lista.find((d) => d.titulo === grupo.nome);
+      const linha = { qtd: q, nome: item.nome, preco: item.preco * q };
+      if (existente) existente.itens.push(linha);
+      else lista.push({ titulo: grupo.nome, itens: [linha] });
+    }
+    return lista;
+  }
+
   function confirmar() {
     if (!produto || !podeAdicionar) return;
+    const detalhes = montarDetalhes();
     if (usandoQtdPorVariacao) {
       let sufixo = "";
       for (const g of gruposSelecionados) {
@@ -252,13 +269,16 @@ export function PosVariacaoDialog({
           variacaoId: v.id,
           selecoesGrupos,
           complementos: complementosParaEnvio(complementos, selecaoComplementos),
+          nomeExibicao: nomeVariacao ? `${produto.nome} - ${nomeVariacao}` : produto.nome,
+          detalhes,
         });
       }
       onOpenChange(false);
       return;
     }
     const nomeVariacao = variacaoSelecionada ? [variacaoSelecionada.tamanho, variacaoSelecionada.cor].filter(Boolean).join(" - ") : "";
-    let nome = nomeVariacao ? `${produto.nome} - ${nomeVariacao}` : produto.nome;
+    const nomeExibicao = nomeVariacao ? `${produto.nome} - ${nomeVariacao}` : produto.nome;
+    let nome = nomeExibicao;
     for (const g of gruposSelecionados) {
       if (g.itens.length > 0) nome += ` + ${g.itens.map((it) => it.nome).join(", ")}`;
     }
@@ -275,6 +295,8 @@ export function PosVariacaoDialog({
       variacaoId,
       selecoesGrupos,
       complementos: complementosParaEnvio(complementos, selecaoComplementos),
+      nomeExibicao,
+      detalhes,
     };
 
     if (itemEditando && onSalvar) {

@@ -4,6 +4,7 @@ import { ouvirCatalogoAlterado } from "@/lib/catalogoSync";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type {
+  PosCartDetalheGrupo,
   PosCartItem,
   PosCatalogoResposta,
   PosClienteBusca,
@@ -35,6 +36,25 @@ function montarEnderecoTexto(e: PosEndereco): string {
 
 /* Estado e regras do lancamento de pedido no balcao, compartilhados pelo PDV de computador
    (pos-overlay.tsx) e pelo de celular (pos-mobile.tsx) — as duas telas mudam so o layout. */
+/* Pedido reaberto: separa o nome base (antes do " + opcoes") e agrupa as opcoes por titulo pro card do Resumo. */
+function detalhesDoSnapshot(
+  nome: string,
+  opcoes: { tipo: "variacao" | "grupo" | "complemento"; titulo: string; nome: string; quantidade?: number }[]
+): { nomeExibicao?: string; detalhes?: PosCartDetalheGrupo[] } {
+  const extras = opcoes.filter((o) => o.tipo !== "variacao");
+  if (extras.length === 0) return {};
+  const detalhes: PosCartDetalheGrupo[] = [];
+  for (const o of extras) {
+    const titulo = o.titulo || "Adicionais";
+    const linha = { qtd: o.quantidade ?? 1, nome: o.nome, preco: null };
+    const existente = detalhes.find((d) => d.titulo === titulo);
+    if (existente) existente.itens.push(linha);
+    else detalhes.push({ titulo, itens: [linha] });
+  }
+  const corte = nome.indexOf(" + ");
+  return { nomeExibicao: corte > 0 ? nome.slice(0, corte) : nome, detalhes };
+}
+
 export function usePosPedido({
   pedidoEditandoId,
   agendamentoPrefillData,
@@ -288,6 +308,7 @@ export function usePosPedido({
             selecoesGrupos,
             complementos: i.opcoes.filter((o) => o.tipo === "complemento").map((o) => ({ id: o.referencia_id, qtd: o.quantidade ?? 1 })),
             opcoesSnapshot: i.opcoes.map((o) => ({ tipo: o.tipo, titulo: o.titulo, nome: o.nome })),
+            ...detalhesDoSnapshot(i.produto_nome, i.opcoes),
             ...(comboCatalogo && combosels ? { comboId: comboCatalogo.id, combosels, imagem: comboCatalogo.imagem } : {}),
           });
         });

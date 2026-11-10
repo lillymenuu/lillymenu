@@ -2,7 +2,7 @@
 
 import { Pencil, ShoppingBag, Trash2 } from "lucide-react";
 import { formatBRL } from "@/components/ordermanager/constants";
-import type { PosCartItem } from "@/lib/pos";
+import type { PosCartDetalheGrupo, PosCartItem } from "@/lib/pos";
 
 type GrupoCombo = { titulo: string | null; itens: { qtd: number; nome: string }[] };
 
@@ -47,6 +47,27 @@ function ComposicaoCombo({ item }: { item: PosCartItem }) {
   );
 }
 
+/* Opcoes de um produto (variacoes/complementos) no mesmo formato da composicao do combo. */
+function DetalhesItem({ grupos }: { grupos: PosCartDetalheGrupo[] }) {
+  return (
+    <div className="mt-1.5 space-y-1.5">
+      {grupos.map((g, i) => (
+        <div key={i}>
+          <div className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">{g.titulo}</div>
+          {g.itens.map((it, j) => (
+            <div key={j} className="flex items-baseline justify-between gap-2 text-[11px] leading-snug text-muted-foreground">
+              <span className="min-w-0">
+                <span className="font-semibold text-foreground">{it.qtd}x</span> {it.nome}
+              </span>
+              {it.preco ? <span className="shrink-0 tabular-nums">+ {formatBRL(it.preco)}</span> : null}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function PosCartList({
   itens,
   onEditar,
@@ -83,12 +104,15 @@ export function PosCartList({
               <div className="flex items-start gap-2.5">
                 <span className="shrink-0 rounded-lg bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">{item.qtd}x</span>
                 <div className="min-w-0 flex-1 pt-0.5">
-                  <div className="truncate text-xs font-semibold text-foreground">{item.nome}</div>
+                  <div className="line-clamp-2 text-xs leading-snug font-semibold text-foreground">{item.nomeExibicao ?? item.nome}</div>
                   {item.observacoes.startsWith("[combo]") ? (
                     <ComposicaoCombo item={item} />
-                  ) : item.observacoes ? (
-                    <div className="truncate text-[11px] text-muted-foreground">{item.observacoes}</div>
-                  ) : null}
+                  ) : (
+                    <>
+                      {item.detalhes?.length ? <DetalhesItem grupos={item.detalhes} /> : null}
+                      {item.observacoes ? <div className="mt-1.5 text-[11px] text-muted-foreground italic">Obs.: {item.observacoes}</div> : null}
+                    </>
+                  )}
                 </div>
                 <span className="shrink-0 pt-0.5 text-xs font-semibold tabular-nums">{formatBRL(item.preco * item.qtd)}</span>
               </div>

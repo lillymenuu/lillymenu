@@ -95,6 +95,9 @@ export type PosComboDetalheResposta = {
 /** `passoTitulo`: titulo da etapa do combo ("Escolha seu copo"), exibido no Resumo do pedido. */
 export type PosCartComboSel = { id: number; nome: string; qtd: number; passoId?: number; passoTitulo?: string };
 
+/** Opcoes escolhidas de um produto (grupos/complementos), so pra exibir organizado no Resumo do pedido. */
+export type PosCartDetalheGrupo = { titulo: string; itens: { qtd: number; nome: string; preco: number | null }[] };
+
 export type PosCartItem = {
   rowKey: string;
   produtoId: number | null;
@@ -117,6 +120,10 @@ export type PosCartItem = {
   opcoesSnapshot?: { tipo: "variacao" | "grupo" | "complemento"; titulo: string; nome: string }[];
   /** Complementos escolhidos (tela Complementos), com a quantidade de cada um. */
   complementos?: ComplementoEscolhido[];
+  /** Nome do produto + variacao (sem os " + opcoes" que vao em `nome`), usado no card do Resumo. */
+  nomeExibicao?: string;
+  /** Opcoes escolhidas agrupadas pelo titulo do grupo, exibidas embaixo do nome no Resumo. */
+  detalhes?: PosCartDetalheGrupo[];
 };
 
 export type PosClienteBusca = { id: number; nome: string; telefone: string };
