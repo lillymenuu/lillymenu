@@ -73,7 +73,7 @@ export function LandingComoFunciona() {
             e.preventDefault();
             rolarParaAncora("#cadastro");
           }}
-          className="landing-cta-pulse mt-12 inline-flex h-12 items-center justify-center rounded-lg bg-white px-8 text-base font-semibold text-[#0b1220] transition-transform hover:-translate-y-0.5"
+          className="landing-cta-pulse mt-12 inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[#0b1220] transition-transform hover:-translate-y-0.5"
         >
           Criar minha loja grátis
         </a>

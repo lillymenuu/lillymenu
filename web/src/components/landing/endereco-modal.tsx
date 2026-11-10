@@ -103,10 +103,10 @@ export function EnderecoModal({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" className="rounded-lg font-normal" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button className="rounded-lg font-normal" onClick={salvar}>
+          <Button className="rounded-full font-normal" onClick={salvar}>
             Salvar
           </Button>
         </DialogFooter>

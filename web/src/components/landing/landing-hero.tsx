@@ -27,7 +27,7 @@ export function LandingHero({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <SmoothAnchor
               href="#cadastro"
-              className="landing-cta-pulse flex h-12 items-center justify-center gap-2 rounded-lg bg-[var(--landing-accent)] px-6 text-base font-semibold text-white shadow-[0_10px_25px_-6px_rgb(var(--landing-accent-rgb)/0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-accent-dark)]"
+              className="landing-cta-pulse flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--landing-accent)] px-6 text-base font-semibold text-white shadow-[0_10px_25px_-6px_rgb(var(--landing-accent-rgb)/0.5)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-accent-dark)]"
             >
               Começar grátis <ArrowRight className="size-4" />
             </SmoothAnchor>

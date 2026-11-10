@@ -87,7 +87,7 @@ export function LandingHeader({
             href="#cadastro"
             onClick={(e) => aoClicarAncora(e, "#cadastro")}
             className={cn(
-              "landing-pulse flex h-9 items-center gap-1.5 rounded-lg bg-[var(--landing-accent)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--landing-accent-dark)]"
+              "landing-pulse flex h-9 items-center gap-1.5 rounded-full bg-[var(--landing-accent)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--landing-accent-dark)]"
             )}
           >
             Começar grátis <ArrowRight className="size-3.5" />
@@ -122,7 +122,7 @@ export function LandingHeader({
           <div className="mt-2 flex flex-col gap-2">
             <a
               href="/login"
-              className="rounded-lg border border-[#e5e7eb] px-4 py-2 text-center text-sm font-semibold text-[#4b5563]"
+              className="rounded-full border border-[#e5e7eb] px-4 py-2 text-center text-sm font-semibold text-[#4b5563]"
             >
               {ctaSecondarioTexto}
             </a>
@@ -132,7 +132,7 @@ export function LandingHeader({
                 aoClicarAncora(e, "#cadastro");
                 setMenuAberto(false);
               }}
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-[var(--landing-accent)] px-4 py-2 text-sm font-semibold text-white"
+              className="flex items-center justify-center gap-1.5 rounded-full bg-[var(--landing-accent)] px-4 py-2 text-sm font-semibold text-white"
             >
               Começar grátis <ArrowRight className="size-3.5" />
             </a>

@@ -18,7 +18,7 @@ export function LandingFinalCta() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <SmoothAnchor
               href="#cadastro"
-              className="flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-6 text-base font-bold text-[#0b1220] transition-transform hover:-translate-y-0.5"
+              className="flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-base font-bold text-[#0b1220] transition-transform hover:-translate-y-0.5"
             >
               Cadastre-se grátis <ArrowRight className="size-4" />
             </SmoothAnchor>

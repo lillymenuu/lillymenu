@@ -96,7 +96,7 @@ export function ContatoForm() {
       <button
         type="submit"
         disabled={enviando}
-        className="mt-1 flex h-11 w-fit items-center justify-center gap-1.5 self-end rounded-lg bg-[var(--landing-accent)] px-6 text-base font-semibold text-white shadow-[0_10px_22px_-6px_rgb(var(--landing-accent-rgb)/0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-accent-dark)] disabled:opacity-60"
+        className="mt-1 flex h-11 w-fit items-center justify-center gap-1.5 self-end rounded-full bg-[var(--landing-accent)] px-6 text-base font-semibold text-white shadow-[0_10px_22px_-6px_rgb(var(--landing-accent-rgb)/0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-accent-dark)] disabled:opacity-60"
       >
         {enviando ? (
           "Enviando..."

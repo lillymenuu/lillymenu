@@ -76,7 +76,7 @@ export function LandingPlanos({
             </ul>
             <SmoothAnchor
               href={resolverLinkPlano(plano)}
-              className="landing-cta-pulse mt-auto flex h-10 w-full items-center justify-center rounded-lg bg-[var(--landing-accent)] text-sm font-semibold text-white shadow-[0_10px_22px_-6px_rgb(var(--landing-accent-rgb)/0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-accent-dark)]"
+              className="landing-cta-pulse mt-auto flex h-10 w-full items-center justify-center rounded-full bg-[var(--landing-accent)] text-sm font-semibold text-white shadow-[0_10px_22px_-6px_rgb(var(--landing-accent-rgb)/0.4)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--landing-accent-dark)]"
             >
               {plano.botaoTexto}
             </SmoothAnchor>
