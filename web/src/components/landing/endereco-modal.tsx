@@ -66,7 +66,7 @@ export function EnderecoModal({
         <DialogHeader>
           <DialogTitle>Endereço da loja</DialogTitle>
         </DialogHeader>
-        <div className="scrollbar-hidden flex max-h-[60vh] flex-col gap-3 overflow-y-auto">
+        <div className="scrollbar-hidden -mx-1.5 flex max-h-[60vh] flex-col gap-3 overflow-y-auto px-1.5 py-1">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="end-cep">CEP</Label>
             <Input className="h-10 rounded-xl" id="end-cep" placeholder="Ex.: 00000-000" value={form.cep} onChange={aoMudarCep} disabled={buscandoCep} />
