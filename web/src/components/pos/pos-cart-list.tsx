@@ -4,6 +4,49 @@ import { Pencil, ShoppingBag, Trash2 } from "lucide-react";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosCartItem } from "@/lib/pos";
 
+type GrupoCombo = { titulo: string | null; itens: { qtd: number; nome: string }[] };
+
+/**
+ * Composicao do combo agrupada por etapa ("ESCOLHA SEU COPO" / "1x Copo..."). Itens reabertos de um
+ * pedido salvo nao tem o titulo da etapa: aparecem so as linhas. A observacao livre (o que sobra em
+ * `observacoes` depois das linhas da composicao) vem no fim.
+ */
+function ComposicaoCombo({ item }: { item: PosCartItem }) {
+  const linhas = item.observacoes.split("\n").slice(1);
+  const sels = item.combosels ?? [];
+  const grupos: GrupoCombo[] = [];
+  let obs: string[];
+  if (sels.length) {
+    for (const s of sels) {
+      const titulo = s.passoTitulo ?? null;
+      const ultimo = grupos[grupos.length - 1];
+      if (ultimo && ultimo.titulo === titulo) ultimo.itens.push({ qtd: s.qtd, nome: s.nome });
+      else grupos.push({ titulo, itens: [{ qtd: s.qtd, nome: s.nome }] });
+    }
+    obs = linhas.slice(sels.length);
+  } else {
+    const itens = linhas.filter((l) => /^\d+x\s/.test(l)).map((l) => ({ qtd: Number(l.match(/^\d+/)![0]), nome: l.replace(/^\d+x\s*/, "") }));
+    if (itens.length) grupos.push({ titulo: null, itens });
+    obs = linhas.filter((l) => !/^\d+x\s/.test(l));
+  }
+  const obsTexto = obs.join(" ").trim();
+  return (
+    <div className="mt-1.5 space-y-1.5">
+      {grupos.map((g, i) => (
+        <div key={i}>
+          {g.titulo ? <div className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">{g.titulo}</div> : null}
+          {g.itens.map((it, j) => (
+            <div key={j} className="text-[11px] leading-snug text-muted-foreground">
+              <span className="font-semibold text-foreground">{it.qtd}x</span> {it.nome}
+            </div>
+          ))}
+        </div>
+      ))}
+      {obsTexto ? <div className="text-[11px] text-muted-foreground italic">Obs.: {obsTexto}</div> : null}
+    </div>
+  );
+}
+
 export function PosCartList({
   itens,
   onEditar,
@@ -41,7 +84,9 @@ export function PosCartList({
                 <span className="shrink-0 rounded-lg bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">{item.qtd}x</span>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="truncate text-xs font-semibold text-foreground">{item.nome}</div>
-                  {item.observacoes && !item.observacoes.startsWith("[combo]") ? (
+                  {item.observacoes.startsWith("[combo]") ? (
+                    <ComposicaoCombo item={item} />
+                  ) : item.observacoes ? (
                     <div className="truncate text-[11px] text-muted-foreground">{item.observacoes}</div>
                   ) : null}
                 </div>

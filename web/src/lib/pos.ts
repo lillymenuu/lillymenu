@@ -92,7 +92,8 @@ export type PosComboDetalheResposta = {
   passos?: PosComboPasso[];
 };
 
-export type PosCartComboSel = { id: number; nome: string; qtd: number; passoId?: number };
+/** `passoTitulo`: titulo da etapa do combo ("Escolha seu copo"), exibido no Resumo do pedido. */
+export type PosCartComboSel = { id: number; nome: string; qtd: number; passoId?: number; passoTitulo?: string };
 
 export type PosCartItem = {
   rowKey: string;

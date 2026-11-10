@@ -205,7 +205,7 @@ export function PosComboDialog({
     const combosels = passos.flatMap((p) =>
       p.opcoes
         .filter((o) => (selecoes[p.id]?.[o.id] ?? 0) > 0)
-        .map((o) => ({ id: o.id, nome: o.nome, qtd: selecoes[p.id]?.[o.id] ?? 0, passoId: p.id }))
+        .map((o) => ({ id: o.id, nome: o.nome, qtd: selecoes[p.id]?.[o.id] ?? 0, passoId: p.id, passoTitulo: p.nome }))
     );
     const linhas = combosels.map((c) => `${c.qtd}x ${c.nome}`).join("\n");
     const obsTexto = obs.trim();
