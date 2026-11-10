@@ -13,6 +13,7 @@ import {
   dicaDoGrupo,
   grupoPendente,
   precoComplementos,
+  minimoDoGrupo,
   qtdNoGrupo,
   rotuloComplementos,
   selecaoDeEscolhidos,
@@ -34,6 +35,34 @@ function Marcador({ marcado }: { marcado: boolean }) {
       {marcado && <span className="size-2.5 rounded-full bg-primary" />}
     </span>
   );
+}
+
+/* Estado das escolhas usado pra saber se uma secao do modal ja foi concluida. */
+type EstadoSecoes = {
+  modoQtd: boolean;
+  variacaoId: number | null;
+  qtdVariacoes: Record<number, number>;
+  gruposOpcoes: PosGrupoOpcoes[];
+  selecoesGrupos: Record<number, number[]>;
+  complementos: ComplementoGrupoVenda[];
+  selecaoComplementos: SelecaoComplementos;
+};
+
+/** Secao concluida = ja tem o minimo exigido ou chegou no maximo permitido. */
+function secaoConcluida(id: string, e: EstadoSecoes): boolean {
+  if (id === "variacao") return e.modoQtd ? Object.values(e.qtdVariacoes).some((q) => q > 0) : e.variacaoId !== null;
+  if (id.startsWith("grupo-")) {
+    const g = e.gruposOpcoes.find((x) => `grupo-${x.id}` === id);
+    if (!g) return true;
+    const n = e.selecoesGrupos[g.id]?.length ?? 0;
+    if (g.tipo_selecao === "unica") return n >= 1;
+    return g.max_selecao > 0 ? n >= g.max_selecao : !!g.obrigatorio && n >= 1;
+  }
+  const g = e.complementos.find((x) => `complemento-${x.id}` === id);
+  if (!g) return true;
+  const n = qtdNoGrupo(e.selecaoComplementos, g.id);
+  const min = minimoDoGrupo(g);
+  return (g.maximo > 0 && n >= g.maximo) || (min > 0 && n >= min);
 }
 
 export function PosVariacaoDialog({
@@ -132,6 +161,44 @@ export function PosVariacaoDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produto, itemEditando]);
 
+  /* Ao concluir uma secao (variacao, grupo ou complemento), rola suavemente ate a proxima secao
+     ainda pendente — mesmo comportamento do modal de combo. */
+  const secaoAlteradaRef = useRef<{ id: string; antes: boolean } | null>(null);
+  const estadoSecoes: EstadoSecoes = {
+    modoQtd: !itemEditando && variacoes.length > 0,
+    variacaoId,
+    qtdVariacoes,
+    gruposOpcoes,
+    selecoesGrupos,
+    complementos,
+    selecaoComplementos,
+  };
+  function marcarSecaoAlterada(id: string) {
+    secaoAlteradaRef.current = { id, antes: secaoConcluida(id, estadoSecoes) };
+  }
+  useEffect(() => {
+    const alterada = secaoAlteradaRef.current;
+    if (!alterada) return;
+    secaoAlteradaRef.current = null;
+    const e: EstadoSecoes = {
+      modoQtd: !itemEditando && variacoes.length > 0,
+      variacaoId,
+      qtdVariacoes,
+      gruposOpcoes,
+      selecoesGrupos,
+      complementos,
+      selecaoComplementos,
+    };
+    if (alterada.antes || !secaoConcluida(alterada.id, e)) return;
+    const ordem = [
+      ...(variacoes.length > 0 ? ["variacao"] : []),
+      ...gruposOpcoes.map((g) => `grupo-${g.id}`),
+      ...complementos.map((g) => `complemento-${g.id}`),
+    ];
+    const proxima = ordem.slice(ordem.indexOf(alterada.id) + 1).find((id) => !secaoConcluida(id, e));
+    if (proxima) secaoRefs.current[proxima]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [itemEditando, variacaoId, qtdVariacoes, selecoesGrupos, selecaoComplementos, variacoes, gruposOpcoes, complementos]);
+
   if (!produto) return null;
 
   const variacaoSelecionada = variacoes.find((v) => v.id === variacaoId) ?? null;
@@ -165,6 +232,7 @@ export function PosVariacaoDialog({
   }
 
   function alterarQtdVariacao(v: PosVariacao, delta: 1 | -1) {
+    if (delta === 1) marcarSecaoAlterada("variacao");
     setQtdVariacoes((atual) => {
       const nova = Math.max(0, Math.min((atual[v.id] ?? 0) + delta, maxDaVariacao(v, atual)));
       return { ...atual, [v.id]: nova };
@@ -184,25 +252,13 @@ export function PosVariacaoDialog({
     : complementos;
   const semResultado = termo && variacoesFiltradas.length === 0 && gruposFiltrados.length === 0 && complementosFiltrados.length === 0;
 
-  /* Ordem das secoes exibidas (variacao, depois cada grupo) — define pra onde rolar ao concluir uma. */
-  const secaoOrder = [
-    ...(variacoes.length > 0 ? ["variacao"] : []),
-    ...gruposOpcoes.map((g) => `grupo-${g.id}`),
-    ...complementos.map((g) => `complemento-${g.id}`),
-  ];
-
-  function rolarParaProximaSecao(idAtual: string) {
-    const idx = secaoOrder.indexOf(idAtual);
-    const proximoId = idx >= 0 ? secaoOrder[idx + 1] : undefined;
-    if (proximoId) secaoRefs.current[proximoId]?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   function selecionarVariacao(id: number) {
+    marcarSecaoAlterada("variacao");
     setVariacaoId(id);
-    rolarParaProximaSecao("variacao");
   }
 
   function alternarOpcao(grupoId: number, itemId: number, tipoSelecao: "unica" | "multipla", maxSelecao: number) {
+    if (!(selecoesGrupos[grupoId] ?? []).includes(itemId)) marcarSecaoAlterada(`grupo-${grupoId}`);
     setSelecoesGrupos((atual) => {
       const selecionados = atual[grupoId] ?? [];
       const jaSelecionado = selecionados.includes(itemId);
@@ -213,16 +269,13 @@ export function PosVariacaoDialog({
         if (!jaSelecionado && maxSelecao > 0 && selecionados.length >= maxSelecao) return atual;
         novo = jaSelecionado ? selecionados.filter((x) => x !== itemId) : [...selecionados, itemId];
       }
-      const concluiu = !jaSelecionado && (tipoSelecao === "unica" || (maxSelecao > 0 && novo.length === maxSelecao));
-      if (concluiu) rolarParaProximaSecao(`grupo-${grupoId}`);
       return { ...atual, [grupoId]: novo };
     });
   }
 
   function alterarComplemento(grupo: ComplementoGrupoVenda, item: ComplementoItemVenda, delta: 1 | -1) {
-    const nova = alterarSelecao(selecaoComplementos, grupo, item, delta);
-    setSelecaoComplementos(nova);
-    if (delta === 1 && grupo.maximo > 0 && qtdNoGrupo(nova, grupo.id) >= grupo.maximo) rolarParaProximaSecao(`complemento-${grupo.id}`);
+    if (delta === 1) marcarSecaoAlterada(`complemento-${grupo.id}`);
+    setSelecaoComplementos(alterarSelecao(selecaoComplementos, grupo, item, delta));
   }
 
   const podeAdicionar =
