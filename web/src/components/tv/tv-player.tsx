@@ -13,7 +13,8 @@ import { VitrineTv } from "./vitrine-tv";
  */
 
 const CHAVE_TOKEN = "lm_tv_token";
-const ATUALIZAR_MS = 60_000;
+/* 30 s: parar/retomar a exibicao no Admin chega rapido na TV. */
+const ATUALIZAR_MS = 30_000;
 const STATUS_PAREAMENTO_MS = 2_000;
 
 function lerToken(): string | null {
@@ -204,6 +205,37 @@ function Aviso({ icone: Icone, titulo, texto }: { icone: React.ComponentType<{ c
   );
 }
 
+/* ---------- Exibicao parada ---------- */
+
+/* Parada pelo Admin: tela neutra so com a marca da loja (o cliente nao ve aviso de pausa). */
+function TelaPausada({ loja }: { loja: CatalogoTv["loja"] }) {
+  return (
+    <div className="relative flex h-full w-full flex-col items-center justify-center gap-[3vh] overflow-hidden bg-[#09090b] text-white">
+      <div
+        className="tv-glow pointer-events-none absolute top-1/2 left-1/2 size-[80vmin] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-60"
+        style={{ background: `radial-gradient(circle, ${loja.cor}55, transparent 65%)` }}
+      />
+      {loja.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={loja.logo} alt="" className="tv-fade relative size-[24vmin] rounded-full bg-white object-cover shadow-[0_30px_90px_-20px_rgba(0,0,0,0.8)]" />
+      ) : (
+        <div className="tv-fade relative flex size-[24vmin] items-center justify-center rounded-full text-[10vmin] font-semibold" style={{ background: loja.cor }}>
+          {loja.nome.charAt(0)}
+        </div>
+      )}
+      <div className="tv-enter-text relative flex items-center gap-[1.2vmin] text-[5.5vmin] font-semibold tracking-tight">
+        {loja.nome}
+        {loja.verificada && (
+          <svg viewBox="0 0 24 24" fill="#3b82f6" className="size-[4.5vmin] shrink-0" aria-label="Loja verificada">
+            <path d="M12 2l2.4 1.6 2.8-.6 1.4 2.5 2.5 1.4-.6 2.8L22 12l-1.6 2.4.6 2.8-2.5 1.4-1.4 2.5-2.8-.6L12 22l-2.4-1.6-2.8.6-1.4-2.5-2.5-1.4.6-2.8L2 12l1.6-2.4-.6-2.8 2.5-1.4 1.4-2.5 2.8.6z" />
+            <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Catalogo ---------- */
 
 type Bloqueio = "loja_bloqueada" | "sem_recurso" | null;
@@ -252,6 +284,7 @@ function PlayerCatalogo({ token, onRemovida }: { token: string; onRemovida: () =
     if (offline) return <Aviso icone={WifiOff} titulo="Sem conexão" texto="Verifique a internet da TV. Tentando novamente..." />;
     return <div className="h-full w-full bg-[#09090b]" />;
   }
+  if (catalogo.tv.config.pausada) return <TelaPausada loja={catalogo.loja} />;
   return <VitrineTv catalogo={catalogo} />;
 }
 

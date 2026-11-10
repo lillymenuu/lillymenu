@@ -154,6 +154,16 @@ export async function salvarTv(
   return atualizadas.length ? { ok: true } : { ok: false, msg: "TV não encontrada." };
 }
 
+/** Para ou retoma a exibicao sem mexer no resto da configuracao. */
+export async function definirPausaTv(lojaId: number, tvId: number, pausada: boolean): Promise<boolean> {
+  const linhas = await db
+    .update(midiaTvs)
+    .set({ config: sql`${midiaTvs.config} || jsonb_build_object('pausada', ${pausada}::boolean)` })
+    .where(and(eq(midiaTvs.id, tvId), eq(midiaTvs.loja_id, lojaId)))
+    .returning({ id: midiaTvs.id });
+  return linhas.length > 0;
+}
+
 export async function removerTv(lojaId: number, tvId: number): Promise<void> {
   await db.delete(midiaTvs).where(and(eq(midiaTvs.id, tvId), eq(midiaTvs.loja_id, lojaId)));
 }

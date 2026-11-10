@@ -19,6 +19,8 @@ export type ConfigTv = {
   /** QR Code da loja no canto, pro cliente pedir pelo celular. */
   mostrarQrLoja: boolean;
   orientacao: "horizontal" | "vertical";
+  /** Exibicao parada pelo Admin: a TV continua conectada, mas mostra so a marca da loja. */
+  pausada: boolean;
 };
 
 export const CONFIG_TV_PADRAO: ConfigTv = {
@@ -30,6 +32,7 @@ export const CONFIG_TV_PADRAO: ConfigTv = {
   esconderEsgotados: true,
   mostrarQrLoja: true,
   orientacao: "horizontal",
+  pausada: false,
 };
 
 export const TEMPO_SLIDE_MIN = 5;
@@ -48,6 +51,7 @@ export function normalizarConfigTv(bruto: unknown): ConfigTv {
     esconderEsgotados: typeof c.esconderEsgotados === "boolean" ? c.esconderEsgotados : CONFIG_TV_PADRAO.esconderEsgotados,
     mostrarQrLoja: typeof c.mostrarQrLoja === "boolean" ? c.mostrarQrLoja : CONFIG_TV_PADRAO.mostrarQrLoja,
     orientacao: c.orientacao === "vertical" ? "vertical" : "horizontal",
+    pausada: c.pausada === true,
   };
 }
 

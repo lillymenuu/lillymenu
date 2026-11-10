@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, Copy, Link2, MonitorPlay, QrCode, Settings2, Smartphone, Trash2, Tv } from "lucide-react";
+import { Check, Copy, Link2, MonitorPlay, Pause, Play, QrCode, Settings2, Smartphone, Trash2, Tv } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,30 @@ export function MidiaIndoorManager({
   const [editando, setEditando] = useState<TvLista | null>(null);
   const [removendo, setRemovendo] = useState<TvLista | null>(null);
   const [removendoAndamento, setRemovendoAndamento] = useState(false);
+  const [pausando, setPausando] = useState<number | null>(null);
+
+  async function alternarPausa(tv: TvLista) {
+    const pausada = !tv.config.pausada;
+    setPausando(tv.id);
+    try {
+      const res = await fetch(`/api/midia-indoor/${tv.id}/pausa`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pausada }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        toast.error(data.msg ?? "Não foi possível alterar a exibição.");
+        return;
+      }
+      setTvs((lista) => lista.map((t) => (t.id === tv.id ? { ...t, config: { ...t.config, pausada } } : t)));
+      toast.success(pausada ? "Exibição parada. A TV mostra só a marca da loja." : "Exibição retomada.");
+    } catch {
+      toast.error("Erro de conexão. Tente novamente.");
+    } finally {
+      setPausando(null);
+    }
+  }
 
   async function recarregar() {
     try {
@@ -202,6 +226,12 @@ export function MidiaIndoorManager({
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{tv.nome}</div>
                     <div className={`truncate text-xs ${tv.online ? "text-emerald-600" : "text-muted-foreground"}`}>{ultimoAcessoTexto(tv)}</div>
+                    {tv.config.pausada && (
+                      <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                        <Pause className="size-3" />
+                        Exibição parada
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5 text-[11px]">
@@ -216,6 +246,16 @@ export function MidiaIndoorManager({
                   </span>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    variant={tv.config.pausada ? "default" : "outline"}
+                    size="sm"
+                    className="flex-1 rounded-full"
+                    disabled={pausando === tv.id}
+                    onClick={() => alternarPausa(tv)}
+                  >
+                    {tv.config.pausada ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
+                    {tv.config.pausada ? "Retomar" : "Parar exibição"}
+                  </Button>
                   <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={() => setEditando(tv)}>
                     <Settings2 className="size-3.5" />
                     Configurar
