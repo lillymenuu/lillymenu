@@ -286,6 +286,7 @@ export function PosMobile({
       <PosAvulsoDialog open={pos.avulsoAberto} onOpenChange={pos.setAvulsoAberto} onAdicionar={(item) => cart.adicionar(item)} />
       <PosEditarItemDialog
         item={pos.itemEditando}
+        limiteEstoque={pos.itemEditando ? pos.limiteEstoqueDoItem(pos.itemEditando) : undefined}
         onOpenChange={(v) => !v && pos.setItemEditando(null)}
         onSalvar={(rowKey, qtd, observacoes) => {
           cart.alterarQtd(rowKey, qtd);

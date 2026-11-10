@@ -1,5 +1,6 @@
 "use client";
 
+import { avisarCatalogoAlterado } from "@/lib/catalogoSync";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -77,6 +78,7 @@ export function EstoqueDialog({
         toast.error(data.msg ?? "Erro ao salvar estoque.");
         return;
       }
+      avisarCatalogoAlterado();
       toast.success("Item de estoque editado com sucesso");
       onSaved?.(Math.max(0, parseInt(quantidade, 10) || 0));
       onOpenChange(false);
@@ -100,6 +102,7 @@ export function EstoqueDialog({
         toast.error(data.msg ?? "Erro ao deletar o estoque.");
         return;
       }
+      avisarCatalogoAlterado();
       toast.success("Estoque deletado com sucesso");
       setConfirmarExclusao(false);
       onDeleted?.();

@@ -1,5 +1,6 @@
 "use client";
 
+import { ouvirCatalogoAlterado } from "@/lib/catalogoSync";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type {
@@ -153,6 +154,31 @@ export function usePosPedido({
     };
   }, []);
 
+  /* Catalogo ao vivo: estoque/produto alterado em outra aba (cadastro de produto) chega aqui sem F5.
+     Tambem recarrega quando a aba volta a ficar visivel, cobrindo alteracoes feitas em outras telas. */
+  useEffect(() => {
+    let ultimo = 0;
+    const recarregar = () => {
+      if (Date.now() - ultimo < 1500) return;
+      ultimo = Date.now();
+      fetch("/api/pos/catalogo", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((cat) => {
+          if (cat.ok) setCatalogo(cat);
+        })
+        .catch(() => {});
+    };
+    const aoVoltar = () => {
+      if (document.visibilityState === "visible") recarregar();
+    };
+    const parar = ouvirCatalogoAlterado(recarregar);
+    document.addEventListener("visibilitychange", aoVoltar);
+    return () => {
+      parar();
+      document.removeEventListener("visibilitychange", aoVoltar);
+    };
+  }, []);
+
   // Modo edicao: carrega os dados do pedido existente e povoa o carrinho/
   // cliente/tipo. Combos/variacoes/extras nao sao reconstituiveis (o schema
   // legado nunca persistiu essa composicao pra leitura posterior — so texto
@@ -290,6 +316,14 @@ export function usePosPedido({
     } else {
       setItemEditando(item);
     }
+  }
+
+  /* Limite de quantidade do modal "Editar item": produto simples usa o estoque ATUAL do catalogo
+     (menos o que o resto do carrinho consome); combo e item sem produto mantem o valor guardado. */
+  function limiteEstoqueDoItem(item: PosCartItem): number | undefined {
+    if (item.comboId || item.combosels?.length || !item.produtoId) return item.estoque;
+    const produto = catalogo?.produtos.find((p) => p.id === item.produtoId);
+    return produto ? restanteDoProduto(produto, item.rowKey) : item.estoque;
   }
 
   /* Quanto ainda cabe de `produto` considerando TUDO que o carrinho consome (produtos, variacoes e combos). */
@@ -560,6 +594,7 @@ export function usePosPedido({
     abrirVariacaoOuAdicionar,
     editarItemCarrinho,
     restanteDoProduto,
+    limiteEstoqueDoItem,
     alterarQtdProduto,
     definirQtdProduto,
     taxaEntrega,

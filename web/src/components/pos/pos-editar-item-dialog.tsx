@@ -28,8 +28,11 @@ export function PosEditarItemDialog({
   item,
   onOpenChange,
   onSalvar,
+  limiteEstoque: limiteAtual,
 }: {
   item: PosCartItem | null;
+  /** Estoque atual que cabe nesse item (recalculado quando o catalogo atualiza em outra aba). */
+  limiteEstoque?: number;
   onOpenChange: (v: boolean) => void;
   onSalvar: (rowKey: string, qtd: number, observacoes: string) => void;
 }) {
@@ -46,7 +49,8 @@ export function PosEditarItemDialog({
   if (!item) return null;
 
   const combo = separarCombo(item);
-  const limiteEstoque = item.estoque !== undefined ? Math.max(1, item.estoque) : undefined;
+  const limiteBase = limiteAtual ?? item.estoque;
+  const limiteEstoque = limiteBase !== undefined ? Math.max(1, limiteBase) : undefined;
   const atingiuLimite = limiteEstoque !== undefined && qtd >= limiteEstoque;
 
   function salvar() {
@@ -68,7 +72,7 @@ export function PosEditarItemDialog({
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[92vh] w-[480px] max-w-[calc(100%-1.5rem)] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-[480px]"
+        className="flex max-h-[92vh] w-[480px] max-w-[calc(100%-1.5rem)] flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-[480px]"
       >
         <DialogTitle className="sr-only">{item.nome}</DialogTitle>
 
@@ -169,7 +173,7 @@ export function PosEditarItemDialog({
             <button
               type="button"
               onClick={salvar}
-              className="h-11 flex-1 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="h-11 flex-1 rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Editar · {formatBRL(item.preco * qtd)}
             </button>

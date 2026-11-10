@@ -110,6 +110,7 @@ export function PosOverlay({
     abrirVariacaoOuAdicionar,
     editarItemCarrinho,
     restanteDoProduto,
+    limiteEstoqueDoItem,
     alterarQtdProduto,
     definirQtdProduto,
     taxaEntrega,
@@ -448,6 +449,7 @@ export function PosOverlay({
       <PosAvulsoDialog open={avulsoAberto} onOpenChange={setAvulsoAberto} onAdicionar={(item) => cart.adicionar(item)} />
       <PosEditarItemDialog
         item={itemEditando}
+        limiteEstoque={itemEditando ? limiteEstoqueDoItem(itemEditando) : undefined}
         onOpenChange={(v) => !v && setItemEditando(null)}
         onSalvar={(rowKey, qtd, observacoes) => {
           cart.alterarQtd(rowKey, qtd);

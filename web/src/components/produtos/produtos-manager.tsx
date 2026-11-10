@@ -1,5 +1,6 @@
 "use client";
 
+import { avisarCatalogoAlterado } from "@/lib/catalogoSync";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -156,6 +157,7 @@ export function ProdutosManager({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: produto.id, ativo: novoAtivo }),
     });
+    avisarCatalogoAlterado();
     toast.success(novoAtivo ? "Produto ativado com sucesso" : "Produto desativado com sucesso");
     router.refresh();
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import { avisarCatalogoAlterado } from "@/lib/catalogoSync";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -384,6 +385,7 @@ export function ProdutoFormDialog({
   async function handleSalvarClick() {
     const ok = await salvar();
     if (ok) {
+      avisarCatalogoAlterado();
       toast.success(produto ? "Produto atualizado com sucesso" : "Produto criado com sucesso");
       onOpenChange(false);
       router.refresh();
@@ -399,6 +401,7 @@ export function ProdutoFormDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: produto.id }),
       });
+      avisarCatalogoAlterado();
       toast.success("Produto excluído com sucesso");
       setConfirmExcluirOpen(false);
       onOpenChange(false);
@@ -422,6 +425,7 @@ export function ProdutoFormDialog({
         setErro(data.msg ?? "Erro ao duplicar produto.");
         return;
       }
+      avisarCatalogoAlterado();
       toast.success("Produto duplicado com sucesso");
       onOpenChange(false);
       router.refresh();
