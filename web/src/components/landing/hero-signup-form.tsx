@@ -14,6 +14,13 @@ import { EnderecoModal, type Endereco } from "./endereco-modal";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type CampoUnico = "email" | "whatsapp" | "cpfCnpj";
+const MSG_JA_CADASTRADO: Record<CampoUnico, string> = {
+  email: "Este e-mail já está cadastrado.",
+  whatsapp: "Este telefone já está cadastrado.",
+  cpfCnpj: "Este CPF/CNPJ já está cadastrado.",
+};
+
 export function HeroSignupForm({
   faturamentoOpcoes,
   segmentoOpcoes,
@@ -48,6 +55,28 @@ export function HeroSignupForm({
   const [aceite, setAceite] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState(false);
+  /* Valor que ja tem conta, por campo; o aviso some assim que o valor digitado mudar. */
+  const [jaCadastrado, setJaCadastrado] = useState<Partial<Record<CampoUnico, string>>>({});
+
+  const valores: Record<CampoUnico, string> = { email, whatsapp, cpfCnpj };
+  const duplicado = (campo: CampoUnico) => jaCadastrado[campo] !== undefined && jaCadastrado[campo] === valores[campo];
+  const temDuplicado = duplicado("email") || duplicado("whatsapp") || duplicado("cpfCnpj");
+
+  async function verificarCampo(campo: CampoUnico) {
+    const valor = valores[campo];
+    if (!valor.trim()) return;
+    try {
+      const res = await fetch("/api/signup/verificar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(campo === "cpfCnpj" ? { cpf_cnpj: valor } : { [campo]: valor }),
+      });
+      const data = await res.json();
+      if (data.ok && data.duplicado?.[campo]) setJaCadastrado((j) => ({ ...j, [campo]: valor }));
+    } catch {
+      /* sem conexao: o envio confere de novo */
+    }
+  }
 
   const emailValido = EMAIL_REGEX.test(email);
   const senhasConferem = confirmarSenha.length > 0 && senha === confirmarSenha;
@@ -98,6 +127,10 @@ export function HeroSignupForm({
       toast.error("Preencha todos os campos obrigatórios corretamente.");
       return;
     }
+    if (temDuplicado) {
+      toast.error("Já existe uma conta com esses dados. Use outro e-mail, telefone ou CPF/CNPJ.");
+      return;
+    }
 
     setEnviando(true);
     try {
@@ -124,6 +157,8 @@ export function HeroSignupForm({
       });
       const data = await res.json();
       if (!data.ok) {
+        const campo = (Object.keys(MSG_JA_CADASTRADO) as CampoUnico[]).find((c) => MSG_JA_CADASTRADO[c] === data.msg);
+        if (campo) setJaCadastrado((j) => ({ ...j, [campo]: valores[campo] }));
         toast.error(data.msg ?? "Não foi possível concluir o cadastro.");
         return;
       }
@@ -170,11 +205,30 @@ export function HeroSignupForm({
           <div className="landing-card-reveal grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="lead-email">{labels.email}</Label>
-              <Input className="rounded-xl" id="lead-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input
+                className="rounded-xl"
+                id="lead-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => verificarCampo("email")}
+                aria-invalid={duplicado("email")}
+                required
+              />
+              {duplicado("email") && <p className="text-xs text-destructive">{MSG_JA_CADASTRADO.email}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="lead-whatsapp">{labels.whatsapp}</Label>
-              <Input className="rounded-xl" id="lead-whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required />
+              <Input
+                className="rounded-xl"
+                id="lead-whatsapp"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                onBlur={() => verificarCampo("whatsapp")}
+                aria-invalid={duplicado("whatsapp")}
+                required
+              />
+              {duplicado("whatsapp") && <p className="text-xs text-destructive">{MSG_JA_CADASTRADO.whatsapp}</p>}
             </div>
           </div>
         )}
@@ -228,11 +282,13 @@ export function HeroSignupForm({
                 className="rounded-xl"
                 value={cpfCnpj}
                 onChange={(e) => setCpfCnpj(formatarCpfCnpj(e.target.value))}
-                aria-invalid={cpfCnpj.length > 0 && !cpfCnpjValido}
+                onBlur={() => cpfCnpjValido && verificarCampo("cpfCnpj")}
+                aria-invalid={(cpfCnpj.length > 0 && !cpfCnpjValido) || duplicado("cpfCnpj")}
                 placeholder="000.000.000-00"
                 required
               />
               {cpfCnpj.length > 0 && !cpfCnpjValido && <p className="text-xs text-destructive">CPF/CNPJ inválido.</p>}
+              {cpfCnpjValido && duplicado("cpfCnpj") && <p className="text-xs text-destructive">{MSG_JA_CADASTRADO.cpfCnpj}</p>}
             </div>
 
             <div className="flex min-w-0 flex-col gap-1.5">
@@ -241,7 +297,7 @@ export function HeroSignupForm({
                 <button
                   type="button"
                   onClick={() => setModalEnderecoAberto(true)}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-input px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-[#f9fafb]"
+                  className="flex h-8 min-w-0 items-center justify-between gap-2 rounded-xl border border-input px-2.5 text-left text-sm transition-colors hover:bg-[#f9fafb]"
                 >
                   <span className="truncate">
                     {endereco.rua}, {endereco.numero} - {endereco.bairro}, {endereco.cidade}/{endereco.estado}
@@ -252,10 +308,10 @@ export function HeroSignupForm({
                 <button
                   type="button"
                   onClick={() => setModalEnderecoAberto(true)}
-                  className="flex h-8 items-center gap-2 rounded-xl border border-input px-2.5 text-sm text-muted-foreground transition-colors hover:bg-[#f9fafb] hover:text-foreground"
+                  className="flex h-8 min-w-0 items-center gap-2 rounded-xl border border-input px-2.5 text-left text-sm text-muted-foreground transition-colors hover:bg-[#f9fafb] hover:text-foreground"
                 >
-                  <MapPin className="size-3.5" />
-                  Informar endereço pelo CEP
+                  <MapPin className="size-3.5 shrink-0" />
+                  <span className="truncate">Informar pelo CEP</span>
                 </button>
               )}
             </div>

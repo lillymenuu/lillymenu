@@ -1,6 +1,6 @@
 import "server-only";
 import bcrypt from "bcryptjs";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { admins, assinaturas, configuracoes, leadsEspecialista, leadsLojas, lojas, pedidos } from "@/db/schema";
 import { dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
@@ -40,6 +40,59 @@ function emailBoasVindasHtml(nome: string, loginUrl: string): string {
     <p><a href="${loginUrl}">Acessar o painel</a></p>
   `;
 }
+
+function somenteDigitos(v: string): string {
+  return v.replace(/\D/g, "");
+}
+
+/** Variacoes do telefone com e sem o DDI 55, pra casar numeros salvos de jeitos diferentes. */
+function variacoesTelefone(digitos: string): string[] {
+  if (!digitos) return [];
+  const semDdi = digitos.length >= 12 && digitos.startsWith("55") ? digitos.slice(2) : digitos;
+  return [semDdi, `55${semDdi}`];
+}
+
+export type DuplicidadeCadastro = { email: boolean; whatsapp: boolean; cpfCnpj: boolean };
+
+/**
+ * Confere se e-mail, telefone ou CPF/CNPJ ja pertencem a outra conta: e-mail nos admins, telefone
+ * no numero de contato da loja e CPF/CNPJ no documento da loja (configuracoes). Compara so os
+ * digitos, entao mascaras diferentes nao escapam.
+ */
+export async function verificarDuplicidadeCadastro(dados: { email?: string; whatsapp?: string; cpfCnpj?: string }): Promise<DuplicidadeCadastro> {
+  const email = (dados.email || "").trim().toLowerCase();
+  const telefones = variacoesTelefone(somenteDigitos(dados.whatsapp || ""));
+  const documento = somenteDigitos(dados.cpfCnpj || "");
+  const digitosValor = sql<string>`regexp_replace(${configuracoes.valor}, '[^0-9]', '', 'g')`;
+
+  const [porEmail, porTelefone, porDocumento] = await Promise.all([
+    email
+      ? db.select({ id: admins.id }).from(admins).where(sql`lower(${admins.email}) = ${email}`).limit(1)
+      : Promise.resolve([]),
+    telefones.length >= 1 && telefones[0].length >= 8
+      ? db
+          .select({ id: configuracoes.loja_id })
+          .from(configuracoes)
+          .where(and(eq(configuracoes.chave, "loja_contato"), inArray(digitosValor, telefones)))
+          .limit(1)
+      : Promise.resolve([]),
+    documento.length === 11 || documento.length === 14
+      ? db
+          .select({ id: configuracoes.loja_id })
+          .from(configuracoes)
+          .where(and(inArray(configuracoes.chave, ["loja_cnpj", "cobranca_cpf"]), eq(digitosValor, documento)))
+          .limit(1)
+      : Promise.resolve([]),
+  ]);
+
+  return { email: porEmail.length > 0, whatsapp: porTelefone.length > 0, cpfCnpj: porDocumento.length > 0 };
+}
+
+export const MSG_DUPLICIDADE: Record<keyof DuplicidadeCadastro, string> = {
+  email: "Este e-mail já está cadastrado.",
+  whatsapp: "Este telefone já está cadastrado.",
+  cpfCnpj: "Este CPF/CNPJ já está cadastrado.",
+};
 
 export type CadastroLojaInput = {
   nome: string;
@@ -81,8 +134,10 @@ export async function criarContaLoja(input: CadastroLojaInput): Promise<Cadastro
   if (erroSenha) return { ok: false, msg: erroSenha };
   if (!validarCpfCnpj(cpfCnpj)) return { ok: false, msg: "CPF/CNPJ inválido." };
 
-  const [emailExistente] = await db.select({ id: admins.id }).from(admins).where(eq(admins.email, email)).limit(1);
-  if (emailExistente) return { ok: false, msg: "Já existe uma conta com esse e-mail." };
+  const duplicado = await verificarDuplicidadeCadastro({ email, whatsapp, cpfCnpj });
+  if (duplicado.email) return { ok: false, msg: MSG_DUPLICIDADE.email };
+  if (duplicado.whatsapp) return { ok: false, msg: MSG_DUPLICIDADE.whatsapp };
+  if (duplicado.cpfCnpj) return { ok: false, msg: MSG_DUPLICIDADE.cpfCnpj };
 
   const plano = await getPlanoTrialGratuito();
   if (!plano) return { ok: false, msg: "Não há plano de teste disponível no momento." };
