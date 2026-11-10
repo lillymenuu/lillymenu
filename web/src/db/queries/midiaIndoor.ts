@@ -215,6 +215,21 @@ export async function listarItensParaTv(lojaId: number, baseUrl: string): Promis
     .filter((c) => c.itens.length > 0);
 }
 
+/* ---------- Estado leve (player da TV) ---------- */
+
+/**
+ * Consulta barata que a TV faz a cada poucos segundos: so a linha da TV. A versao muda quando o
+ * Admin salva a configuracao, para ou retoma a exibicao; ai a TV recarrega o catalogo na hora.
+ */
+export async function estadoDaTv(token: string): Promise<{ versao: string } | null> {
+  const [tv] = await db
+    .select({ versao: sql<string>`md5(${midiaTvs.nome} || ${midiaTvs.layout} || ${midiaTvs.config}::text)` })
+    .from(midiaTvs)
+    .where(eq(midiaTvs.token, token))
+    .limit(1);
+  return tv ?? null;
+}
+
 /* ---------- Catalogo (player da TV) ---------- */
 
 export type CatalogoTvResultado = { ok: true; catalogo: CatalogoTv } | { ok: false; motivo: "tv_removida" | "loja_bloqueada" | "sem_recurso" };

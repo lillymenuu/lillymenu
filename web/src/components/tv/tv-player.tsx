@@ -13,8 +13,10 @@ import { VitrineTv } from "./vitrine-tv";
  */
 
 const CHAVE_TOKEN = "lm_tv_token";
-/* 30 s: parar/retomar a exibicao no Admin chega rapido na TV. */
-const ATUALIZAR_MS = 30_000;
+/* Catalogo completo (precos, esgotados, aberto/fechado). */
+const ATUALIZAR_MS = 60_000;
+/* Estado leve: parar/retomar e configuracoes salvas no Admin chegam em ate 5 s. */
+const ESTADO_MS = 5_000;
 const STATUS_PAREAMENTO_MS = 2_000;
 
 function lerToken(): string | null {
@@ -268,9 +270,33 @@ function PlayerCatalogo({ token, onRemovida }: { token: string; onRemovida: () =
     }
     carregar();
     const t = setInterval(carregar, ATUALIZAR_MS);
+
+    /* Estado leve: recarrega o catalogo assim que a TV muda no Admin e a pagina quando sai versao nova do sistema. */
+    let versao: string | null = null;
+    let build: string | null = null;
+    const e = setInterval(async () => {
+      try {
+        const res = await fetch("/api/tv/estado", { headers: { [HEADER_TOKEN_TV]: token }, cache: "no-store" });
+        if (!ativo) return;
+        if (res.status === 401) return onRemovida();
+        const data = await res.json();
+        if (!ativo || !data.ok) return;
+        if (build !== null && data.build !== build) {
+          window.location.reload();
+          return;
+        }
+        build = data.build;
+        if (versao !== null && data.versao !== versao) carregar();
+        versao = data.versao;
+      } catch {
+        /* sem rede: o proximo ciclo tenta de novo */
+      }
+    }, ESTADO_MS);
+
     return () => {
       ativo = false;
       clearInterval(t);
+      clearInterval(e);
     };
   }, [token, onRemovida]);
 
