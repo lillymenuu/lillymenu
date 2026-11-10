@@ -62,25 +62,25 @@ export function EnderecoModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-md gap-3 overflow-hidden sm:max-w-md">
+      <DialogContent className="max-h-[85vh] max-w-md gap-3 overflow-hidden rounded-3xl p-5 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Endereço da loja</DialogTitle>
         </DialogHeader>
         <div className="scrollbar-hidden flex max-h-[60vh] flex-col gap-3 overflow-y-auto">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="end-cep">CEP</Label>
-            <Input id="end-cep" placeholder="Ex.: 00000-000" value={form.cep} onChange={aoMudarCep} disabled={buscandoCep} />
+            <Input className="h-10 rounded-xl" id="end-cep" placeholder="Ex.: 00000-000" value={form.cep} onChange={aoMudarCep} disabled={buscandoCep} />
           </div>
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="end-rua">Rua</Label>
-              <Input id="end-rua" placeholder="Rua" value={form.rua} onChange={(e) => setForm((f) => ({ ...f, rua: e.target.value }))} />
+              <Input className="h-10 rounded-xl" id="end-rua" placeholder="Rua" value={form.rua} onChange={(e) => setForm((f) => ({ ...f, rua: e.target.value }))} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="end-numero">Número</Label>
               <Input
                 id="end-numero"
-                className="w-24"
+                className="h-10 w-24 rounded-xl"
                 placeholder="Ex.: 123"
                 value={form.numero}
                 onChange={(e) => setForm((f) => ({ ...f, numero: e.target.value }))}
@@ -90,19 +90,19 @@ export function EnderecoModal({
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="end-bairro">Bairro</Label>
-              <Input id="end-bairro" placeholder="Bairro" value={form.bairro} onChange={(e) => setForm((f) => ({ ...f, bairro: e.target.value }))} />
+              <Input className="h-10 rounded-xl" id="end-bairro" placeholder="Bairro" value={form.bairro} onChange={(e) => setForm((f) => ({ ...f, bairro: e.target.value }))} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="end-cidade">Cidade</Label>
-              <Input id="end-cidade" placeholder="Cidade" value={form.cidade} onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))} />
+              <Input className="h-10 rounded-xl" id="end-cidade" placeholder="Cidade" value={form.cidade} onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))} />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="end-estado">Estado</Label>
-            <Input id="end-estado" placeholder="Estado" value={form.estado} onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value }))} />
+            <Input className="h-10 rounded-xl" id="end-estado" placeholder="Estado" value={form.estado} onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value }))} />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="-mx-5 -mb-5 rounded-b-3xl border-t-0 bg-transparent px-5 pt-1 pb-5">
           <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
