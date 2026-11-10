@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, Copy, Link2, MonitorPlay, Pause, Play, QrCode, Settings2, Smartphone, Trash2, Tv } from "lucide-react";
+import { Check, Copy, Link2, MonitorPlay, Pause, Play, QrCode, Settings2, Smartphone, Trash2, TriangleAlert, Tv } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -142,6 +142,18 @@ export function MidiaIndoorManager({
         <div>
           <h1 className="text-lg font-semibold">Mídia Indoor – Menu Digital</h1>
           <p className="text-sm text-muted-foreground">Transforme qualquer Smart TV da loja em um cardápio digital com os seus produtos passando automaticamente.</p>
+        </div>
+      </div>
+
+      <div className="flex gap-3 rounded-3xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
+        <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+        <div className="flex flex-col gap-1">
+          <div className="font-semibold text-amber-800 dark:text-amber-300">Antes de configurar: sua TV precisa ter navegador de internet</div>
+          <p className="text-amber-900/80 dark:text-amber-200/80">
+            A Mídia Indoor funciona em Smart TVs com navegador (Samsung, LG, Android TV/Google TV, entre outras). TVs com sistema Roku
+            não têm navegador e não são compatíveis. Nesse caso, ligue na TV um aparelho com navegador pela entrada HDMI (como Fire TV
+            Stick ou TV Box Android) e abra o link por ele.
+          </p>
         </div>
       </div>
 
