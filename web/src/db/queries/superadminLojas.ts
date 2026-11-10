@@ -12,7 +12,7 @@ const RECURSOS_CATEGORIAS: { titulo: string; itens: Record<string, string> }[] =
   { titulo: "Clientes", itens: { "menu.clientes": "Clientes (CRM)", "menu.relatorios_fidelidade": "Fidelidade", "menu.cupons": "Cupons" } },
   { titulo: "Financeiro", itens: { "menu.controle_caixa": "Controle de caixa", "menu.controle_fiado": "Controle de fiado", "menu.financeiro": "Financeiro", "menu.nfce": "NFCe (fiscal)" } },
   { titulo: "Relatórios", itens: { "menu.relatorios": "Relatórios (vendas)", "menu.relatorio_cross_sell": "Relatório de Cross-sell" } },
-  { titulo: "Comunicação", itens: { "menu.whatslilly": "WhatsLilly", "menu.lista_transmissao": "Lista de Transmissão" } },
+  { titulo: "Comunicação", itens: { "menu.whatslilly": "WhatsLilly", "menu.lista_transmissao": "Lista de Transmissão", "menu.midia_indoor": "Mídia Indoor – Menu Digital" } },
   { titulo: "Sistema", itens: { "menu.configuracoes": "Configurações", "menu.cross_sell_config": "Configurações do Cross-sell" } },
 ];
 

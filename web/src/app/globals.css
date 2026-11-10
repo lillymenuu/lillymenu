@@ -364,3 +364,20 @@
     font-size: 16px;
   }
 }
+
+/* Midia Indoor (player da TV, /tv) */
+@keyframes tv-kenburns { 0% { transform: scale(1) translate(0, 0) } 100% { transform: scale(1.12) translate(-1.5%, -1%) } }
+@keyframes tv-enter-img { 0% { opacity: 0; transform: translateX(-4%) scale(.97) } 100% { opacity: 1; transform: none } }
+@keyframes tv-enter-text { 0% { opacity: 0; transform: translateY(5%) } 100% { opacity: 1; transform: none } }
+@keyframes tv-progress { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+@keyframes tv-fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes tv-glow { 0%, 100% { opacity: .55; transform: scale(1) } 50% { opacity: .8; transform: scale(1.08) } }
+.tv-kenburns { animation: tv-kenburns var(--tv-dur, 8s) ease-out both }
+.tv-enter-img { animation: tv-enter-img .9s cubic-bezier(.2, .8, .2, 1) both }
+.tv-enter-text { animation: tv-enter-text .9s cubic-bezier(.2, .8, .2, 1) both }
+.tv-progress { transform-origin: left; animation: tv-progress var(--tv-dur, 8s) linear both }
+.tv-fade { animation: tv-fade 1.2s ease both }
+.tv-glow { animation: tv-glow 9s ease-in-out infinite }
+@media (prefers-reduced-motion: reduce) {
+  .tv-kenburns, .tv-glow { animation: none }
+}

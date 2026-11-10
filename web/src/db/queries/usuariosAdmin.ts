@@ -35,6 +35,7 @@ const PERMS_MENU = [
   "menu.relatorios_fidelidade",
   "menu.controle_caixa",
   "menu.cupons",
+  "menu.midia_indoor",
   "menu.configuracoes",
 ];
 

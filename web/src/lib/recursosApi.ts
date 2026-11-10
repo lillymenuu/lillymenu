@@ -72,6 +72,7 @@ const REGRAS: { prefixo: string; recursos: string[] | null }[] = [
   /* Comunicacao */
   { prefixo: "/api/whatslilly", recursos: ["whatslilly"] },
   { prefixo: "/api/broadcastlist", recursos: ["listaTransmissao"] },
+  { prefixo: "/api/midia-indoor", recursos: ["midiaIndoor"] },
 
   /* Sistema */
   { prefixo: "/api/settings", recursos: ["configuracoes"] },

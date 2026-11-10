@@ -1607,3 +1607,39 @@ export const desperdicios = pgTable(
     foreignKey({ columns: [t.produto_id], foreignColumns: [produtos.id], name: "desperdicios_fk_produto" }).onDelete("set null"),
   ]
 );
+
+/*
+ * Midia Indoor - Menu Digital (/midia-indoor): TVs pareadas com a loja que exibem o catalogo.
+ * A TV guarda o token (so leitura do catalogo, nunca acesso ao painel). config: opcoes do player.
+ */
+export const midiaTvs = pgTable(
+  "midia_tvs",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    loja_id: integer("loja_id").notNull(),
+    nome: varchar("nome", { length: 60 }).notNull(),
+    token: varchar("token", { length: 64 }).notNull(),
+    layout: text("layout").$type<"vitrine" | "grade" | "misto">().notNull().default("vitrine"),
+    config: jsonb("config").$type<Record<string, unknown>>().notNull().default({}),
+    ultimo_acesso: timestamp("ultimo_acesso", { mode: "string" }),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => [unique("midia_tvs_token_unico").on(t.token), index("midia_tvs_idx_loja").on(t.loja_id)]
+);
+
+/*
+ * Pareamento temporario: a TV gera o codigo (mostrado no QR) e consulta o status com o segredo,
+ * que so ela conhece; o admin confirma pelo celular e o pareamento recebe a TV criada.
+ */
+export const midiaPareamentos = pgTable(
+  "midia_pareamentos",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    codigo: varchar("codigo", { length: 8 }).notNull(),
+    segredo: varchar("segredo", { length: 64 }).notNull(),
+    tv_id: integer("tv_id"),
+    expira_em: timestamp("expira_em", { mode: "string" }).notNull(),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => [unique("midia_pareamentos_codigo_unico").on(t.codigo)]
+);

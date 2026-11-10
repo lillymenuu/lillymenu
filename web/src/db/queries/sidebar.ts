@@ -36,6 +36,7 @@ const CHAVE_POR_MENU: Record<string, string> = {
   cupons: "menu.cupons",
   listaTransmissao: "menu.lista_transmissao",
   whatslilly: "menu.whatslilly",
+  midiaIndoor: "menu.midia_indoor",
   configuracoes: "menu.configuracoes",
   crossSellConfig: "menu.cross_sell_config",
   crossSellRelatorio: "menu.relatorio_cross_sell",

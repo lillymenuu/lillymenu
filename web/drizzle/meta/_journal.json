@@ -183,6 +183,13 @@
       "when": 1793999865784,
       "tag": "0025_desperdicios",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794273564356,
+      "tag": "0026_midia_indoor",
+      "breakpoints": true
     }
   ]
 }

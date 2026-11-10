@@ -37,6 +37,7 @@ import {
   Store,
   UserCheck,
   Layers,
+  Tv,
 } from "lucide-react";
 
 export type NavItem = {
@@ -103,6 +104,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { menuKey: "whatslilly", label: "WhatsLilly", icon: MessageCircle, href: "/whatslilly", migrated: true },
       { menuKey: "listaTransmissao", label: "Lista de Transmissão", icon: Radio, href: "/broadcastlist", migrated: true },
+      { menuKey: "midiaIndoor", label: "Mídia Indoor", icon: Tv, href: "/midia-indoor", migrated: true },
     ],
   },
   {
