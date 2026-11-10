@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, X, ShoppingBag } from "lucide-react";
+import { Pencil, ShoppingBag, Trash2 } from "lucide-react";
 import { formatBRL } from "@/components/ordermanager/constants";
 import type { PosCartItem } from "@/lib/pos";
 
@@ -24,32 +24,33 @@ export function PosCartList({
       ) : (
         <div className="space-y-2.5">
           {itens.map((item) => (
-            <div key={item.rowKey} className="rounded-xl border bg-card p-3 shadow-sm">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-normal text-foreground">
-                    <span className="font-medium">{item.qtd}x</span> {item.nome}
-                  </div>
+            <div key={item.rowKey} className="rounded-2xl border bg-card p-3 transition-colors hover:border-foreground/20 hover:shadow-sm">
+              <div className="flex items-start gap-2.5">
+                <span className="shrink-0 rounded-lg bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">{item.qtd}x</span>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <div className="truncate text-xs font-semibold text-foreground">{item.nome}</div>
                   {item.observacoes && !item.observacoes.startsWith("[combo]") ? (
                     <div className="truncate text-[11px] text-muted-foreground">{item.observacoes}</div>
                   ) : null}
                 </div>
-                <span className="shrink-0 text-xs font-normal tabular-nums">{formatBRL(item.preco * item.qtd)}</span>
+                <span className="shrink-0 pt-0.5 text-xs font-semibold tabular-nums">{formatBRL(item.preco * item.qtd)}</span>
               </div>
-              <div className="mt-2 flex items-center justify-end gap-1.5">
+              <div className="mt-3 flex items-center justify-end gap-2 border-t pt-3">
                 <button
                   type="button"
                   onClick={() => onEditar(item)}
-                  className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/70"
+                  className="flex h-7 items-center gap-1.5 rounded-full border bg-muted/50 px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted"
                 >
-                  <Pencil className="size-3" />
+                  <Pencil className="size-3.5" />
+                  Editar
                 </button>
                 <button
                   type="button"
                   onClick={() => onRemover(item.rowKey)}
-                  className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+                  className="flex h-7 items-center gap-1.5 rounded-full bg-red-500/10 px-3 text-xs font-medium text-red-600 transition-colors hover:bg-red-500/20 dark:text-red-400"
                 >
-                  <X className="size-3" />
+                  <Trash2 className="size-3.5" />
+                  Remover
                 </button>
               </div>
             </div>
