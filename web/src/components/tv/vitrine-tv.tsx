@@ -154,13 +154,19 @@ export function VitrineTv({ catalogo }: { catalogo: CatalogoTv }) {
           <div className="flex min-w-0 items-center gap-[calc(var(--u)*1.6)]">
             {loja.logo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={loja.logo} alt="" className="size-[calc(var(--u)*7)] rounded-[calc(var(--u)*1.8)] object-cover ring-2 ring-white/15" />
+              <img src={loja.logo} alt="" className="size-[calc(var(--u)*7)] rounded-full bg-white object-cover" />
             ) : (
-              <div className="flex size-[calc(var(--u)*7)] items-center justify-center rounded-[calc(var(--u)*1.8)] bg-[rgb(var(--tv-cor))] text-[calc(var(--u)*3.2)] font-semibold">
+              <div className="flex size-[calc(var(--u)*7)] items-center justify-center rounded-full bg-[rgb(var(--tv-cor))] text-[calc(var(--u)*3.2)] font-semibold">
                 {loja.nome.charAt(0)}
               </div>
             )}
             <div className="truncate text-[calc(var(--u)*3.2)] font-semibold tracking-tight">{loja.nome}</div>
+            {loja.verificada && (
+              <svg viewBox="0 0 24 24" fill="#3b82f6" className="size-[calc(var(--u)*3)] shrink-0 drop-shadow" aria-label="Loja verificada">
+                <path d="M12 2l2.4 1.6 2.8-.6 1.4 2.5 2.5 1.4-.6 2.8L22 12l-1.6 2.4.6 2.8-2.5 1.4-1.4 2.5-2.8-.6L12 22l-2.4-1.6-2.8.6-1.4-2.5-2.5-1.4.6-2.8L2 12l1.6-2.4-.6-2.8 2.5-1.4 1.4-2.5 2.8.6z" />
+                <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-[calc(var(--u)*1.6)]">
             <span className="text-[calc(var(--u)*3)] font-medium text-white/80 tabular-nums">{hora}</span>
@@ -177,10 +183,10 @@ export function VitrineTv({ catalogo }: { catalogo: CatalogoTv }) {
         {atual ? (
           <main
             key={atual.id}
-            className={`flex min-h-0 flex-1 gap-[calc(var(--u)*5)] py-[calc(var(--u)*3.5)] ${palco.retrato ? "flex-col" : "items-center"}`}
+            className={`flex min-h-0 flex-1 gap-[calc(var(--u)*4.5)] py-[calc(var(--u)*2)] ${palco.retrato ? "flex-col" : "items-center"}`}
           >
             <div
-              className={`tv-enter-img relative overflow-hidden rounded-[calc(var(--u)*3.2)] shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)] ring-1 ring-white/10 ${palco.retrato ? "aspect-square w-full" : "aspect-square h-full max-h-full"}`}
+              className={`tv-enter-img relative overflow-hidden rounded-[calc(var(--u)*3.2)] shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)] ring-1 ring-white/10 ${palco.retrato ? "aspect-[4/3] w-full" : "aspect-[4/3] h-full max-h-full max-w-[56%]"}`}
             >
               <Foto produto={atual} duracao={config.tempoSlide} />
               {atual.emPromo && (

@@ -278,6 +278,7 @@ export async function catalogoDaTv(token: string, baseUrl: string): Promise<Cata
         logo: perfil.perfilLoja || null,
         cor: perfil.temaCorMenu,
         aberta: perfil.lojaAberta,
+        verificada: perfil.lojaVerificada,
         link: perfil.lojaCanonicalUrl,
       },
       produtos: filtrados,

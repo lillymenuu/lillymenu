@@ -100,7 +100,7 @@ export type ProdutoTv = {
 
 export type CatalogoTv = {
   tv: { nome: string; layout: LayoutTv; config: ConfigTv };
-  loja: { nome: string; logo: string | null; cor: string; aberta: boolean; link: string };
+  loja: { nome: string; logo: string | null; cor: string; aberta: boolean; verificada: boolean; link: string };
   produtos: ProdutoTv[];
 };
 
