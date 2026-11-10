@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ImageIcon, LayoutGrid, Layers, List, Minus, Plus, Search, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -170,7 +170,26 @@ export function PosComboDialog({
     return true;
   });
 
+  /* Ao completar uma etapa (ex.: escolher o empadao), rola suavemente ate a proxima etapa ainda
+     pendente — mesmo comportamento do combo da loja (store-combo-dialog). */
+  const passoRefs = useRef<Record<number, HTMLElement | null>>({});
+  const ultimoPassoAlteradoRef = useRef<number | null>(null);
+  useEffect(() => {
+    const passoId = ultimoPassoAlteradoRef.current;
+    if (passoId === null) return;
+    ultimoPassoAlteradoRef.current = null;
+    const completo = (p: PosComboPasso) => {
+      const total = Object.values(selecoes[p.id] ?? {}).reduce((soma, q) => soma + q, 0);
+      return p.obrigatorio ? total >= Math.max(1, p.min_itens || 1) : p.max_itens > 0 && total >= p.max_itens;
+    };
+    const idx = passos.findIndex((p) => p.id === passoId);
+    if (idx === -1 || !completo(passos[idx])) return;
+    const proximo = passos.slice(idx + 1).find((p) => !completo(p));
+    if (proximo) passoRefs.current[proximo.id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selecoes, passos]);
+
   function alterarQtdOpcao(passo: PosComboPasso, opcaoId: number, delta: number) {
+    if (delta > 0) ultimoPassoAlteradoRef.current = passo.id;
     setSelecoes((prev) => {
       const atualPasso = { ...(prev[passo.id] ?? {}) };
       const atual = atualPasso[opcaoId] ?? 0;
@@ -304,7 +323,13 @@ export function PosComboDialog({
                 const cheio = passo.max_itens > 0 && total >= passo.max_itens;
                 const faltando = passo.obrigatorio && total < Math.max(1, passo.min_itens);
                 return (
-                  <section key={passo.id}>
+                  <section
+                    key={passo.id}
+                    ref={(el) => {
+                      passoRefs.current[passo.id] = el;
+                    }}
+                    className="scroll-mt-2"
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="text-sm font-bold">{passo.nome}</h3>
