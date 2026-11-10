@@ -158,11 +158,11 @@ export function HeroSignupForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="lead-nome">{labels.nome}</Label>
-            <Input id="lead-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+            <Input className="rounded-xl" id="lead-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="lead-empresa">{labels.empresa}</Label>
-            <Input id="lead-empresa" value={empresa} onChange={(e) => setEmpresa(e.target.value)} required />
+            <Input className="rounded-xl" id="lead-empresa" value={empresa} onChange={(e) => setEmpresa(e.target.value)} required />
           </div>
         </div>
 
@@ -170,11 +170,11 @@ export function HeroSignupForm({
           <div className="landing-card-reveal grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="lead-email">{labels.email}</Label>
-              <Input id="lead-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input className="rounded-xl" id="lead-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="lead-whatsapp">{labels.whatsapp}</Label>
-              <Input id="lead-whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required />
+              <Input className="rounded-xl" id="lead-whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required />
             </div>
           </div>
         )}
@@ -189,7 +189,7 @@ export function HeroSignupForm({
                   type={mostrarSenha ? "text" : "password"}
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
-                  className="pr-8"
+                  className="rounded-xl pr-8"
                   required
                 />
                 <button
@@ -207,6 +207,7 @@ export function HeroSignupForm({
               <Label htmlFor="lead-confirmar-senha">Repita a senha</Label>
               <Input
                 id="lead-confirmar-senha"
+                className="rounded-xl"
                 type={mostrarSenha ? "text" : "password"}
                 value={confirmarSenha}
                 onChange={(e) => setConfirmarSenha(e.target.value)}
@@ -219,11 +220,12 @@ export function HeroSignupForm({
         )}
 
         {mostraDocumento && (
-          <div className="landing-card-reveal flex flex-col gap-3">
-            <div className="flex flex-col gap-1.5">
+          <div className="landing-card-reveal grid gap-3 sm:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-1.5">
               <Label htmlFor="lead-cpf-cnpj">CPF/CNPJ</Label>
               <Input
                 id="lead-cpf-cnpj"
+                className="rounded-xl"
                 value={cpfCnpj}
                 onChange={(e) => setCpfCnpj(formatarCpfCnpj(e.target.value))}
                 aria-invalid={cpfCnpj.length > 0 && !cpfCnpjValido}
@@ -233,13 +235,13 @@ export function HeroSignupForm({
               {cpfCnpj.length > 0 && !cpfCnpjValido && <p className="text-xs text-destructive">CPF/CNPJ inválido.</p>}
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex min-w-0 flex-col gap-1.5">
               <Label>Endereço</Label>
               {endereco ? (
                 <button
                   type="button"
                   onClick={() => setModalEnderecoAberto(true)}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-input px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-[#f9fafb]"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-input px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-[#f9fafb]"
                 >
                   <span className="truncate">
                     {endereco.rua}, {endereco.numero} - {endereco.bairro}, {endereco.cidade}/{endereco.estado}
@@ -250,7 +252,7 @@ export function HeroSignupForm({
                 <button
                   type="button"
                   onClick={() => setModalEnderecoAberto(true)}
-                  className="flex h-8 items-center gap-2 rounded-lg border border-input px-2.5 text-sm text-muted-foreground transition-colors hover:bg-[#f9fafb] hover:text-foreground"
+                  className="flex h-8 items-center gap-2 rounded-xl border border-input px-2.5 text-sm text-muted-foreground transition-colors hover:bg-[#f9fafb] hover:text-foreground"
                 >
                   <MapPin className="size-3.5" />
                   Informar endereço pelo CEP
@@ -265,7 +267,7 @@ export function HeroSignupForm({
             <div className="flex flex-col gap-1.5">
               <Label>{labels.faturamento}</Label>
               <Select value={faturamento} onValueChange={(v) => setFaturamento(v ?? "")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full rounded-xl">
                   <SelectValue placeholder="Selecionar" />
                 </SelectTrigger>
                 <SelectContent>
@@ -280,7 +282,7 @@ export function HeroSignupForm({
             <div className="flex flex-col gap-1.5">
               <Label>{labels.segmento}</Label>
               <Select value={segmento} onValueChange={(v) => setSegmento(v ?? "")}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full rounded-xl">
                   <SelectValue placeholder="Selecionar" />
                 </SelectTrigger>
                 <SelectContent>
