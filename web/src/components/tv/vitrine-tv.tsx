@@ -143,11 +143,12 @@ export function VitrineTv({ catalogo }: { catalogo: CatalogoTv }) {
       {/* Fundo: a foto do produto desfocada e a cor da loja. */}
       {atual?.imagem && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={`bg-${atual.id}`} src={atual.imagem} alt="" className="tv-fade absolute inset-0 h-full w-full scale-125 object-cover opacity-30 blur-[60px]" />
+        <img key={`bg-${atual.id}`} src={atual.imagem} alt="" className="tv-fade absolute inset-0 h-full w-full scale-125 object-cover opacity-80 blur-[48px] saturate-[1.35]" />
       )}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_10%,rgb(var(--tv-cor)/0.35),transparent_55%),linear-gradient(180deg,rgba(9,9,11,0.35),rgba(9,9,11,0.92))]" />
+      {/* Veu leve: a foto continua viva, so escurece um pouco embaixo e atras do texto pra manter a leitura. */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_15%_0%,rgb(var(--tv-cor)/0.28),transparent_55%),linear-gradient(90deg,rgba(9,9,11,0.05)_0%,rgba(9,9,11,0.32)_60%,rgba(9,9,11,0.4)_100%),linear-gradient(180deg,rgba(9,9,11,0.18)_0%,rgba(9,9,11,0)_35%,rgba(9,9,11,0.55)_100%)]" />
 
-      <div className="relative flex h-full flex-col px-[calc(var(--u)*5)] py-[calc(var(--u)*4)]">
+      <div className="relative flex h-full flex-col px-[calc(var(--u)*5)] py-[calc(var(--u)*4)] [text-shadow:0_2px_18px_rgba(0,0,0,0.35)]">
         {/* Cabecalho */}
         <header className="flex items-center justify-between gap-[calc(var(--u)*2)]">
           <div className="flex min-w-0 items-center gap-[calc(var(--u)*1.6)]">
@@ -190,11 +191,11 @@ export function VitrineTv({ catalogo }: { catalogo: CatalogoTv }) {
             </div>
 
             <div className={`tv-enter-text flex min-w-0 flex-1 flex-col justify-center gap-[calc(var(--u)*2.2)] [animation-delay:.15s] ${palco.retrato ? "" : "pr-[calc(var(--u)*2)]"}`}>
-              <span className="w-fit rounded-full border border-white/15 bg-white/5 px-[1em] py-[0.35em] text-[calc(var(--u)*1.9)] font-medium tracking-[0.18em] text-white/70 uppercase">
+              <span className="w-fit rounded-full border border-white/25 bg-black/15 px-[1em] py-[0.35em] text-[calc(var(--u)*1.9)] font-medium tracking-[0.18em] text-white/70 uppercase">
                 {atual.categoria}
               </span>
               <h2 className="line-clamp-2 text-[calc(var(--u)*7)] leading-[1.02] font-semibold tracking-tight text-balance">{atual.nome}</h2>
-              {atual.descricao && <p className="line-clamp-3 text-[calc(var(--u)*2.6)] leading-snug text-white/65">{atual.descricao}</p>}
+              {atual.descricao && <p className="line-clamp-3 text-[calc(var(--u)*2.6)] leading-snug text-white/85">{atual.descricao}</p>}
               <div className="mt-[calc(var(--u)*1)]">
                 <Preco produto={atual} grande />
               </div>
