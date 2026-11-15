@@ -29,26 +29,36 @@ const FORMAS_PAGAMENTO: { valor: string; label: string; sub: string; icon: typeo
   { valor: "debito", label: "Cartao de debito", sub: "Bandeiras aceitas na entrega", icon: CreditCard, flag: "debAtivo" },
 ];
 
-/* iOS Safari: com o teclado aberto, o layout viewport nao encolhe — so o visual viewport —
-   entao um painel com bottom:0 fica atras/abaixo do teclado e a pagina aparece no vao entre
-   ele e o teclado. Retorna quanto do fundo do layout viewport esta escondido (teclado), pra
-   ancorar o bottom sheet logo acima dele. 0 sem teclado / navegadores que ja encolhem o layout. */
-function useTecladoOffset(ativo: boolean): number {
-  const [offset, setOffset] = useState(0);
+/* Bottom sheet no iPhone (Safari):
+   - com o teclado aberto so o visual viewport encolhe/rola; um painel com bottom:0 fica preso
+     no layout viewport e a pagina aparece no vao entre ele e o teclado. Devolve a base da area
+     VISIVEL (visualViewport.offsetTop + height) pra ancorar o painel ali. (window.innerHeight
+     nao serve: no iOS ele ja acompanha o visual viewport.)
+   - overflow:hidden no html/body (scroll lock do Base UI) e ignorado pelo iOS: o cardapio de
+     tras continua rolando. Trava com body position:fixed e devolve a rolagem ao fechar. */
+function useBottomSheetMobile(ativo: boolean): number | null {
+  const [baseVisivel, setBaseVisivel] = useState<number | null>(null);
   useEffect(() => {
-    const vv = typeof window !== "undefined" ? window.visualViewport : null;
-    if (!ativo || !vv) return;
-    const atualizar = () => setOffset(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    if (!ativo || typeof window === "undefined") return;
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const anterior = { position: body.style.position, top: body.style.top, left: body.style.left, right: body.style.right, width: body.style.width };
+    Object.assign(body.style, { position: "fixed", top: `-${scrollY}px`, left: "0", right: "0", width: "100%" });
+
+    const vv = window.visualViewport;
+    const atualizar = () => vv && setBaseVisivel(Math.round(vv.offsetTop + vv.height));
     atualizar();
-    vv.addEventListener("resize", atualizar);
-    vv.addEventListener("scroll", atualizar);
+    vv?.addEventListener("resize", atualizar);
+    vv?.addEventListener("scroll", atualizar);
     return () => {
-      vv.removeEventListener("resize", atualizar);
-      vv.removeEventListener("scroll", atualizar);
-      setOffset(0);
+      vv?.removeEventListener("resize", atualizar);
+      vv?.removeEventListener("scroll", atualizar);
+      Object.assign(body.style, anterior);
+      window.scrollTo(0, scrollY);
+      setBaseVisivel(null);
     };
   }, [ativo]);
-  return offset;
+  return baseVisivel;
 }
 
 function fieldClass() {
@@ -123,7 +133,7 @@ export function StoreCheckoutDialog({
   const [geoErro, setGeoErro] = useState("");
   const [enderecoEtapa, setEnderecoEtapa] = useState<"cep" | "form">("cep");
   const [cepErro, setCepErro] = useState("");
-  const tecladoOffset = useTecladoOffset(enderecoModalAberto);
+  const baseVisivel = useBottomSheetMobile(enderecoModalAberto);
 
   const [formaPagamento, setFormaPagamento] = useState("");
   const [trocoPara, setTrocoPara] = useState("");
@@ -1202,8 +1212,8 @@ export function StoreCheckoutDialog({
             entrada de baixo pra cima. sm+: volta ao modal centralizado. */}
         <DialogContent
           showCloseButton={false}
-          style={{ "--teclado-offset": `${tecladoOffset}px` } as React.CSSProperties}
-          className="top-auto right-3 bottom-(--teclado-offset) left-3 w-auto max-w-none translate-x-0 translate-y-0 gap-0 rounded-t-2xl rounded-b-none p-0 pb-[env(safe-area-inset-bottom)] duration-300 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-screen after:bg-popover sm:after:hidden ease-out data-open:zoom-in-100 data-open:slide-in-from-bottom data-closed:duration-200 data-closed:zoom-out-100 data-closed:slide-out-to-bottom sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:pb-0 sm:data-open:zoom-in-95 sm:data-open:slide-in-from-bottom-0 sm:data-closed:zoom-out-95 sm:data-closed:slide-out-to-bottom-0"
+          style={baseVisivel !== null ? ({ "--base-visivel": `${baseVisivel}px` } as React.CSSProperties) : undefined}
+          className="top-(--base-visivel,100dvh) right-3 bottom-auto left-3 w-auto max-w-none translate-x-0 -translate-y-full gap-0 rounded-t-2xl rounded-b-none p-0 pb-[env(safe-area-inset-bottom)] duration-300 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-screen after:bg-popover sm:after:hidden ease-out data-open:zoom-in-100 data-open:slide-in-from-bottom data-closed:duration-200 data-closed:zoom-out-100 data-closed:slide-out-to-bottom sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:pb-0 sm:data-open:zoom-in-95 sm:data-open:slide-in-from-bottom-0 sm:data-closed:zoom-out-95 sm:data-closed:slide-out-to-bottom-0"
         >
           <div className="flex items-center justify-between border-b border-neutral-100 p-4">
             <DialogTitle className="text-[1rem] font-bold text-neutral-900">Endereço de entrega</DialogTitle>
