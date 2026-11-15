@@ -29,6 +29,28 @@ const FORMAS_PAGAMENTO: { valor: string; label: string; sub: string; icon: typeo
   { valor: "debito", label: "Cartao de debito", sub: "Bandeiras aceitas na entrega", icon: CreditCard, flag: "debAtivo" },
 ];
 
+/* iOS Safari: com o teclado aberto, o layout viewport nao encolhe — so o visual viewport —
+   entao um painel com bottom:0 fica atras/abaixo do teclado e a pagina aparece no vao entre
+   ele e o teclado. Retorna quanto do fundo do layout viewport esta escondido (teclado), pra
+   ancorar o bottom sheet logo acima dele. 0 sem teclado / navegadores que ja encolhem o layout. */
+function useTecladoOffset(ativo: boolean): number {
+  const [offset, setOffset] = useState(0);
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!ativo || !vv) return;
+    const atualizar = () => setOffset(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    atualizar();
+    vv.addEventListener("resize", atualizar);
+    vv.addEventListener("scroll", atualizar);
+    return () => {
+      vv.removeEventListener("resize", atualizar);
+      vv.removeEventListener("scroll", atualizar);
+      setOffset(0);
+    };
+  }, [ativo]);
+  return offset;
+}
+
 function fieldClass() {
   /* text-base (16px) e nao um valor menor — abaixo de 16px o iOS/Android
      tratam o campo como "dificil de ler" e da zoom automatico na tela ao
@@ -101,6 +123,7 @@ export function StoreCheckoutDialog({
   const [geoErro, setGeoErro] = useState("");
   const [enderecoEtapa, setEnderecoEtapa] = useState<"cep" | "form">("cep");
   const [cepErro, setCepErro] = useState("");
+  const tecladoOffset = useTecladoOffset(enderecoModalAberto);
 
   const [formaPagamento, setFormaPagamento] = useState("");
   const [trocoPara, setTrocoPara] = useState("");
@@ -1179,7 +1202,8 @@ export function StoreCheckoutDialog({
             entrada de baixo pra cima. sm+: volta ao modal centralizado. */}
         <DialogContent
           showCloseButton={false}
-          className="top-auto right-3 bottom-0 left-3 w-auto max-w-none translate-x-0 translate-y-0 gap-0 rounded-t-2xl rounded-b-none p-0 pb-[env(safe-area-inset-bottom)] duration-300 ease-out data-open:zoom-in-100 data-open:slide-in-from-bottom data-closed:duration-200 data-closed:zoom-out-100 data-closed:slide-out-to-bottom sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:pb-0 sm:data-open:zoom-in-95 sm:data-open:slide-in-from-bottom-0 sm:data-closed:zoom-out-95 sm:data-closed:slide-out-to-bottom-0"
+          style={{ "--teclado-offset": `${tecladoOffset}px` } as React.CSSProperties}
+          className="top-auto right-3 bottom-(--teclado-offset) left-3 w-auto max-w-none translate-x-0 translate-y-0 gap-0 rounded-t-2xl rounded-b-none p-0 pb-[env(safe-area-inset-bottom)] duration-300 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-screen after:bg-popover sm:after:hidden ease-out data-open:zoom-in-100 data-open:slide-in-from-bottom data-closed:duration-200 data-closed:zoom-out-100 data-closed:slide-out-to-bottom sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:pb-0 sm:data-open:zoom-in-95 sm:data-open:slide-in-from-bottom-0 sm:data-closed:zoom-out-95 sm:data-closed:slide-out-to-bottom-0"
         >
           <div className="flex items-center justify-between border-b border-neutral-100 p-4">
             <DialogTitle className="text-[1rem] font-bold text-neutral-900">Endereço de entrega</DialogTitle>
