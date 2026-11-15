@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Copy, MapPin, Receipt, Share2, ShoppingBag, Star, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 import { StoreSheet } from "@/components/store/store-sheet";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { StoreAvaliacaoModal } from "@/components/store/store-avaliacao-modal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useStoreTheme } from "@/components/store/store-theme";
@@ -503,6 +504,22 @@ export function StorePedidosSheet({
                           <MapPin size={13} /> Ver no mapa
                         </button>
                       </div>
+                    </div>
+                  )}
+
+                  {perfil.lojaWhatsappPedidos && (
+                    <div className="border-t border-neutral-100 py-2.5">
+                      <a
+                        href={`https://wa.me/55${perfil.lojaWhatsappPedidos}?text=${encodeURIComponent(
+                          `Olá! Gostaria de saber como está o status do meu pedido N. ${p.codigo}.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-[.82rem] font-normal text-white"
+                        style={{ background: "#25D366" }}
+                      >
+                        <WhatsAppIcon size={16} /> Falar com a loja sobre este pedido
+                      </a>
                     </div>
                   )}
 
