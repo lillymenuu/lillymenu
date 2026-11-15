@@ -7,6 +7,8 @@ import { PontosBadge } from "@/components/store/pontos-badge";
 import { QtyStepper } from "@/components/store/qty-stepper";
 import { useStoreTheme } from "@/components/store/store-theme";
 import { avisarEstoqueIndisponivel } from "@/components/store/toast-estoque";
+import { toast } from "sonner";
+import { TOAST_CARRINHO_ID } from "@/components/store/use-store-cart";
 import { consumoDoCarrinho } from "@/components/store/estoque-carrinho";
 import { formatarPreco } from "@/lib/store/format";
 import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
@@ -188,6 +190,8 @@ export function StoreCartSheet({
             onClick={() => {
               itens.forEach((i) => onRemover(i.key));
               onCupomAplicadoChange(null);
+              // mesmo id do aviso por item: substitui o "<ultimo item> removido" por um aviso unico
+              toast.success("Carrinho esvaziado", { id: TOAST_CARRINHO_ID, duration: 2500 });
             }}
             className="text-[.8rem] text-neutral-400"
           >

@@ -1,7 +1,7 @@
 "use client";
 
 import { trackStoreEvento } from "@/lib/store/tracking";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { StoreCartItem } from "@/lib/store/types";
 import { assinaturaComplementos } from "@/lib/complementos";
@@ -44,9 +44,21 @@ function assinaturaItem(item: Omit<StoreCartItem, "key" | "qtd">): string {
   ].join("::");
 }
 
+/* Toaster global (app/layout.tsx) ja fica no topo central, desktop e mobile. id fixo:
+   varias alteracoes seguidas substituem o aviso em vez de empilhar. */
+export const TOAST_CARRINHO_ID = "store-carrinho-aviso";
+function avisarCarrinho(nome: string, acao: string) {
+  toast.success(`${nome} ${acao}`, { id: TOAST_CARRINHO_ID, duration: 2500 });
+}
+
 export function useStoreCart(lojaId: number) {
   const [itens, setItens] = useState<StoreCartItem[]>([]);
   const [carregado, setCarregado] = useState(false);
+  /* atualizarQtd/remover precisam do nome do item pro aviso sem perder a identidade estavel do useCallback. */
+  const itensRef = useRef(itens);
+  useEffect(() => {
+    itensRef.current = itens;
+  }, [itens]);
 
   useEffect(() => {
     try {
@@ -70,9 +82,7 @@ export function useStoreCart(lojaId: number) {
 
   const adicionar = useCallback((item: Omit<StoreCartItem, "key">) => {
     trackStoreEvento(lojaId, "carrinho");
-    /* Toaster global (app/layout.tsx) ja fica no topo central, desktop e mobile. id fixo:
-       adicionar varias vezes seguidas substitui o aviso em vez de empilhar. */
-    toast.success(`${item.qtd > 1 ? `${item.qtd}x ` : ""}${item.nome} adicionado ao carrinho`, { id: "store-item-adicionado", duration: 2500 });
+    avisarCarrinho(`${item.qtd > 1 ? `${item.qtd}x ` : ""}${item.nome}`, "adicionado ao carrinho");
     setItens((atual) => {
       const assinaturaNova = assinaturaItem(item);
       const idxExistente = atual.findIndex((i) => assinaturaItem(i) === assinaturaNova);
@@ -89,12 +99,16 @@ export function useStoreCart(lojaId: number) {
   }, [lojaId]);
 
   const atualizarQtd = useCallback((key: string, qtd: number) => {
+    const item = itensRef.current.find((i) => i.key === key);
+    if (item && qtd !== item.qtd) avisarCarrinho(item.nome, qtd > item.qtd ? "adicionado ao carrinho" : "removido do carrinho");
     setItens((atual) =>
       qtd <= 0 ? atual.filter((i) => i.key !== key) : atual.map((i) => (i.key === key ? { ...i, qtd } : i))
     );
   }, []);
 
   const remover = useCallback((key: string) => {
+    const item = itensRef.current.find((i) => i.key === key);
+    if (item) avisarCarrinho(item.nome, "removido do carrinho");
     setItens((atual) => atual.filter((i) => i.key !== key));
   }, []);
 
