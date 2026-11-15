@@ -98,8 +98,9 @@ export function StoreCheckoutDialog({
   const [areaTaxaInfo, setAreaTaxaInfo] = useState<{ atendido: boolean; taxa: number } | null>(null);
   const [calculandoAreaTaxa, setCalculandoAreaTaxa] = useState(false);
   const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(false);
-  const [geoDispensado, setGeoDispensado] = useState(false);
   const [geoErro, setGeoErro] = useState("");
+  const [enderecoEtapa, setEnderecoEtapa] = useState<"cep" | "form">("cep");
+  const [cepErro, setCepErro] = useState("");
 
   const [formaPagamento, setFormaPagamento] = useState("");
   const [trocoPara, setTrocoPara] = useState("");
@@ -230,17 +231,34 @@ export function StoreCheckoutDialog({
     }
   }
 
-  async function buscarCep() {
-    const digitos = cep.replace(/\D/g, "");
-    if (digitos.length !== 8) return;
+  /* Modal de endereco em 2 etapas: "cep" (localizacao atual ou CEP digitado) e "form"
+     (campos ja preenchidos pra conferir + numero). Reabrir com endereco ja preenchido
+     vai direto pro form. */
+  function abrirModalEndereco() {
+    setEnderecoEtapa(rua.trim() ? "form" : "cep");
+    setCepErro("");
+    setEnderecoModalAberto(true);
+  }
+
+  async function buscarCep(valor: string = cep, avancar = false) {
+    const digitos = valor.replace(/\D/g, "");
+    if (digitos.length !== 8) {
+      if (avancar) setCepErro("Informe um CEP valido com 8 digitos.");
+      return;
+    }
     setBuscandoCep(true);
+    setCepErro("");
     try {
-      const end = await buscarEnderecoPorCep(digitos);
+      const end = await buscarEnderecoPorCep(digitos).catch(() => null);
       if (end) {
         setRua(end.rua);
         setBairro(end.bairro);
         setCidade(end.cidade);
         setEstado(end.estado);
+        if (avancar) setEnderecoEtapa("form");
+      } else if (avancar) {
+        setCepErro("CEP nao encontrado. Confira o numero ou preencha o endereco manualmente.");
+        return;
       }
       calcularTaxaArea(digitos);
     } finally {
@@ -271,7 +289,7 @@ export function StoreCheckoutDialog({
             setCidade(data.cidade ?? "");
             setEstado(data.estado ?? "");
             if (data.numero) setNumero(data.numero);
-            setGeoDispensado(true);
+            setEnderecoEtapa("form");
             calcularTaxaArea(String(data.cep ?? "").replace(/\D/g, ""));
           })
           .catch(() => setGeoErro("Erro ao buscar seu endereco."))
@@ -637,7 +655,7 @@ export function StoreCheckoutDialog({
                         min={perfil.pedidoMinEntregaAtivo ? perfil.pedidoMinEntrega : 0}
                         onClick={() => {
                           setTipo("entrega");
-                          if (!enderecoConfirmado) setEnderecoModalAberto(true);
+                          if (!enderecoConfirmado) abrirModalEndereco();
                         }}
                       />
                     )}
@@ -650,7 +668,7 @@ export function StoreCheckoutDialog({
                         min={perfil.pedidoMinEntregaAtivo ? perfil.pedidoMinEntrega : 0}
                         onClick={() => {
                           setTipo("entrega_agendada");
-                          if (!enderecoConfirmado) setEnderecoModalAberto(true);
+                          if (!enderecoConfirmado) abrirModalEndereco();
                           else if (!agendamento) setAgendamentoModalAberto(true);
                         }}
                       />
@@ -705,7 +723,7 @@ export function StoreCheckoutDialog({
                                   {cep ? ` - ${cep.replace(/\D/g, "")}` : ""}
                                 </p>
                               </div>
-                              <button type="button" onClick={() => setEnderecoModalAberto(true)} className="shrink-0 text-[.8rem] font-light" style={{ color: brown }}>
+                              <button type="button" onClick={() => abrirModalEndereco()} className="shrink-0 text-[.8rem] font-light" style={{ color: brown }}>
                                 Editar
                               </button>
                             </div>
@@ -723,7 +741,7 @@ export function StoreCheckoutDialog({
                       ) : (
                         <button
                           type="button"
-                          onClick={() => setEnderecoModalAberto(true)}
+                          onClick={() => abrirModalEndereco()}
                           className="flex w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-neutral-300 py-3.5 text-[.86rem] font-semibold text-neutral-600"
                         >
                           <MapPin size={15} />
@@ -1164,42 +1182,93 @@ export function StoreCheckoutDialog({
           className="top-auto right-3 bottom-0 left-3 w-auto max-w-none translate-x-0 translate-y-0 gap-0 rounded-t-2xl rounded-b-none p-0 pb-[env(safe-area-inset-bottom)] duration-300 ease-out data-open:zoom-in-100 data-open:slide-in-from-bottom data-closed:duration-200 data-closed:zoom-out-100 data-closed:slide-out-to-bottom sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:pb-0 sm:data-open:zoom-in-95 sm:data-open:slide-in-from-bottom-0 sm:data-closed:zoom-out-95 sm:data-closed:slide-out-to-bottom-0"
         >
           <div className="flex items-center justify-between border-b border-neutral-100 p-4">
-            <DialogTitle className="text-[1rem] font-bold text-neutral-900">Endereco de Entrega</DialogTitle>
+            <DialogTitle className="text-[1rem] font-bold text-neutral-900">Endereço de entrega</DialogTitle>
             <button type="button" onClick={() => setEnderecoModalAberto(false)} className="flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
               ×
             </button>
           </div>
-          <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4">
-            {perfil.geoAtivo && !geoDispensado && (
-              <div className="border-b border-neutral-100 pb-3">
-                <div className="flex items-start gap-2.5">
-                  <MapPin size={16} className="mt-0.5 shrink-0 text-neutral-500" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[.86rem] font-bold text-neutral-900">Usar minha localizacao atual?</p>
-                    <p className="mt-0.5 text-[.76rem] text-neutral-500">
-                      Preenchemos o endereco automaticamente, voce so confirma o numero.
-                    </p>
-                  </div>
+          {enderecoEtapa === "cep" ? (
+            <div className="space-y-4 px-5 pt-5 pb-6">
+              {perfil.geoAtivo && (
+                <>
                   <button
                     type="button"
                     disabled={buscandoLocalizacao}
                     onClick={usarLocalizacaoAtual}
-                    className="shrink-0 rounded-full px-3.5 py-1.5 text-[.78rem] font-bold text-white disabled:opacity-70"
-                    style={{ background: brown }}
+                    className="flex w-full items-center gap-3 rounded-2xl border border-neutral-200 px-4 py-3.5 text-left transition-colors hover:bg-neutral-50 disabled:opacity-70"
                   >
-                    {buscandoLocalizacao ? "Buscando..." : "Usar"}
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full text-white" style={{ background: brown }}>
+                      {buscandoLocalizacao ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[.88rem] font-bold text-neutral-900">
+                        {buscandoLocalizacao ? "Buscando sua localização..." : "Usar minha localização atual"}
+                      </span>
+                      <span className="mt-0.5 block text-[.75rem] text-neutral-500">Preenchemos o endereço, você só confirma o número.</span>
+                    </span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setGeoDispensado(true)}
-                    className="shrink-0 text-neutral-400 hover:text-neutral-600"
-                  >
-                    ×
-                  </button>
-                </div>
-                {geoErro && <p className="mt-1.5 text-[.74rem] text-red-600">{geoErro}</p>}
-              </div>
-            )}
+                  {geoErro && <p className="-mt-2 text-[.74rem] text-red-600">{geoErro}</p>}
+                  <div className="flex items-center gap-3 text-[.74rem] text-neutral-400">
+                    <span className="h-px flex-1 bg-neutral-100" />
+                    ou
+                    <span className="h-px flex-1 bg-neutral-100" />
+                  </div>
+                </>
+              )}
+              <p className="text-center text-[.86rem] text-neutral-600">Informe seu CEP para verificarmos se entregamos em sua região</p>
+              <input
+                value={cep}
+                onChange={(e) => {
+                  const formatado = formatarCep(e.target.value);
+                  setCep(formatado);
+                  setCepErro("");
+                  if (perfil.taxaEntregaTipo === "area") setAreaTaxaInfo(null);
+                  // CEP completo: busca e ja avanca pro form preenchido
+                  if (formatado.replace(/\D/g, "").length === 8) buscarCep(formatado, true);
+                }}
+                onKeyDown={(e) => e.key === "Enter" && buscarCep(cep, true)}
+                placeholder="00000-000"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                maxLength={9}
+                className="w-full border-0 bg-transparent py-2 text-center text-[1.9rem] tracking-wider text-neutral-900 outline-none placeholder:text-neutral-300"
+              />
+              {cepErro && <p className="text-center text-[.76rem] text-red-600">{cepErro}</p>}
+              <button
+                type="button"
+                disabled={buscandoCep || cep.replace(/\D/g, "").length !== 8}
+                onClick={() => buscarCep(cep, true)}
+                className="flex w-full items-center justify-center rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
+                style={{ background: buscandoCep || cep.replace(/\D/g, "").length !== 8 ? "#c0a88a" : brown }}
+              >
+                {buscandoCep ? <Loader2 size={16} className="animate-spin" /> : "Buscar CEP"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCepErro("");
+                  setEnderecoEtapa("form");
+                }}
+                className="block w-full text-center text-[.82rem] font-medium underline-offset-2 hover:underline"
+                style={{ color: brown }}
+              >
+                Não sei meu CEP
+              </button>
+            </div>
+          ) : (
+          <>
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4">
+            <button
+              type="button"
+              onClick={() => {
+                setCepErro("");
+                setEnderecoEtapa("cep");
+              }}
+              className="text-[.78rem] font-medium"
+              style={{ color: brown }}
+            >
+              ← Buscar por CEP{perfil.geoAtivo ? " ou localização" : ""}
+            </button>
             <div className="flex items-center gap-2">
               <input
                 value={cep}
@@ -1207,7 +1276,7 @@ export function StoreCheckoutDialog({
                   setCep(formatarCep(e.target.value));
                   if (perfil.taxaEntregaTipo === "area") setAreaTaxaInfo(null);
                 }}
-                onBlur={buscarCep}
+                onBlur={() => buscarCep()}
                 placeholder="CEP"
                 inputMode="numeric"
                 className={fieldClass()}
@@ -1292,6 +1361,8 @@ export function StoreCheckoutDialog({
               </button>
             )}
           </div>
+          </>
+          )}
         </DialogContent>
       </Dialog>
 
