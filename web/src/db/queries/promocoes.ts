@@ -190,7 +190,7 @@ export async function salvarPromocao(lojaId: number, operadorId: number, input: 
 
   try {
     const resultado = await withTransaction(async (tx): Promise<{ ok: true } | { ok: false; msg: string }> => {
-      const [atual] = await tx.select({ promoDesativado: produtos.promo_desativado, promoImagem: produtos.promo_imagem }).from(produtos).where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId))).limit(1);
+      const [atual] = await tx.select({ promoDesativado: produtos.promo_desativado, promoImagem: produtos.promo_imagem, promoInicio: produtos.promo_inicio }).from(produtos).where(and(eq(produtos.id, produtoId), eq(produtos.loja_id, lojaId))).limit(1);
       if (!atual) return { ok: false, msg: "Produto nao encontrado." };
       const estavaAtiva = !atual.promoDesativado;
 
@@ -220,7 +220,8 @@ export async function salvarPromocao(lojaId: number, operadorId: number, input: 
         promo_descricao: promoDescricao,
         promo_etiqueta: promoEtiqueta,
       };
-      if (ativar && !estavaAtiva) set.promo_inicio = dataFortaleza();
+      // sem promo_inicio o prazo (promo_dias) nunca venceria: comeca a contar hoje
+      if (ativar && (!estavaAtiva || !atual.promoInicio)) set.promo_inicio = dataFortaleza();
       if (promoImagemRemover) set.promo_imagem = null;
       else if (novaImagem !== null) set.promo_imagem = novaImagem;
 

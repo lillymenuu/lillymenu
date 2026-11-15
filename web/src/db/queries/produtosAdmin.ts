@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { produtos, categorias, estoque, estoqueGrupoMembros, produtoVariacoes, produtoOpcoesGrupos, produtoOpcoesItens, configuracoes } from "@/db/schema";
 import { storageSaveBase64, storageDelete } from "@/db/queries/storage";
 import { sincronizarEstoqueProdutoComVariacoes } from "@/db/queries/variacaoEstoque";
+import { dataFortaleza } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/produtos.php (GET/POST/PATCH/DELETE): CRUD do
@@ -55,8 +56,16 @@ export type ProdutoAdmin = {
   destaque: boolean;
 };
 
+/** Promocao com prazo (promo_dias, definido na tela de Promocoes) ja vencido hoje. */
+function promoExpiradaSql(hoje: string) {
+  return sql`(${produtos.promo_dias} is not null and ${produtos.promo_inicio} is not null and ${produtos.promo_inicio} + ${produtos.promo_dias} <= ${hoje}::date)`;
+}
+
 export async function listarProdutosAdmin(lojaId: number): Promise<ProdutoAdmin[]> {
-  const precoExpr = sql<number>`case when ${produtos.promo_desativado} = false and ${produtos.preco_promocional} is not null and ${produtos.preco_promocional} > 0 then ${produtos.preco_promocional} else ${produtos.preco} end`;
+  const expirada = promoExpiradaSql(dataFortaleza());
+  // promocao vencida aparece como desativada no form, igual a loja (catalogo.ts)
+  const promoDesativadoExpr = sql<boolean>`(${produtos.promo_desativado} or ${expirada})`;
+  const precoExpr = sql<number>`case when not ${promoDesativadoExpr} and ${produtos.preco_promocional} is not null and ${produtos.preco_promocional} > 0 then ${produtos.preco_promocional} else ${produtos.preco} end`;
 
   const linhas = await db
     .select({
@@ -74,7 +83,7 @@ export async function listarProdutosAdmin(lojaId: number): Promise<ProdutoAdmin[
       estoqueQuantidade: sql<number>`coalesce(${estoque.quantidade}, 0)`,
       precoPromocional: produtos.preco_promocional,
       precoCusto: produtos.preco_custo,
-      promoDesativado: produtos.promo_desativado,
+      promoDesativado: promoDesativadoExpr,
       imagem: produtos.imagem,
       descricao: produtos.descricao,
       apenasAgendamento: produtos.apenas_agendamento,
@@ -288,11 +297,10 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
     preco_promocional: precoPromocional,
     ...(input.precoCusto !== undefined ? { preco_custo: input.precoCusto } : {}),
     promo_desativado: Boolean(input.promoDesativado),
-    /* promo_dias/promo_inicio: feature legada de "promocao por N dias" sem
-       equivalente neste form — zera pra uma promocao antiga com prazo
-       vencido nao travar o produto pra sempre (catalogo.ts checa expiracao). */
-    promo_dias: null,
-    promo_inicio: null,
+    /* promo_dias/promo_inicio pertencem a tela de Promocoes: este form nao
+       mexe neles (antes zerava, e a promocao com prazo virava permanente).
+       Reativar uma promocao desativada/vencida por aqui reinicia o prazo
+       (promo_inicio = hoje) — ver o update abaixo. */
     apenas_agendamento: Boolean(input.apenasAgendamento),
     disponivel_orcamento: Boolean(input.disponivelOrcamento),
     quantidade_minima: Math.max(0, Number(input.quantidadeMinima ?? 0)),
@@ -313,10 +321,19 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
 
   if (input.id && input.id > 0) {
     const idInt = input.id;
-    const atual = await db.select({ imagem: produtos.imagem }).from(produtos).where(and(eq(produtos.id, idInt), eq(produtos.loja_id, lojaId))).limit(1);
+    const hoje = dataFortaleza();
+    const atual = await db
+      .select({ imagem: produtos.imagem, promoDesativado: produtos.promo_desativado, promoInicio: produtos.promo_inicio, promoExpirada: sql<boolean>`${promoExpiradaSql(hoje)}` })
+      .from(produtos)
+      .where(and(eq(produtos.id, idInt), eq(produtos.loja_id, lojaId)))
+      .limit(1);
     let imagemAtual = atual[0]?.imagem ?? null;
 
     const set: Record<string, unknown> = { ...campos };
+    const promoLigada = !campos.promo_desativado && (precoPromocional ?? 0) > 0;
+    if (promoLigada && atual[0] && (atual[0].promoDesativado || atual[0].promoExpirada || !atual[0].promoInicio)) {
+      set.promo_inicio = hoje;
+    }
     if (input.imagemRemover) {
       await storageDelete(imagemAtual);
       set.imagem = null;
