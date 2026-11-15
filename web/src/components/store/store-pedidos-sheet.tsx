@@ -507,7 +507,7 @@ export function StorePedidosSheet({
                     </div>
                   )}
 
-                  {perfil.lojaWhatsappPedidos && (
+                  {perfil.lojaWhatsappPedidos && !["finalizado", "entregue", "cancelado"].includes(p.status) && (
                     <div className="border-t border-neutral-100 py-2.5">
                       <a
                         href={`https://wa.me/55${perfil.lojaWhatsappPedidos}?text=${encodeURIComponent(
