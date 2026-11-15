@@ -2,6 +2,7 @@
 
 import { trackStoreEvento } from "@/lib/store/tracking";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { StoreCartItem } from "@/lib/store/types";
 import { assinaturaComplementos } from "@/lib/complementos";
 
@@ -69,6 +70,9 @@ export function useStoreCart(lojaId: number) {
 
   const adicionar = useCallback((item: Omit<StoreCartItem, "key">) => {
     trackStoreEvento(lojaId, "carrinho");
+    /* Toaster global (app/layout.tsx) ja fica no topo central, desktop e mobile. id fixo:
+       adicionar varias vezes seguidas substitui o aviso em vez de empilhar. */
+    toast.success(`${item.qtd > 1 ? `${item.qtd}x ` : ""}${item.nome} adicionado ao carrinho`, { id: "store-item-adicionado", duration: 2500 });
     setItens((atual) => {
       const assinaturaNova = assinaturaItem(item);
       const idxExistente = atual.findIndex((i) => assinaturaItem(i) === assinaturaNova);
