@@ -1157,7 +1157,12 @@ export function StoreCheckoutDialog({
       </Dialog>
 
       <Dialog open={enderecoModalAberto} onOpenChange={setEnderecoModalAberto}>
-        <DialogContent showCloseButton={false} className="max-w-md gap-0 p-0 sm:max-w-md">
+        {/* Mobile: bottom sheet estilo app — preso na base (sem flutuar), com respiro nas laterais e
+            entrada de baixo pra cima. sm+: volta ao modal centralizado. */}
+        <DialogContent
+          showCloseButton={false}
+          className="top-auto right-3 bottom-0 left-3 w-auto max-w-none translate-x-0 translate-y-0 gap-0 rounded-t-2xl rounded-b-none p-0 pb-[env(safe-area-inset-bottom)] duration-300 ease-out data-open:zoom-in-100 data-open:slide-in-from-bottom data-closed:duration-200 data-closed:zoom-out-100 data-closed:slide-out-to-bottom sm:top-1/2 sm:right-auto sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:pb-0 sm:data-open:zoom-in-95 sm:data-open:slide-in-from-bottom-0 sm:data-closed:zoom-out-95 sm:data-closed:slide-out-to-bottom-0"
+        >
           <div className="flex items-center justify-between border-b border-neutral-100 p-4">
             <DialogTitle className="text-[1rem] font-bold text-neutral-900">Endereco de Entrega</DialogTitle>
             <button type="button" onClick={() => setEnderecoModalAberto(false)} className="flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
