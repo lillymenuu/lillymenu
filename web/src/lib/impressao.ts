@@ -22,8 +22,8 @@ declare global {
   interface Window {
     impressaoQZ?: {
       listarPerfis: () => PerfilImpressao[];
-      salvarPerfil: (p: PerfilImpressao) => PerfilImpressao;
-      excluirPerfil: (id: string) => void;
+      salvarPerfil: (p: PerfilImpressao) => Promise<PerfilImpressao>;
+      excluirPerfil: (id: string) => Promise<void>;
       listarImpressorasSistema: () => Promise<string[]>;
       imprimirTeste: (perfil: PerfilImpressao, lojaNome: string) => Promise<void>;
       imprimirManual: (pedidoId: string | number, lojaNome: string, uso?: string) => Promise<void>;

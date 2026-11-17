@@ -22,6 +22,7 @@ import {
 } from "@/lib/impressao-qz";
 
 const QZ_DOWNLOAD_URL = "https://qz.io/download/";
+const NENHUMA = "__nenhuma__";
 
 const PERFIL_VAZIO: Perfil = {
   id: null,
@@ -57,6 +58,7 @@ export function ImpressaoDialog({ open, onOpenChange, lojaNome }: { open: boolea
   const [form, setForm] = useState<Perfil | null>(null);
   const [testando, setTestando] = useState<string | null>(null);
   const [excluirId, setExcluirId] = useState<string | null>(null);
+  const [salvando, setSalvando] = useState(false);
 
   function recarregarImpressoras() {
     setSistema({ estado: "carregando" });
@@ -90,23 +92,38 @@ export function ImpressaoDialog({ open, onOpenChange, lojaNome }: { open: boolea
     if (padrao) setForm((f) => (f && !f.id && !f.qzPrinterName ? { ...f, qzPrinterName: padrao, nome: f.nome || padrao.toUpperCase() } : f));
   }
 
-  function salvar() {
+  async function salvar() {
     if (!form) return;
     if (!form.nome.trim()) return toast.error("Informe um nome para a impressora.");
-    if (!form.qzPrinterName) return toast.error("Selecione a impressora deste computador.");
-    salvarPerfil({ ...form, nome: form.nome.trim() });
-    toast.success("Impressora salva.");
-    setForm(null);
+    setSalvando(true);
+    try {
+      await salvarPerfil({ ...form, nome: form.nome.trim() });
+      toast.success("Impressora salva.");
+      setForm(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao salvar impressora.");
+    } finally {
+      setSalvando(false);
+    }
   }
 
-  function excluir() {
+  async function excluir() {
     if (!excluirId) return;
-    excluirPerfil(excluirId);
-    toast.success("Impressora apagada.");
-    setExcluirId(null);
+    try {
+      await excluirPerfil(excluirId);
+      toast.success("Impressora apagada.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao apagar impressora.");
+    } finally {
+      setExcluirId(null);
+    }
   }
 
   async function testar(perfil: Perfil) {
+    if (!perfil.qzPrinterName) {
+      toast.error("Escolha em Editar qual impressora deste computador corresponde a esta.");
+      return;
+    }
     setTestando(perfil.id ?? "form");
     try {
       await imprimirTeste(perfil, lojaNome);
@@ -141,22 +158,23 @@ export function ImpressaoDialog({ open, onOpenChange, lojaNome }: { open: boolea
               sistema={sistema}
               onRecarregar={recarregarImpressoras}
               testando={testando === "form"}
+              salvando={salvando}
               onTestar={() => void testar(form)}
-              onSalvar={salvar}
+              onSalvar={() => void salvar()}
             />
           ) : (
             <>
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6">
                 {perfis.length === 0 ? (
                   <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                    Nenhuma impressora configurada. As impressoras ficam salvas em cada computador que imprime (caixa, cozinha).
+                    Nenhuma impressora cadastrada. As impressoras ficam salvas na loja; em cada computador que imprime, basta escolher a impressora do Windows correspondente.
                   </div>
                 ) : (
                   perfis.map((p) => (
                     <CardImpressora
                       key={p.id}
                       perfil={p}
-                      naoEncontrada={sistema.estado === "ok" && !impressorasSistema.includes(p.qzPrinterName)}
+                      naoEncontrada={!p.qzPrinterName || (sistema.estado === "ok" && !impressorasSistema.includes(p.qzPrinterName))}
                       testando={testando === p.id}
                       onApagar={() => setExcluirId(p.id)}
                       onTestar={() => void testar(p)}
@@ -179,7 +197,7 @@ export function ImpressaoDialog({ open, onOpenChange, lojaNome }: { open: boolea
         open={excluirId !== null}
         onOpenChange={(v) => !v && setExcluirId(null)}
         titulo="Apagar impressora"
-        descricao="Tem certeza que deseja apagar esta impressora deste computador?"
+        descricao="Tem certeza que deseja apagar esta impressora? Ela some de todos os computadores da loja."
         textoConfirmar="Apagar"
         onConfirmar={excluir}
       />
@@ -206,7 +224,8 @@ function CardImpressora({
     <div className="rounded-2xl border p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-bold">{perfil.nome}</span>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{USO_LABEL[perfil.usoPara] ?? perfil.usoPara}</span>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Vinculado a essa loja</span>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{USO_LABEL[perfil.usoPara] ?? perfil.usoPara}</span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
         <Info rotulo="Impressão automática" valor={perfil.impressaoAutomatica ? "Habilitado" : "Desabilitado"} />
@@ -216,7 +235,7 @@ function CardImpressora({
         <span className="hidden sm:block" />
         <Info rotulo="Modo" valor={MODO_LABEL[perfil.tipoImpressao] ?? perfil.tipoImpressao} className="sm:text-right" />
       </div>
-      <div className="mt-2 truncate text-sm text-muted-foreground">Impressora: {perfil.qzPrinterName || "não vinculada"}</div>
+      {perfil.qzPrinterName && <div className="mt-2 truncate text-sm text-muted-foreground">Neste computador: {perfil.qzPrinterName}</div>}
       {naoEncontrada && (
         <div className="mt-1 text-sm text-amber-700 dark:text-amber-400">Impressora não está configurada nesse computador. Possivelmente é compartilhada!</div>
       )}
@@ -249,6 +268,7 @@ function FormImpressora({
   sistema,
   onRecarregar,
   testando,
+  salvando,
   onTestar,
   onSalvar,
 }: {
@@ -257,6 +277,7 @@ function FormImpressora({
   sistema: Sistema;
   onRecarregar: () => void;
   testando: boolean;
+  salvando: boolean;
   onTestar: () => void;
   onSalvar: () => void;
 }) {
@@ -281,9 +302,7 @@ function FormImpressora({
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">
-              Impressora deste computador<span className="text-primary">*</span>
-            </Label>
+            <Label className="text-sm font-medium">Impressora deste computador</Label>
             <button
               type="button"
               onClick={onRecarregar}
@@ -293,13 +312,22 @@ function FormImpressora({
               <RefreshCw className={`size-3 ${sistema.estado === "carregando" ? "animate-spin" : ""}`} /> Buscar
             </button>
           </div>
-          <Select value={form.qzPrinterName || null} onValueChange={(v) => v && setForm({ ...form, qzPrinterName: v as string })} disabled={!opcoes.length}>
+          <Select
+            value={form.qzPrinterName || (opcoes.length ? NENHUMA : null)}
+            onValueChange={(v) => v && setForm({ ...form, qzPrinterName: v === NENHUMA ? "" : (v as string) })}
+            disabled={!opcoes.length}
+          >
             <SelectTrigger className="h-10 w-full rounded-full bg-muted/60 px-4">
-              <SelectValue
-                placeholder={sistema.estado === "carregando" ? "Buscando impressoras..." : sistema.estado === "erro" ? "Abra o QZ Tray para listar" : "Selecione"}
-              />
+              <SelectValue>
+                {(v: string | null) =>
+                  v === NENHUMA
+                    ? "Nenhuma (este computador não imprime)"
+                    : v || (sistema.estado === "carregando" ? "Buscando impressoras..." : sistema.estado === "erro" ? "Abra o QZ Tray para listar" : "Selecione")
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value={NENHUMA}>Nenhuma (este computador não imprime)</SelectItem>
               {opcoes.map((nome) => (
                 <SelectItem key={nome} value={nome}>
                   {nome}
@@ -307,6 +335,7 @@ function FormImpressora({
               ))}
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground">Vale só para este computador. Os outros dados ficam salvos na loja.</p>
         </div>
 
         <GrupoRadio
@@ -371,8 +400,8 @@ function FormImpressora({
         <Button variant="secondary" className="gap-1.5 rounded-full" onClick={onTestar} disabled={!form.qzPrinterName || testando}>
           {testando && <Loader2 className="size-4 animate-spin" />} Imprimir teste
         </Button>
-        <Button className="rounded-full px-5" onClick={onSalvar}>
-          Salvar
+        <Button className="gap-1.5 rounded-full px-5" onClick={onSalvar} disabled={salvando}>
+          {salvando && <Loader2 className="size-4 animate-spin" />} Salvar
         </Button>
       </DialogFooter>
     </>

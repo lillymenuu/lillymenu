@@ -7,11 +7,13 @@
  * "qz" nao existia e a conexao sempre falhava; (2) a URL saia como /admin/admin/...;
  * (3) os dados do pedido vinham de "api/pdv_detalhe.php" relativo, que nao existe no Next.
  *
- * Os perfis de impressora ficam no localStorage deste navegador (cada computador do
- * caixa/cozinha tem suas proprias impressoras), na mesma chave usada pelo painel PHP.
+ * As impressoras (perfis) ficam salvas na loja (/api/impressao/perfis), iguais pra todos os
+ * computadores. Cada computador guarda so o VINCULO perfil -> impressora do Windows
+ * (localStorage), e so imprime pelos perfis que vinculou. Uma copia da lista da loja fica
+ * em cache local pra leitura sincrona e pra funcionar se a rede oscilar.
  * Tambem expoe window.impressaoQZ pra manter compativeis os chamadores existentes.
  */
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { PerfilImpressao } from "@/lib/impressao";
 
 type QZ = {
@@ -32,7 +34,10 @@ type QZ = {
   api: { getVersion: () => Promise<string> };
 };
 
-const STORAGE_KEY = "lm_impressoras";
+const CACHE_KEY = "lm_impressoras_loja"; // copia da lista da loja
+const VINCULO_KEY = "lm_impressoras_vinculo"; // { [perfilId]: nome da impressora no Windows }
+const LEGADO_KEY = "lm_impressoras"; // formato antigo: perfis completos so neste navegador
+const EVENTO_PERFIS = "lm-impressoras-alteradas";
 const ESC = "\x1B";
 const GS = "\x1D";
 
@@ -70,29 +75,51 @@ function configurarSeguranca(qz: QZ) {
 
 /* ---------- perfis ---------- */
 
-export function listarPerfis(): PerfilImpressao[] {
+type PerfilLoja = Omit<PerfilImpressao, "qzPrinterName" | "tipo" | "id"> & { id: string };
+
+function ler(chave: string): string | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
+    return localStorage.getItem(chave);
   } catch {
-    return [];
+    return null;
   }
 }
 
-const EVENTO_PERFIS = "lm-impressoras-alteradas";
-
-function salvarPerfis(perfis: PerfilImpressao[]) {
+function lerJSON<T>(chave: string, padrao: T): T {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(perfis));
+    const v = JSON.parse(ler(chave) ?? "null");
+    return v ?? padrao;
+  } catch {
+    return padrao;
+  }
+}
+
+function gravarJSON(chave: string, valor: unknown) {
+  try {
+    localStorage.setItem(chave, JSON.stringify(valor));
   } catch {
     /* modo privado / storage bloqueado */
   }
   window.dispatchEvent(new Event(EVENTO_PERFIS));
 }
 
+function lerVinculos(): Record<string, string> {
+  const v = lerJSON<Record<string, string>>(VINCULO_KEY, {});
+  return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+}
+
+function combinar(perfisLoja: PerfilLoja[], vinculos: Record<string, string>): PerfilImpressao[] {
+  return perfisLoja.map((p) => ({ ...p, tipo: "nao_fiscal", qzPrinterName: vinculos[p.id] ?? "" }));
+}
+
+/* Lista da loja (do cache local) + impressora do Windows vinculada neste computador ("" = nao vinculada). */
+export function listarPerfis(): PerfilImpressao[] {
+  const cache = lerJSON<PerfilLoja[]>(CACHE_KEY, []);
+  return combinar(Array.isArray(cache) ? cache : [], lerVinculos());
+}
+
 function assinarPerfis(cb: () => void) {
-  const onStorage = (e: StorageEvent) => e.key === STORAGE_KEY && cb();
+  const onStorage = (e: StorageEvent) => (e.key === CACHE_KEY || e.key === VINCULO_KEY) && cb();
   window.addEventListener(EVENTO_PERFIS, cb);
   window.addEventListener("storage", onStorage);
   return () => {
@@ -101,43 +128,123 @@ function assinarPerfis(cb: () => void) {
   };
 }
 
+/* Separador que nao aparece em JSON valido (nomes de impressora podem ter "|"). */
+const SEP = "\u0001";
+
 function snapshotPerfis() {
-  try {
-    return localStorage.getItem(STORAGE_KEY) ?? "[]";
-  } catch {
-    return "[]";
-  }
+  return (ler(CACHE_KEY) ?? "[]") + SEP + (ler(VINCULO_KEY) ?? "{}");
 }
 
-/* Perfis salvos neste navegador, reativo (atualiza quando outro componente/aba salva). */
+async function api<T>(url: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(url, { cache: "no-store", ...init });
+  const dados = await r.json().catch(() => ({ ok: false }));
+  if (!dados.ok) throw new Error(dados.msg || "Não foi possível falar com o servidor.");
+  return dados as T;
+}
+
+function postarPerfil(perfil: PerfilLoja) {
+  return api<{ ok: true; perfis: PerfilLoja[] }>("/api/impressao/perfis", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ perfil }),
+  });
+}
+
+function paraLoja(p: PerfilImpressao & { id: string }): PerfilLoja {
+  const { qzPrinterName: _q, tipo: _t, ...resto } = p;
+  void _q;
+  void _t;
+  return resto;
+}
+
+/* Perfis do formato antigo (so no localStorage) sobem pra loja uma vez, mantendo o vinculo local. */
+async function migrarLegado(perfisLoja: PerfilLoja[]): Promise<PerfilLoja[]> {
+  const legado = lerJSON<PerfilImpressao[]>(LEGADO_KEY, []);
+  if (!Array.isArray(legado) || !legado.length) return perfisLoja;
+  let lista = perfisLoja;
+  const vinculos = lerVinculos();
+  for (const p of legado) {
+    if (!p?.id || !p.nome) continue;
+    if (!lista.some((x) => x.id === p.id)) lista = (await postarPerfil(paraLoja(p as PerfilImpressao & { id: string }))).perfis;
+    if (p.qzPrinterName && !vinculos[p.id]) vinculos[p.id] = p.qzPrinterName;
+  }
+  gravarJSON(VINCULO_KEY, vinculos);
+  try {
+    localStorage.removeItem(LEGADO_KEY);
+  } catch {
+    /* ignore */
+  }
+  return lista;
+}
+
+let sincronizando: Promise<PerfilImpressao[]> | null = null;
+
+/* Busca a lista da loja no servidor e atualiza o cache local. */
+export function sincronizarPerfis(): Promise<PerfilImpressao[]> {
+  if (!sincronizando) {
+    sincronizando = (async () => {
+      const { perfis } = await api<{ ok: true; perfis: PerfilLoja[] }>("/api/impressao/perfis");
+      const lista = await migrarLegado(perfis);
+      gravarJSON(CACHE_KEY, lista);
+      return listarPerfis();
+    })().finally(() => {
+      sincronizando = null;
+    });
+  }
+  return sincronizando;
+}
+
+/* Impressoras da loja com o vinculo deste computador — reativo e sincroniza com o servidor ao montar. */
 export function usePerfisImpressao(): PerfilImpressao[] {
-  const raw = useSyncExternalStore(assinarPerfis, snapshotPerfis, () => "[]");
+  const raw = useSyncExternalStore(assinarPerfis, snapshotPerfis, () => "[]" + SEP + "{}");
+  useEffect(() => {
+    sincronizarPerfis().catch(() => {
+      /* sem rede: segue com o cache */
+    });
+  }, []);
   return useMemo(() => {
+    const [cache, vinc] = raw.split(SEP);
     try {
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
+      const lista = JSON.parse(cache);
+      const vinculos = JSON.parse(vinc);
+      return combinar(Array.isArray(lista) ? lista : [], vinculos && typeof vinculos === "object" ? vinculos : {});
     } catch {
       return [];
     }
   }, [raw]);
 }
 
-export function salvarPerfil(perfil: PerfilImpressao): PerfilImpressao {
-  const perfis = listarPerfis();
-  const salvo = { ...perfil, id: perfil.id || `imp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}` };
-  const idx = perfis.findIndex((p) => p.id === salvo.id);
-  if (idx >= 0) perfis[idx] = salvo;
-  else perfis.push(salvo);
-  salvarPerfis(perfis);
+/* Salva o perfil na loja e o vinculo com a impressora do Windows neste computador. */
+export async function salvarPerfil(perfil: PerfilImpressao): Promise<PerfilImpressao> {
+  const id = perfil.id || `imp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const salvo = { ...perfil, id };
+  const { perfis } = await postarPerfil(paraLoja(salvo));
+  gravarJSON(CACHE_KEY, perfis);
+  vincularImpressora(id, perfil.qzPrinterName);
   return salvo;
 }
 
-export function excluirPerfil(id: string) {
-  salvarPerfis(listarPerfis().filter((p) => p.id !== id));
+export async function excluirPerfil(id: string) {
+  const { perfis } = await api<{ ok: true; perfis: PerfilLoja[] }>(`/api/impressao/perfis?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+  gravarJSON(CACHE_KEY, perfis);
+  vincularImpressora(id, "");
 }
 
-function perfisPara(uso: string) {
-  return listarPerfis().filter((p) => p.impressaoAutomatica && (p.usoPara === uso || p.usoPara === "ambos"));
+/* Vinculo local: so neste computador. "" remove. */
+export function vincularImpressora(perfilId: string, impressora: string) {
+  const vinculos = lerVinculos();
+  if (impressora) vinculos[perfilId] = impressora;
+  else delete vinculos[perfilId];
+  gravarJSON(VINCULO_KEY, vinculos);
+}
+
+async function perfisAtuais() {
+  return sincronizarPerfis().catch(() => listarPerfis());
+}
+
+/* So imprime por perfis vinculados a uma impressora deste computador. */
+async function perfisPara(uso: string) {
+  return (await perfisAtuais()).filter((p) => p.qzPrinterName && p.impressaoAutomatica && (p.usoPara === uso || p.usoPara === "ambos"));
 }
 
 /* ---------- conexao ---------- */
@@ -513,17 +620,17 @@ async function buscarDadosPedido(pedidoId: string | number): Promise<Dados> {
 
 /* Impressao pelo botao "Imprimir" — usa todas as impressoras do uso, com ou sem automatica. */
 export async function imprimirManual(pedidoId: string | number, lojaNome: string, uso = "cozinha") {
-  const perfis = listarPerfis().filter((p) => p.usoPara === uso || p.usoPara === "ambos");
-  if (!perfis.length) throw new Error("Nenhuma impressora configurada. Configure em Configurações > Impressão.");
+  const perfis = (await perfisAtuais()).filter((p) => p.qzPrinterName && (p.usoPara === uso || p.usoPara === "ambos"));
+  if (!perfis.length) throw new Error("Nenhuma impressora vinculada neste computador. Configure em Configurações > Impressão.");
   const dados = await buscarDadosPedido(pedidoId);
   for (const perfil of perfis) await imprimirPedido(dados, perfil, lojaNome);
 }
 
 /* Impressao automatica (ao fechar venda no PDV/garcom) — best-effort, nunca lanca. */
 export async function imprimirAutomaticoPedido(uso: string, pedidoId: string | number, lojaNome: string) {
-  const perfis = perfisPara(uso);
-  if (!perfis.length) return;
   try {
+    const perfis = await perfisPara(uso);
+    if (!perfis.length) return;
     const dados = await buscarDadosPedido(pedidoId);
     for (const perfil of perfis) {
       try {
@@ -552,7 +659,7 @@ export function mensagemErroQZ(e: unknown): string {
   return msg || "Erro desconhecido ao imprimir.";
 }
 
-const api = {
+const apiGlobal = {
   listarPerfis,
   salvarPerfil,
   excluirPerfil,
@@ -565,8 +672,8 @@ const api = {
 };
 
 export function instalarImpressaoQZ() {
-  if (typeof window !== "undefined") window.impressaoQZ = api;
-  return api;
+  if (typeof window !== "undefined") window.impressaoQZ = apiGlobal;
+  return apiGlobal;
 }
 
 instalarImpressaoQZ();
