@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Copy,
   Truck,
   Printer,
+  Loader2,
   XCircle,
   CalendarClock,
   Monitor,
@@ -44,6 +46,7 @@ import { ClientePerfilDialog } from "@/components/cliente/cliente-perfil-dialog"
 import type { Motoboy } from "@/lib/pedidos";
 import { cn } from "cn";
 import { usePosOverlay } from "@/components/pos/pos-overlay-provider";
+import { imprimirManual, mensagemErroQZ } from "@/lib/impressao-qz";
 
 type NotaFiscalResumo = { status: string; chave: string | null; pdf_url: string | null; mensagem_erro: string | null };
 
@@ -189,6 +192,8 @@ export function OrderDetailDialog({
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [cancelarOpen, setCancelarOpen] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [imprimindo, setImprimindo] = useState(false);
+  const router = useRouter();
   const [finalizando, setFinalizando] = useState(false);
   const [motoboyOpen, setMotoboyOpen] = useState(false);
   const [clienteOpen, setClienteOpen] = useState(false);
@@ -337,7 +342,22 @@ export function OrderDetailDialog({
     toast.success("Endereço copiado.");
   }
 
-  const finalizavel = pedido && pedido.status !== "finalizado" && pedido.status !== "cancelado";
+  /* Imprime direto na impressora vinculada neste computador (QZ Tray), sem a tela do navegador. */
+  async function imprimir(id: number) {
+    setImprimindo(true);
+    try {
+      await imprimirManual(id, "");
+      toast.success("Pedido enviado para a impressora.");
+    } catch (e) {
+      toast.error(mensagemErroQZ(e), {
+        action: { label: "Configurar", onClick: () => router.push("/settings?abrir=impressao") },
+      });
+    } finally {
+      setImprimindo(false);
+    }
+  }
+
+  const finalizavel = pedido &&pedido.status !== "finalizado" && pedido.status !== "cancelado";
   const telHref = pedido?.telefone ? `tel:${pedido.telefone.replace(/\D/g, "")}` : undefined;
   const waHref = pedido?.telefone ? `https://wa.me/55${pedido.telefone.replace(/\D/g, "")}` : undefined;
 
@@ -367,11 +387,13 @@ export function OrderDetailDialog({
                   )}
                   <button
                     type="button"
-                    onClick={() => window.print()}
+                    onClick={() => void imprimir(pedido.id)}
+                    disabled={imprimindo}
                     aria-label="Imprimir"
                     className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg font-normal")}
                   >
-                    <Printer size={13} /> <span className="max-md:sr-only">Imprimir</span>
+                    {imprimindo ? <Loader2 size={13} className="animate-spin" /> : <Printer size={13} />}{" "}
+                    <span className="max-md:sr-only">Imprimir</span>
                   </button>
                 </div>
               )}

@@ -618,9 +618,12 @@ async function buscarDadosPedido(pedidoId: string | number): Promise<Dados> {
   return dados as Dados;
 }
 
-/* Impressao pelo botao "Imprimir" — usa todas as impressoras do uso, com ou sem automatica. */
-export async function imprimirManual(pedidoId: string | number, lojaNome: string, uso = "cozinha") {
-  const perfis = (await perfisAtuais()).filter((p) => p.qzPrinterName && (p.usoPara === uso || p.usoPara === "ambos"));
+/* Impressao pelo botao "Imprimir" — usa as impressoras vinculadas do uso, com ou sem automatica.
+   Sem uso: prefere as do PDV/caixa (pdv/ambos); se nao houver, usa qualquer vinculada. */
+export async function imprimirManual(pedidoId: string | number, lojaNome: string, uso?: string) {
+  const vinculadas = (await perfisAtuais()).filter((p) => p.qzPrinterName);
+  let perfis = vinculadas.filter((p) => p.usoPara === (uso ?? "pdv") || p.usoPara === "ambos");
+  if (!uso && !perfis.length) perfis = vinculadas;
   if (!perfis.length) throw new Error("Nenhuma impressora vinculada neste computador. Configure em Configurações > Impressão.");
   const dados = await buscarDadosPedido(pedidoId);
   for (const perfil of perfis) await imprimirPedido(dados, perfil, lojaNome);
