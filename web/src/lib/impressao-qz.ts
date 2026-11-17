@@ -618,24 +618,87 @@ async function buscarDadosPedido(pedidoId: string | number): Promise<Dados> {
   return dados as Dados;
 }
 
-/* Impressao pelo botao "Imprimir" — usa as impressoras vinculadas do uso, com ou sem automatica.
-   Sem uso: prefere as do PDV/caixa (pdv/ambos); se nao houver, usa qualquer vinculada. */
-export async function imprimirManual(pedidoId: string | number, lojaNome: string, uso?: string) {
-  const vinculadas = (await perfisAtuais()).filter((p) => p.qzPrinterName);
-  let perfis = vinculadas.filter((p) => p.usoPara === (uso ?? "pdv") || p.usoPara === "ambos");
-  if (!uso && !perfis.length) perfis = vinculadas;
-  if (!perfis.length) throw new Error("Nenhuma impressora vinculada neste computador. Configure em Configurações > Impressão.");
-  const dados = await buscarDadosPedido(pedidoId);
-  for (const perfil of perfis) await imprimirPedido(dados, perfil, lojaNome);
+/* ---------- fila entre computadores ---------- */
+
+type Trabalho = { id: number; pedido_id: number; perfil_id: string; status: string; erro: string | null };
+
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const nomesDe = (perfis: PerfilImpressao[]) => perfis.map((p) => `"${p.nome}"`).join(", ");
+
+function criarTrabalhos(pedidoId: string | number, perfis: PerfilImpressao[]) {
+  return api<{ ok: true; ids: number[] }>("/api/impressao/fila", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pedido_id: Number(pedidoId), perfis: perfis.map((p) => p.id) }),
+  });
 }
 
-/* Impressao automatica (ao fechar venda no PDV/garcom) — best-effort, nunca lanca. */
+/* Manda pro computador que tem a impressora e espera a resposta (ate ~20s). Devolve a mensagem de sucesso. */
+async function imprimirEmOutroComputador(pedidoId: string | number, perfis: PerfilImpressao[]): Promise<string> {
+  const { ids } = await criarTrabalhos(pedidoId, perfis);
+  let trabalhos: Trabalho[] = [];
+  const limite = Date.now() + 20_000;
+  while (Date.now() < limite) {
+    await esperar(1500);
+    trabalhos = (await api<{ ok: true; trabalhos: Trabalho[] }>(`/api/impressao/fila?ids=${ids.join(",")}`)).trabalhos;
+    if (trabalhos.every((t) => t.status !== "pendente" && t.status !== "imprimindo")) break;
+  }
+  const pendentes = trabalhos.filter((t) => t.status === "pendente");
+  if (pendentes.length) {
+    // ninguem pegou: desiste, pra nao imprimir "do nada" quando o outro computador abrir mais tarde
+    await api(`/api/impressao/fila?ids=${pendentes.map((t) => t.id).join(",")}`, { method: "DELETE" }).catch(() => {});
+  }
+  const perfilDe = (t: Trabalho) => perfis.find((p) => p.id === t.perfil_id);
+  const ok = trabalhos.filter((t) => t.status === "impresso" || t.status === "imprimindo");
+  const falhas = trabalhos.filter((t) => t.status === "erro");
+  const problemas = [
+    ...falhas.map((t) => `O computador da impressora "${perfilDe(t)?.nome ?? ""}" não conseguiu imprimir: ${t.erro ?? "erro desconhecido"}`),
+    ...(pendentes.length
+      ? [
+          `Nenhum computador com a impressora ${nomesDe(pendentes.map(perfilDe).filter((p): p is PerfilImpressao => !!p))} está com o sistema aberto agora. Abra o sistema no computador da impressora e tente de novo.`,
+        ]
+      : []),
+  ];
+  if (!ok.length) throw new Error(problemas.join(" ") || "Não foi possível imprimir.");
+  const msg = `Pedido enviado para ${nomesDe(ok.map(perfilDe).filter((p): p is PerfilImpressao => !!p))} (outro computador).`;
+  return problemas.length ? `${msg} ${problemas.join(" ")}` : msg;
+}
+
+/* Imprime aqui nas impressoras vinculadas neste computador; as outras vao pela fila pro computador delas. */
+function separarPorComputador(perfis: PerfilImpressao[]) {
+  return { aqui: perfis.filter((p) => p.qzPrinterName), outros: perfis.filter((p) => !p.qzPrinterName) };
+}
+
+/* Impressao pelo botao "Imprimir" — usa as impressoras da loja do uso, com ou sem automatica.
+   Sem uso: prefere as do PDV/caixa (pdv/ambos); se a loja nao tiver, usa todas.
+   As vinculadas neste computador imprimem aqui; as demais vao pro computador que tem a impressora. */
+export async function imprimirManual(pedidoId: string | number, lojaNome: string, uso?: string): Promise<string> {
+  const daLoja = await perfisAtuais();
+  let perfis = daLoja.filter((p) => p.usoPara === (uso ?? "pdv") || p.usoPara === "ambos");
+  if (!uso && !perfis.length) perfis = daLoja;
+  if (!perfis.length) throw new Error("Nenhuma impressora cadastrada na loja. Configure em Configurações > Impressão.");
+
+  // se alguma do uso estiver aqui, imprime so aqui (o caixa nao precisa mandar pro outro computador)
+  const { aqui, outros } = separarPorComputador(perfis);
+  if (aqui.length) {
+    const dados = await buscarDadosPedido(pedidoId);
+    for (const perfil of aqui) await imprimirPedido(dados, perfil, lojaNome);
+    return `Pedido enviado para ${nomesDe(aqui)}.`;
+  }
+  return imprimirEmOutroComputador(pedidoId, outros);
+}
+
+/* Impressao automatica (ao fechar venda no PDV/garcom) — best-effort, nunca lanca.
+   Impressoras vinculadas aqui imprimem aqui; as outras vao pela fila (sem esperar). */
 export async function imprimirAutomaticoPedido(uso: string, pedidoId: string | number, lojaNome: string) {
   try {
-    const perfis = await perfisPara(uso);
-    if (!perfis.length) return;
+    const { aqui, outros } = separarPorComputador(await perfisPara(uso));
+    if (outros.length) {
+      criarTrabalhos(pedidoId, outros).catch((e) => console.warn("Falha ao mandar impressão para outro computador:", e));
+    }
+    if (!aqui.length) return;
     const dados = await buscarDadosPedido(pedidoId);
-    for (const perfil of perfis) {
+    for (const perfil of aqui) {
       try {
         await imprimirPedido(dados, perfil, lojaNome);
       } catch (e) {
@@ -645,6 +708,71 @@ export async function imprimirAutomaticoPedido(uso: string, pedidoId: string | n
   } catch (e) {
     console.warn("Falha ao buscar detalhe do pedido para impressão automática:", e);
   }
+}
+
+/* Lado do computador que tem a impressora: pega os trabalhos das impressoras vinculadas aqui e imprime. */
+let processandoFila = false;
+
+async function processarFila() {
+  const vinculadas = listarPerfis().filter((p) => p.qzPrinterName);
+  if (!vinculadas.length || processandoFila) return; // sem impressora aqui: nem pergunta ao servidor
+  processandoFila = true;
+  try {
+    const { trabalhos } = await api<{ ok: true; trabalhos: Trabalho[] }>("/api/impressao/fila/pegar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ perfis: vinculadas.map((p) => p.id) }),
+    });
+    for (const t of trabalhos) {
+      let resultado: { ok: boolean; erro?: string } = { ok: true };
+      try {
+        const perfil = vinculadas.find((p) => p.id === t.perfil_id);
+        if (!perfil) throw new Error("Impressora não vinculada neste computador.");
+        await imprimirPedido(await buscarDadosPedido(t.pedido_id), perfil, "");
+      } catch (e) {
+        resultado = { ok: false, erro: mensagemErroQZ(e) };
+      }
+      await api("/api/impressao/fila/pegar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ concluir: t.id, ...resultado }),
+      }).catch(() => {});
+    }
+  } catch {
+    /* sem rede / sessao expirada: tenta no proximo ciclo */
+  } finally {
+    processandoFila = false;
+  }
+}
+
+/* Timer num Web Worker: o navegador nao segura (throttling) timers de worker quando a aba
+   fica em segundo plano — o computador da impressora costuma estar com o sistema minimizado. */
+function criarTimer(ms: number, cb: () => void): () => void {
+  try {
+    const src = `setInterval(function(){postMessage(0)},${ms})`;
+    const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
+    const w = new Worker(url);
+    w.onmessage = cb;
+    return () => {
+      w.terminate();
+      URL.revokeObjectURL(url);
+    };
+  } catch {
+    const t = setInterval(cb, ms);
+    return () => clearInterval(t);
+  }
+}
+
+/* Liga o atendimento da fila neste computador (chamado uma vez pelo AppShell). Devolve o "desligar". */
+export function iniciarFilaImpressao(): () => void {
+  sincronizarPerfis().catch(() => {});
+  const pararFila = criarTimer(3000, () => void processarFila());
+  // configuracoes das impressoras podem mudar em outro computador
+  const pararSync = criarTimer(120_000, () => void sincronizarPerfis().catch(() => {}));
+  return () => {
+    pararFila();
+    pararSync();
+  };
 }
 
 /* Mensagem amigavel pros erros mais comuns do QZ Tray. */

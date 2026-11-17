@@ -26,7 +26,7 @@ declare global {
       excluirPerfil: (id: string) => Promise<void>;
       listarImpressorasSistema: () => Promise<string[]>;
       imprimirTeste: (perfil: PerfilImpressao, lojaNome: string) => Promise<void>;
-      imprimirManual: (pedidoId: string | number, lojaNome: string, uso?: string) => Promise<void>;
+      imprimirManual: (pedidoId: string | number, lojaNome: string, uso?: string) => Promise<string>;
       imprimirAutomaticoPedido: (uso: string, pedidoId: string | number, lojaNome: string) => Promise<void>;
       garantirConexao: () => Promise<void>;
     };

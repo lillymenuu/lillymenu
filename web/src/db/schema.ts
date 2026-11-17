@@ -1609,6 +1609,26 @@ export const desperdicios = pgTable(
 );
 
 /*
+ * Fila de impressao entre computadores: um computador sem a impressora pede a impressao de um
+ * pedido num perfil da loja (configuracoes.impressoras_perfis); o computador que tem esse perfil
+ * vinculado (QZ Tray) pega o trabalho (pendente -> imprimindo), imprime e marca impresso/erro.
+ */
+export const impressaoFila = pgTable(
+  "impressao_fila",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    loja_id: integer("loja_id").notNull(),
+    pedido_id: integer("pedido_id").notNull(),
+    perfil_id: varchar("perfil_id", { length: 60 }).notNull(),
+    status: text("status").$type<"pendente" | "imprimindo" | "impresso" | "erro" | "cancelado">().notNull().default("pendente"),
+    erro: varchar("erro", { length: 255 }),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    atualizado_em: timestamp("atualizado_em", { mode: "string" }),
+  },
+  (t) => [index("impressao_fila_idx_loja_status").on(t.loja_id, t.status)]
+);
+
+/*
  * Midia Indoor - Menu Digital (/midia-indoor): TVs pareadas com a loja que exibem o catalogo.
  * A TV guarda o token (so leitura do catalogo, nunca acesso ao painel). config: opcoes do player.
  */

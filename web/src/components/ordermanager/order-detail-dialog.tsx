@@ -346,8 +346,7 @@ export function OrderDetailDialog({
   async function imprimir(id: number) {
     setImprimindo(true);
     try {
-      await imprimirManual(id, "");
-      toast.success("Pedido enviado para a impressora.");
+      toast.success(await imprimirManual(id, ""));
     } catch (e) {
       toast.error(mensagemErroQZ(e), {
         action: { label: "Configurar", onClick: () => router.push("/settings?abrir=impressao") },

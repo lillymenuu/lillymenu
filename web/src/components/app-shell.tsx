@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PosOverlayProvider, usePosOverlay } from "@/components/pos/pos-overlay-provider";
 import { ValidadeAviso } from "@/components/produtos/validade-aviso";
+import { iniciarFilaImpressao } from "@/lib/impressao-qz";
 import { cn } from "cn";
 
 const COLLAPSE_KEY = "sidebarCollapsed";
@@ -82,6 +83,9 @@ function AppShellInner({
       clearInterval(interval);
     };
   }, [sidebarData.menu.whatslilly]);
+
+  /* Computador com impressora vinculada atende pedidos de impressao vindos de outros computadores. */
+  useEffect(() => iniciarFilaImpressao(), []);
 
   useEffect(() => {
     let ativo = true;

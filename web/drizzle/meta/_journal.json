@@ -190,6 +190,13 @@
       "when": 1794273564356,
       "tag": "0026_midia_indoor",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794952818043,
+      "tag": "0027_impressao_fila",
+      "breakpoints": true
     }
   ]
 }
