@@ -1,45 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Script from "next/script";
 import Link from "next/link";
 import { Printer } from "lucide-react";
-import type { PerfilImpressao } from "@/lib/impressao";
+import { salvarPerfil, usePerfisImpressao } from "@/lib/impressao-qz";
 
-function perfisPdv(): PerfilImpressao[] {
-  if (!window.impressaoQZ) return [];
-  return window.impressaoQZ.listarPerfis().filter((p) => p.usoPara === "pdv" || p.usoPara === "ambos");
-}
-
-export function PosImpressaoToggle({ phpAdminUrl }: { phpAdminUrl: string }) {
-  const [scriptPronto, setScriptPronto] = useState(false);
-  const [ligada, setLigada] = useState(false);
-  const [temPerfil, setTemPerfil] = useState(false);
-
-  function atualizarEstado() {
-    const perfis = perfisPdv();
-    setTemPerfil(perfis.length > 0);
-    setLigada(perfis.some((p) => p.impressaoAutomatica));
-  }
-
-  useEffect(() => {
-    if (scriptPronto) atualizarEstado();
-  }, [scriptPronto]);
+export function PosImpressaoToggle() {
+  const perfis = usePerfisImpressao().filter((p) => p.usoPara === "pdv" || p.usoPara === "ambos");
+  const temPerfil = perfis.length > 0;
+  const ligada = perfis.some((p) => p.impressaoAutomatica);
 
   function alternar() {
-    const perfis = perfisPdv();
-    if (!perfis.length || !window.impressaoQZ) return;
-    const novoEstado = !ligada;
-    perfis.forEach((p) => {
-      p.impressaoAutomatica = novoEstado;
-      window.impressaoQZ!.salvarPerfil(p);
-    });
-    setLigada(novoEstado);
+    perfis.forEach((p) => salvarPerfil({ ...p, impressaoAutomatica: !ligada }));
   }
 
   return (
     <>
-      <Script src={`${phpAdminUrl}/admin/assets/js/impressao_qz.js`} strategy="afterInteractive" onLoad={() => setScriptPronto(true)} />
       {temPerfil ? (
         <button
           type="button"

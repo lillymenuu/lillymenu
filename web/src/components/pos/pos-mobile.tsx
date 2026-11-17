@@ -176,7 +176,7 @@ export function PosMobile({
             )}
           </div>
         </div>
-        <PosImpressaoToggle phpAdminUrl={phpAdminUrl} />
+        <PosImpressaoToggle />
       </header>
 
       {pos.carregandoInicial ? (

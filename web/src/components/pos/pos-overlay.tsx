@@ -197,7 +197,7 @@ export function PosOverlay({
               </div>
             ) : null}
             <PosNotificacoes phpAdminUrl={phpAdminUrl} />
-            <PosImpressaoToggle phpAdminUrl={phpAdminUrl} />
+            <PosImpressaoToggle />
             <Button
               variant="ghost"
               size="icon"

@@ -1,9 +1,7 @@
 /*
  * Tipo compartilhado + augmentation global de window.impressaoQZ, exposto
- * por admin/assets/js/impressao_qz.js (carregado via <Script> tanto no
- * dialog de configuracao em Settings quanto no overlay do POS). Fica num
- * lib separado pra evitar duas declaracoes "declare global" conflitantes
- * (TypeScript exige que sejam identicas quando mescladas).
+ * por src/lib/impressao-qz.ts (QZ Tray via npm). Fica num lib separado pra
+ * evitar duas declaracoes "declare global" conflitantes.
  */
 export type PerfilImpressao = {
   id: string | null;
@@ -25,6 +23,7 @@ declare global {
       excluirPerfil: (id: string) => void;
       listarImpressorasSistema: () => Promise<string[]>;
       imprimirTeste: (perfil: PerfilImpressao, lojaNome: string) => Promise<void>;
+      imprimirManual: (pedidoId: string | number, lojaNome: string, uso?: string) => Promise<void>;
       imprimirAutomaticoPedido: (uso: string, pedidoId: string | number, lojaNome: string) => Promise<void>;
       garantirConexao: () => Promise<void>;
     };

@@ -3,6 +3,7 @@
 import { ouvirCatalogoAlterado } from "@/lib/catalogoSync";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { imprimirAutomaticoPedido } from "@/lib/impressao-qz";
 import type {
   PosCartDetalheGrupo,
   PosCartItem,
@@ -515,10 +516,10 @@ export function usePosPedido({
         return;
       }
       toast.success(pedidoEditandoId ? "Pedido atualizado com sucesso!" : `Pedido #${data.codigo} criado com sucesso!`);
-      if (imprimir && window.impressaoQZ) {
+      if (imprimir) {
         try {
           await Promise.race([
-            window.impressaoQZ.imprimirAutomaticoPedido("pdv", data.pedido_id, lojaNome),
+            imprimirAutomaticoPedido("pdv", data.pedido_id, lojaNome),
             new Promise((resolve) => setTimeout(resolve, 6000)),
           ]);
         } catch (e) {

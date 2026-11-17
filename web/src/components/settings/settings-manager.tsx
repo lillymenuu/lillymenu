@@ -354,7 +354,7 @@ export function SettingsManager({
       <ImpressaoDialog
         open={aberto === "impressao"}
         onOpenChange={(v) => setAberto(v ? "impressao" : null)}
-        phpAdminUrl={phpAdminUrl}
+        lojaNome={dados.loja.nome}
       />
       <CrossSellDialog
         open={aberto === "cross-sell"}
