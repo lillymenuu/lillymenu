@@ -11,6 +11,6 @@ import { getSessaoAdmin } from "@/lib/session";
 export async function GET() {
   const sessao = await getSessaoAdmin();
   if (!sessao) return new NextResponse("", { status: 401 });
-  const cert = (process.env.QZ_CERTIFICATE ?? "").replace(/\n/g, "\n").trim();
+  const cert = (process.env.QZ_CERTIFICATE ?? "").replace(/\\n/g, "\n").trim();
   return new NextResponse(cert, { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
 }

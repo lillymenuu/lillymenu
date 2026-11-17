@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const sessao = await getSessaoAdmin();
   if (!sessao) return new NextResponse("", { status: 401 });
 
-  const chave = (process.env.QZ_PRIVATE_KEY ?? "").replace(/\n/g, "\n").trim();
+  const chave = (process.env.QZ_PRIVATE_KEY ?? "").replace(/\\n/g, "\n").trim();
   if (!chave) return new NextResponse("", { headers: { "Content-Type": "text/plain" } });
 
   const { mensagem } = (await request.json().catch(() => ({}))) as { mensagem?: string };
