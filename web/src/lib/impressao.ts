@@ -13,6 +13,9 @@ export type PerfilImpressao = {
   copias: number;
   tipoImpressao: string;
   impressaoAutomatica: boolean;
+  /* opcionais: perfis antigos (salvos antes desses campos) caem no padrao */
+  tamanhoFonte?: "pequeno" | "medio";
+  mostrarGruposComplementos?: boolean;
 };
 
 declare global {

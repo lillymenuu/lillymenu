@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
       preco: i.preco,
       observacoes: i.observacoes,
       pontos: (pontosPorProduto.get(i.produtoId ?? 0) ?? 0) * (i.quantidade ?? 1),
+      opcoes: i.opcoes.map((o) => ({ titulo: o.titulo, nome: o.nome, quantidade: o.quantidade ?? 1 })),
     })),
     pagamentos: detalhe.pagamentos.map((p) => ({ forma: p.forma, valor: p.valor, taxa_maquininha: p.taxaMaquininha })),
     pontos_a_receber: Number(pontosMov[0]?.total ?? 0),

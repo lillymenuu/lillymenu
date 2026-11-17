@@ -186,7 +186,14 @@ export async function impressoraPadrao(): Promise<string | null> {
 type Linha = { texto: string; bold: boolean; big: boolean; align: "left" | "center"; quebra: boolean };
 type Dados = {
   pedido: Record<string, unknown> & { id?: number; codigo?: string | number; tipo?: string; criado_em?: string | null };
-  itens?: { quantidade: number; produto_nome: string; preco: number; observacoes?: string | null; pontos?: number }[];
+  itens?: {
+    quantidade: number;
+    produto_nome: string;
+    preco: number;
+    observacoes?: string | null;
+    pontos?: number;
+    opcoes?: { titulo: string; nome: string; quantidade?: number }[];
+  }[];
   pagamentos?: { forma: string; valor: number }[];
   loja_nome?: string;
   loja_cnpj?: string;
@@ -297,6 +304,21 @@ function numeroPedido(pedido: Dados["pedido"]) {
   return /^\d+$/.test(String(n)) ? String(n).padStart(4, "0") : String(n);
 }
 
+function nomeBaseItem(produtoNome: string) {
+  const idx = produtoNome.search(/ - | \+ /);
+  return idx === -1 ? produtoNome : produtoNome.slice(0, idx);
+}
+
+function agruparOpcoes(opcoes: { titulo: string; nome: string; quantidade?: number }[]) {
+  const grupos: { titulo: string; nomes: string[] }[] = [];
+  for (const o of opcoes) {
+    let g = grupos.find((x) => x.titulo === o.titulo);
+    if (!g) grupos.push((g = { titulo: o.titulo, nomes: [] }));
+    g.nomes.push((o.quantidade ?? 1) > 1 ? `${o.quantidade}x ${o.nome}` : o.nome);
+  }
+  return grupos;
+}
+
 function construirLinhasCupom(dados: Dados, perfil: PerfilImpressao): Linha[] {
   const cols = largura(perfil.papel);
   const { pedido, itens, pagamentos } = dados;
@@ -317,7 +339,19 @@ function construirLinhasCupom(dados: Dados, perfil: PerfilImpressao): Linha[] {
   linhas.push(linha("Itens do pedido"));
   linhas.push(linha(""));
   (itens || []).forEach((item) => {
-    linhas.push(linha(linhaValor(item.quantidade + " x " + item.produto_nome, formatMoney(item.preco * item.quantidade), cols), { quebra: true }));
+    const opcoes = item.opcoes ?? [];
+    /* Com as opcoes estruturadas, imprime o nome base ("Açaí") e as escolhas em lista,
+       em vez do nome concatenado ("Açaí - Tradicional + Creme"). */
+    const nome = opcoes.length ? nomeBaseItem(item.produto_nome) : item.produto_nome;
+    linhas.push(linha(linhaValor(item.quantidade + " x " + nome, formatMoney(item.preco * item.quantidade), cols), { quebra: true }));
+    for (const grupo of agruparOpcoes(opcoes)) {
+      if (perfil.mostrarGruposComplementos && grupo.titulo) {
+        linhas.push(linha("  " + grupo.titulo + ":", { quebra: true }));
+        grupo.nomes.forEach((n) => linhas.push(linha("    - " + n, { quebra: true })));
+      } else {
+        grupo.nomes.forEach((n) => linhas.push(linha("  - " + n, { quebra: true })));
+      }
+    }
     if (item.observacoes) {
       const obs = item.observacoes;
       const prefixo = obs.startsWith("[combo]\n") ? "[combo]\n" : obs.startsWith("[complementos]\n") ? "[complementos]\n" : null;
@@ -424,20 +458,23 @@ function semAcento(t: string) {
   return t.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/•/g, "-");
 }
 
-function renderizarEscPos(linhas: Linha[], papel: string) {
-  const cols = largura(papel);
+/* Fonte "medio" = altura dupla (ESC ! 0x10): mesma quantidade de colunas, letra mais alta
+   e legivel na cozinha. Titulos (big) seguem altura+largura dupla (0x30). */
+function renderizarEscPos(linhas: Linha[], perfil: PerfilImpressao) {
+  const cols = largura(perfil.papel);
+  const modoNormal = perfil.tamanhoFonte === "medio" ? "\x10" : "\x00";
   let t = ESC + "@";
   linhas.forEach((l) => {
     t += ESC + "a" + (l.align === "center" ? "\x01" : "\x00");
+    t += ESC + "!" + (l.big ? "\x30" : modoNormal);
     if (l.bold) t += ESC + "E" + "\x01";
-    if (l.big) t += ESC + "!" + "\x30";
     const textos = l.quebra ? quebrarTexto(l.texto, l.big ? Math.floor(cols / 2) : cols) : [l.texto];
     textos.forEach((txt) => {
       t += semAcento(txt) + "\n";
     });
-    if (l.big) t += ESC + "!" + "\x00";
     if (l.bold) t += ESC + "E" + "\x00";
   });
+  t += ESC + "!" + "\x00";
   t += "\n\n\n";
   t += GS + "V" + "\x01";
   return t;
@@ -460,11 +497,11 @@ async function enviar(perfil: PerfilImpressao, textoEscPos: string) {
 
 export async function imprimirPedido(dados: Dados, perfil: PerfilImpressao, lojaNome: string) {
   const d = { ...dados, loja_nome: dados.loja_nome || lojaNome };
-  return enviar(perfil, renderizarEscPos(construirLinhasCupom(d, perfil), perfil.papel));
+  return enviar(perfil, renderizarEscPos(construirLinhasCupom(d, perfil), perfil));
 }
 
 export async function imprimirTeste(perfil: PerfilImpressao, lojaNome: string) {
-  return enviar(perfil, renderizarEscPos(construirLinhasTeste(lojaNome, perfil), perfil.papel));
+  return enviar(perfil, renderizarEscPos(construirLinhasTeste(lojaNome, perfil), perfil));
 }
 
 async function buscarDadosPedido(pedidoId: string | number): Promise<Dados> {
