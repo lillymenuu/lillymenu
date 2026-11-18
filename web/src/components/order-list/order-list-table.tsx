@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, RotateCcw, Printer } from "lucide-react";
+import { Plus, RotateCcw, Printer, Loader2 } from "lucide-react";
+import { imprimirManual, mensagemErroQZ } from "@/lib/impressao-qz";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -100,6 +101,19 @@ export function OrderListTable({
   const [detalheId, setDetalheId] = useState<number | null>(null);
   const [zerarOpen, setZerarOpen] = useState(false);
   const [zerando, setZerando] = useState(false);
+  const [imprimindoId, setImprimindoId] = useState<number | null>(null);
+
+  /* Mesmo fluxo do botao Imprimir do modal do pedido: impressora deste computador ou, pela fila, a de outro. */
+  async function imprimir(id: number) {
+    setImprimindoId(id);
+    try {
+      toast.success(await imprimirManual(id, ""));
+    } catch (e) {
+      toast.error(mensagemErroQZ(e));
+    } finally {
+      setImprimindoId(null);
+    }
+  }
 
   const primeiraRenderRef = useRef(true);
 
@@ -334,11 +348,12 @@ export function OrderListTable({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setDetalheId(pedido.id);
+                            void imprimir(pedido.id);
                           }}
-                          className="flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-muted/70"
+                          disabled={imprimindoId === pedido.id}
+                          className="flex items-center gap-1 rounded-full border bg-background px-3 py-1.5 text-[11px] font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-70"
                         >
-                          <Printer size={11} /> Imprimir
+                          {imprimindoId === pedido.id ? <Loader2 size={11} className="animate-spin" /> : <Printer size={11} />} Imprimir
                         </button>
                       </TableCell>
                     </TableRow>
