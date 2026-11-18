@@ -426,6 +426,16 @@ function agruparOpcoes(opcoes: { titulo: string; nome: string; quantidade?: numb
   return grupos;
 }
 
+/* Agendamento vem do banco como "AAAA-MM-DD HH:MM:SS" (hora local da loja): le os numeros direto,
+   sem new Date(), pra nao deslocar o horario pelo fuso do computador. */
+function formatarAgendamento(valor: unknown): { curto: string; completo: string } | null {
+  const m = String(valor ?? "").match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return null;
+  const [, ano, mes, dia, hora, min] = m;
+  const semana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][new Date(Number(ano), Number(mes) - 1, Number(dia)).getDay()];
+  return { curto: `${dia}/${mes} ${hora}:${min}`, completo: `${semana}, ${dia}/${mes}/${ano} às ${hora}:${min}` };
+}
+
 function construirLinhasCupom(dados: Dados, perfil: PerfilImpressao): Linha[] {
   const cols = largura(perfil.papel);
   const { pedido, itens, pagamentos } = dados;
@@ -438,6 +448,15 @@ function construirLinhasCupom(dados: Dados, perfil: PerfilImpressao): Linha[] {
   if (pedido.criado_em) {
     const d = new Date(String(pedido.criado_em).replace(" ", "T"));
     if (!isNaN(d.getTime())) linhas.push(linha(d.toLocaleString("pt-BR"), { align: "center" }));
+  }
+  const agendado = formatarAgendamento(pedido.agendamento);
+  if (agendado) {
+    // em destaque: a cozinha precisa ver que nao e pra agora
+    linhas.push(linha("-".repeat(cols)));
+    linhas.push(linha("AGENDADO", { bold: true, big: true, align: "center" }));
+    linhas.push(linha(agendado.curto, { bold: true, big: true, align: "center" }));
+    linhas.push(linha(agendado.completo, { align: "center" }));
+    linhas.push(linha("-".repeat(cols)));
   }
   if (pedido.mesa_nome) linhas.push(linha("Mesa: " + pedido.mesa_nome, { bold: true, align: "center" }));
   if (dados.id_curto) linhas.push(linha("id: " + dados.id_curto, { align: "center" }));
