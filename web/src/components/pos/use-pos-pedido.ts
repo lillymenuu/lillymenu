@@ -3,7 +3,7 @@
 import { ouvirCatalogoAlterado } from "@/lib/catalogoSync";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { imprimirAutomaticoPedido } from "@/lib/impressao-qz";
+import { imprimirAutomaticoPedido, imprimirManual, mensagemErroQZ } from "@/lib/impressao-qz";
 import type {
   PosCartDetalheGrupo,
   PosCartItem,
@@ -516,15 +516,21 @@ export function usePosPedido({
         return;
       }
       toast.success(pedidoEditandoId ? "Pedido atualizado com sucesso!" : `Pedido #${data.codigo} criado com sucesso!`);
-      // "Finalizar e imprimir" imprime sempre; "Finalizar" imprime se o toggle de impressao
-      // automatica do PDV (impressoras PDV/ambos da loja) estiver ligado.
-      try {
-        await Promise.race([
-          imprimirAutomaticoPedido("pdv", data.pedido_id, lojaNome, imprimir),
-          new Promise((resolve) => setTimeout(resolve, 6000)),
-        ]);
-      } catch (e) {
-        console.warn("Falha na impressão automática:", e);
+      if (imprimir) {
+        // "Finalizar e imprimir": mesmo fluxo do botao Imprimir do pedido (impressora deste computador
+        // ou, pela fila, a do outro computador), com aviso na tela se nao imprimir. Nao segura o PDV:
+        // o aviso aparece quando a impressora responder.
+        const codigo = data.codigo ?? data.pedido_id;
+        imprimirManual(data.pedido_id, lojaNome)
+          .then((msg) => toast.success(msg))
+          .catch((e) => toast.error(`Pedido #${codigo} salvo, mas não foi impresso: ${mensagemErroQZ(e)}`, { duration: 10000 }));
+      } else {
+        // "Finalizar": imprime se o toggle de impressao automatica do PDV estiver ligado.
+        try {
+          await Promise.race([imprimirAutomaticoPedido("pdv", data.pedido_id, lojaNome), new Promise((resolve) => setTimeout(resolve, 6000))]);
+        } catch (e) {
+          console.warn("Falha na impressão automática:", e);
+        }
       }
       cart.limpar();
       setCliente(null);
