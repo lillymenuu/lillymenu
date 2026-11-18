@@ -1121,8 +1121,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           href="https://lillymenu.com/"
           target="_blank"
           rel="noreferrer"
-          className="inline-block rounded-full border border-neutral-200 px-5 py-1.5 text-[.8rem] font-semibold transition-colors hover:border-neutral-300 hover:bg-neutral-50"
-          style={{ color: "var(--store-pink)" }}
+          className="inline-block rounded-full border border-neutral-200 px-5 py-1.5 text-[.8rem] font-semibold text-primary transition-colors hover:border-neutral-300 hover:bg-neutral-50"
         >
           Saiba mais
         </a>
