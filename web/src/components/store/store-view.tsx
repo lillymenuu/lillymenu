@@ -1118,7 +1118,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           Tem um negocio e precisa de um cardapio digital simples e facil? O <strong className="font-semibold text-neutral-700">Lilly</strong> e a solucao.
         </p>
         <a
-          href="https://lillymenu.com/public/home"
+          href="https://lillymenu.com/"
           target="_blank"
           rel="noreferrer"
           className="inline-block rounded-full border-[1.5px] px-5 py-1.5 text-[.8rem] font-semibold transition-colors"
