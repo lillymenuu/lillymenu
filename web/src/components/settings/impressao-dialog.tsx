@@ -17,6 +17,7 @@ import {
   impressoraPadrao,
   listarImpressorasSistema,
   mensagemErroQZ,
+  previaCupom,
   salvarPerfil,
   usePerfisImpressao,
 } from "@/lib/impressao-qz";
@@ -140,7 +141,7 @@ export function ImpressaoDialog({ open, onOpenChange, lojaNome }: { open: boolea
   return (
     <>
       <Dialog open={open} onOpenChange={alterarAberto}>
-        <DialogContent className="flex max-h-[90vh] flex-col gap-0 rounded-3xl p-0 sm:max-w-xl">
+        <DialogContent className={`flex max-h-[90vh] flex-col gap-0 rounded-3xl p-0 ${form ? "sm:max-w-xl lg:max-w-5xl" : "sm:max-w-xl"}`}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-lg">{form ? (form.id ? "Editando impressora" : "Nova impressora") : "Configurações de impressora"}</DialogTitle>
           </DialogHeader>
@@ -155,6 +156,7 @@ export function ImpressaoDialog({ open, onOpenChange, lojaNome }: { open: boolea
             <FormImpressora
               form={form}
               setForm={setForm}
+              lojaNome={lojaNome}
               sistema={sistema}
               onRecarregar={recarregarImpressoras}
               testando={testando === "form"}
@@ -265,6 +267,7 @@ function Info({ rotulo, valor, className = "" }: { rotulo: string; valor: string
 function FormImpressora({
   form,
   setForm,
+  lojaNome,
   sistema,
   onRecarregar,
   testando,
@@ -274,6 +277,7 @@ function FormImpressora({
 }: {
   form: Perfil;
   setForm: (f: Perfil) => void;
+  lojaNome: string;
   sistema: Sistema;
   onRecarregar: () => void;
   testando: boolean;
@@ -287,7 +291,8 @@ function FormImpressora({
 
   return (
     <>
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 pb-2">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-2 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-8">
+      <div className="space-y-5">
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
             Nome<span className="text-primary">*</span>
@@ -396,6 +401,11 @@ function FormImpressora({
         />
       </div>
 
+      <div className="mt-6 lg:sticky lg:top-0 lg:mt-0 lg:self-start">
+        <PreviaCupom perfil={form} lojaNome={lojaNome} />
+      </div>
+      </div>
+
       <DialogFooter className="mx-0 mb-0 border-t-0 bg-transparent px-6 pt-4 pb-6">
         <Button variant="secondary" className="gap-1.5 rounded-full" onClick={onTestar} disabled={!form.qzPrinterName || testando}>
           {testando && <Loader2 className="size-4 animate-spin" />} Imprimir teste
@@ -405,6 +415,48 @@ function FormImpressora({
         </Button>
       </DialogFooter>
     </>
+  );
+}
+
+/* Cupom de exemplo como sai na termica: monoespacado, largura em colunas do papel (32 ou 48),
+   titulos em altura+largura dupla e fonte "Medio" em altura dupla. Atualiza a cada opcao. */
+function PreviaCupom({ perfil, lojaNome }: { perfil: Perfil; lojaNome: string }) {
+  const { colunas, linhas } = previaCupom(perfil, lojaNome);
+  const medio = perfil.tamanhoFonte === "medio";
+  return (
+    <div className="rounded-2xl bg-muted/50 p-4">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <span className="text-sm font-medium">Prévia do cupom</span>
+        <span className="text-xs text-muted-foreground">Pedido de exemplo · {perfil.papel}</span>
+      </div>
+      <div className="flex justify-center overflow-x-auto">
+        <div
+          className="rounded-sm bg-white px-3 pt-4 pb-6 font-mono text-[11px] leading-[1.25] text-neutral-900 shadow-sm ring-1 ring-black/5"
+          style={{ width: `calc(${colunas}ch + 1.5rem)` }}
+          aria-label="Prévia do cupom impresso"
+        >
+          {linhas.map((l, i) => (
+            <div
+              key={i}
+              className={`overflow-hidden whitespace-pre ${l.bold ? "font-bold" : ""}`}
+              style={{ textAlign: l.align, ...(medio && !l.big ? { height: "2.5em", lineHeight: "2.5em" } : {}) }}
+            >
+              {l.big ? (
+                <span style={{ fontSize: "2em", lineHeight: 1.15 }}>{l.texto || " "}</span>
+              ) : medio ? (
+                <span className="inline-block" style={{ transform: "scaleY(2)" }}>
+                  {l.texto || " "}
+                </span>
+              ) : (
+                l.texto || " "
+              )}
+            </div>
+          ))}
+          <div className="mt-4 border-t border-dashed border-neutral-300" />
+        </div>
+      </div>
+      <p className="mt-3 text-center text-xs text-muted-foreground">Atualiza conforme você muda as opções. No papel, as letras saem sem acento.</p>
+    </div>
   );
 }
 

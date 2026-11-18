@@ -567,18 +567,22 @@ function semAcento(t: string) {
 
 /* Fonte "medio" = altura dupla (ESC ! 0x10): mesma quantidade de colunas, letra mais alta
    e legivel na cozinha. Titulos (big) seguem altura+largura dupla (0x30). */
-function renderizarEscPos(linhas: Linha[], perfil: PerfilImpressao) {
+/* Quebra cada linha do jeito que sai no papel (titulos "big" tem metade das colunas). */
+function linhasDoPapel(linhas: Linha[], perfil: PerfilImpressao): Linha[] {
   const cols = largura(perfil.papel);
+  return linhas.flatMap((l) =>
+    (l.quebra ? quebrarTexto(l.texto, l.big ? Math.floor(cols / 2) : cols) : [l.texto]).map((texto) => ({ ...l, texto: semAcento(texto), quebra: false }))
+  );
+}
+
+function renderizarEscPos(linhas: Linha[], perfil: PerfilImpressao) {
   const modoNormal = perfil.tamanhoFonte === "medio" ? "\x10" : "\x00";
   let t = ESC + "@";
-  linhas.forEach((l) => {
+  linhasDoPapel(linhas, perfil).forEach((l) => {
     t += ESC + "a" + (l.align === "center" ? "\x01" : "\x00");
     t += ESC + "!" + (l.big ? "\x30" : modoNormal);
     if (l.bold) t += ESC + "E" + "\x01";
-    const textos = l.quebra ? quebrarTexto(l.texto, l.big ? Math.floor(cols / 2) : cols) : [l.texto];
-    textos.forEach((txt) => {
-      t += semAcento(txt) + "\n";
-    });
+    t += l.texto + "\n";
     if (l.bold) t += ESC + "E" + "\x00";
   });
   t += ESC + "!" + "\x00";
@@ -587,9 +591,53 @@ function renderizarEscPos(linhas: Linha[], perfil: PerfilImpressao) {
   return t;
 }
 
-export function previaTeste(perfil: PerfilImpressao, lojaNome: string) {
-  const cols = largura(perfil.papel);
-  return construirLinhasTeste(lojaNome, perfil).flatMap((l) => (l.quebra ? quebrarTexto(l.texto, cols) : [l.texto]).map((texto) => ({ ...l, texto })));
+/* Pedido de exemplo da previa: passa por todas as partes do cupom (complementos, obs, entrega, troco). */
+function pedidoExemplo(lojaNome: string): Dados {
+  return {
+    pedido: {
+      id: 57,
+      codigo: 57,
+      tipo: "entrega",
+      criado_em: new Date().toISOString(),
+      nome: "Maria Souza",
+      telefone: "(85) 99999-0000",
+      subtotal: 62.9,
+      taxa_entrega: 5,
+      desconto: 0,
+      total: 67.9,
+      troco: 32.1,
+      observacoes_cliente: "Tocar o interfone, por favor",
+      motoboy_nome: "João",
+      endereco_entrega: "Rua das Flores, 123 | Bairro: Centro | Cidade: Fortaleza/CE | CEP: 60000-000 | Complemento: Apto 201",
+    },
+    itens: [
+      {
+        quantidade: 1,
+        produto_nome: "Açaí 500ml - Tradicional",
+        preco: 24.9,
+        pontos: 5,
+        opcoes: [
+          { titulo: "Tamanho", nome: "500ml" },
+          { titulo: "Complementos", nome: "Leite em pó" },
+          { titulo: "Complementos", nome: "Granola", quantidade: 2 },
+          { titulo: "Calda", nome: "Chocolate" },
+        ],
+      },
+      { quantidade: 2, produto_nome: "Coca-Cola Lata", preco: 6, observacoes: "Bem gelada" },
+      { quantidade: 1, produto_nome: "Brigadeiro gourmet", preco: 26 },
+    ],
+    pagamentos: [{ forma: "dinheiro", valor: 100 }],
+    loja_nome: lojaNome || "Minha loja",
+    id_curto: "A1B2C3",
+    cashback_ganho: 1.36,
+    pontos_a_receber: 5,
+    pedidos_na_loja: 12,
+  };
+}
+
+/* Previa do cupom (pedido de exemplo) com as configuracoes do perfil — mesmas linhas que vao pro papel. */
+export function previaCupom(perfil: PerfilImpressao, lojaNome: string) {
+  return { colunas: largura(perfil.papel), linhas: linhasDoPapel(construirLinhasCupom(pedidoExemplo(lojaNome), perfil), perfil) };
 }
 
 /* ---------- envio ---------- */
