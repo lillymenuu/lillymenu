@@ -516,15 +516,15 @@ export function usePosPedido({
         return;
       }
       toast.success(pedidoEditandoId ? "Pedido atualizado com sucesso!" : `Pedido #${data.codigo} criado com sucesso!`);
-      if (imprimir) {
-        try {
-          await Promise.race([
-            imprimirAutomaticoPedido("pdv", data.pedido_id, lojaNome),
-            new Promise((resolve) => setTimeout(resolve, 6000)),
-          ]);
-        } catch (e) {
-          console.warn("Falha na impressão automática:", e);
-        }
+      // "Finalizar e imprimir" imprime sempre; "Finalizar" imprime se o toggle de impressao
+      // automatica do PDV (impressoras PDV/ambos da loja) estiver ligado.
+      try {
+        await Promise.race([
+          imprimirAutomaticoPedido("pdv", data.pedido_id, lojaNome, imprimir),
+          new Promise((resolve) => setTimeout(resolve, 6000)),
+        ]);
+      } catch (e) {
+        console.warn("Falha na impressão automática:", e);
       }
       cart.limpar();
       setCliente(null);

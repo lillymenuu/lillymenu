@@ -242,9 +242,9 @@ async function perfisAtuais() {
   return sincronizarPerfis().catch(() => listarPerfis());
 }
 
-/* So imprime por perfis vinculados a uma impressora deste computador. */
-async function perfisPara(uso: string) {
-  return (await perfisAtuais()).filter((p) => p.qzPrinterName && p.impressaoAutomatica && (p.usoPara === uso || p.usoPara === "ambos"));
+/* Impressoras da loja do uso (vinculadas aqui ou em outro computador). forcar: ignora a "impressao automatica". */
+async function perfisPara(uso: string, forcar = false) {
+  return (await perfisAtuais()).filter((p) => (forcar || p.impressaoAutomatica) && (p.usoPara === uso || p.usoPara === "ambos"));
 }
 
 /* ---------- conexao ---------- */
@@ -688,11 +688,12 @@ export async function imprimirManual(pedidoId: string | number, lojaNome: string
   return imprimirEmOutroComputador(pedidoId, outros);
 }
 
-/* Impressao automatica (ao fechar venda no PDV/garcom) — best-effort, nunca lanca.
+/* Impressao ao fechar venda no PDV/garcom — best-effort, nunca lanca. So as impressoras com
+   "impressao automatica" ligada, a menos que forcar (botao "Finalizar e imprimir").
    Impressoras vinculadas aqui imprimem aqui; as outras vao pela fila (sem esperar). */
-export async function imprimirAutomaticoPedido(uso: string, pedidoId: string | number, lojaNome: string) {
+export async function imprimirAutomaticoPedido(uso: string, pedidoId: string | number, lojaNome: string, forcar = false) {
   try {
-    const { aqui, outros } = separarPorComputador(await perfisPara(uso));
+    const { aqui, outros } = separarPorComputador(await perfisPara(uso, forcar));
     if (outros.length) {
       criarTrabalhos(pedidoId, outros).catch((e) => console.warn("Falha ao mandar impressão para outro computador:", e));
     }
