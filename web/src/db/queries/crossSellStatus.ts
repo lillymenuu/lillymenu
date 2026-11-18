@@ -99,11 +99,15 @@ export async function statusCrossSell(lojaId: number): Promise<StatusCrossSellRe
     }
   }
 
+  // So o mes atual (fuso da loja): pedidos.criado_em fica em horario local.
+  const [ano, mes] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit" }).format(new Date()).split("-");
+  const inicioMes = `${ano}-${mes}-01 00:00:00`;
+
   const [{ faturamentoExtra }] = await db
     .select({ faturamentoExtra: sql<string>`coalesce(sum(${pedidoItens.preco} * ${pedidoItens.quantidade}), 0)` })
     .from(pedidoItens)
     .innerJoin(pedidos, and(eq(pedidos.id, pedidoItens.pedido_id), eq(pedidos.loja_id, pedidoItens.loja_id)))
-    .where(and(eq(pedidoItens.loja_id, lojaId), eq(pedidoItens.cross_sell, true), ne(pedidos.status, "cancelado")));
+    .where(and(eq(pedidoItens.loja_id, lojaId), eq(pedidoItens.cross_sell, true), ne(pedidos.status, "cancelado"), sql`${pedidos.criado_em} >= ${inicioMes}`));
 
   return { ativo, faturamentoExtra: Number(faturamentoExtra ?? 0), grupos };
 }

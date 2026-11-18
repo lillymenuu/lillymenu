@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Shuffle, Lightbulb, Settings2 } from "lucide-react";
-import { formatBRL } from "@/components/ordermanager/constants";
+import { formatBRLMilhar } from "@/components/ordermanager/constants";
 import type { CrossSellStatusResposta } from "@/lib/crossSell";
 
 export function CrossSellDialog({
@@ -80,8 +80,8 @@ export function CrossSellDialog({
 
           {status?.ativo ? (
             <div className="space-y-1 rounded-xl border p-4 text-center sm:col-span-2">
-              <div className="text-xs text-muted-foreground">Seu faturamento aumentou</div>
-              <div className="text-2xl font-bold">{formatBRL(status.faturamento_extra)}</div>
+              <div className="text-xs text-muted-foreground">Este mês, seu faturamento aumentou</div>
+              <div className="text-2xl font-bold">{formatBRLMilhar(status.faturamento_extra)}</div>
               <div className="text-xs text-muted-foreground">a mais com o cross-sell</div>
               <Link href="/crosssellreport" className="mt-1 inline-block text-xs font-semibold text-primary hover:underline">
                 Ver relatório completo
