@@ -278,7 +278,7 @@ export function OrderManager({
                 </div>
               </div>
 
-              <div className="flex max-h-[1300px] flex-1 flex-col gap-1.5 overflow-y-auto bg-muted/30 p-2">
+              <div className="flex max-h-[1300px] flex-1 flex-col gap-3 overflow-y-auto bg-muted/30 p-2">
                 {pedidosColuna.length === 0 && (
                   <div className="flex flex-1 items-center justify-center py-10 text-center text-xs text-muted-foreground">
                     Nenhum pedido aqui.
