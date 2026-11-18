@@ -1115,14 +1115,14 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
       {/* Rodape */}
       <div className="mx-auto max-w-[901px] border-t border-neutral-100 px-5 py-6 text-center">
         <p className="mb-3 text-[.8rem] leading-relaxed text-neutral-500">
-          Tem um negocio e precisa de um cardapio digital simples e facil? O <strong className="font-semibold text-neutral-700">Lilly</strong> e a solucao.
+          Tem um negócio e precisa de um cardápio digital simples e fácil? O <strong className="font-semibold text-neutral-700">Lilly</strong> é a solução.
         </p>
         <a
           href="https://lillymenu.com/"
           target="_blank"
           rel="noreferrer"
-          className="inline-block rounded-full border-[1.5px] px-5 py-1.5 text-[.8rem] font-semibold transition-colors"
-          style={{ borderColor: "var(--store-pink)", color: "var(--store-pink)" }}
+          className="inline-block rounded-full border border-neutral-200 px-5 py-1.5 text-[.8rem] font-semibold transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+          style={{ color: "var(--store-pink)" }}
         >
           Saiba mais
         </a>
