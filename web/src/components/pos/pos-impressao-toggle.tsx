@@ -54,17 +54,13 @@ export function PosImpressaoToggle() {
       disabled={salvando}
       title={ligada ? "Impressão automática ligada — clique para desligar" : "Impressão automática desligada — clique para ligar"}
       className={cn(
-        "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-70",
-        ligada ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-muted-foreground hover:bg-muted/50"
+        "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-foreground transition-colors hover:bg-muted/50 disabled:opacity-70"
       )}
     >
       {salvando ? <Loader2 className="size-4 animate-spin" /> : <Printer className="size-4" />}
       <span
         aria-hidden
-        className={cn(
-          "absolute right-2 bottom-2 size-2 rounded-full ring-2",
-          ligada ? "bg-emerald-400 ring-primary" : "bg-muted-foreground/40 ring-background"
-        )}
+        className={cn("absolute right-3 bottom-3 size-2 rounded-full ring-2 ring-background", ligada ? "bg-emerald-500" : "bg-red-500")}
       />
     </button>
   );
