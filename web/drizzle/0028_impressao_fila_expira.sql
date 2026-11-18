@@ -1,0 +1,1 @@
+ALTER TABLE "impressao_fila" ADD COLUMN "expira_em" timestamp;

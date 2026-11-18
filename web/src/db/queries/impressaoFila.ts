@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { impressaoFila, pedidos } from "@/db/schema";
 import { listarImpressorasLoja } from "@/db/queries/impressoras";
@@ -33,6 +33,31 @@ export async function criarTrabalhosImpressao(lojaId: number, pedidoId: number, 
     .values(ids.map((perfil_id) => ({ loja_id: lojaId, pedido_id: pedidoId, perfil_id })))
     .returning({ id: impressaoFila.id });
   return { ok: true as const, ids: criados.map((c) => c.id) };
+}
+
+/*
+ * Pedido da loja online aceito (na hora, com aceite automatico, ou pelo botao Aceitar): manda pra
+ * todas as impressoras da loja com "impressao automatica" ligada. Vale por 30 min, pra imprimir
+ * mesmo se o computador da impressora estiver reabrindo. Nao repete se o pedido ja foi pra fila.
+ * Best-effort: nunca lanca (nao pode atrapalhar a criacao/aceite do pedido).
+ */
+export async function enfileirarImpressaoPedidoOnline(lojaId: number, pedidoId: number) {
+  try {
+    const perfis = (await listarImpressorasLoja(lojaId)).filter((p) => p.impressaoAutomatica);
+    if (!perfis.length) return;
+    const [ja] = await db
+      .select({ id: impressaoFila.id })
+      .from(impressaoFila)
+      // so os automaticos (expira_em preenchido): uma impressao manual antes nao impede esta
+      .where(and(eq(impressaoFila.loja_id, lojaId), eq(impressaoFila.pedido_id, pedidoId), isNotNull(impressaoFila.expira_em)))
+      .limit(1);
+    if (ja) return;
+    await db.insert(impressaoFila).values(
+      perfis.map((p) => ({ loja_id: lojaId, pedido_id: pedidoId, perfil_id: p.id, expira_em: sql`now() + interval '30 minutes'` }))
+    );
+  } catch (e) {
+    console.error("Falha ao mandar pedido da loja para a fila de impressão:", e);
+  }
 }
 
 export async function statusTrabalhosImpressao(lojaId: number, ids: number[]): Promise<TrabalhoImpressao[]> {
@@ -71,7 +96,7 @@ export async function pegarTrabalhosImpressao(lojaId: number, perfilIds: string[
     WHERE id IN (
       SELECT id FROM impressao_fila
       WHERE loja_id = ${lojaId} AND status = 'pendente' AND perfil_id IN (${lista})
-        AND criado_em > now() - make_interval(secs => ${VALIDADE_SEGUNDOS})
+        AND coalesce(expira_em, criado_em + make_interval(secs => ${VALIDADE_SEGUNDOS})) > now()
       ORDER BY id
       LIMIT 5
       FOR UPDATE SKIP LOCKED

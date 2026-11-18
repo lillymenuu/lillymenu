@@ -27,6 +27,7 @@ import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
 import { saldoCashbackLiberado } from "@/db/queries/cashback";
 import { timestampFortaleza } from "@/db/queries/tempo";
+import { enfileirarImpressaoPedidoOnline } from "@/db/queries/impressaoFila";
 
 /*
  * Equivalente de public/api/pedido_criar.php — cria um pedido da loja publica
@@ -424,6 +425,9 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
   } catch {
     /* idem */
   }
+
+  /* Ja nasce aceito: vai direto pra impressora (sem aceite automatico, imprime ao clicar em Aceitar). */
+  if (aceiteAutomatico) await enfileirarImpressaoPedidoOnline(lojaId, pedidoId);
 
   const codigoBaseFinal = await pedidoCodigoBase(lojaId);
   return { ok: true, id: pedidoId, codigo: codigoDisplay(pedidoId, codigoBaseFinal) };

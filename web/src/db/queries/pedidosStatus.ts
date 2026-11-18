@@ -8,6 +8,7 @@ import { caixaAtribuirPedidoFinalizado } from "@/db/queries/caixa";
 import { cashbackPromoverPendente, cashbackCancelarPendente } from "@/db/queries/cashback";
 import { syncFinalizedOrder, reverseCanceledOrder } from "@/db/queries/financeiroSync";
 import { getConfig } from "@/db/queries/config";
+import { enfileirarImpressaoPedidoOnline } from "@/db/queries/impressaoFila";
 
 /*
  * Equivalente de admin/api/v1/pedidos_status.php, pedidos_cancelar.php e
@@ -106,6 +107,9 @@ export async function atualizarStatusPedido(lojaId: number, adminId: number, ped
   } catch (e) {
     console.error("Erro ao sincronizar pedido no financeiro:", e);
   }
+
+  /* Pedido aceito (Pendente -> Aceito, ex.: pedido da loja online): impressao automatica. */
+  if (statusTipado === "aceito" && statusAntes === "pendente") await enfileirarImpressaoPedidoOnline(lojaId, pedidoId);
 
   await registrarOperacao(adminId, "pedido_status", `pedido:${pedidoId}`, { status: statusTipado });
   return { ok: true };

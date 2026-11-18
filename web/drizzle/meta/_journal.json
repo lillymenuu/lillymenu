@@ -197,6 +197,13 @@
       "when": 1794952818043,
       "tag": "0027_impressao_fila",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1795012059751,
+      "tag": "0028_impressao_fila_expira",
+      "breakpoints": true
     }
   ]
 }

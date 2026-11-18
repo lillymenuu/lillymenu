@@ -1622,6 +1622,9 @@ export const impressaoFila = pgTable(
     perfil_id: varchar("perfil_id", { length: 60 }).notNull(),
     status: text("status").$type<"pendente" | "imprimindo" | "impresso" | "erro" | "cancelado">().notNull().default("pendente"),
     erro: varchar("erro", { length: 255 }),
+    /* Ate quando um computador pode pegar o trabalho (null = 60s apos criado). Pedidos da loja
+       online esperam mais: imprimem quando o computador da impressora voltar. */
+    expira_em: timestamp("expira_em", { mode: "string" }),
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
     atualizado_em: timestamp("atualizado_em", { mode: "string" }),
   },
