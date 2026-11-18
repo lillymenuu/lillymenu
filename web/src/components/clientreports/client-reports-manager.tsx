@@ -24,7 +24,7 @@ import {
 import { DateRangePicker } from "@/components/order-list/date-range-picker";
 import { ClientePerfilDialog } from "@/components/cliente/cliente-perfil-dialog";
 import { formatDataCurta } from "@/components/cliente/types";
-import { formatBRL } from "@/components/ordermanager/constants";
+import { formatBRL, formatBRLMilhar } from "@/components/ordermanager/constants";
 import type {
   RelatoriosClientesParams,
   RelatoriosClientesResposta,
@@ -249,7 +249,7 @@ export function ClientReportsManager({
                     <TableCell className="text-right font-normal tabular-nums text-muted-foreground">
                       {formatBRL(c.ticket_medio)}
                     </TableCell>
-                    <TableCell className="text-right font-normal tabular-nums">{formatBRL(c.total_gasto)}</TableCell>
+                    <TableCell className="text-right font-normal tabular-nums">{formatBRLMilhar(c.total_gasto)}</TableCell>
                     <TableCell className="text-right font-normal tabular-nums text-muted-foreground">
                       {c.pedidos_feitos}
                     </TableCell>
