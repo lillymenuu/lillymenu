@@ -498,6 +498,8 @@ export function StoreCheckoutDialog({
           mesa_id: isMesa ? perfil.mesaId : undefined,
           forma_pagamento: formaPagamento,
           endereco: isEntregaTipo ? enderecoTexto() : "",
+          /* campos separados pra gravar o endereco no cadastro do cliente */
+          endereco_partes: isEntregaTipo ? { cep, rua, numero, bairro, complemento, cidade, estado } : undefined,
           subtotal,
           taxa_entrega: taxaFinal,
           taxa_servico: taxaServico,

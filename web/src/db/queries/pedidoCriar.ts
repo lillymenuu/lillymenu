@@ -60,6 +60,8 @@ export type ItemCarrinho = {
   complementos?: ComplementoEscolhido[] | null;
 };
 
+export type EnderecoPartes = { cep: string; rua: string; numero: string; bairro: string; complemento: string; cidade: string; estado: string };
+
 export type CriarPedidoInput = {
   lojaId: number;
   clienteNome: string;
@@ -69,6 +71,8 @@ export type CriarPedidoInput = {
   mesaId?: number | null;
   formaPagamento: string;
   endereco?: string;
+  /** Campos separados do endereco de entrega, gravados no cadastro do cliente. */
+  enderecoPartes?: EnderecoPartes;
   subtotal: number;
   taxaEntrega?: number;
   taxaServico?: number;
@@ -89,12 +93,30 @@ export type CriarPedidoInput = {
 
 export type CriarPedidoResultado = { ok: true; id: number; codigo: number } | { ok: false; msg: string };
 
-async function obterOuCriarCliente(tx: NeonTx, lojaId: number, nome: string, telefoneBruto: string, aniversario?: string): Promise<number> {
+async function obterOuCriarCliente(
+  tx: NeonTx,
+  lojaId: number,
+  nome: string,
+  telefoneBruto: string,
+  aniversario?: string,
+  endereco?: { texto: string; partes?: EnderecoPartes }
+): Promise<number> {
   const telFormatado = formatarTelefoneBR(telefoneBruto);
   const telDigitos = apenasDigitos(telefoneBruto);
   /* opcional: so grava/atualiza se o cliente informou (nao apaga o que ja
      estava cadastrado quando ele deixa em branco num pedido seguinte) */
   const aniversarioValido = aniversario && /^\d{4}-\d{2}-\d{2}$/.test(aniversario) ? aniversario : undefined;
+  /* Pedido de entrega: o endereco usado vira o endereco do cadastro (o mais recente). */
+  const p = endereco?.partes;
+  const dadosEndereco =
+    endereco && endereco.texto.trim()
+      ? {
+          endereco: endereco.texto.trim(),
+          ...(p && p.rua
+            ? { cep: p.cep || null, rua: p.rua, numero: p.numero || null, bairro: p.bairro || null, complemento: p.complemento || null, cidade: p.cidade || null, estado: p.estado || null }
+            : {}),
+        }
+      : {};
 
   const existente = await tx
     .select({ id: clientes.id })
@@ -103,13 +125,13 @@ async function obterOuCriarCliente(tx: NeonTx, lojaId: number, nome: string, tel
     .limit(1);
 
   if (existente.length > 0) {
-    await tx.update(clientes).set({ nome, ...(aniversarioValido ? { aniversario: aniversarioValido } : {}) }).where(eq(clientes.id, existente[0].id));
+    await tx.update(clientes).set({ nome, ...(aniversarioValido ? { aniversario: aniversarioValido } : {}), ...dadosEndereco }).where(eq(clientes.id, existente[0].id));
     return existente[0].id;
   }
 
   const [novo] = await tx
     .insert(clientes)
-    .values({ nome, telefone: telFormatado, loja_id: lojaId, criado_em: timestampFortaleza(), aniversario: aniversarioValido ?? null })
+    .values({ nome, telefone: telFormatado, loja_id: lojaId, criado_em: timestampFortaleza(), aniversario: aniversarioValido ?? null, ...dadosEndereco })
     .returning({ id: clientes.id });
   return novo.id;
 }
@@ -202,7 +224,14 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
 
   try {
     await withTransaction(async (tx) => {
-      clienteId = await obterOuCriarCliente(tx, lojaId, nome, telefone, input.clienteAniversario);
+      clienteId = await obterOuCriarCliente(
+        tx,
+        lojaId,
+        nome,
+        telefone,
+        input.clienteAniversario,
+        input.tipo === "entrega" ? { texto: input.endereco ?? "", partes: input.enderecoPartes } : undefined
+      );
 
       const [novoPedido] = await tx
         .insert(pedidos)

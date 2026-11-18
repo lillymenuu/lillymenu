@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { criarPedidoLoja, type ItemCarrinho } from "@/db/queries/pedidoCriar";
+import { criarPedidoLoja, type EnderecoPartes, type ItemCarrinho } from "@/db/queries/pedidoCriar";
 
 type ItemPayload = {
   id?: number;
@@ -14,6 +14,13 @@ type ItemPayload = {
   selecoes_grupos?: Record<string, number[]> | null;
   complementos?: { id: number; qtd?: number }[] | null;
 };
+
+function lerEnderecoPartes(v: unknown): EnderecoPartes | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  const o = v as Record<string, unknown>;
+  const txt = (k: string, max: number) => (typeof o[k] === "string" ? (o[k] as string).trim().slice(0, max) : "");
+  return { cep: txt("cep", 20), rua: txt("rua", 255), numero: txt("numero", 20), bairro: txt("bairro", 100), complemento: txt("complemento", 255), cidade: txt("cidade", 100), estado: txt("estado", 50) };
+}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -61,6 +68,7 @@ export async function POST(request: Request) {
     mesaId: b.mesa_id !== undefined ? Number(b.mesa_id) : undefined,
     formaPagamento: String(b.forma_pagamento ?? ""),
     endereco: typeof b.endereco === "string" ? b.endereco : undefined,
+    enderecoPartes: lerEnderecoPartes(b.endereco_partes),
     subtotal: Number(b.subtotal ?? 0),
     taxaEntrega: b.taxa_entrega !== undefined ? Number(b.taxa_entrega) : undefined,
     taxaServico: b.taxa_servico !== undefined ? Number(b.taxa_servico) : undefined,
