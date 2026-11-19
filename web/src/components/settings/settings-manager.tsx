@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -30,6 +31,12 @@ import {
   ExternalLink,
   Shuffle,
   Globe,
+  Settings2,
+  ChevronRight,
+  Lock,
+  Heart,
+  Plug,
+  LayoutGrid,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -84,6 +91,23 @@ type CardDef = {
 };
 
 type Section = { title: string; cards: CardDef[] };
+
+const ICONE_SECAO: Record<string, LucideIcon> = {
+  Loja: Store,
+  Fidelidade: Heart,
+  Pedidos: Inbox,
+  "Integrações": Plug,
+  "Pedidos na mesa": Table2,
+  Outros: LayoutGrid,
+};
+
+/* Brilho que acompanha o cursor no card (posicao via CSS vars, sem re-render). */
+function moverBrilho(e: React.MouseEvent<HTMLDivElement>) {
+  const el = e.currentTarget;
+  const r = el.getBoundingClientRect();
+  el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+  el.style.setProperty("--my", `${e.clientY - r.top}px`);
+}
 
 export function SettingsManager({
   dadosIniciais,
@@ -226,69 +250,134 @@ export function SettingsManager({
     setAberto(id as CardId);
   }
 
-  return (
-    <div className="mx-auto max-w-6xl space-y-8 p-4 sm:p-6">
-      <div>
-        <h1 className="text-xl font-semibold">Configurações</h1>
-        <p className="text-sm text-muted-foreground">Gerencie loja, pedidos, pagamentos e integrações.</p>
-      </div>
+  let indiceAnimacao = 0;
 
-      {sections.map((section) => (
-        <section key={section.title} className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground">{section.title}</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {section.cards.map((card) => {
-              const Icon = card.icon;
-              const isToggle = card.id === "versiculo-dashboard";
-              const bloqueadoPorPlano = card.id === "pedidos-agendados" && !pedidosAgendadosDisponivel;
-              const badge = bloqueadoPorPlano ? "Essencial" : card.badge;
-              return (
-                <Card
-                  key={card.id}
-                  className={`relative flex flex-row items-start gap-3 p-4 ${
-                    card.disabled
-                      ? "opacity-60"
-                      : bloqueadoPorPlano
-                        ? "cursor-pointer opacity-75 hover:border-primary/40"
-                        : "cursor-pointer hover:border-primary/40"
-                  }`}
-                  onClick={() => !card.disabled && !isToggle && abrirCard(card.id)}
-                >
-                  {badge ? (
-                    <span className="absolute right-3 top-3 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                      {badge}
-                    </span>
-                  ) : null}
-                  {card.linkOut ? (
-                    <ExternalLink className="absolute right-3 top-3 size-3.5 text-muted-foreground" />
-                  ) : null}
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
-                    <Icon className="size-4.5" />
-                  </div>
-                  <div className="min-w-0 flex-1 pr-4">
-                    <div className="text-sm font-medium">{card.title}</div>
-                    <div className="mt-0.5 text-xs text-muted-foreground">{card.desc}</div>
-                    {card.disabled && !isToggle ? (
-                      <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">Em breve</div>
-                    ) : bloqueadoPorPlano ? (
-                      <div className="mt-1.5 text-[11px] font-medium text-muted-foreground">Disponível no plano Essencial</div>
-                    ) : null}
-                  </div>
-                  {isToggle ? (
-                    <Switch
-                      checked={versiculoAtivo}
-                      onCheckedChange={alternarVersiculo}
-                      disabled={salvandoVersiculo}
-                      onClick={(e) => e.stopPropagation()}
-                      className={card.badge ? "mt-5" : undefined}
-                    />
-                  ) : null}
-                </Card>
-              );
-            })}
+  return (
+    <div className="mx-auto max-w-6xl space-y-10 p-4 sm:p-6">
+      <header className="relative overflow-hidden rounded-3xl border bg-linear-to-br from-primary/10 via-card to-card p-6 sm:p-8">
+        <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-primary/15 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-24 left-1/3 size-56 rounded-full bg-primary/5 blur-3xl" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+            <Settings2 className="size-6" />
           </div>
-        </section>
-      ))}
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight">Configurações</h1>
+            <p className="text-sm text-muted-foreground">Gerencie loja, pedidos, pagamentos e integrações.</p>
+          </div>
+        </div>
+      </header>
+
+      {sections.map((section) => {
+        const SectionIcon = ICONE_SECAO[section.title] ?? Settings2;
+        return (
+          <section key={section.title} className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <SectionIcon className="size-3.5" />
+              </div>
+              <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{section.title}</h2>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+                {section.cards.length}
+              </span>
+              <div className="h-px flex-1 bg-linear-to-r from-border to-transparent" />
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {section.cards.map((card) => {
+                const Icon = card.icon;
+                const isToggle = card.id === "versiculo-dashboard";
+                const bloqueadoPorPlano = card.id === "pedidos-agendados" && !pedidosAgendadosDisponivel;
+                const badge = bloqueadoPorPlano ? "Essencial" : card.badge;
+                const clicavel = !card.disabled && !isToggle;
+                const ativo = !card.disabled;
+                const atraso = Math.min(indiceAnimacao++ * 35, 600);
+                return (
+                  <Card
+                    key={card.id}
+                    role={clicavel ? "button" : undefined}
+                    tabIndex={clicavel ? 0 : undefined}
+                    onMouseMove={ativo ? moverBrilho : undefined}
+                    onKeyDown={
+                      clicavel
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              abrirCard(card.id);
+                            }
+                          }
+                        : undefined
+                    }
+                    style={{ animationDelay: `${atraso}ms` }}
+                    className={`group relative flex min-h-24 flex-row items-start gap-3.5 rounded-2xl p-4 outline-none animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500 ${
+                      card.disabled
+                        ? "opacity-55"
+                        : `transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 hover:ring-primary/30 focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                            clicavel ? "cursor-pointer" : ""
+                          } ${bloqueadoPorPlano ? "opacity-80" : ""}`
+                    }`}
+                    onClick={() => clicavel && abrirCard(card.id)}
+                  >
+                    {ativo ? (
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                        style={{
+                          background:
+                            "radial-gradient(320px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--primary) 12%, transparent), transparent 70%)",
+                        }}
+                      />
+                    ) : null}
+                    {badge ? (
+                      <span className="absolute right-3 top-3 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary ring-1 ring-primary/15">
+                        {badge}
+                      </span>
+                    ) : null}
+                    {card.linkOut ? (
+                      <ExternalLink className="absolute right-3 top-3 size-3.5 text-muted-foreground transition-colors group-hover:text-primary" />
+                    ) : null}
+                    <div
+                      className={`relative flex size-11 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
+                        card.disabled
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-primary/10 text-primary ring-1 ring-primary/10 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-lg group-hover:shadow-primary/30 motion-safe:group-hover:-rotate-6 motion-safe:group-hover:scale-110"
+                      }`}
+                    >
+                      <Icon className="size-5" />
+                    </div>
+                    <div className="relative min-w-0 flex-1 pr-6">
+                      <div className="text-sm font-semibold tracking-tight">{card.title}</div>
+                      <div className="mt-1 text-xs leading-relaxed text-muted-foreground">{card.desc}</div>
+                      {card.disabled && !isToggle ? (
+                        <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          <Clock className="size-3" /> Em breve
+                        </div>
+                      ) : bloqueadoPorPlano ? (
+                        <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          <Lock className="size-3" /> Disponível no plano Essencial
+                        </div>
+                      ) : null}
+                    </div>
+                    {isToggle ? (
+                      <Switch
+                        checked={versiculoAtivo}
+                        onCheckedChange={alternarVersiculo}
+                        disabled={salvandoVersiculo}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`relative ${card.badge ? "mt-6" : ""}`}
+                      />
+                    ) : clicavel && !card.linkOut ? (
+                      <ChevronRight
+                        aria-hidden
+                        className="absolute bottom-4 right-4 size-4 text-primary opacity-0 transition-all duration-300 motion-safe:-translate-x-2 group-hover:translate-x-0 group-hover:opacity-100"
+                      />
+                    ) : null}
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
 
       <LojaInfoDialog
         open={aberto === "loja-info"}
