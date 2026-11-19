@@ -47,6 +47,7 @@ export type NavItem = {
   href: string; // caminho relativo (sem "/admin"); sem extensao, igual ao PHP
   migrated?: boolean; // true = ja existe como rota Next.js
   opensPos?: true; // abre o overlay do POS em vez de navegar
+  novo?: true; // selo vermelho "novo" no menu (funcao recente); fica ate ser removido manualmente
 };
 
 export type NavSection = {
@@ -67,13 +68,13 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "pdv", label: "Pedidos (PDV)", icon: ShoppingBag, href: "/pdv", opensPos: true },
       { menuKey: "gestor", label: "Gestor de Pedidos", icon: Kanban, href: "/ordermanager", migrated: true },
       { menuKey: "pedidos", label: "Lista de Pedidos", icon: Receipt, href: "/order-list", migrated: true },
-      { menuKey: "pedidosAgendados", label: "Agendamentos", icon: CalendarCheck, href: "/scheduled-orders", migrated: true },
+      { menuKey: "pedidosAgendados", label: "Agendamentos", icon: CalendarCheck, href: "/scheduled-orders", migrated: true, novo: true },
       { menuKey: "orcamentos", label: "Gerar orçamentos", icon: FileText, href: "/quotes", migrated: true },
       { menuKey: "produtos", label: "Produtos", icon: Package, href: "/produtos", migrated: true },
       { menuKey: "produtos", label: "Complementos", icon: Layers, href: "/product-complement", migrated: true },
-      { menuKey: "promo", label: "Promo", icon: Gift, href: "/promotion", migrated: true },
+      { menuKey: "promo", label: "Promo", icon: Gift, href: "/promotion", migrated: true, novo: true },
       { menuKey: "estoque", label: "Estoque", icon: Boxes, href: "/stock", migrated: true },
-      { menuKey: "desperdicios", label: "Desperdícios", icon: PackageX, href: "/desperdicios", migrated: true },
+      { menuKey: "desperdicios", label: "Desperdícios", icon: PackageX, href: "/desperdicios", migrated: true, novo: true },
       { menuKey: "clientes", label: "Clientes", icon: Grid3x3, href: "/clients", migrated: true },
     ],
   },
@@ -84,7 +85,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "relatorios", label: "Canais de venda", icon: Store, href: "/saleschannels", migrated: true },
       { menuKey: "relatorios", label: "Relatório de clientes", icon: Users, href: "/clientreports", migrated: true },
       { menuKey: "fidelidade", label: "Fidelidade", icon: Award, href: "/loyaltyreports", migrated: true },
-      { menuKey: "crossSellRelatorio", label: "Cross-sell", icon: Shuffle, href: "/crosssellreport", migrated: true },
+      { menuKey: "crossSellRelatorio", label: "Cross-sell", icon: Shuffle, href: "/crosssellreport", migrated: true, novo: true },
       { menuKey: "modoGarcom", label: "Relatório de garçons", icon: UserCheck, href: "/waiter-report", migrated: true },
     ],
   },
@@ -104,15 +105,15 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { menuKey: "whatslilly", label: "WhatsLilly", icon: MessageCircle, href: "/whatslilly", migrated: true },
       { menuKey: "listaTransmissao", label: "Lista de Transmissão", icon: Radio, href: "/broadcastlist", migrated: true },
-      { menuKey: "midiaIndoor", label: "Mídia Indoor", icon: Tv, href: "/midia-indoor", migrated: true },
+      { menuKey: "midiaIndoor", label: "Mídia Indoor", icon: Tv, href: "/midia-indoor", migrated: true, novo: true },
     ],
   },
   {
     title: "Gerenciar",
     items: [
       { menuKey: "gerenciamento", label: "Gerenciamento", icon: Building2, href: "/superadmin/dashboard" },
-      { menuKey: "motoboys", label: "Motoboys", icon: Bike, href: "/motoboys", migrated: true },
-      { menuKey: "modoGarcom", label: "Modo Garçom", icon: BadgeIcon, href: "/waitermode", migrated: true },
+      { menuKey: "motoboys", label: "Motoboys", icon: Bike, href: "/motoboys", migrated: true, novo: true },
+      { menuKey: "modoGarcom", label: "Modo Garçom", icon: BadgeIcon, href: "/waitermode", migrated: true, novo: true },
       { menuKey: "controleCaixa", label: "Controle de caixa", icon: Wallet, href: "/cashcontrol", migrated: true },
       { menuKey: "controleFiado", label: "Controle de fiado", icon: BookText, href: "/storecredittracking", migrated: true },
       { menuKey: "cupons", label: "Cupons", icon: Ticket, href: "/coupons", migrated: true },

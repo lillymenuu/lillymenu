@@ -404,7 +404,7 @@ function AppShellInner({
                       const active = pathname === item.href;
                       const itemBloqueado = bloqueado && item.href !== "/plan-details";
                       const className = cn(
-                        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors max-md:rounded-xl max-md:py-3 max-md:text-[15px]",
+                        "relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors max-md:rounded-xl max-md:py-3 max-md:text-[15px]",
                         collapsed && "md:justify-center md:px-0",
                         itemBloqueado
                           ? cn("cursor-not-allowed opacity-40", collapsed ? "text-white/60" : "text-foreground/40")
@@ -441,6 +441,15 @@ function AppShellInner({
                           <span className="ml-auto flex size-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">
                             {wlNaoLidas > 99 ? "99+" : wlNaoLidas}
                           </span>
+                        ) : item.novo ? (
+                          <span className="ml-auto shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold leading-none text-white">
+                            novo
+                          </span>
+                        ) : null;
+                      /* Menu recolhido: no lugar do selo, uma bolinha vermelha no canto do icone. */
+                      const pontoNovo =
+                        collapsed && item.novo ? (
+                          <span aria-hidden className="absolute right-2 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-primary max-md:hidden" />
                         ) : null;
                       const link = item.opensPos ? (
                         <button
@@ -453,19 +462,22 @@ function AppShellInner({
                         >
                           <Icon size={20} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
-                          {!collapsed && badge}
+                          {badge && <span className={cn("ml-auto flex shrink-0", collapsed && "md:hidden")}>{badge}</span>}
+                          {pontoNovo}
                         </button>
                       ) : item.migrated ? (
                         <Link href={item.href} className={className} onClick={() => setMobileOpen(false)}>
                           <Icon size={20} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
-                          {!collapsed && badge}
+                          {badge && <span className={cn("ml-auto flex shrink-0", collapsed && "md:hidden")}>{badge}</span>}
+                          {pontoNovo}
                         </Link>
                       ) : (
                         <a href={`${phpAdminUrl}${item.href}`} className={className}>
                           <Icon size={20} />
                           <span className={cn(collapsed && "md:hidden")}>{item.label}</span>
-                          {!collapsed && badge}
+                          {badge && <span className={cn("ml-auto flex shrink-0", collapsed && "md:hidden")}>{badge}</span>}
+                          {pontoNovo}
                         </a>
                       );
                       return (
