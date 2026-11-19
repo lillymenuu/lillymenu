@@ -219,22 +219,22 @@ export function PushNotificacoes() {
 
           <DialogFooter className="border-t-0 bg-transparent">
             {estado === "inativo" && (
-              <Button onClick={ativar} disabled={ocupado}>
+              <Button className="rounded-full" onClick={ativar} disabled={ocupado}>
                 <Bell size={14} /> Ativar notificações
               </Button>
             )}
             {ativo && (
               <>
-                <Button variant="outline" onClick={desativar} disabled={ocupado}>
+                <Button variant="outline" className="rounded-full" onClick={desativar} disabled={ocupado}>
                   Desativar
                 </Button>
-                <Button onClick={testar} disabled={ocupado}>
+                <Button className="rounded-full" onClick={testar} disabled={ocupado}>
                   Enviar teste
                 </Button>
               </>
             )}
             {(estado === "instalar-ios" || estado === "sem-suporte" || estado === "negado") && (
-              <Button variant="outline" onClick={() => setAberto(false)}>
+              <Button variant="outline" className="rounded-full" onClick={() => setAberto(false)}>
                 Entendi
               </Button>
             )}
