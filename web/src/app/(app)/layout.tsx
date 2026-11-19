@@ -10,7 +10,9 @@ import { getLandingConfig, lc } from "@/db/queries/landingConfig";
 export const metadata: Metadata = {
   manifest: "/gestor.webmanifest",
   appleWebApp: { capable: true, title: "LillyMenu", statusBarStyle: "default" },
-  icons: { apple: "/favicon_store.png" },
+  /* Icone do app = logo do menu (landing_config.logo_image) com fundo preenchido — o iOS pinta de
+     preto cantos transparentes. Se a logo mudar no superadmin, gerar de novo os public/icone-app-*.png. */
+  icons: { apple: "/apple-touch-icon.png" },
 };
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
