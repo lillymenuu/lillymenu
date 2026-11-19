@@ -70,13 +70,28 @@ export function OrderManager({
   const arrastandoIdRef = useRef<number | null>(null);
   const ultimoSnapshotRef = useRef(snapshot(pedidosIniciais));
 
+  /*
+   * Movimentos em andamento (id -> status de destino) e um contador de "geracao" que sobe a cada clique.
+   * Sem isso, uma leitura disparada antes (ou durante) um movimento chegava com o status antigo e o
+   * card voltava por um instante para a coluna anterior antes de avancar — bem visivel ao mover
+   * varios pedidos seguidos.
+   */
+  const movendoRef = useRef(new Map<number, string>());
+  const geracaoRef = useRef(0);
+  const filaPorPedidoRef = useRef(new Map<number, Promise<void>>());
+
   const carregarPedidos = useCallback(async () => {
     if (pausadoRef.current) return;
+    const geracaoInicio = geracaoRef.current;
     try {
       const res = await fetch("/api/ordermanager/pedidos", { cache: "no-store" });
       const data = await res.json();
       if (!data.ok) return;
-      const novos: Pedido[] = data.pedidos ?? [];
+      /* Algum clique aconteceu enquanto a leitura viajava: ela pode estar velha. A leitura feita ao fim
+         desse movimento traz o estado certo. */
+      if (geracaoRef.current !== geracaoInicio) return;
+      const movendo = movendoRef.current;
+      const novos: Pedido[] = (data.pedidos ?? []).map((p: Pedido) => (movendo.has(p.id) ? { ...p, status: movendo.get(p.id)! } : p));
       const novoSnapshot = snapshot(novos);
       if (novoSnapshot === ultimoSnapshotRef.current) return;
       ultimoSnapshotRef.current = novoSnapshot;
@@ -115,26 +130,40 @@ export function OrderManager({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  async function moverStatus(id: number, status: string) {
+  function moverStatus(id: number, status: string) {
     /* Status que a tela mostra agora: o servidor recusa se o pedido ja mudou em outro aparelho. */
-    const statusAtual = pedidos.find((p) => p.id === id)?.status;
+    const statusAtual = movendoRef.current.get(id) ?? pedidos.find((p) => p.id === id)?.status;
+    geracaoRef.current++;
+    movendoRef.current.set(id, status);
     ultimoSnapshotRef.current = ""; // forca re-render mesmo se o poll ainda nao pegou a mudanca
     setPedidos((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
     const endpoint = status === "finalizado" ? "/api/ordermanager/finalizar" : "/api/ordermanager/status";
     const body = status === "finalizado" ? { id } : { id, status, de: statusAtual };
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        toast.error(data.msg ?? "Erro ao mover o pedido.");
+
+    /* Cliques seguidos no MESMO pedido vao em ordem (aceito -> preparando nao chega antes do aceite). */
+    const anterior = filaPorPedidoRef.current.get(id) ?? Promise.resolve();
+    const atual = anterior.then(async () => {
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) toast.error(data.msg ?? "Erro ao mover o pedido.");
+      } catch {
+        toast.error("Erro ao mover o pedido.");
+      } finally {
+        if (movendoRef.current.get(id) === status) movendoRef.current.delete(id);
+        if (filaPorPedidoRef.current.get(id) === atual) filaPorPedidoRef.current.delete(id);
+        /* Le de novo so quando nenhum outro movimento esta no ar; o ultimo a terminar atualiza a tela. */
+        if (movendoRef.current.size === 0) {
+          geracaoRef.current++;
+          carregarPedidos();
+        }
       }
-    } finally {
-      carregarPedidos();
-    }
+    });
+    filaPorPedidoRef.current.set(id, atual);
   }
 
   function avancar(pedido: Pedido) {
