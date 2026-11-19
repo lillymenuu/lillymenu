@@ -328,7 +328,13 @@ export function SettingsManager({
                       />
                     ) : null}
                     {badge ? (
-                      <span className="absolute right-3 top-3 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary ring-1 ring-primary/15">
+                      <span
+                        className={`absolute right-3 top-3 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          badge === "Novo"
+                            ? "bg-red-500 text-white shadow-sm shadow-red-500/30"
+                            : "bg-primary/10 text-primary ring-1 ring-primary/15"
+                        }`}
+                      >
                         {badge}
                       </span>
                     ) : null}
