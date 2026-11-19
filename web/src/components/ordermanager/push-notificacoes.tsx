@@ -135,14 +135,15 @@ export function PushNotificacoes() {
     if (!inscricao) return;
     setOcupado(true);
     try {
-      const res = await fetch("/api/push/teste", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ endpoint: inscricao.endpoint }),
-      });
+      const res = await fetch("/api/push/teste", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!data.ok) toast.error(data.msg ?? "Não foi possível enviar o teste.");
-      else toast.success("Teste enviado. A notificação deve chegar em alguns segundos.");
+      else
+        toast.success(
+          data.enviadas > 1
+            ? `Teste enviado para ${data.enviadas} aparelhos seus. Deve chegar em alguns segundos.`
+            : "Teste enviado. Deve chegar em alguns segundos."
+        );
     } finally {
       setOcupado(false);
     }
@@ -215,6 +216,9 @@ export function PushNotificacoes() {
             <p className={cn("rounded-xl px-3 py-2 text-sm", ativo ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-muted")}>
               {ativo ? "Ativadas neste aparelho." : "Desativadas neste aparelho."}
             </p>
+          )}
+          {ativo && (
+            <p className="text-xs text-muted-foreground">O teste vai para todos os seus aparelhos com notificações ativadas.</p>
           )}
 
           <DialogFooter className="border-t-0 bg-transparent">

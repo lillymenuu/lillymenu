@@ -81,13 +81,14 @@ export async function enviarPushLoja(lojaId: number, payload: PayloadPush): Prom
   return enviarPara(linhas.map((l) => l.inscricao), payload);
 }
 
-/** Envia so para uma inscricao (botao "Enviar teste"). */
-export async function enviarPushEndpoint(lojaId: number, endpoint: string, payload: PayloadPush): Promise<number> {
+/** Envia para todos os aparelhos de um usuario (botao "Enviar teste": celular e computador dele,
+    sem avisar os outros funcionarios da loja). */
+export async function enviarPushAdmin(lojaId: number, adminId: number, payload: PayloadPush): Promise<number> {
   if (!configurar()) return 0;
   const linhas = await db
     .select()
     .from(pushInscricoes)
-    .where(and(eq(pushInscricoes.loja_id, lojaId), eq(pushInscricoes.endpoint, endpoint)));
+    .where(and(eq(pushInscricoes.loja_id, lojaId), eq(pushInscricoes.admin_id, adminId)));
   return enviarPara(linhas, payload);
 }
 
