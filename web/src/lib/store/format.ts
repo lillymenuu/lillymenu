@@ -17,15 +17,14 @@ export function parseValorMascarado(valor: string): number {
 }
 
 export function formatarTelefone(valor: string): string {
-  let v = valor.replace(/\D/g, "").slice(0, 11);
-  if (v.length > 10) {
-    v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
-  } else if (v.length > 5) {
-    v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-  } else if (v.length > 2) {
-    v = v.replace(/(\d{2})(\d{0,4})/, "($1) $2");
-  } else if (v.length > 0) {
-    v = v.replace(/(\d{0,2})/, "($1");
-  }
-  return v;
+  const v = valor.replace(/\D/g, "").slice(0, 11);
+  /* Separador so entra quando ja ha digito depois dele: se a mascara deixasse "(85) 9865-" com o
+     hifen sobrando, apagar o hifen nao mudava os digitos e ele voltava na hora (campo travava). */
+  if (v.length === 0) return "";
+  if (v.length <= 2) return `(${v}`;
+  const ddd = v.slice(0, 2);
+  const resto = v.slice(2);
+  const corte = v.length > 10 ? 5 : 4;
+  if (resto.length <= corte) return `(${ddd}) ${resto}`;
+  return `(${ddd}) ${resto.slice(0, corte)}-${resto.slice(corte)}`;
 }
