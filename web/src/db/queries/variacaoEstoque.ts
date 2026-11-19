@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { db, NeonTx } from "@/db";
 import { estoque, estoqueMovimentacoes, produtos, produtoVariacoes } from "@/db/schema";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Estoque por variacao (produtos.variacoes_estoque): cada variacao tem saldo proprio em
@@ -75,7 +76,7 @@ export async function sincronizarEstoqueProdutoComVariacoes(conexao: typeof db |
   const delta = quantidade - (atual?.quantidade ?? 0);
   await conexao.insert(estoque).values({ produto_id: produtoId, quantidade, loja_id: lojaId }).onConflictDoUpdate({ target: estoque.produto_id, set: { quantidade } });
   if (delta !== 0) {
-    await conexao.insert(estoqueMovimentacoes).values({ produto_id: produtoId, tipo: delta > 0 ? "entrada" : "saida", quantidade: Math.abs(delta), origem: "ajuste", loja_id: lojaId });
+    await conexao.insert(estoqueMovimentacoes).values({ criado_em: await timestampLoja(lojaId), produto_id: produtoId, tipo: delta > 0 ? "entrada" : "saida", quantidade: Math.abs(delta), origem: "ajuste", loja_id: lojaId });
   }
   return quantidade;
 }

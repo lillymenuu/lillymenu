@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, gte, asc, desc, sql, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos, pedidoItens, pontosMovimentacoes } from "@/db/schema";
-import { adicionarHorasFortaleza } from "@/db/queries/tempo";
+import { adicionarHorasLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/cliente_pedidos.php e cliente_pontos.php: abas
@@ -20,7 +20,7 @@ export async function pedidosCliente(lojaId: number, clienteId: number, periodoI
   const limite = 3;
 
   const condicoes = [eq(pedidos.cliente_id, clienteId), eq(pedidos.loja_id, lojaId)];
-  if (periodo > 0) condicoes.push(gte(pedidos.criado_em, adicionarHorasFortaleza(-periodo * 24)));
+  if (periodo > 0) condicoes.push(gte(pedidos.criado_em, (await adicionarHorasLoja(lojaId, -periodo * 24))));
   if (tipo !== "" && tipo !== "todos") condicoes.push(eq(pedidos.tipo, tipo as "retirada" | "entrega" | "mesa"));
   const condicao = and(...condicoes)!;
 

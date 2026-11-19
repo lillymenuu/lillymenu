@@ -107,6 +107,10 @@ export type ConfiguracoesDetalhe = {
     fixa: { valor: number; tempo_min: number; tempo_max: number };
   };
   versiculo_dashboard_ativo: boolean;
+  /** Fuso IANA da loja (configuracoes.fuso_horario). */
+  fuso_horario: string;
+  /** false = nunca salvo (o valor acima e a sugestao pelo estado). */
+  fuso_horario_definido: boolean;
 };
 
 export type Usuario = {

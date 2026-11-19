@@ -3,6 +3,7 @@ import { getSessaoAdmin } from "@/lib/session";
 import { detalhePedido } from "@/db/queries/pedidosAdmin";
 import { getConfig } from "@/db/queries/config";
 import { gerarPdfPedido } from "@/lib/pedidoPdf";
+import { fusoLoja } from "@/db/queries/tempo";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
   ]);
 
   const p = resultado.pedido as Record<string, unknown>;
-  const pdf = await gerarPdfPedido({
+  const pdf = await gerarPdfPedido({ fuso: await fusoLoja(sessao.lojaId),
     loja: { nome: nomeLoja, logoUrl },
     pedido: {
       codigo: Number(p.codigo ?? 0),

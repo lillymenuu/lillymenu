@@ -3,6 +3,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos, clientes, motoboys, mesas, garcons, pedidoPagamentos, pedidoItens, pedidoItemOpcoes, pedidoComboItens, cashbackMovimentacoes, operacaoLogs, admins, configuracoes } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
+import { fusoLoja, dataLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/pedidos_listar.php, pedidos_kanban.php,
@@ -100,13 +101,13 @@ function normalizarDataSQL(d: string): string {
   return s;
 }
 
-function hojeFortalezaISO(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
+function hojeFortalezaISO(fuso: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
 }
 
 export async function listarPedidos(input: ListarPedidosInput): Promise<ListarPedidosResultado> {
   const { lojaId } = input;
-  const hoje = hojeFortalezaISO();
+  const hoje = hojeFortalezaISO(await fusoLoja(lojaId));
   const dataIni = normalizarDataSQL(input.dataIni ?? hoje);
   const dataFim = normalizarDataSQL(input.dataFim ?? hoje);
   const pagina = Math.max(1, input.pagina ?? 1);
@@ -382,7 +383,7 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
           from cashback_movimentacoes m
           left join cashback_movimentacoes u on u.referencia_id = m.id and u.tipo in ('uso','expirado') and u.loja_id = m.loja_id
           where m.cliente_id = ${clienteId} and m.loja_id = ${lojaId} and m.tipo = 'entrada'
-            and (m.expira_em is null or m.expira_em >= current_date)
+            and (m.expira_em is null or m.expira_em >= ${await dataLoja(lojaId)}::date)
           group by m.id, m.expira_em, m.valor
           having (m.valor - coalesce(sum(u.valor),0)) > 0 and m.expira_em is not null
         ) t

@@ -2,11 +2,12 @@ import "server-only";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos, pedidoItens, clientes } from "@/db/schema";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /* Equivalente de admin/api/v1/relatorio_cross_sell.php (/crosssellreport). */
 
-function resolverPeriodo(periodo: string, dataIni?: string, dataFim?: string): { periodo: string; inicio: string; fim: string } {
-  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
+function resolverPeriodo(fuso: string, periodo: string, dataIni?: string, dataFim?: string): { periodo: string; inicio: string; fim: string } {
+  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
   if (periodo === "customizado") {
     return { periodo, inicio: dataIni || `${hojeISO.slice(0, 7)}-01`, fim: dataFim || hojeISO };
   }
@@ -32,7 +33,7 @@ export type RelatorioCrossSellResultado = {
 
 export async function relatorioCrossSell(input: RelatorioCrossSellInput): Promise<RelatorioCrossSellResultado> {
   const { lojaId } = input;
-  const { inicio, fim } = resolverPeriodo(input.periodo ?? "hoje", input.dataIni, input.dataFim);
+  const { inicio, fim } = resolverPeriodo(await fusoLoja(lojaId), input.periodo ?? "hoje", input.dataIni, input.dataFim);
 
   const where = and(eq(pedidoItens.loja_id, lojaId), eq(pedidoItens.cross_sell, true), ne(pedidos.status, "cancelado"), sql`${pedidos.criado_em}::date between ${inicio}::date and ${fim}::date`);
 

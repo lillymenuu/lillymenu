@@ -3,6 +3,7 @@ import { and, eq, ilike, or, desc, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { avaliacoes, clientes, pedidos } from "@/db/schema";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/avaliacoes.php (tela Avaliacoes) e
@@ -133,9 +134,9 @@ export async function salvarAvaliacaoCliente(lojaId: number, pedidoId: number, n
   const [existente] = await db.select({ id: avaliacoes.id }).from(avaliacoes).where(and(eq(avaliacoes.pedido_id, pedidoId), eq(avaliacoes.loja_id, lojaId))).limit(1);
 
   if (existente) {
-    await db.update(avaliacoes).set({ nota, descricao: descricao || null, criado_em: sql`now()` }).where(eq(avaliacoes.id, existente.id));
+    await db.update(avaliacoes).set({ nota, descricao: descricao || null, criado_em: await timestampLoja(lojaId) }).where(eq(avaliacoes.id, existente.id));
   } else {
-    await db.insert(avaliacoes).values({ pedido_id: pedidoId, loja_id: lojaId, cliente_id: pedido.clienteId, nota, descricao: descricao || null });
+    await db.insert(avaliacoes).values({ pedido_id: pedidoId, loja_id: lojaId, cliente_id: pedido.clienteId, nota, descricao: descricao || null, criado_em: await timestampLoja(lojaId) });
   }
 
   return { ok: true, msg: "Avaliação enviada! Obrigado." };

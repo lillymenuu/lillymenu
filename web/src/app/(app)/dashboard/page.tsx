@@ -16,7 +16,7 @@ import { funilConversao } from "@/db/queries/funilConversao";
 import { getConfig } from "@/db/queries/config";
 import { buscarVersiculoDoDia } from "@/db/queries/versiculoDoDia";
 import { reacaoVersiculoDoDia } from "@/db/queries/versiculoReacao";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataLoja } from "@/db/queries/tempo";
 import { formatBRLMilhar } from "@/components/ordermanager/constants";
 import { exigirRecurso } from "@/lib/acessoRecurso";
 
@@ -77,7 +77,7 @@ export default async function DashboardPage({
 
   const versiculoAtivo = (await getConfig(sessao.lojaId, "versiculo_dashboard_ativo", "1")) !== "0";
   const versiculo = versiculoAtivo ? await buscarVersiculoDoDia() : null;
-  const hojeVersiculo = dataFortaleza();
+  const hojeVersiculo = (await dataLoja(sessao.lojaId));
   const reacaoVersiculo = versiculo ? await reacaoVersiculoDoDia(sessao.id, hojeVersiculo) : null;
 
   if (erro || !data) {

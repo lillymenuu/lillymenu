@@ -15,6 +15,7 @@ import {
   type ProdutoParaPerda,
   type TipoDesperdicio,
 } from "@/lib/desperdicios";
+import { fusoLoja, timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Controle de desperdicio (/desperdicios). Lancar perda de um produto cadastrado so guarda a
@@ -23,8 +24,8 @@ import {
 
 type Resultado<T = object> = ({ ok: true } & T) | { ok: false; msg: string };
 
-function mesAtualFortaleza(): { mes: number; ano: number } {
-  const [ano, mes] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit" })
+function mesAtualFortaleza(fuso: string): { mes: number; ano: number } {
+  const [ano, mes] = new Intl.DateTimeFormat("en-CA", { timeZone: fuso, year: "numeric", month: "2-digit" })
     .format(new Date())
     .split("-")
     .map(Number);
@@ -89,7 +90,7 @@ export async function listarProdutosParaPerda(lojaId: number): Promise<ProdutoPa
 }
 
 export async function dashboardDesperdicio(lojaId: number, mesParam?: number, anoParam?: number): Promise<DesperdicioDashboard> {
-  const atual = mesAtualFortaleza();
+  const atual = mesAtualFortaleza(await fusoLoja(lojaId));
   const mes = mesParam && mesParam >= 1 && mesParam <= 12 ? mesParam : atual.mes;
   const ano = anoParam && anoParam >= 2000 && anoParam <= 2100 ? anoParam : atual.ano;
 
@@ -245,9 +246,11 @@ export async function salvarLotePerda(lojaId: number, adminId: number, input: Lo
   if (!v.ok) return v;
 
   const observacao = (input.observacao ?? "").trim().slice(0, 255) || null;
+  const criadoEm = await timestampLoja(lojaId);
   await db.insert(desperdicios).values(
     v.itens.map((i) => ({
       loja_id: lojaId,
+      criado_em: criadoEm,
       data: input.data,
       tipo: i.tipo,
       motivo: input.motivo,

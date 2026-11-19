@@ -8,6 +8,7 @@ import { estaAberto } from "@/db/queries/lojaStatus";
 import { reservaMapaPdv } from "@/db/queries/pdvReservas";
 import { temRecursoPlano } from "@/db/queries/assinatura";
 import { BANDEIRAS_PADRAO } from "@/lib/settings";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de helpers/loja_context.php::obterLojaIdDaRequisicao() (so o
@@ -86,7 +87,7 @@ async function entregaDisponivelAgora(lojaId: number): Promise<boolean> {
   const fim = cfg.horario_entrega_fim.trim();
   if (ini === "" || fim === "") return true;
 
-  const fuso = cfg.fuso_horario || "America/Fortaleza";
+  const fuso = await fusoLoja(lojaId);
   const partes = new Intl.DateTimeFormat("en-CA", { timeZone: fuso, hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
   const hora = `${partes.find((p) => p.type === "hour")?.value ?? "00"}:${partes.find((p) => p.type === "minute")?.value ?? "00"}`;
   return hora >= ini && hora <= fim;
@@ -376,7 +377,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
   let pausaAtivaTitulo = "";
   let pausaAtivaFim = "";
   if (!lojaAberta) {
-    const fuso = (await getConfig(lojaId, "fuso_horario", "America/Fortaleza")) || "America/Fortaleza";
+    const fuso = await fusoLoja(lojaId);
     const dataHoje = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
     const partes = new Intl.DateTimeFormat("en-CA", { timeZone: fuso, hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
     const hora = `${partes.find((p) => p.type === "hour")?.value ?? "00"}:${partes.find((p) => p.type === "minute")?.value ?? "00"}`;
@@ -403,7 +404,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
   const diasNomes: Record<number, string> = { 1: "Dom", 2: "Seg", 3: "Ter", 4: "Qua", 5: "Qui", 6: "Sex", 7: "Sab" };
   if (!lojaAberta) {
     const hs = jsonOuVazio<Record<string, AgendHorario>>(cfg.horarios_semana || "", {});
-    const fuso = (await getConfig(lojaId, "fuso_horario", "America/Fortaleza")) || "America/Fortaleza";
+    const fuso = await fusoLoja(lojaId);
     const dataHoje = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
     const diaJsHoje = new Date(`${dataHoje}T00:00:00`).getDay();
     const ckHoje = diaJsHoje + 1;
@@ -474,7 +475,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
     .map((v) => parseInt(v, 10))
     .filter((v) => Number.isFinite(v));
   const diasNomesInfo: Record<number, string> = { 1: "Domingo", 2: "Segunda", 3: "Terça", 4: "Quarta", 5: "Quinta", 6: "Sexta", 7: "Sábado" };
-  const fusoInfo = (await getConfig(lojaId, "fuso_horario", "America/Fortaleza")) || "America/Fortaleza";
+  const fusoInfo = await fusoLoja(lojaId);
   const dataHojeInfo = new Intl.DateTimeFormat("en-CA", { timeZone: fusoInfo }).format(new Date());
   const ckHojeInfo = new Date(`${dataHojeInfo}T00:00:00`).getDay() + 1;
   const partesInfo = new Intl.DateTimeFormat("en-CA", { timeZone: fusoInfo, hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());

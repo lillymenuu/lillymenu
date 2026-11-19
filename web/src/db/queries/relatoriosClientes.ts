@@ -2,15 +2,16 @@ import "server-only";
 import { and, asc, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos, clientes } from "@/db/schema";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /* Equivalente de admin/api/v1/relatorios_clientes.php (/clientreports). */
 
 const DIAS_VALIDOS = ["7", "15", "30", "60", "90", "365"] as const;
 
-function resolverPeriodo(periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
+function resolverPeriodo(fuso: string, periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
   if (dataIni && dataFim) return { inicio: `${dataIni} 00:00:00`, fim: `${dataFim} 23:59:59` };
   const dias = (DIAS_VALIDOS as readonly string[]).includes(periodo) ? Number(periodo) : 30;
-  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
+  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
   const [y, m, d] = hojeISO.split("-").map(Number);
   const inicioDt = new Date(Date.UTC(y, m - 1, d) - dias * 86_400_000);
   const inicio = `${inicioDt.getUTCFullYear()}-${String(inicioDt.getUTCMonth() + 1).padStart(2, "0")}-${String(inicioDt.getUTCDate()).padStart(2, "0")}`;
@@ -48,7 +49,7 @@ export type RelatorioClientesResultado = { total: number; pagina: number; pagina
 
 export async function relatorioClientes(input: RelatorioClientesInput): Promise<RelatorioClientesResultado> {
   const { lojaId } = input;
-  const { inicio, fim } = resolverPeriodo(input.periodo ?? "30", input.dataIni, input.dataFim);
+  const { inicio, fim } = resolverPeriodo(await fusoLoja(lojaId), input.periodo ?? "30", input.dataIni, input.dataFim);
   const pagina0 = Math.max(1, input.pagina ?? 1);
   const limite = ([10, 25, 50] as const).includes(input.limite as never) ? (input.limite as 10 | 25 | 50) : 10;
   const ordenar = ordenarPor(input.ordenar ?? "total_gasto");

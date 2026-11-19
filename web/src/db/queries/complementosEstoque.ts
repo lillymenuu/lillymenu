@@ -3,7 +3,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { complementosEstoques, complementosGrupos, complementosItens, estoque, produtos } from "@/db/schema";
 import { salvarEstoque } from "@/db/queries/estoqueAdmin";
-import { timestampFortaleza } from "@/db/queries/tempo";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Estoque dos itens de complemento (aba "Gerenciar estoque"). O item pode:
@@ -131,7 +131,7 @@ export async function vincularEstoqueItem(lojaId: number, itemId: number, tipo: 
 
   await db
     .update(complementosItens)
-    .set({ estoque_produto_id: tipo === "produto" ? id : null, estoque_complemento_id: tipo === "complemento" ? id : null, atualizado_em: timestampFortaleza() })
+    .set({ estoque_produto_id: tipo === "produto" ? id : null, estoque_complemento_id: tipo === "complemento" ? id : null, atualizado_em: (await timestampLoja(lojaId)) })
     .where(and(eq(complementosItens.id, itemId), eq(complementosItens.loja_id, lojaId)));
   return { ok: true, estoque: await estoqueDoItem(lojaId, itemId) };
 }
@@ -139,7 +139,7 @@ export async function vincularEstoqueItem(lojaId: number, itemId: number, tipo: 
 export async function desvincularEstoqueItem(lojaId: number, itemId: number): Promise<Resultado> {
   const r = await db
     .update(complementosItens)
-    .set({ estoque_produto_id: null, estoque_complemento_id: null, atualizado_em: timestampFortaleza() })
+    .set({ estoque_produto_id: null, estoque_complemento_id: null, atualizado_em: (await timestampLoja(lojaId)) })
     .where(and(eq(complementosItens.id, itemId), eq(complementosItens.loja_id, lojaId)))
     .returning({ id: complementosItens.id });
   return r.length ? { ok: true } : { ok: false, msg: "Item não encontrado." };
@@ -179,7 +179,7 @@ export async function salvarEstoqueComplemento(
   } else {
     const r = await db
       .update(complementosEstoques)
-      .set({ quantidade: input.quantidade, quantidade_minima: input.quantidadeMinima, atualizado_em: timestampFortaleza() })
+      .set({ quantidade: input.quantidade, quantidade_minima: input.quantidadeMinima, atualizado_em: (await timestampLoja(lojaId)) })
       .where(and(eq(complementosEstoques.id, id), eq(complementosEstoques.loja_id, lojaId)))
       .returning({ id: complementosEstoques.id });
     if (!r.length) return { ok: false, msg: "Estoque não encontrado." };

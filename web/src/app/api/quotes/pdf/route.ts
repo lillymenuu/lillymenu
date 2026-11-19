@@ -3,6 +3,7 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getConfigs } from "@/db/queries/config";
 import { detalheOrcamento } from "@/db/queries/orcamentos";
 import { gerarPdfOrcamento } from "@/lib/orcamentoPdf";
+import { fusoLoja } from "@/db/queries/tempo";
 
 export const runtime = "nodejs";
 
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
     .join(" - ") + (cfg.loja_cep ? ` - CEP: ${cfg.loja_cep}` : "");
 
   const juridica = o.clienteTipoDocumento === "juridica";
-  const pdf = await gerarPdfOrcamento({
+  const pdf = await gerarPdfOrcamento({ fuso: await fusoLoja(sessao.lojaId),
     tipo,
     loja: {
       nome: cfg.nome_loja || "Loja",

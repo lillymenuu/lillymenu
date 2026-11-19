@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos } from "@/db/schema";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /*
  * Relatorio de canais de venda (/saleschannels): compara o desempenho do
@@ -20,8 +21,8 @@ export type CanalVendaOrigem = keyof typeof CANAIS_VENDA;
 
 const ORIGENS_VALIDAS = Object.keys(CANAIS_VENDA) as CanalVendaOrigem[];
 
-function resolverPeriodo(periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
-  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
+function resolverPeriodo(fuso: string, periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
   if (dataIni && dataFim) return { inicio: `${dataIni} 00:00:00`, fim: `${dataFim} 23:59:59` };
   if (periodo === "7dias" || periodo === "30dias") {
     const dias = periodo === "7dias" ? 6 : 29;
@@ -58,7 +59,7 @@ export type RelatorioCanaisVendaResultado = {
 
 export async function relatorioCanaisVenda(input: RelatorioCanaisVendaInput): Promise<RelatorioCanaisVendaResultado> {
   const { lojaId } = input;
-  const { inicio, fim } = resolverPeriodo(input.periodo ?? "hoje", input.dataIni, input.dataFim);
+  const { inicio, fim } = resolverPeriodo(await fusoLoja(lojaId), input.periodo ?? "hoje", input.dataIni, input.dataFim);
   const canalFiltro = input.canal && ORIGENS_VALIDAS.includes(input.canal as CanalVendaOrigem) ? (input.canal as CanalVendaOrigem) : undefined;
   const origensConsideradas = canalFiltro ? [canalFiltro] : ORIGENS_VALIDAS;
 

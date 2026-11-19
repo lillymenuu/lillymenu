@@ -9,6 +9,7 @@ import { cashbackPromoverPendente, cashbackCancelarPendente } from "@/db/queries
 import { syncFinalizedOrder, reverseCanceledOrder } from "@/db/queries/financeiroSync";
 import { getConfig } from "@/db/queries/config";
 import { enfileirarImpressaoPedidoOnline } from "@/db/queries/impressaoFila";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/pedidos_status.php, pedidos_cancelar.php e
@@ -63,7 +64,7 @@ async function promoverPontosPendentes(tx: NeonTx, lojaId: number, pedidoId: num
     const saldoAntes = cliente?.saldo ?? 0;
     const saldoDepois = saldoAntes + pendente;
 
-    await tx.insert(pontosMovimentacoes).values({ cliente_id: clienteId, pedido_id: pedidoId, tipo: "ganho", pontos: pendente, saldo_antes: saldoAntes, saldo_depois: saldoDepois, referencia_id: null, loja_id: lojaId });
+    await tx.insert(pontosMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: clienteId, pedido_id: pedidoId, tipo: "ganho", pontos: pendente, saldo_antes: saldoAntes, saldo_depois: saldoDepois, referencia_id: null, loja_id: lojaId });
     await tx.update(clientes).set({ pontos_saldo: saldoDepois < 0 ? 0 : saldoDepois }).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
   }
 
@@ -96,7 +97,7 @@ export async function atualizarStatusPedido(lojaId: number, adminId: number, ped
     if (statusEsperado && atual.status !== statusEsperado) return "desatualizado" as const;
 
     await tx.update(pedidos).set({ status: statusTipado }).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId)));
-    await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: statusTipado, loja_id: lojaId });
+    await tx.insert(pedidoStatusLog).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoId, status: statusTipado, loja_id: lojaId });
 
     if (statusTipado === "cancelado") {
       await pedidoRestaurarEstoqueCancelado(tx, pedidoId, lojaId);
@@ -139,7 +140,7 @@ export async function cancelarPedido(lojaId: number, adminId: number, perfil: st
     if (atual.status === "cancelado") return "ja_cancelado" as const;
 
     await tx.update(pedidos).set({ status: "cancelado" }).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId)));
-    await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: "cancelado", loja_id: lojaId });
+    await tx.insert(pedidoStatusLog).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoId, status: "cancelado", loja_id: lojaId });
     await pedidoRestaurarEstoqueCancelado(tx, pedidoId, lojaId);
     await cashbackCancelarPendente(tx, lojaId, pedidoId);
     return "cancelado" as const;
@@ -170,7 +171,7 @@ export async function finalizarPedido(lojaId: number, adminId: number, pedidoId:
     if (atual.status === "cancelado") return "cancelado" as const;
 
     await tx.update(pedidos).set({ status: "finalizado" }).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId)));
-    await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: "finalizado", loja_id: lojaId });
+    await tx.insert(pedidoStatusLog).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoId, status: "finalizado", loja_id: lojaId });
 
     await promoverPontosPendentes(tx, lojaId, pedidoId);
     await cashbackPromoverPendente(tx, lojaId, pedidoId);

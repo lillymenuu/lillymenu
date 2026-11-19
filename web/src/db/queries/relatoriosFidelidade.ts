@@ -2,7 +2,7 @@ import "server-only";
 import { and, desc, eq, inArray, isNotNull, lt, sql } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { clientes, pedidos, cashbackMovimentacoes } from "@/db/schema";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataLoja, dataNoFuso, fusoLoja, timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/relatorios_fidelidade.php (/loyaltyreports).
@@ -14,8 +14,8 @@ import { dataFortaleza } from "@/db/queries/tempo";
 
 const DIAS_VALIDOS = ["7", "15", "30", "60", "90", "365"] as const;
 
-function resolverPeriodo(periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
-  const hoje = dataFortaleza();
+function resolverPeriodo(fuso: string, periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
+  const hoje = dataNoFuso(fuso);
   if (dataIni && dataFim) return { inicio: `${dataIni} 00:00:00`, fim: `${dataFim} 23:59:59` };
   if (periodo === "hoje") return { inicio: `${hoje} 00:00:00`, fim: `${hoje} 23:59:59` };
 
@@ -27,7 +27,7 @@ function resolverPeriodo(periodo: string, dataIni?: string, dataFim?: string): {
 }
 
 async function expirarCashbackVencido(lojaId: number): Promise<void> {
-  const hoje = dataFortaleza();
+  const hoje = (await dataLoja(lojaId));
 
   const vencidos = await db
     .select({
@@ -65,7 +65,7 @@ async function expirarCashbackVencido(lojaId: number): Promise<void> {
 
       const saldoDepois = Math.max(0, saldoAntes - expirar);
       await tx.update(clientes).set({ cashback_saldo: saldoDepois }).where(and(eq(clientes.id, venc.clienteId), eq(clientes.loja_id, lojaId)));
-      await tx.insert(cashbackMovimentacoes).values({ cliente_id: venc.clienteId, pedido_id: null, tipo: "expirado", valor: expirar, saldo_antes: saldoAntes, saldo_depois: saldoDepois, expira_em: venc.expiraEm, referencia_id: venc.id, loja_id: lojaId });
+      await tx.insert(cashbackMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: venc.clienteId, pedido_id: null, tipo: "expirado", valor: expirar, saldo_antes: saldoAntes, saldo_depois: saldoDepois, expira_em: venc.expiraEm, referencia_id: venc.id, loja_id: lojaId });
       saldosCache.set(venc.clienteId, saldoDepois);
     }
   });
@@ -90,7 +90,7 @@ export type RelatorioFidelidadeResultado = {
 
 export async function relatorioFidelidade(input: RelatorioFidelidadeInput): Promise<RelatorioFidelidadeResultado> {
   const { lojaId } = input;
-  const { inicio, fim } = resolverPeriodo(input.periodo ?? "hoje", input.dataIni, input.dataFim);
+  const { inicio, fim } = resolverPeriodo(await fusoLoja(lojaId), input.periodo ?? "hoje", input.dataIni, input.dataFim);
 
   await expirarCashbackVencido(lojaId);
 

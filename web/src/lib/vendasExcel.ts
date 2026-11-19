@@ -2,11 +2,14 @@ import "server-only";
 import ExcelJS from "exceljs";
 import { STATUS_LABELS, TIPO_LABELS } from "@/components/ordermanager/constants";
 import type { RelatorioVendasResultado } from "@/db/queries/relatoriosVendas";
+import { FUSO_PADRAO } from "@/lib/fusos";
 
 /* Planilha elegante do relatorio de vendas (/sales): aba "Resumo" com os
    indicadores e rankings do periodo, aba "Pedidos" com a lista completa. */
 
 export type DadosExcelVendas = {
+  /** Fuso da loja (configuracoes.fuso_horario) para o "Emitido em". */
+  fuso?: string;
   loja: { nome: string };
   periodoLabel: string;
   tipoLabel: string;
@@ -87,7 +90,7 @@ export async function gerarExcelVendas(dados: DadosExcelVendas): Promise<Buffer>
   resumo.getCell("A2").font = { size: 11, color: { argb: "FF64748B" } };
 
   resumo.mergeCells("A3:C3");
-  resumo.getCell("A3").value = `Período: ${dados.periodoLabel}   •   Tipo: ${dados.tipoLabel}   •   Emitido em ${new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", dateStyle: "short", timeStyle: "short" }).format(new Date())}`;
+  resumo.getCell("A3").value = `Período: ${dados.periodoLabel}   •   Tipo: ${dados.tipoLabel}   •   Emitido em ${new Intl.DateTimeFormat("pt-BR", { timeZone: dados.fuso ?? FUSO_PADRAO, dateStyle: "short", timeStyle: "short" }).format(new Date())}`;
   resumo.getCell("A3").font = { size: 9.5, italic: true, color: { argb: "FF94A3B8" } };
 
   let lin = 5;

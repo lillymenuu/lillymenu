@@ -34,8 +34,9 @@ type ItemForm = {
 const CAMPO = "h-9 w-full rounded-full border-0 bg-muted/60 px-3.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 const TIPOS_AVULSA = TIPOS.filter((t) => t.id !== "produto_vencido");
 
-function hojeFortaleza(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+/* Data de hoje no relogio do aparelho (o mesmo da loja; ver configuracoes.fuso_horario). */
+function hojeLocal(): string {
+  return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 }
 
 function numero(v: string): number {
@@ -75,7 +76,7 @@ export function LancarPerdaDialog({
   /** Recebe a data da perda salva (YYYY-MM-DD) — a tela vai pro mes dela. */
   onSalvo: (data: string) => void;
 }) {
-  const [data, setData] = useState(editando?.data ?? hojeFortaleza());
+  const [data, setData] = useState(editando?.data ?? hojeLocal());
   const [motivo, setMotivo] = useState<MotivoDesperdicio>(editando?.motivo ?? "vencido");
   const [observacao, setObservacao] = useState(editando?.observacao ?? "");
   const [aba, setAba] = useState<"produtos" | "avulsa">("produtos");
@@ -318,8 +319,8 @@ export function LancarPerdaDialog({
         <div className={`grid grid-cols-2 gap-3 ${editando ? "" : "sm:grid-cols-[160px_220px_1fr]"}`}>
           <div>
             <label className="mb-1 block text-xs font-medium">Data da perda</label>
-            <input type="date" value={data} max={hojeFortaleza()} onChange={(e) => setData(e.target.value)} className={CAMPO} />
-            {/^\d{4}-\d{2}/.test(data) && data.slice(0, 7) !== hojeFortaleza().slice(0, 7) && (
+            <input type="date" value={data} max={hojeLocal()} onChange={(e) => setData(e.target.value)} className={CAMPO} />
+            {/^\d{4}-\d{2}/.test(data) && data.slice(0, 7) !== hojeLocal().slice(0, 7) && (
               <p className="mt-1 text-[11px] font-medium text-amber-700">
                 Entra em {MESES_NOMES[Number(data.slice(5, 7)) - 1]} de {data.slice(0, 4)}
               </p>

@@ -1,5 +1,6 @@
 import "server-only";
 import PDFDocument from "pdfkit";
+import { FUSO_PADRAO } from "@/lib/fusos";
 
 /*
  * Equivalente de admin/helpers/orcamento_pdf_render.php + orcamentos_pdf.php
@@ -7,6 +8,8 @@ import PDFDocument from "pdfkit";
  */
 
 export type DadosPdfOrcamento = {
+  /** Fuso da loja (configuracoes.fuso_horario) para o "Emitido em". */
+  fuso?: string;
   tipo: "orcamento" | "recibo";
   loja: { nome: string; contato: string; endereco: string; logoUrl: string; capaUrl: string };
   cliente: { nome: string; whatsapp: string; endereco: string; documentoLabel: string; documento: string };
@@ -36,10 +39,10 @@ async function baixarImagem(url: string): Promise<Buffer | null> {
   }
 }
 
-function dataHoraFortaleza(): string {
+function dataHoraFortaleza(fuso = FUSO_PADRAO): string {
   const d = new Date();
-  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
-  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
   return `${data} às ${hora}`;
 }
 
@@ -91,7 +94,7 @@ export async function gerarPdfOrcamento(dados: DadosPdfOrcamento): Promise<Buffe
 
   doc.fillColor(COR.texto);
   if (!recibo) doc.font("Helvetica-Bold").fontSize(18).text(titulo, M, doc.y, { width: largura });
-  doc.font("Helvetica").fontSize(recibo ? 11 : 12).fillColor(COR.suave).text(`Emitido em ${dataHoraFortaleza()}`, M, doc.y + 2, { width: largura, align: recibo ? "center" : "left" });
+  doc.font("Helvetica").fontSize(recibo ? 11 : 12).fillColor(COR.suave).text(`Emitido em ${dataHoraFortaleza(dados.fuso)}`, M, doc.y + 2, { width: largura, align: recibo ? "center" : "left" });
   doc.moveDown(0.8);
 
   const caixa = (linhas: string[], negritoPrimeira: boolean) => {

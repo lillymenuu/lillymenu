@@ -5,7 +5,7 @@ import type { NeonTx } from "@/db";
 import { clientes, pedidos, cashbackMovimentacoes } from "@/db/schema";
 import { getConfig, getConfigs } from "@/db/queries/config";
 import { apenasDigitos, telefoneSemMascara } from "@/db/queries/telefone";
-import { adicionarDiasFortaleza, adicionarHorasFortaleza } from "@/db/queries/tempo";
+import { adicionarDiasLoja, adicionarHorasLoja, timestampLoja, fusoLoja, timestampNoFuso, dataNoFuso } from "@/db/queries/tempo";
 
 type Queryable = typeof db | NeonTx;
 
@@ -16,8 +16,10 @@ type Queryable = typeof db | NeonTx;
 
 /** Saldo de cashback ja liberado (fora do periodo de carencia) — mesma regra usada na criacao do pedido. */
 export async function saldoCashbackLiberado(clienteId: number, lojaId: number, saldoAtual: number): Promise<number> {
-  const agora = new Date().toISOString();
-  const hoje = agora.slice(0, 10);
+  /* disponivel_em/expira_em ficam no relogio da loja (antes comparava com UTC: liberava 3h antes). */
+  const fuso = await fusoLoja(lojaId);
+  const agora = timestampNoFuso(fuso);
+  const hoje = dataNoFuso(fuso);
 
   const naoLiberadas = await db.execute<{ valor: string; usado: string }>(sql`
     SELECT m.valor,
@@ -98,14 +100,14 @@ export async function cashbackPromoverPendente(conexao: Queryable, lojaId: numbe
       if (pendenteNum > 0.009 && cashbackAtivo) {
         const carenciaHoras = Math.max(0, Number(await getConfig(lojaId, "cashback_carencia_horas", "12")));
         const expiraDias = Number(await getConfig(lojaId, "cashback_expira_dias", "0"));
-        const expiraEm = expiraDias > 0 ? adicionarDiasFortaleza(expiraDias) : null;
-        const disponivelEm = carenciaHoras > 0 ? adicionarHorasFortaleza(carenciaHoras) : null;
+        const expiraEm = expiraDias > 0 ? (await adicionarDiasLoja(lojaId, expiraDias)) : null;
+        const disponivelEm = carenciaHoras > 0 ? (await adicionarHorasLoja(lojaId, carenciaHoras)) : null;
 
         const [cliente] = await conexao.select({ saldo: clientes.cashback_saldo }).from(clientes).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId))).limit(1);
         const saldoAntes = cliente?.saldo ?? 0;
         const saldoDepois = saldoAntes + pendenteNum;
 
-        await conexao.insert(cashbackMovimentacoes).values({ cliente_id: clienteId, pedido_id: pedidoId, tipo: "entrada", valor: pendenteNum, saldo_antes: saldoAntes, saldo_depois: saldoDepois, expira_em: expiraEm, disponivel_em: disponivelEm, referencia_id: null, loja_id: lojaId });
+        await conexao.insert(cashbackMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: clienteId, pedido_id: pedidoId, tipo: "entrada", valor: pendenteNum, saldo_antes: saldoAntes, saldo_depois: saldoDepois, expira_em: expiraEm, disponivel_em: disponivelEm, referencia_id: null, loja_id: lojaId });
         await conexao.update(clientes).set({ cashback_saldo: sql`greatest(0, ${clientes.cashback_saldo} + ${pendenteNum})` }).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
       }
     }

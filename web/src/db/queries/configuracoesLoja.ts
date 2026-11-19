@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { admins, configuracoes } from "@/db/schema";
 import { getConfigs } from "@/db/queries/config";
 import { storageSaveBase64, storageDelete } from "@/db/queries/storage";
+import { limparCacheFuso } from "@/db/queries/tempo";
+import { fusoPorEstado, fusoValido } from "@/lib/fusos";
 
 /*
  * Equivalente ao bloco de leitura/escrita de admin/configuracoes.php via
@@ -146,6 +148,7 @@ const CHAVES_CONFIGURACOES = [
   "taxa_entrega_tempo_min",
   "taxa_entrega_tempo_max",
   "versiculo_dashboard_ativo",
+  "fuso_horario",
 ];
 
 export type DetalheConfiguracoes = ReturnType<typeof montarDetalheConfiguracoes> extends Promise<infer T> ? T : never;
@@ -287,6 +290,9 @@ async function montarDetalheConfiguracoes(lojaId: number, adminId: number, perfi
       fixa: { valor: Number(cfg.taxa_entrega || 0), tempoMin: Number(cfg.taxa_entrega_tempo_min || 40), tempoMax: Number(cfg.taxa_entrega_tempo_max || 60) },
     },
     versiculoDashboardAtivo: cfg.versiculo_dashboard_ativo !== "0",
+    /* Sem valor salvo: sugere pelo estado da loja (o padrao do sistema e Fortaleza). */
+    fusoHorario: fusoValido(cfg.fuso_horario) ? cfg.fuso_horario : fusoPorEstado(cfg.loja_estado),
+    fusoHorarioDefinido: fusoValido(cfg.fuso_horario),
     horariosSemana,
   };
 }
@@ -401,6 +407,10 @@ export async function salvarConfiguracoes(lojaId: number, body: SalvarConfigurac
     if (atual && atual !== nova) await storageDelete(atual);
   }
 
+  if ("fuso_horario" in dados && !fusoValido(String(dados.fuso_horario ?? ""))) return { ok: false, msg: "Fuso horário inválido." };
+  /* Sem fuso salvo, o estado define o fuso (ver tempo.ts/fusoLoja): os dois limpam o cache. */
+  const mudouFuso = "fuso_horario" in dados || "loja_estado" in dados;
+
   for (const [chave, valorBruto] of Object.entries(dados)) {
     let valor: string;
     if (chave === "dias_funcionamento") {
@@ -417,6 +427,7 @@ export async function salvarConfiguracoes(lojaId: number, body: SalvarConfigurac
       .onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor } });
   }
 
+  if (mudouFuso) limparCacheFuso(lojaId);
   return { ok: true };
 }
 

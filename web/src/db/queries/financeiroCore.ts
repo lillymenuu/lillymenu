@@ -3,6 +3,7 @@ import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import type { NeonTx } from "@/db";
 import { financialAccounts, financialCategories, paymentMethods, financialTransactions } from "@/db/schema";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de models/FinancialAccount.php, models/FinancialCategory.php,
@@ -446,7 +447,7 @@ export async function criarLancamento(lojaId: number, input: SalvarLancamentoInp
     const data = await validarPayloadLancamento(tx, lojaId, input);
     const [inserido] = await tx
       .insert(financialTransactions)
-      .values({ tenant_id: lojaId, order_id: data.orderId, account_id: data.accountId, category_id: data.categoryId, payment_method_id: data.paymentMethodId, type: data.type, description: data.description, amount: data.amount, transaction_date: data.transactionDate, reference_month: data.referenceMonth, reference_year: data.referenceYear, notes: data.notes })
+      .values({ created_at: await timestampLoja(lojaId), tenant_id: lojaId, order_id: data.orderId, account_id: data.accountId, category_id: data.categoryId, payment_method_id: data.paymentMethodId, type: data.type, description: data.description, amount: data.amount, transaction_date: data.transactionDate, reference_month: data.referenceMonth, reference_year: data.referenceYear, notes: data.notes })
       .returning();
     await aplicarImpactoConta(tx, data.accountId, lojaId, data.type, data.amount);
     return mapLancamento(inserido);

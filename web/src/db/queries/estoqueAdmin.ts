@@ -3,6 +3,7 @@ import { and, eq, inArray, asc } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { estoque, estoqueGrupoMembros, estoqueMovimentacoes, produtos } from "@/db/schema";
 import { membrosDoGrupo, sincronizarEstoqueVinculo, bumpCatalogoVersao, type MovimentoEstoque } from "@/db/queries/estoqueVinculo";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/estoque_listar.php e estoque.php (GET/POST/DELETE
@@ -73,7 +74,7 @@ export async function salvarEstoque(lojaId: number, produtoId: number, quantidad
       if (delta !== 0) {
         const tipo: "entrada" | "saida" = delta > 0 ? "entrada" : "saida";
         mov = { tipo, quantidade: Math.abs(delta), origem: "ajuste", referenciaId: null };
-        await tx.insert(estoqueMovimentacoes).values({ produto_id: produtoId, tipo, quantidade: Math.abs(delta), origem: "ajuste", loja_id: lojaId });
+        await tx.insert(estoqueMovimentacoes).values({ criado_em: await timestampLoja(lojaId), produto_id: produtoId, tipo, quantidade: Math.abs(delta), origem: "ajuste", loja_id: lojaId });
       }
 
       await sincronizarEstoqueVinculo(tx, produtoId, lojaId, mov);

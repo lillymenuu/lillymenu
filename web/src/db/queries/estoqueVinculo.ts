@@ -3,6 +3,7 @@ import { and, eq, ilike, inArray, ne, notInArray, sql } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import type { NeonTx } from "@/db";
 import { estoque, estoqueGrupos, estoqueGrupoMembros, estoqueMovimentacoes, configuracoes, pedidoComboItens, produtos } from "@/db/schema";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/helpers/estoque_vinculo_module.php: produtos vinculados
@@ -77,7 +78,7 @@ export async function sincronizarEstoqueVinculo(tx: NeonTx, produtoId: number, l
       .onConflictDoNothing({ target: estoque.produto_id });
     await tx.update(estoque).set({ quantidade }).where(and(eq(estoque.produto_id, outroId), eq(estoque.loja_id, lojaId)));
     if (mov) {
-      await tx.insert(estoqueMovimentacoes).values({
+      await tx.insert(estoqueMovimentacoes).values({ criado_em: await timestampLoja(lojaId),
         produto_id: outroId,
         tipo: mov.tipo,
         quantidade: mov.quantidade,

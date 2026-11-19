@@ -6,7 +6,7 @@ import { mesas, garcons, pedidos, pedidoItens, pedidoPagamentos, produtos, estoq
 import { getConfigs } from "@/db/queries/config";
 import { fixImgPath } from "@/db/queries/lojaPerfil";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
-import { dataFortaleza, timestampFortaleza } from "@/db/queries/tempo";
+import { dataLoja, timestampLoja } from "@/db/queries/tempo";
 import { reservaMapaPdv, aplicarReservaPdv } from "@/db/queries/pdvReservas";
 import { baixarEstoque, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
 import { baixarEstoqueVariacao } from "@/db/queries/variacaoEstoque";
@@ -42,7 +42,7 @@ export async function clienteDaMesa(mesaId: number, nomeMesa: string, lojaId: nu
   const [linha] = await db.select({ clienteId: mesas.cliente_id }).from(mesas).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId))).limit(1);
   if (linha?.clienteId) return linha.clienteId;
 
-  const [novoCliente] = await db.insert(clientes).values({ nome: nomeMesa, telefone: "", loja_id: lojaId }).returning({ id: clientes.id });
+  const [novoCliente] = await db.insert(clientes).values({ criado_em: await timestampLoja(lojaId), nome: nomeMesa, telefone: "", loja_id: lojaId }).returning({ id: clientes.id });
   await db.update(mesas).set({ cliente_id: novoCliente.id }).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId)));
   return novoCliente.id;
 }
@@ -144,7 +144,7 @@ export async function salvarTaxaServico(lojaId: number, ativa: boolean, pctInput
 export type StatsModoGarcomResultado = { pedidosPendentes: number; mesasAtivas: number; garconsAtivos: number };
 
 export async function statsModoGarcom(lojaId: number): Promise<StatsModoGarcomResultado> {
-  const hoje = dataFortaleza();
+  const hoje = (await dataLoja(lojaId));
 
   const [{ n: pedidosPendentes }] = await db
     .select({ n: sql<string>`count(*)` })
@@ -217,7 +217,7 @@ export type PedidoMesa = {
 };
 
 export async function pedidosMesas(lojaId: number): Promise<PedidoMesa[]> {
-  const hoje = dataFortaleza();
+  const hoje = (await dataLoja(lojaId));
 
   const linhas = await db
     .select({
@@ -564,7 +564,7 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
          de Pedidos, e a mesa continua visivel separadamente (pedidos.mesa_id, mostrado pelo join
          com `mesas` em pedidosAdmin). Sem identificacao, mantem o fallback de sempre. */
       const clienteId = clienteNomeInformado
-        ? (await tx.insert(clientes).values({ nome: clienteNomeInformado, telefone: "", loja_id: lojaId }).returning({ id: clientes.id }))[0].id
+        ? (await tx.insert(clientes).values({ criado_em: await timestampLoja(lojaId), nome: clienteNomeInformado, telefone: "", loja_id: lojaId }).returning({ id: clientes.id }))[0].id
         : await clienteDaMesa(mesaId, mesa.nome, lojaId);
 
       const [novoPedido] = await tx
@@ -583,7 +583,7 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
           loja_id: lojaId,
           tipo: "mesa",
           origem: "garcom",
-          criado_em: timestampFortaleza(),
+          criado_em: (await timestampLoja(lojaId)),
           valor_pago: dinheiroRecebido > 0 ? dinheiroRecebido : null,
           troco,
         })
@@ -599,7 +599,7 @@ export async function criarPedidoMesa(input: CriarPedidoMesaInput): Promise<{ ok
          uma linha por forma de pagamento, igual ao PDV (pagamento dividido). */
       for (const p of pagamentosValidos) {
         const taxaPagamentoLinha = Math.round(p.valor * ((taxaPorForma[p.forma] ?? 0) / 100) * 100) / 100;
-        await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamentoLinha, loja_id: lojaId });
+        await tx.insert(pedidoPagamentos).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamentoLinha, loja_id: lojaId });
       }
 
       for (const item of input.itens) {

@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, asc, desc, sql } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { orcamentos, orcamentoItens, produtos, categorias, estoque } from "@/db/schema";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/orcamentos_listar.php, orcamentos_detalhe.php,
@@ -179,7 +180,7 @@ export async function salvarOrcamento(lojaId: number, adminId: number, input: Sa
   await withTransaction(async (tx) => {
     const [novo] = await tx
       .insert(orcamentos)
-      .values({
+      .values({ criado_em: await timestampLoja(lojaId),
         loja_id: lojaId,
         status: "pendente",
         cliente_nome: clienteNome,

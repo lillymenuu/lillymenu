@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { produtos, categorias, estoque, estoqueGrupoMembros, produtoVariacoes, produtoOpcoesGrupos, produtoOpcoesItens, configuracoes } from "@/db/schema";
 import { storageSaveBase64, storageDelete } from "@/db/queries/storage";
 import { sincronizarEstoqueProdutoComVariacoes } from "@/db/queries/variacaoEstoque";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/produtos.php (GET/POST/PATCH/DELETE): CRUD do
@@ -62,7 +62,7 @@ function promoExpiradaSql(hoje: string) {
 }
 
 export async function listarProdutosAdmin(lojaId: number): Promise<ProdutoAdmin[]> {
-  const expirada = promoExpiradaSql(dataFortaleza());
+  const expirada = promoExpiradaSql((await dataLoja(lojaId)));
   // promocao vencida aparece como desativada no form, igual a loja (catalogo.ts)
   const promoDesativadoExpr = sql<boolean>`(${produtos.promo_desativado} or ${expirada})`;
   const precoExpr = sql<number>`case when not ${promoDesativadoExpr} and ${produtos.preco_promocional} is not null and ${produtos.preco_promocional} > 0 then ${produtos.preco_promocional} else ${produtos.preco} end`;
@@ -321,7 +321,7 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
 
   if (input.id && input.id > 0) {
     const idInt = input.id;
-    const hoje = dataFortaleza();
+    const hoje = (await dataLoja(lojaId));
     const atual = await db
       .select({ imagem: produtos.imagem, promoDesativado: produtos.promo_desativado, promoInicio: produtos.promo_inicio, promoExpirada: sql<boolean>`${promoExpiradaSql(hoje)}` })
       .from(produtos)
@@ -486,7 +486,7 @@ export type ProdutoValidadeAviso = { id: number; nome: string | null; dataValida
 /* Equivalente de admin/api/v1/produtos_validade_check.php: produtos ativos vencendo em ate 2 dias (ou ja vencidos). */
 export async function produtosValidadeCheck(lojaId: number): Promise<ProdutoValidadeAviso[]> {
   const DIAS_AVISO = 2;
-  const diasRestantesExpr = sql<string>`(${produtos.data_validade}::date - current_date)`;
+  const diasRestantesExpr = sql<string>`(${produtos.data_validade}::date - ${await dataLoja(lojaId)}::date)`;
 
   const linhas = await db
     .select({ id: produtos.id, nome: produtos.nome, dataValidade: produtos.data_validade, diasRestantes: diasRestantesExpr })

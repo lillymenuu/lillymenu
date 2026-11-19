@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { clientes, pedidos, pedidoItens, avaliacoes, mesas } from "@/db/schema";
 import { apenasDigitos, telefoneSemMascara } from "@/db/queries/telefone";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
-import { timestampFortaleza } from "@/db/queries/tempo";
+import { timestampLoja } from "@/db/queries/tempo";
 import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
 
 /*
@@ -347,6 +347,6 @@ export async function solicitarContaMesaPublico(lojaId: number, mesaId: number):
     .where(and(eq(pedidos.mesa_id, mesaId), eq(pedidos.loja_id, lojaId), notInArray(pedidos.status, ["finalizado", "cancelado"])));
   if (Number(abertos) === 0) return { ok: false, msg: "Não há pedidos em aberto nessa mesa." };
 
-  await db.update(mesas).set({ conta_solicitada_em: timestampFortaleza() }).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId)));
+  await db.update(mesas).set({ conta_solicitada_em: (await timestampLoja(lojaId)) }).where(and(eq(mesas.id, mesaId), eq(mesas.loja_id, lojaId)));
   return { ok: true };
 }

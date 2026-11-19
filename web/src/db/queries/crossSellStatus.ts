@@ -3,6 +3,7 @@ import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categorias, produtos, pedidoItens, pedidos } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
+import { anoMesNoFuso, fusoLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/cross_sell_status.php (modal "Configuracoes do
@@ -100,7 +101,7 @@ export async function statusCrossSell(lojaId: number): Promise<StatusCrossSellRe
   }
 
   // So o mes atual (fuso da loja): pedidos.criado_em fica em horario local.
-  const [ano, mes] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit" }).format(new Date()).split("-");
+  const { ano, mes } = anoMesNoFuso(await fusoLoja(lojaId));
   const inicioMes = `${ano}-${mes}-01 00:00:00`;
 
   const [{ faturamentoExtra }] = await db

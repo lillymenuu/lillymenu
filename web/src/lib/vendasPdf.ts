@@ -2,11 +2,14 @@ import "server-only";
 import PDFDocument from "pdfkit";
 import { STATUS_LABELS, TIPO_LABELS } from "@/components/ordermanager/constants";
 import type { RelatorioVendasResultado } from "@/db/queries/relatoriosVendas";
+import { FUSO_PADRAO } from "@/lib/fusos";
 
 /* PDF elegante do relatorio de vendas (/sales), no mesmo estilo visual do
    orcamentoPdf.ts (mesmas cores, margem e helpers de tabela/caixa). */
 
 export type DadosPdfVendas = {
+  /** Fuso da loja (configuracoes.fuso_horario) para o "Emitido em". */
+  fuso?: string;
   loja: { nome: string; logoUrl: string };
   periodoLabel: string;
   tipoLabel: string;
@@ -48,10 +51,10 @@ async function baixarImagem(url: string): Promise<Buffer | null> {
   }
 }
 
-function dataHoraFortaleza(): string {
+function dataHoraFortaleza(fuso = FUSO_PADRAO): string {
   const d = new Date();
-  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
-  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
   return `${data} às ${hora}`;
 }
 
@@ -90,7 +93,7 @@ export async function gerarPdfVendas(dados: DadosPdfVendas): Promise<Buffer> {
   const yFaixa = doc.y + 8;
   doc.font("Helvetica-Bold").fontSize(9.5).fillColor(COR.marca);
   doc.text(`PERÍODO: ${dados.periodoLabel}`, M + 12, yFaixa, { continued: true, width: largura - 24 });
-  doc.font("Helvetica").fillColor(COR.suave).text(`   •   Tipo: ${dados.tipoLabel}   •   Emitido em ${dataHoraFortaleza()}`);
+  doc.font("Helvetica").fillColor(COR.suave).text(`   •   Tipo: ${dados.tipoLabel}   •   Emitido em ${dataHoraFortaleza(dados.fuso)}`);
   doc.y = yFaixa + 22;
   doc.moveDown(0.6);
 

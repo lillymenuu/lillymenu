@@ -1,11 +1,14 @@
 import "server-only";
 import ExcelJS from "exceljs";
 import { MOTIVOS, MOTIVO_LABEL, ORIGEM_LABEL, TIPOS, TIPO_LABEL, filtrosLabel, type Desperdicio, type FiltrosDesperdicio } from "@/lib/desperdicios";
+import { FUSO_PADRAO } from "@/lib/fusos";
 
 /* Planilha do controle de desperdicio (/desperdicios), no mesmo estilo do financeiroDashboardExcel.ts:
    aba "Resumo" (filtros, indicadores e agrupamentos) e aba "Lançamentos" (uma linha por item). */
 
 export type DadosExcelDesperdicio = {
+  /** Fuso da loja (configuracoes.fuso_horario) para o "Emitido em". */
+  fuso?: string;
   loja: { nome: string };
   filtros: FiltrosDesperdicio;
   itens: Desperdicio[];
@@ -69,7 +72,7 @@ function cabecalhoPlanilha(ws: ExcelJS.Worksheet, colunas: number, titulo: strin
 
   ws.mergeCells(3, 1, 3, colunas);
   ws.getCell(3, 1).value = `${filtrosLabel(dados.filtros).join("   •   ")}   •   Emitido em ${new Intl.DateTimeFormat("pt-BR", {
-    timeZone: "America/Fortaleza",
+    timeZone: dados.fuso ?? FUSO_PADRAO,
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date())}`;

@@ -26,7 +26,7 @@ import { baixarEstoqueVariacao } from "@/db/queries/variacaoEstoque";
 import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
 import { saldoCashbackLiberado } from "@/db/queries/cashback";
-import { timestampFortaleza } from "@/db/queries/tempo";
+import { timestampLoja } from "@/db/queries/tempo";
 import { enfileirarImpressaoPedidoOnline } from "@/db/queries/impressaoFila";
 
 /*
@@ -131,7 +131,7 @@ async function obterOuCriarCliente(
 
   const [novo] = await tx
     .insert(clientes)
-    .values({ nome, telefone: telFormatado, loja_id: lojaId, criado_em: timestampFortaleza(), aniversario: aniversarioValido ?? null, ...dadosEndereco })
+    .values({ nome, telefone: telFormatado, loja_id: lojaId, criado_em: (await timestampLoja(lojaId)), aniversario: aniversarioValido ?? null, ...dadosEndereco })
     .returning({ id: clientes.id });
   return novo.id;
 }
@@ -249,7 +249,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           taxa_maquininha: input.taxaMaquininha ?? 0,
           endereco_entrega: input.endereco ?? "",
           origem: "loja",
-          criado_em: timestampFortaleza(),
+          criado_em: (await timestampLoja(lojaId)),
           troco: input.trocoSolicitado && trocoValorRecebido > input.total ? trocoValorRecebido - input.total : null,
           /* Valor com que o cliente vai pagar ("troco para 50") — o modal do pedido mostra em "Cliente pagara com". */
           valor_pago: input.trocoSolicitado && trocoValorRecebido > input.total ? trocoValorRecebido : null,
@@ -262,7 +262,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
         })
         .returning({ id: pedidos.id });
       pedidoId = novoPedido.id;
-      if (aceiteAutomatico) await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: "aceito", loja_id: lojaId });
+      if (aceiteAutomatico) await tx.insert(pedidoStatusLog).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoId, status: "aceito", loja_id: lojaId });
 
       /* codigo de exibicao (respeita sequencia zerada, se configurada) */
       const codigoBase = await pedidoCodigoBase(lojaId);
@@ -328,7 +328,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
         await tx.insert(pontosMovimentacoes).values({
           cliente_id: clienteId,
           tipo: "resgate",
-          criado_em: timestampFortaleza(),
+          criado_em: (await timestampLoja(lojaId)),
           pontos: -custoTotal,
           saldo_antes: saldoAntes,
           saldo_depois: saldoDepois,
@@ -342,7 +342,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
         valor: input.total,
         taxa_maquininha: input.taxaMaquininha ?? 0,
         loja_id: lojaId,
-        criado_em: timestampFortaleza(),
+        criado_em: (await timestampLoja(lojaId)),
       });
     });
   } catch (e) {
@@ -388,7 +388,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           cliente_id: clienteId,
           pedido_id: pedidoId,
           tipo: "uso",
-          criado_em: timestampFortaleza(),
+          criado_em: (await timestampLoja(lojaId)),
           valor: cashbackValorUsar,
           saldo_antes: saldoAntesUso,
           saldo_depois: saldoDepoisUso,
@@ -406,7 +406,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
             cliente_id: clienteId,
             pedido_id: pedidoId,
             tipo: "pendente",
-            criado_em: timestampFortaleza(),
+            criado_em: (await timestampLoja(lojaId)),
             valor: novoValor,
             saldo_antes: saldoAtualPendente,
             saldo_depois: saldoAtualPendente,
@@ -443,7 +443,7 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           cliente_id: clienteId,
           pedido_id: pedidoId,
           tipo: "pendente",
-          criado_em: timestampFortaleza(),
+          criado_em: (await timestampLoja(lojaId)),
           pontos: pontosGanhoTotal,
           saldo_antes: saldoAtual,
           saldo_depois: saldoAtual,

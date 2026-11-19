@@ -3,7 +3,7 @@ import { and, eq, isNotNull, notInArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { operacaoLogs, pedidos, clientes, avaliacoes, mesas } from "@/db/schema";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/notificacoes_pedidos.php: pedidos novos/editados
@@ -28,7 +28,7 @@ export type NotificacaoPedido = {
 };
 
 export async function notificacoesPedidos(lojaId: number): Promise<NotificacaoPedido[]> {
-  const hoje = dataFortaleza();
+  const hoje = (await dataLoja(lojaId));
 
   // pedidos editados hoje: operacao_logs.acao='pedido_editado', dados.novo_pedido é o id do pedido.
   const logsHoje = await db

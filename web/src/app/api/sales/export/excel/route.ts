@@ -4,6 +4,7 @@ import { getConfig } from "@/db/queries/config";
 import { getRelatorioVendasExport } from "@/lib/relatorios";
 import { periodoLabelExport, tipoLabelExport } from "@/lib/vendasExportHelpers";
 import { gerarExcelVendas } from "@/lib/vendasExcel";
+import { fusoLoja } from "@/db/queries/tempo";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
     getConfig(sessao.lojaId, "nome_loja", "Loja"),
   ]);
 
-  const excel = await gerarExcelVendas({
+  const excel = await gerarExcelVendas({ fuso: await fusoLoja(sessao.lojaId),
     loja: { nome: nomeLoja },
     periodoLabel: periodoLabelExport(periodo, relatorio),
     tipoLabel: tipoLabelExport(tipo),

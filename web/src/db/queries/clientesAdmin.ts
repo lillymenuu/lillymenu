@@ -3,7 +3,7 @@ import { and, eq, ne, gte, ilike, or, sql, desc } from "drizzle-orm";
 import { db } from "@/db";
 import { clientes, pedidos, avaliacoes, cashbackMovimentacoes } from "@/db/schema";
 import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataLoja, timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/clientes_listar.php, cliente_detalhe.php,
@@ -212,7 +212,7 @@ export async function criarCliente(lojaId: number, input: ClienteInput): Promise
 
   const [nova] = await db
     .insert(clientes)
-    .values({
+    .values({ criado_em: await timestampLoja(lojaId),
       nome,
       telefone,
       endereco: endereco || null,
@@ -347,7 +347,7 @@ export async function clienteStats(lojaId: number, clienteId: number): Promise<{
           eq(cashbackMovimentacoes.cliente_id, clienteId),
           eq(cashbackMovimentacoes.loja_id, lojaId),
           eq(cashbackMovimentacoes.tipo, "entrada"),
-          gte(cashbackMovimentacoes.expira_em, dataFortaleza())
+          gte(cashbackMovimentacoes.expira_em, (await dataLoja(lojaId)))
         )
       );
     cashbackValidoAte = proximaExpiracao?.expiraEm ?? null;

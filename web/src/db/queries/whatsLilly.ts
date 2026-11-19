@@ -3,7 +3,7 @@ import { and, eq, or, ilike, gt, inArray, asc, desc, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { whatsConversas, whatsMensagens, configuracoes, pedidos, clientes } from "@/db/schema";
 import { telefoneSemMascara } from "@/db/queries/telefone";
-import { timestampFortaleza } from "@/db/queries/tempo";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/whatslilly_conversas.php, whatslilly_mensagens.php,
@@ -133,7 +133,7 @@ export async function enviarMensagem(lojaId: number, conversaId: number, mensage
     erroEnvio = "WhatsApp não configurado para esta loja.";
   }
 
-  const agora = timestampFortaleza();
+  const agora = (await timestampLoja(lojaId));
   const [nova] = await db.insert(whatsMensagens).values({ conversa_id: conversaId, loja_id: lojaId, direcao: "saida", mensagem: texto, whats_msg_id: whatsId, created_at: agora }).returning({ id: whatsMensagens.id });
 
   await db.update(whatsConversas).set({ ultimo_msg: texto.slice(0, 200), ultimo_msg_em: agora }).where(eq(whatsConversas.id, conversaId));
@@ -182,7 +182,7 @@ export async function novaConversa(lojaId: number, numeroInput: string, nomeInpu
 
   await db
     .insert(whatsConversas)
-    .values({ loja_id: lojaId, numero, nome: nome || null, created_at: timestampFortaleza() })
+    .values({ loja_id: lojaId, numero, nome: nome || null, created_at: (await timestampLoja(lojaId)) })
     .onConflictDoNothing({ target: [whatsConversas.loja_id, whatsConversas.numero] });
 
   const [conversa] = await db.select({ id: whatsConversas.id }).from(whatsConversas).where(and(eq(whatsConversas.loja_id, lojaId), eq(whatsConversas.numero, numero))).limit(1);

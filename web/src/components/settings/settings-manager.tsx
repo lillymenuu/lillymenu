@@ -29,6 +29,7 @@ import {
   BookOpen,
   ExternalLink,
   Shuffle,
+  Globe,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -49,6 +50,8 @@ import { ValorMinimoDialog } from "@/components/settings/valor-minimo-dialog";
 import { TaxaEntregaDialog } from "@/components/settings/taxa-entrega-dialog";
 import { ImpressaoDialog } from "@/components/settings/impressao-dialog";
 import { CrossSellDialog } from "@/components/settings/cross-sell-dialog";
+import { FusoHorarioDialog } from "@/components/settings/fuso-horario-dialog";
+import { FUSOS_BRASIL } from "@/lib/fusos";
 
 type CardId =
   | "loja-info"
@@ -56,6 +59,7 @@ type CardId =
   | "usuarios"
   | "selo-verificacao"
   | "horarios"
+  | "fuso-horario"
   | "pausa"
   | "formas-pagamento"
   | "cashback"
@@ -153,6 +157,13 @@ export function SettingsManager({
         { id: "permissoes", icon: ShieldCheck, title: "Permissões", desc: "Defina niveis e politicas de acesso.", linkOut: "permissoes.php" },
         { id: "selo-verificacao", icon: BadgeCheck, title: "Selo de verificação", desc: "Verifique seu contato e exiba o selo de loja verificada no cardápio.", badge: "Novo" },
         { id: "horarios", icon: Clock, title: "Horário de funcionamento", desc: "Configure abertura, fechamento e dias ativos." },
+        {
+          id: "fuso-horario",
+          icon: Globe,
+          title: "Fuso horário",
+          desc: `Relógio da loja: ${FUSOS_BRASIL.find((f) => f.valor === dados.fuso_horario)?.rotulo ?? dados.fuso_horario}.`,
+          badge: "Novo",
+        },
         { id: "pausa", icon: PauseCircle, title: "Pausa programada", desc: "Agende pausas automaticas da loja." },
         { id: "formas-pagamento", icon: CreditCard, title: "Formas de pagamento", desc: "Defina meios aceitos e taxas." },
         { id: "cross-sell", icon: Shuffle, title: "Cross-sell", desc: "Gere sugestões automáticas de produtos complementares no carrinho.", badge: "Novo" },
@@ -305,6 +316,13 @@ export function SettingsManager({
         open={aberto === "horarios"}
         onOpenChange={(v) => setAberto(v ? "horarios" : null)}
         horarios={dados.horarios}
+        onSalvo={recarregar}
+      />
+      <FusoHorarioDialog
+        open={aberto === "fuso-horario"}
+        onOpenChange={(v) => setAberto(v ? "fuso-horario" : null)}
+        fuso={dados.fuso_horario}
+        definido={dados.fuso_horario_definido}
         onSalvo={recarregar}
       />
       <PausaDialog open={aberto === "pausa"} onOpenChange={(v) => setAberto(v ? "pausa" : null)} />

@@ -4,6 +4,7 @@ import { getConfig } from "@/db/queries/config";
 import { listarDesperdicios } from "@/db/queries/desperdicios";
 import { filtrosDaUrl } from "@/lib/desperdicios";
 import { gerarPdfDesperdicio } from "@/lib/desperdiciosPdf";
+import { fusoLoja } from "@/db/queries/tempo";
 
 export const runtime = "nodejs";
 
@@ -11,14 +12,14 @@ export async function GET(request: Request) {
   const sessao = await getSessaoAdmin();
   if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
 
-  const filtros = filtrosDaUrl(new URL(request.url).searchParams);
+  const filtros = filtrosDaUrl(new URL(request.url).searchParams, await fusoLoja(sessao.lojaId));
   const [itens, nomeLoja, logoUrl] = await Promise.all([
     listarDesperdicios(sessao.lojaId, filtros),
     getConfig(sessao.lojaId, "nome_loja", "Loja"),
     getConfig(sessao.lojaId, "loja_perfil", ""),
   ]);
 
-  const pdf = await gerarPdfDesperdicio({ loja: { nome: nomeLoja, logoUrl }, filtros, itens });
+  const pdf = await gerarPdfDesperdicio({ fuso: await fusoLoja(sessao.lojaId), loja: { nome: nomeLoja, logoUrl }, filtros, itens });
 
   return new Response(new Uint8Array(pdf), {
     headers: {

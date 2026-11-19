@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { financialTransactions, financialCategories, financialAccounts, paymentMethods, configuracoes } from "@/db/schema";
 import { syncFinalizedOrdersForPeriod } from "@/db/queries/financeiroSync";
 import { listarCategoriasFinanceiras, listarContasFinanceiras, listarFormasPagamento, listarLancamentosFiltrados, type FiltrosLancamentos } from "@/db/queries/financeiroCore";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de services/FinancialReportService.php + trechos de
@@ -14,12 +15,12 @@ import { listarCategoriasFinanceiras, listarContasFinanceiras, listarFormasPagam
  * financeiro_lancamentos_detalhe.php e financeiro_sync_pedidos.php.
  */
 
-function hojeFortalezaISO(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
+function hojeFortalezaISO(fuso: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
 }
 
-function mesAnoAtualFortaleza(): { mes: number; ano: number } {
-  const partes = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza", year: "numeric", month: "numeric" }).formatToParts(new Date());
+function mesAnoAtualFortaleza(fuso: string): { mes: number; ano: number } {
+  const partes = new Intl.DateTimeFormat("en-CA", { timeZone: fuso, year: "numeric", month: "numeric" }).formatToParts(new Date());
   const mapa: Record<string, string> = {};
   for (const p of partes) mapa[p.type] = p.value;
   return { mes: Number(mapa.month), ano: Number(mapa.year) };
@@ -27,8 +28,8 @@ function mesAnoAtualFortaleza(): { mes: number; ano: number } {
 
 export type FiltrosRelatorio = { type?: "income" | "expense"; accountId?: number; categoryId?: number; paymentMethodId?: number; referenceMonth?: number; referenceYear?: number; dateFrom?: string; dateTo?: string };
 
-function condicoesRelatorio(lojaId: number, filtros: FiltrosRelatorio) {
-  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza();
+function condicoesRelatorio(lojaId: number, filtros: FiltrosRelatorio, fuso: string) {
+  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza(fuso);
   const condicoes = [eq(financialTransactions.tenant_id, lojaId)];
   if (filtros.type) condicoes.push(eq(financialTransactions.type, filtros.type));
   if (filtros.accountId) condicoes.push(eq(financialTransactions.account_id, filtros.accountId));
@@ -39,7 +40,7 @@ function condicoesRelatorio(lojaId: number, filtros: FiltrosRelatorio) {
 
   /* mesmo do PHP: sem date_to explicito, olhando o mes/ano corrente, nao conta lancamentos "futuros" do proprio mes. */
   if (!filtros.dateTo && filtros.referenceMonth === mesAtual && filtros.referenceYear === anoAtual) {
-    condicoes.push(sql`${financialTransactions.transaction_date} <= ${hojeFortalezaISO()}`);
+    condicoes.push(sql`${financialTransactions.transaction_date} <= ${hojeFortalezaISO(fuso)}`);
   }
   if (filtros.dateFrom) condicoes.push(sql`${financialTransactions.transaction_date} >= ${filtros.dateFrom}`);
   if (filtros.dateTo) condicoes.push(sql`${financialTransactions.transaction_date} <= ${filtros.dateTo}`);
@@ -57,7 +58,7 @@ export async function resumoFinanceiro(lojaId: number, filtros: FiltrosRelatorio
       balance: sql<string>`coalesce(sum(case when ${financialTransactions.type} = 'income' then ${financialTransactions.amount} else -${financialTransactions.amount} end), 0)`,
     })
     .from(financialTransactions)
-    .where(condicoesRelatorio(lojaId, filtros));
+    .where(condicoesRelatorio(lojaId, filtros, await fusoLoja(lojaId)));
   return { totalIncome: Number(linha.totalIncome), totalExpense: Number(linha.totalExpense), balance: Number(linha.balance) };
 }
 
@@ -81,7 +82,7 @@ export async function fluxoCaixa(lojaId: number, filtros: FiltrosRelatorio = {})
       dayBalance: sql<string>`coalesce(sum(case when ${financialTransactions.type} = 'income' then ${financialTransactions.amount} else -${financialTransactions.amount} end), 0)`,
     })
     .from(financialTransactions)
-    .where(condicoesRelatorio(lojaId, filtros))
+    .where(condicoesRelatorio(lojaId, filtros, await fusoLoja(lojaId)))
     .groupBy(financialTransactions.transaction_date)
     .orderBy(financialTransactions.transaction_date);
   return linhas.map((l) => ({ transactionDate: l.transactionDate, incomeTotal: Number(l.incomeTotal), expenseTotal: Number(l.expenseTotal), dayBalance: Number(l.dayBalance) }));
@@ -106,7 +107,7 @@ export async function dre(lojaId: number, filtros: FiltrosRelatorio = {}): Promi
     .from(financialTransactions)
     .innerJoin(financialCategories, and(eq(financialCategories.id, financialTransactions.category_id), eq(financialCategories.tenant_id, financialTransactions.tenant_id)))
     .leftJoin(sql`financial_categories p`, sql`p.id = ${financialCategories.parent_id} and p.tenant_id = ${financialCategories.tenant_id}`)
-    .where(condicoesRelatorio(lojaId, filtros))
+    .where(condicoesRelatorio(lojaId, filtros, await fusoLoja(lojaId)))
     .groupBy(financialCategories.type, financialCategories.name, sql`coalesce(p.name, ${financialCategories.name})`)
     .orderBy(financialCategories.type, sql`coalesce(p.name, ${financialCategories.name})`, financialCategories.name);
   void categoriaPai;
@@ -132,7 +133,7 @@ export async function despesasPorCategoria(lojaId: number, filtros: FiltrosRelat
     .from(financialTransactions)
     .innerJoin(financialCategories, and(eq(financialCategories.id, financialTransactions.category_id), eq(financialCategories.tenant_id, financialTransactions.tenant_id)))
     .leftJoin(sql`financial_categories p`, sql`p.id = ${financialCategories.parent_id} and p.tenant_id = ${financialCategories.tenant_id}`)
-    .where(condicoesRelatorio(lojaId, { ...filtros, type: "expense" }))
+    .where(condicoesRelatorio(lojaId, { ...filtros, type: "expense" }, await fusoLoja(lojaId)))
     .groupBy(sql`coalesce(p.name, ${financialCategories.name})`, financialCategories.name)
     .orderBy(desc(sql`sum(${financialTransactions.amount})`), financialCategories.name);
   return linhas.map((l) => ({ categoryGroup: l.categoryGroup, categoryName: l.categoryName, total: Number(l.total) }));
@@ -145,7 +146,7 @@ export async function receitasPorFormaPagamento(lojaId: number, filtros: Filtros
     .select({ paymentMethod: sql<string>`coalesce(${paymentMethods.name}, 'Não informado')`, total: sql<string>`sum(${financialTransactions.amount})` })
     .from(financialTransactions)
     .leftJoin(paymentMethods, and(eq(paymentMethods.id, financialTransactions.payment_method_id), eq(paymentMethods.tenant_id, financialTransactions.tenant_id)))
-    .where(condicoesRelatorio(lojaId, { ...filtros, type: "income" }))
+    .where(condicoesRelatorio(lojaId, { ...filtros, type: "income" }, await fusoLoja(lojaId)))
     .groupBy(sql`coalesce(${paymentMethods.name}, 'Não informado')`)
     .orderBy(desc(sql`sum(${financialTransactions.amount})`), sql`coalesce(${paymentMethods.name}, 'Não informado')`);
   return linhas.map((l) => ({ paymentMethod: l.paymentMethod, total: Number(l.total) }));
@@ -162,7 +163,7 @@ export type DashboardFinanceiro = {
 };
 
 export async function dashboardFinanceiro(lojaId: number, filtros: FiltrosRelatorio = {}): Promise<DashboardFinanceiro> {
-  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza();
+  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza(await fusoLoja(lojaId));
   const refMonth = filtros.referenceMonth ?? mesAtual;
   const refYear = filtros.referenceYear ?? anoAtual;
 
@@ -201,7 +202,7 @@ export async function dashboardFinanceiro(lojaId: number, filtros: FiltrosRelato
 
 export async function anosDisponiveis(lojaId: number): Promise<number[]> {
   const linhas = await db.selectDistinct({ ano: financialTransactions.reference_year }).from(financialTransactions).where(eq(financialTransactions.tenant_id, lojaId));
-  const { ano: anoAtual } = mesAnoAtualFortaleza();
+  const { ano: anoAtual } = mesAnoAtualFortaleza(await fusoLoja(lojaId));
   const anos = new Set<number>(linhas.map((l) => l.ano));
   if (anos.size === 0) anos.add(anoAtual);
   for (let ano = anoAtual; ano <= 2030; ano++) anos.add(ano);
@@ -210,7 +211,7 @@ export async function anosDisponiveis(lojaId: number): Promise<number[]> {
 
 /** financialSyncCurrentMonthSalesIfNeeded: so sincroniza o mes atual, no maximo a cada 5 minutos por loja (throttle persistido em configuracoes). */
 async function sincronizarMesAtualSeNecessario(lojaId: number, referenceMonth: number, referenceYear: number): Promise<void> {
-  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza();
+  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza(await fusoLoja(lojaId));
   if (referenceMonth !== mesAtual || referenceYear !== anoAtual) return;
 
   const chave = `fin_sync_last_${referenceMonth}_${referenceYear}`;
@@ -246,7 +247,7 @@ async function sincronizarMesAtualSeNecessario(lojaId: number, referenceMonth: n
 export type DetalheDashboardFinanceiro = { mes: number; ano: number; anos: number[]; resumoMensal: ResumoMensal; dashboard: DashboardFinanceiro; dre: Dre };
 
 export async function detalheDashboardFinanceiro(lojaId: number, mesInput?: number, anoInput?: number): Promise<DetalheDashboardFinanceiro> {
-  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza();
+  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza(await fusoLoja(lojaId));
   const mes = Math.min(12, Math.max(1, mesInput ?? mesAtual));
   const ano = anoInput ?? anoAtual;
 
@@ -269,7 +270,7 @@ export async function detalheDashboardFinanceiro(lojaId: number, mesInput?: numb
 export type DetalheDreFinanceiro = { ano: number; anos: number[]; meses: Record<number, ResumoMensal> };
 
 export async function detalheDreFinanceiro(lojaId: number, anoInput?: number): Promise<DetalheDreFinanceiro> {
-  const { ano: anoAtual } = mesAnoAtualFortaleza();
+  const { ano: anoAtual } = mesAnoAtualFortaleza(await fusoLoja(lojaId));
   const ano = anoInput ?? anoAtual;
 
   const anosSet = new Set(await anosDisponiveis(lojaId));
@@ -323,7 +324,7 @@ export type FiltrosDetalheLancamentos = { mes?: number; ano?: number; tipo?: str
 
 /** financeiro_lancamentos_detalhe.php: paginacao feita em memoria sobre a lista ja filtrada, igual ao legado (per_page fixo em 5). */
 export async function detalheLancamentosFinanceiro(lojaId: number, filtros: FiltrosDetalheLancamentos = {}): Promise<DetalheLancamentosFinanceiro> {
-  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza();
+  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza(await fusoLoja(lojaId));
   const mes = Math.min(12, Math.max(1, filtros.mes ?? mesAtual));
   const ano = filtros.ano ?? anoAtual;
   const tipo = filtros.tipo?.trim() ?? "";
@@ -411,7 +412,7 @@ export type ResultadoSincronizacaoPedidos =
   | { ok: true; modo: "todos"; periodos: string[]; created: number; updated: number; orders: number; msg: string };
 
 export async function sincronizarPedidosFinanceiro(lojaId: number, modo: "mes" | "todos", mesInput?: number, anoInput?: number): Promise<ResultadoSincronizacaoPedidos> {
-  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza();
+  const { mes: mesAtual, ano: anoAtual } = mesAnoAtualFortaleza(await fusoLoja(lojaId));
 
   if (modo === "todos") {
     const periodosLinhas = await db.execute<{ ano: number; mes: number }>(sql`

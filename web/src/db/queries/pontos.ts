@@ -3,6 +3,7 @@ import { and, eq, gt, or } from "drizzle-orm";
 import { db } from "@/db";
 import { clientes, produtos, categorias, pontosMovimentacoes } from "@/db/schema";
 import { apenasDigitos, telefoneSemMascara } from "@/db/queries/telefone";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /* Equivalente de public/api/pontos_saldo.php e pontos_produtos.php. */
 
@@ -98,7 +99,7 @@ export async function resgatarPontos(lojaId: number, clienteId: number, produtoI
 
   const saldoNovo = saldo - custo;
   await db.update(clientes).set({ pontos_saldo: saldoNovo }).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
-  await db.insert(pontosMovimentacoes).values({ cliente_id: clienteId, tipo: "resgate", pontos: -custo, saldo_antes: saldo, saldo_depois: saldoNovo, loja_id: lojaId });
+  await db.insert(pontosMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: clienteId, tipo: "resgate", pontos: -custo, saldo_antes: saldo, saldo_depois: saldoNovo, loja_id: lojaId });
 
   return { ok: true, msg: `Resgate realizado! ${produtoResumo.nome} adicionado ao carrinho.`, produto: produtoResumo, custo, saldoAntes: saldo, saldoNovo };
 }

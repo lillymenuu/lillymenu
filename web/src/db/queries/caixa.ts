@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import type { NeonTx } from "@/db";
 import { admins, caixaTurnos, caixaMovimentacoes, operacaoLogs, pedidos, lojas } from "@/db/schema";
-import { timestampFortaleza, dataFortaleza } from "@/db/queries/tempo";
+import { timestampLoja, dataLoja } from "@/db/queries/tempo";
 import { resumoCaixaAtual } from "@/db/queries/caixaResumo";
 import { verificarSenhaPorId } from "@/db/queries/auth";
 import { MOTIVOS_SAIDA_VALORES } from "@/lib/caixaMotivos";
@@ -68,7 +68,7 @@ export async function abrirCaixa(input: AbrirCaixaInput): Promise<AbrirCaixaResu
 
   const saldoInicial = input.saldoInicial ?? 0;
   const observacoes = (input.observacoes ?? "").trim();
-  const hoje = dataFortaleza();
+  const hoje = (await dataLoja(lojaId));
 
   const abertoHoje = await db
     .select({ id: caixaTurnos.id, status: caixaTurnos.status, saldoInicial: caixaTurnos.saldo_inicial, abertoEm: caixaTurnos.aberto_em })
@@ -91,7 +91,7 @@ export async function abrirCaixa(input: AbrirCaixaInput): Promise<AbrirCaixaResu
     };
   }
 
-  const agora = timestampFortaleza();
+  const agora = (await timestampLoja(lojaId));
   const inserido = await db
     .insert(caixaTurnos)
     .values({ operador_id: operadorId, status: "aberto", saldo_inicial: saldoInicial, aberto_em: agora, obs_abertura: observacoes || null, loja_id: lojaId })
@@ -125,7 +125,7 @@ export async function fecharCaixa(input: FecharCaixaInput): Promise<FecharCaixaR
 
   const saldoFinal = input.saldoFinal ?? 0;
   const observacoes = (input.observacoes ?? "").trim();
-  const agora = timestampFortaleza();
+  const agora = (await timestampLoja(input.lojaId));
 
   await db
     .update(caixaTurnos)
@@ -193,7 +193,7 @@ export async function movimentarCaixa(input: MovimentarCaixaInput): Promise<Movi
     if (!senhaOk) return { ok: false, msg: "Senha do responsável incorreta." };
   }
 
-  const agora = timestampFortaleza();
+  const agora = (await timestampLoja(input.lojaId));
 
   const [inserido] = await db
     .insert(caixaMovimentacoes)
@@ -319,7 +319,7 @@ export async function caixaAtribuirPedidoFinalizado(conexao: Queryable, lojaId: 
     const [pedido] = await conexao.select({ caixaId: pedidos.caixa_id }).from(pedidos).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId))).limit(1);
     if (!pedido || pedido.caixaId) return;
 
-    const hoje = dataFortaleza();
+    const hoje = (await dataLoja(lojaId));
     const [caixaAberto] = await conexao
       .select({ id: caixaTurnos.id })
       .from(caixaTurnos)

@@ -3,6 +3,7 @@ import { and, lte, gte, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pausasProgramadas, configuracoes } from "@/db/schema";
 import { getConfigs } from "@/db/queries/config";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /* Equivalente de admin/api/v1/loja_status.php (abre/fecha a loja manualmente). */
 export async function definirLojaAberta(lojaId: number, aberta: boolean): Promise<void> {
@@ -26,7 +27,7 @@ export async function estaAberto(lojaId: number): Promise<boolean> {
 
   if (cfg.loja_force_fechada === "1") return false;
 
-  const fuso = cfg.fuso_horario || "America/Fortaleza";
+  const fuso = await fusoLoja(lojaId);
   const partes = new Intl.DateTimeFormat("en-CA", {
     timeZone: fuso,
     weekday: "short",

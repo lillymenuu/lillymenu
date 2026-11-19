@@ -1,10 +1,13 @@
 import "server-only";
 import PDFDocument from "pdfkit";
 import { MOTIVOS, MOTIVO_LABEL, ORIGEM_LABEL, TIPOS, TIPO_LABEL, filtrosLabel, periodoLabel, type Desperdicio, type FiltrosDesperdicio } from "@/lib/desperdicios";
+import { FUSO_PADRAO } from "@/lib/fusos";
 
 /* PDF do controle de desperdicio (/desperdicios), no mesmo estilo visual do financeiroDashboardPdf.ts. */
 
 export type DadosPdfDesperdicio = {
+  /** Fuso da loja (configuracoes.fuso_horario) para o "Emitido em". */
+  fuso?: string;
   loja: { nome: string; logoUrl: string };
   filtros: FiltrosDesperdicio;
   itens: Desperdicio[];
@@ -44,10 +47,10 @@ async function baixarImagem(url: string): Promise<Buffer | null> {
   }
 }
 
-function dataHoraFortaleza(): string {
+function dataHoraFortaleza(fuso = FUSO_PADRAO): string {
   const d = new Date();
-  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
-  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
   return `${data} às ${hora}`;
 }
 
@@ -89,7 +92,7 @@ export async function gerarPdfDesperdicio(dados: DadosPdfDesperdicio): Promise<B
   const yFaixa = doc.y + 8;
   doc.font("Helvetica-Bold").fontSize(9.5).fillColor(COR.marca);
   doc.text(`PERÍODO: ${periodoLabel(filtros.de, filtros.ate)}`, M + 12, yFaixa, { continued: true, width: largura - 24 });
-  doc.font("Helvetica").fillColor(COR.suave).text(`   •   Emitido em ${dataHoraFortaleza()}`);
+  doc.font("Helvetica").fillColor(COR.suave).text(`   •   Emitido em ${dataHoraFortaleza(dados.fuso)}`);
   doc.font("Helvetica").fontSize(9).fillColor(COR.suave).text(`Filtros: ${filtrosTexto}`, M + 12, yFaixa + 15, { width: largura - 24 });
   doc.y = yFaixa - 8 + alturaFaixa + 12;
 

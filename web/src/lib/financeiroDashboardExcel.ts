@@ -2,11 +2,14 @@ import "server-only";
 import ExcelJS from "exceljs";
 import { MESES_LABEL } from "@/lib/financeiroDashboard";
 import type { FinanceiroDashboardResposta } from "@/lib/financeiroDashboard";
+import { FUSO_PADRAO } from "@/lib/fusos";
 
 /* Planilha elegante do dashboard financeiro (/financialdashboard), no mesmo
    estilo visual do vendasExcel.ts (cores, titulos de secao e tabelas). */
 
 export type DadosExcelFinanceiro = {
+  /** Fuso da loja (configuracoes.fuso_horario) para o "Emitido em". */
+  fuso?: string;
   loja: { nome: string };
   dados: FinanceiroDashboardResposta;
 };
@@ -99,7 +102,7 @@ export async function gerarExcelFinanceiro(dados: DadosExcelFinanceiro): Promise
   ws.getCell("A2").font = { size: 11, color: { argb: "FF64748B" } };
 
   ws.mergeCells("A3:D3");
-  ws.getCell("A3").value = `Período: ${periodoLabel}   •   Emitido em ${new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", dateStyle: "short", timeStyle: "short" }).format(new Date())}`;
+  ws.getCell("A3").value = `Período: ${periodoLabel}   •   Emitido em ${new Intl.DateTimeFormat("pt-BR", { timeZone: dados.fuso ?? FUSO_PADRAO, dateStyle: "short", timeStyle: "short" }).format(new Date())}`;
   ws.getCell("A3").font = { size: 9.5, italic: true, color: { argb: "FF94A3B8" } };
 
   let lin = 5;

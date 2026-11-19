@@ -3,7 +3,7 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { complementosGrupos, complementosGruposCategorias, complementosGruposProdutos, complementosItens, categorias, produtos } from "@/db/schema";
 import { storageDelete, storageSaveBase64 } from "@/db/queries/storage";
-import { timestampFortaleza } from "@/db/queries/tempo";
+import { timestampLoja } from "@/db/queries/tempo";
 import { resolverEstoquesItens, type EstoqueComplemento } from "@/db/queries/complementosEstoque";
 
 /*
@@ -150,7 +150,7 @@ export async function salvarGrupoComplemento(lojaId: number, input: SalvarGrupoI
   const id = await withTransaction(async (tx) => {
     let grupoId = input.id ?? 0;
     if (grupoId) {
-      await tx.update(complementosGrupos).set({ ...campos, atualizado_em: timestampFortaleza() }).where(and(eq(complementosGrupos.id, grupoId), eq(complementosGrupos.loja_id, lojaId)));
+      await tx.update(complementosGrupos).set({ ...campos, atualizado_em: (await timestampLoja(lojaId)) }).where(and(eq(complementosGrupos.id, grupoId), eq(complementosGrupos.loja_id, lojaId)));
       await tx.delete(complementosGruposProdutos).where(eq(complementosGruposProdutos.grupo_id, grupoId));
       await tx.delete(complementosGruposCategorias).where(eq(complementosGruposCategorias.grupo_id, grupoId));
     } else {
@@ -277,7 +277,7 @@ export async function salvarItemComplemento(lojaId: number, input: SalvarItemInp
     const [atual] = await db.select({ imagem: complementosItens.imagem }).from(complementosItens).where(and(eq(complementosItens.id, input.id), eq(complementosItens.loja_id, lojaId))).limit(1);
     if (!atual) return { ok: false, msg: "Item não encontrado." };
 
-    const set: Record<string, unknown> = { ...campos, atualizado_em: timestampFortaleza() };
+    const set: Record<string, unknown> = { ...campos, atualizado_em: (await timestampLoja(lojaId)) };
     if (novaImagem || input.imagemRemover) set.imagem = novaImagem;
     await db.update(complementosItens).set(set).where(and(eq(complementosItens.id, input.id), eq(complementosItens.loja_id, lojaId)));
     if (novaImagem || input.imagemRemover) await apagarImagemSeOrfa(atual.imagem);
@@ -297,7 +297,7 @@ export async function salvarItemComplemento(lojaId: number, input: SalvarItemInp
 }
 
 export async function alterarAtivoItemComplemento(lojaId: number, itemId: number, ativo: boolean): Promise<Resultado> {
-  const r = await db.update(complementosItens).set({ ativo, atualizado_em: timestampFortaleza() }).where(and(eq(complementosItens.id, itemId), eq(complementosItens.loja_id, lojaId))).returning({ id: complementosItens.id });
+  const r = await db.update(complementosItens).set({ ativo, atualizado_em: (await timestampLoja(lojaId)) }).where(and(eq(complementosItens.id, itemId), eq(complementosItens.loja_id, lojaId))).returning({ id: complementosItens.id });
   return r.length ? { ok: true } : { ok: false, msg: "Item não encontrado." };
 }
 

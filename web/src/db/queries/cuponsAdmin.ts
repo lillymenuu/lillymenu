@@ -3,6 +3,7 @@ import { and, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { cupons } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/cupons_listar.php, cupons_salvar.php,
@@ -120,7 +121,7 @@ export async function salvarCupom(lojaId: number, input: SalvarCupomInput): Prom
 
   const [nova] = await db
     .insert(cupons)
-    .values({ codigo, tipo, desconto, minimo, quantidade_total: quantidadeTotal, quantidade_usada: 0, ativo, primeira_compra: primeiraCompra, publico, loja_id: lojaId })
+    .values({ criado_em: await timestampLoja(lojaId), codigo, tipo, desconto, minimo, quantidade_total: quantidadeTotal, quantidade_usada: 0, ativo, primeira_compra: primeiraCompra, publico, loja_id: lojaId })
     .returning({ id: cupons.id });
 
   return { ok: true, id: nova.id };

@@ -1,6 +1,7 @@
 import "server-only";
 import PDFDocument from "pdfkit";
 import { STATUS_LABELS, TIPO_LABELS, TIPO_CORES } from "@/components/ordermanager/constants";
+import { FUSO_PADRAO } from "@/lib/fusos";
 
 /*
  * Nota de pedido em PDF (preview no PrintReceiptDialog + download), no mesmo
@@ -28,6 +29,8 @@ export type DadosPdfPedidoItem = { nome: string; quantidade: number; preco: numb
 export type DadosPdfPedidoPagamento = { forma: string; valor: number };
 
 export type DadosPdfPedido = {
+  /** Fuso da loja (configuracoes.fuso_horario) para o "Emitido em". */
+  fuso?: string;
   loja: { nome: string; logoUrl: string };
   pedido: {
     codigo: number;
@@ -66,10 +69,10 @@ function dataHora(isoComEspaco: string): string {
   return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function dataHoraFortaleza(): string {
+function dataHoraFortaleza(fuso = FUSO_PADRAO): string {
   const d = new Date();
-  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
-  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
   return `${data} às ${hora}`;
 }
 
@@ -113,7 +116,7 @@ export async function gerarPdfPedido(dados: DadosPdfPedido): Promise<Buffer> {
   }
   const xTexto = logo ? M + 56 : M;
   doc.fillColor(COR.texto).font("Helvetica-Bold").fontSize(11).text(dados.loja.nome.toUpperCase(), xTexto, yTopo, { width: largura - (xTexto - M) });
-  doc.font("Helvetica").fontSize(9).fillColor(COR.suave).text(`Emitido em ${dataHoraFortaleza()}`, xTexto, doc.y + 2, { width: largura - (xTexto - M) });
+  doc.font("Helvetica").fontSize(9).fillColor(COR.suave).text(`Emitido em ${dataHoraFortaleza(dados.fuso)}`, xTexto, doc.y + 2, { width: largura - (xTexto - M) });
   doc.y = Math.max(doc.y, yTopo + 44) + 14;
   doc.x = M;
 

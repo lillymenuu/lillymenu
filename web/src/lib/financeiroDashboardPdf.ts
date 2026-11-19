@@ -2,11 +2,14 @@ import "server-only";
 import PDFDocument from "pdfkit";
 import { MESES_LABEL } from "@/lib/financeiroDashboard";
 import type { FinanceiroDashboardResposta } from "@/lib/financeiroDashboard";
+import { FUSO_PADRAO } from "@/lib/fusos";
 
 /* PDF detalhado do dashboard financeiro (/financialdashboard), no mesmo
    estilo visual do vendasPdf.ts (cores, margem e helpers de tabela/caixa). */
 
 export type DadosPdfFinanceiro = {
+  /** Fuso da loja (configuracoes.fuso_horario) para o "Emitido em". */
+  fuso?: string;
   loja: { nome: string; logoUrl: string };
   dados: FinanceiroDashboardResposta;
 };
@@ -46,10 +49,10 @@ async function baixarImagem(url: string): Promise<Buffer | null> {
   }
 }
 
-function dataHoraFortaleza(): string {
+function dataHoraFortaleza(fuso = FUSO_PADRAO): string {
   const d = new Date();
-  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
-  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Fortaleza", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  const data = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, day: "2-digit", month: "2-digit", year: "numeric" }).format(d);
+  const hora = new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
   return `${data} às ${hora}`;
 }
 
@@ -89,7 +92,7 @@ export async function gerarPdfFinanceiro(dados: DadosPdfFinanceiro): Promise<Buf
   const yFaixa = doc.y + 8;
   doc.font("Helvetica-Bold").fontSize(9.5).fillColor(COR.marca);
   doc.text(`PERÍODO: ${periodoLabel}`, M + 12, yFaixa, { continued: true, width: largura - 24 });
-  doc.font("Helvetica").fillColor(COR.suave).text(`   •   Emitido em ${dataHoraFortaleza()}`);
+  doc.font("Helvetica").fillColor(COR.suave).text(`   •   Emitido em ${dataHoraFortaleza(dados.fuso)}`);
   doc.y = yFaixa + 22;
   doc.moveDown(0.6);
 

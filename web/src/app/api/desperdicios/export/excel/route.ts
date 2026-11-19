@@ -4,6 +4,7 @@ import { getConfig } from "@/db/queries/config";
 import { listarDesperdicios } from "@/db/queries/desperdicios";
 import { filtrosDaUrl } from "@/lib/desperdicios";
 import { gerarExcelDesperdicio } from "@/lib/desperdiciosExcel";
+import { fusoLoja } from "@/db/queries/tempo";
 
 export const runtime = "nodejs";
 
@@ -11,10 +12,10 @@ export async function GET(request: Request) {
   const sessao = await getSessaoAdmin();
   if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
 
-  const filtros = filtrosDaUrl(new URL(request.url).searchParams);
+  const filtros = filtrosDaUrl(new URL(request.url).searchParams, await fusoLoja(sessao.lojaId));
   const [itens, nomeLoja] = await Promise.all([listarDesperdicios(sessao.lojaId, filtros), getConfig(sessao.lojaId, "nome_loja", "Loja")]);
 
-  const excel = await gerarExcelDesperdicio({ loja: { nome: nomeLoja }, filtros, itens });
+  const excel = await gerarExcelDesperdicio({ fuso: await fusoLoja(sessao.lojaId), loja: { nome: nomeLoja }, filtros, itens });
 
   return new Response(new Uint8Array(excel), {
     headers: {

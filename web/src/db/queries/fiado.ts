@@ -4,7 +4,7 @@ import { db, withTransaction } from "@/db";
 import { clientes, fiadoLancamentos, pedidos, admins } from "@/db/schema";
 import { apenasDigitos, telefoneSemMascara } from "@/db/queries/telefone";
 import { recordFiadoPayment } from "@/db/queries/financeiroSync";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataLoja, timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/fiado_clientes.php, fiado_clientes_busca.php,
@@ -187,7 +187,7 @@ export async function registrarFiado(lojaId: number, operadorId: number, cliente
 
   await withTransaction(async (tx) => {
     await tx.update(clientes).set({ saldo_fiado: saldoDepois }).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
-    await tx.insert(fiadoLancamentos).values({
+    await tx.insert(fiadoLancamentos).values({ criado_em: await timestampLoja(lojaId),
       loja_id: lojaId,
       cliente_id: clienteId,
       pedido_id: null,
@@ -225,7 +225,7 @@ export async function registrarPagamentoFiado(lojaId: number, operadorId: number
     await tx.update(clientes).set({ saldo_fiado: saldoDepois }).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
     const [nova] = await tx
       .insert(fiadoLancamentos)
-      .values({
+      .values({ criado_em: await timestampLoja(lojaId),
         loja_id: lojaId,
         cliente_id: clienteId,
         pedido_id: null,
@@ -245,7 +245,7 @@ export async function registrarPagamentoFiado(lojaId: number, operadorId: number
     await recordFiadoPayment(lojaId, {
       forma: formaFinal,
       valor,
-      data: dataFortaleza(),
+      data: (await dataLoja(lojaId)),
       clienteNome: cliente.nome ?? "",
       fiadoLancamentoId,
     });

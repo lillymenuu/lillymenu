@@ -6,7 +6,7 @@ import { produtos, categorias, operacaoLogs, configuracoes } from "@/db/schema";
 import { getConfig } from "@/db/queries/config";
 import { storageSaveBase64, storageDelete } from "@/db/queries/storage";
 import { bumpCatalogoVersao } from "@/db/queries/estoqueVinculo";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/promo_listar.php, promo_salvar.php,
@@ -67,7 +67,7 @@ export type ListarPromocoesResultado = {
 };
 
 export async function listarPromocoes(lojaId: number): Promise<ListarPromocoesResultado> {
-  const hoje = dataFortaleza();
+  const hoje = (await dataLoja(lojaId));
 
   const lojaFlyersRaw = await getConfig(lojaId, "loja_flyers", "[]");
   let lojaFlyers: string[] = [];
@@ -221,7 +221,7 @@ export async function salvarPromocao(lojaId: number, operadorId: number, input: 
         promo_etiqueta: promoEtiqueta,
       };
       // sem promo_inicio o prazo (promo_dias) nunca venceria: comeca a contar hoje
-      if (ativar && (!estavaAtiva || !atual.promoInicio)) set.promo_inicio = dataFortaleza();
+      if (ativar && (!estavaAtiva || !atual.promoInicio)) set.promo_inicio = (await dataLoja(lojaId));
       if (promoImagemRemover) set.promo_imagem = null;
       else if (novaImagem !== null) set.promo_imagem = novaImagem;
 

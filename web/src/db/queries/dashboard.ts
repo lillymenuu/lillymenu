@@ -3,6 +3,7 @@ import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos, caixaTurnos, lojaEventos, pedidoItens, produtos, estoque } from "@/db/schema";
 import { getConfigs } from "@/db/queries/config";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/dashboard.php: KPIs, grafico de pedidos/faturamento
@@ -22,8 +23,8 @@ function normalizarPeriodo(periodo: number): Periodo {
 /** DATE(COALESCE(caixa_turnos.aberto_em, pedidos.criado_em)), como string "YYYY-MM-DD". */
 const dataCompetencia = sql<string>`to_char(coalesce(${caixaTurnos.aberto_em}, ${pedidos.criado_em}), 'YYYY-MM-DD')`;
 
-function hojeEmFortaleza(): Date {
-  const partes = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
+function hojeEmFortaleza(fuso: string): Date {
+  const partes = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
   return new Date(`${partes}T00:00:00`);
 }
 
@@ -66,7 +67,7 @@ export type DashboardData = {
 
 export async function montarDashboard(lojaId: number, periodoBruto: number): Promise<DashboardData> {
   const periodo = normalizarPeriodo(periodoBruto);
-  const hoje = hojeEmFortaleza();
+  const hoje = hojeEmFortaleza(await fusoLoja(lojaId));
 
   const inicioPeriodo = new Date(hoje);
   inicioPeriodo.setDate(inicioPeriodo.getDate() - (periodo - 1));

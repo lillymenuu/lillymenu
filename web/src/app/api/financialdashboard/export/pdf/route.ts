@@ -3,6 +3,7 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getConfig } from "@/db/queries/config";
 import { getFinanceiroDashboard } from "@/lib/financeiroDashboardServer";
 import { gerarPdfFinanceiro } from "@/lib/financeiroDashboardPdf";
+import { fusoLoja } from "@/db/queries/tempo";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
     getConfig(sessao.lojaId, "loja_perfil", ""),
   ]);
 
-  const pdf = await gerarPdfFinanceiro({ loja: { nome: nomeLoja, logoUrl }, dados });
+  const pdf = await gerarPdfFinanceiro({ fuso: await fusoLoja(sessao.lojaId), loja: { nome: nomeLoja, logoUrl }, dados });
 
   return new Response(new Uint8Array(pdf), {
     headers: {

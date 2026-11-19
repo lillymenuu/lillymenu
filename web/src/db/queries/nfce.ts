@@ -3,7 +3,7 @@ import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { configuracoes, dadosFiscaisLoja, certificadosFiscais, notasFiscais, pedidos, pedidoItens, pedidoPagamentos, produtos } from "@/db/schema";
 import { getConfig, getConfigs } from "@/db/queries/config";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataNoFuso, fusoLoja, timestampLoja } from "@/db/queries/tempo";
 import {
   pnCadastrarCertificado,
   pnCadastrarEmpresa,
@@ -282,7 +282,7 @@ async function registrarErroNota(notaExistente: NotaFiscal | null, valoresBase: 
   if (notaExistente) {
     await db.update(notasFiscais).set({ status: "erro", mensagem_erro: erro, atualizado_em: new Date().toISOString() }).where(eq(notasFiscais.pedido_id, notaExistente.pedido_id));
   } else {
-    await db.insert(notasFiscais).values({ ...valoresBase, status: "erro", mensagem_erro: erro });
+    await db.insert(notasFiscais).values({ ...valoresBase, criado_em: await timestampLoja(valoresBase.loja_id), status: "erro", mensagem_erro: erro });
   }
 }
 
@@ -380,7 +380,7 @@ export async function emitirNfceDoPedido(lojaId: number, pedidoId: number): Prom
 
     const [nota] = notaExistente
       ? await db.update(notasFiscais).set(patch).where(eq(notasFiscais.pedido_id, pedidoId)).returning()
-      : await db.insert(notasFiscais).values({ ...valoresBase, ...patch }).returning();
+      : await db.insert(notasFiscais).values({ ...valoresBase, criado_em: await timestampLoja(valoresBase.loja_id), ...patch }).returning();
 
     return { ok: true, nota };
   }
@@ -416,7 +416,7 @@ export async function emitirNfceDoPedido(lojaId: number, pedidoId: number): Prom
         .set({ status: "processando", protocolo: resultado.dados.protocol, mensagem_erro: null, atualizado_em: new Date().toISOString() })
         .where(eq(notasFiscais.pedido_id, pedidoId))
         .returning()
-    : await db.insert(notasFiscais).values({ ...valoresBase, status: "processando", protocolo: resultado.dados.protocol }).returning();
+    : await db.insert(notasFiscais).values({ ...valoresBase, criado_em: await timestampLoja(valoresBase.loja_id), status: "processando", protocolo: resultado.dados.protocol }).returning();
 
   return { ok: true, nota };
 }
@@ -509,8 +509,8 @@ export async function cancelarNotaFiscal(lojaId: number, pedidoId: number, justi
   return { ok: true };
 }
 
-function resolverPeriodoNfce(periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
-  const hoje = dataFortaleza();
+function resolverPeriodoNfce(fuso: string, periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
+  const hoje = dataNoFuso(fuso);
   if (dataIni && dataFim) return { inicio: `${dataIni} 00:00:00`, fim: `${dataFim} 23:59:59` };
   if (periodo === "hoje") return { inicio: `${hoje} 00:00:00`, fim: `${hoje} 23:59:59` };
 
@@ -536,7 +536,7 @@ export type NotaFiscalRelatorio = {
 };
 
 export async function listarNotasFiscais(lojaId: number, periodo: string, dataIni?: string, dataFim?: string): Promise<{ notas: NotaFiscalRelatorio[]; inicio: string; fim: string }> {
-  const { inicio, fim } = resolverPeriodoNfce(periodo, dataIni, dataFim);
+  const { inicio, fim } = resolverPeriodoNfce(await fusoLoja(lojaId), periodo, dataIni, dataFim);
 
   const linhas = await db
     .select({

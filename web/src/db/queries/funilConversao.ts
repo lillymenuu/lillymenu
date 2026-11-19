@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, gte, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { lojaEventos } from "@/db/schema";
-import { adicionarDiasFortaleza } from "@/db/queries/tempo";
+import { adicionarDiasLoja } from "@/db/queries/tempo";
 
 /* Equivalente de admin/api/v1/funil_conversao.php: funil de visitas -> views -> carrinho -> pedido, por visitante unico. */
 
@@ -20,7 +20,7 @@ export type FunilConversaoResultado = {
 
 export async function funilConversao(lojaId: number, diasInput: number): Promise<FunilConversaoResultado> {
   const dias = Math.max(1, Math.min(90, diasInput));
-  const desde = `${adicionarDiasFortaleza(-dias)} 00:00:00`;
+  const desde = `${(await adicionarDiasLoja(lojaId, -dias))} 00:00:00`;
 
   const linhas = await db
     .select({ tipo: lojaEventos.tipo, cnt: sql<string>`count(distinct ${lojaEventos.visitante})` })

@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, inArray, sql, isNotNull, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { listasTransmissao, listasTransmissaoMembros, listasTransmissaoEnvios, clientes, configuracoes } from "@/db/schema";
-import { timestampFortaleza } from "@/db/queries/tempo";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/broadcastlist_listar.php, broadcastlist_detalhe.php,
@@ -89,7 +89,7 @@ export async function salvarLista(lojaId: number, idInput: number, nomeInput: st
     if (id > 0) {
       const [existe] = await db.select({ id: listasTransmissao.id }).from(listasTransmissao).where(and(eq(listasTransmissao.id, id), eq(listasTransmissao.loja_id, lojaId))).limit(1);
       if (!existe) return { ok: false, msg: "Lista não encontrada." };
-      await db.update(listasTransmissao).set({ nome, atualizado_em: timestampFortaleza() }).where(and(eq(listasTransmissao.id, id), eq(listasTransmissao.loja_id, lojaId)));
+      await db.update(listasTransmissao).set({ nome, atualizado_em: (await timestampLoja(lojaId)) }).where(and(eq(listasTransmissao.id, id), eq(listasTransmissao.loja_id, lojaId)));
     } else {
       const [nova] = await db.insert(listasTransmissao).values({ loja_id: lojaId, nome }).returning({ id: listasTransmissao.id });
       id = nova.id;
@@ -145,7 +145,7 @@ export async function iniciarEnvio(lojaId: number, listaId: number, mensagemInpu
 
   if (destinatarios.length === 0) return { ok: false, msg: "Nenhum destinatário com WhatsApp válido neste grupo." };
 
-  const [envio] = await db.insert(listasTransmissaoEnvios).values({ lista_id: listaId, loja_id: lojaId, mensagem, total_destinatarios: destinatarios.length }).returning({ id: listasTransmissaoEnvios.id });
+  const [envio] = await db.insert(listasTransmissaoEnvios).values({ criado_em: await timestampLoja(lojaId), lista_id: listaId, loja_id: lojaId, mensagem, total_destinatarios: destinatarios.length }).returning({ id: listasTransmissaoEnvios.id });
 
   return { ok: true, envioId: envio.id, destinatarios };
 }
@@ -176,7 +176,7 @@ export async function enviarItemEnvio(lojaId: number, envioId: number, clienteId
 export type ResumoEnvio = { totalDestinatarios: number; totalEnviados: number; totalFalhas: number };
 
 export async function finalizarEnvio(lojaId: number, envioId: number): Promise<{ ok: true; resumo: ResumoEnvio } | { ok: false; msg: string }> {
-  await db.update(listasTransmissaoEnvios).set({ status: "concluido", finalizado_em: timestampFortaleza() }).where(and(eq(listasTransmissaoEnvios.id, envioId), eq(listasTransmissaoEnvios.loja_id, lojaId)));
+  await db.update(listasTransmissaoEnvios).set({ status: "concluido", finalizado_em: (await timestampLoja(lojaId)) }).where(and(eq(listasTransmissaoEnvios.id, envioId), eq(listasTransmissaoEnvios.loja_id, lojaId)));
 
   const [resumo] = await db
     .select({ totalDestinatarios: listasTransmissaoEnvios.total_destinatarios, totalEnviados: listasTransmissaoEnvios.total_enviados, totalFalhas: listasTransmissaoEnvios.total_falhas })

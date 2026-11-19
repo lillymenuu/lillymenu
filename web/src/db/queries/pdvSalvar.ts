@@ -23,7 +23,7 @@ import { registrarComplementosItem } from "@/db/queries/complementosVenda";
 import type { ComplementoEscolhido } from "@/lib/complementos";
 import { getConfig } from "@/db/queries/config";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
-import { timestampFortaleza, dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
+import { timestampLoja, dataLoja, adicionarDiasLoja, fusoLoja, dataNoFuso, timestampNoFuso } from "@/db/queries/tempo";
 import { sincronizarEstoqueVinculo, registrarComponentesCombo } from "@/db/queries/estoqueVinculo";
 import { registrarItemOpcoes } from "@/db/queries/pedidoItemOpcoes";
 import { baixarEstoqueVariacao } from "@/db/queries/variacaoEstoque";
@@ -234,12 +234,14 @@ async function ajustarUsoCashback(tx: NeonTx, lojaId: number, clienteId: number,
 
   let saldoMov = saldoAntes;
   let restante = delta;
+  /* expira_em/disponivel_em ficam no relogio da loja: compara com "agora" no fuso dela. */
+  const fusoCb = await fusoLoja(lojaId);
   const entradasResult = await tx.execute<{ id: number; valor: string; usado: string }>(sql`
     SELECT m.id, m.valor,
       COALESCE((SELECT SUM(valor) FROM cashback_movimentacoes u WHERE u.referencia_id = m.id AND u.tipo IN ('uso','resgate','expirado') AND u.loja_id = m.loja_id), 0) AS usado
     FROM cashback_movimentacoes m
     WHERE m.cliente_id = ${clienteId} AND m.loja_id = ${lojaId} AND m.tipo IN ('entrada','ganho')
-      AND (m.expira_em IS NULL OR m.expira_em >= CURRENT_DATE) AND (m.disponivel_em IS NULL OR m.disponivel_em <= NOW())
+      AND (m.expira_em IS NULL OR m.expira_em >= ${dataNoFuso(fusoCb)}::date) AND (m.disponivel_em IS NULL OR m.disponivel_em <= ${timestampNoFuso(fusoCb)}::timestamp)
     ORDER BY m.criado_em ASC, m.id ASC
   `);
   for (const entrada of entradasResult.rows) {
@@ -248,13 +250,13 @@ async function ajustarUsoCashback(tx: NeonTx, lojaId: number, clienteId: number,
     if (disponivel <= 0.009) continue;
     const usar = Math.min(restante, disponivel);
     const saldoDepoisMov = Math.max(0, saldoMov - usar);
-    await tx.insert(cashbackMovimentacoes).values({ cliente_id: clienteId, pedido_id: pedidoId, tipo: "uso", valor: usar, saldo_antes: saldoMov, saldo_depois: saldoDepoisMov, referencia_id: entrada.id, loja_id: lojaId });
+    await tx.insert(cashbackMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: clienteId, pedido_id: pedidoId, tipo: "uso", valor: usar, saldo_antes: saldoMov, saldo_depois: saldoDepoisMov, referencia_id: entrada.id, loja_id: lojaId });
     saldoMov = saldoDepoisMov;
     restante -= usar;
   }
   if (restante > 0.009) {
     const saldoDepoisMov = Math.max(0, saldoMov - restante);
-    await tx.insert(cashbackMovimentacoes).values({ cliente_id: clienteId, pedido_id: pedidoId, tipo: "uso", valor: restante, saldo_antes: saldoMov, saldo_depois: saldoDepoisMov, referencia_id: null, loja_id: lojaId });
+    await tx.insert(cashbackMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: clienteId, pedido_id: pedidoId, tipo: "uso", valor: restante, saldo_antes: saldoMov, saldo_depois: saldoDepoisMov, referencia_id: null, loja_id: lojaId });
     saldoMov = saldoDepoisMov;
   }
   return saldoMov;
@@ -342,7 +344,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   if (input.tipo === "entrega" && !input.endereco) return { ok: false, msg: "Endereco obrigatorio" };
 
   // caixa aberto (do operador hoje, ou qualquer caixa aberto hoje da loja)
-  const hojeCaixa = dataFortaleza();
+  const hojeCaixa = (await dataLoja(lojaId));
   let caixaId: number | null = null;
   if (adminId) {
     if (input.caixaIdPost) {
@@ -419,12 +421,13 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   const [cliente] = await db.select({ cashbackSaldo: clientes.cashback_saldo }).from(clientes).where(and(eq(clientes.id, input.clienteId), eq(clientes.loja_id, lojaId))).limit(1);
   const clienteCashbackSaldo = cliente?.cashbackSaldo ?? 0;
 
+  const fusoCb = await fusoLoja(lojaId);
   const naoLiberadasLinhas = await db.execute<{ valor: string; usado: string }>(sql`
     SELECT m.valor,
       COALESCE((SELECT SUM(valor) FROM cashback_movimentacoes u WHERE u.referencia_id = m.id AND u.tipo IN ('uso','resgate','expirado') AND u.loja_id = m.loja_id), 0) AS usado
     FROM cashback_movimentacoes m
     WHERE m.cliente_id = ${input.clienteId} AND m.loja_id = ${lojaId} AND m.tipo IN ('entrada','ganho')
-      AND m.disponivel_em IS NOT NULL AND m.disponivel_em > NOW() AND (m.expira_em IS NULL OR m.expira_em >= CURRENT_DATE)
+      AND m.disponivel_em IS NOT NULL AND m.disponivel_em > ${timestampNoFuso(fusoCb)}::timestamp AND (m.expira_em IS NULL OR m.expira_em >= ${dataNoFuso(fusoCb)}::date)
   `);
   let cashbackNaoLiberado = 0;
   for (const row of naoLiberadasLinhas.rows) {
@@ -542,7 +545,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   if (cashbackAplicadoFinal) {
     const cashbackBase = Math.max(0, subtotal - desconto);
     cashbackValor = Math.max(0, Math.round(cashbackBase * (cashbackPercentual / 100) * 100) / 100);
-    if (cashbackExpiraDias > 0) cashbackExpiraEm = adicionarDiasFortaleza(cashbackExpiraDias);
+    if (cashbackExpiraDias > 0) cashbackExpiraEm = (await adicionarDiasLoja(lojaId, cashbackExpiraDias));
   }
 
   let troco: number | null = null;
@@ -610,7 +613,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
           await tx.delete(pedidoPagamentos).where(and(eq(pedidoPagamentos.pedido_id, pedidoEdicaoId), eq(pedidoPagamentos.loja_id, lojaId)));
           for (const p of pagamentosValidos) {
             const taxaPagamento = p.valor * ((taxasPorForma[p.forma] ?? 0) / 100);
-            await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoEdicaoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamento, loja_id: lojaId });
+            await tx.insert(pedidoPagamentos).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoEdicaoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamento, loja_id: lojaId });
           }
 
           return { apenasPagamento: true as const, pedidoId: pedidoEdicaoId };
@@ -646,7 +649,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         cashback_aplicado: cashbackAplicadoFinal,
         origem: input.origemOriginal ?? "balcao",
         offline_uuid: offlineUuid !== "" ? offlineUuid : null,
-        criado_em: timestampFortaleza(),
+        criado_em: (await timestampLoja(lojaId)),
       };
 
       const [novoPedido] = await tx.insert(pedidos).values(camposPedido as typeof pedidos.$inferInsert).returning({ id: pedidos.id });
@@ -678,7 +681,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
           await baixarEstoqueVariacao(tx, produtoIdItem, i.variacaoId, qtdItem, lojaId, !pedidoEdicaoId);
           await tx.insert(estoque).values({ produto_id: produtoIdItem, quantidade: 0, loja_id: lojaId }).onConflictDoNothing({ target: estoque.produto_id });
           await tx.update(estoque).set({ quantidade: sql`${estoque.quantidade} - ${qtdItem}` }).where(and(eq(estoque.produto_id, produtoIdItem), eq(estoque.loja_id, lojaId)));
-          await tx.insert(estoqueMovimentacoes).values({ produto_id: produtoIdItem, tipo: "saida", quantidade: qtdItem, origem: "pedido", referencia_id: pedidoId, loja_id: lojaId });
+          await tx.insert(estoqueMovimentacoes).values({ criado_em: await timestampLoja(lojaId), produto_id: produtoIdItem, tipo: "saida", quantidade: qtdItem, origem: "pedido", referencia_id: pedidoId, loja_id: lojaId });
           await sincronizarEstoqueVinculo(tx, produtoIdItem, lojaId, { tipo: "saida", quantidade: qtdItem, origem: "pedido", referenciaId: pedidoId });
         }
 
@@ -688,7 +691,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
             if (sel.id <= 0 || selQtd <= 0) continue;
             await tx.insert(estoque).values({ produto_id: sel.id, quantidade: 0, loja_id: lojaId }).onConflictDoNothing({ target: estoque.produto_id });
             await tx.update(estoque).set({ quantidade: sql`${estoque.quantidade} - ${selQtd}` }).where(and(eq(estoque.produto_id, sel.id), eq(estoque.loja_id, lojaId)));
-            await tx.insert(estoqueMovimentacoes).values({ produto_id: sel.id, tipo: "saida", quantidade: selQtd, origem: "pedido", referencia_id: pedidoId, loja_id: lojaId });
+            await tx.insert(estoqueMovimentacoes).values({ criado_em: await timestampLoja(lojaId), produto_id: sel.id, tipo: "saida", quantidade: selQtd, origem: "pedido", referencia_id: pedidoId, loja_id: lojaId });
             await sincronizarEstoqueVinculo(tx, sel.id, lojaId, { tipo: "saida", quantidade: selQtd, origem: "pedido", referenciaId: pedidoId });
           }
           await registrarComponentesCombo(tx, pedidoId, novoItem.id, i.combosels, qtdItem, lojaId);
@@ -697,10 +700,10 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
 
       for (const p of pagamentosValidos) {
         const taxaPagamento = p.valor * ((taxasPorForma[p.forma] ?? 0) / 100);
-        await tx.insert(pedidoPagamentos).values({ pedido_id: pedidoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamento, loja_id: lojaId });
+        await tx.insert(pedidoPagamentos).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamento, loja_id: lojaId });
       }
 
-      await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: "aceito", loja_id: lojaId });
+      await tx.insert(pedidoStatusLog).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoId, status: "aceito", loja_id: lojaId });
 
       if (cupomAplicado && cupomId && !cupomMantidoDaEdicao) {
         const resCupom = await tx
@@ -720,7 +723,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
       }
       const saldoMov = await ajustarUsoCashback(tx, lojaId, input.clienteId, pedidoId, cashbackUsadoInput - cashbackUsadoOriginal, clienteCashbackSaldo);
       if (cashbackAplicadoFinal && cashbackValor > 0.009) {
-        await tx.insert(cashbackMovimentacoes).values({ cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "pendente", valor: cashbackValor, saldo_antes: saldoMov, saldo_depois: saldoMov, referencia_id: null, loja_id: lojaId });
+        await tx.insert(cashbackMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "pendente", valor: cashbackValor, saldo_antes: saldoMov, saldo_depois: saldoMov, referencia_id: null, loja_id: lojaId });
       }
 
       // pontos: resgate imediato + credito pendente
@@ -730,7 +733,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         let deltaPontos = 0;
         if (pontosCustoTotal > 0) {
           const saldoDepois = Math.max(0, saldoMovPontos - pontosCustoTotal);
-          await tx.insert(pontosMovimentacoes).values({ cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "resgate", pontos: pontosCustoTotal, saldo_antes: saldoMovPontos, saldo_depois: saldoDepois, referencia_id: null, loja_id: lojaId });
+          await tx.insert(pontosMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "resgate", pontos: pontosCustoTotal, saldo_antes: saldoMovPontos, saldo_depois: saldoDepois, referencia_id: null, loja_id: lojaId });
           saldoMovPontos = saldoDepois;
           deltaPontos -= pontosCustoTotal;
         }
@@ -738,7 +741,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
           await tx.update(clientes).set({ pontos_saldo: sql`greatest(0, ${clientes.pontos_saldo} + ${deltaPontos})` }).where(and(eq(clientes.id, input.clienteId), eq(clientes.loja_id, lojaId)));
         }
         if (pontosGanhoTotal > 0) {
-          await tx.insert(pontosMovimentacoes).values({ cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "pendente", pontos: pontosGanhoTotal, saldo_antes: saldoMovPontos, saldo_depois: saldoMovPontos, referencia_id: null, loja_id: lojaId });
+          await tx.insert(pontosMovimentacoes).values({ criado_em: await timestampLoja(lojaId), cliente_id: input.clienteId, pedido_id: pedidoId, tipo: "pendente", pontos: pontosGanhoTotal, saldo_antes: saldoMovPontos, saldo_depois: saldoMovPontos, referencia_id: null, loja_id: lojaId });
         }
       }
 
@@ -748,14 +751,14 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
         const saldoAntesFiado = c?.saldoFiado ?? 0;
         const saldoDepoisFiado = saldoAntesFiado + fiadoValorTotal;
         await tx.update(clientes).set({ saldo_fiado: saldoDepoisFiado }).where(and(eq(clientes.id, input.clienteId), eq(clientes.loja_id, lojaId)));
-        await tx.insert(fiadoLancamentos).values({ loja_id: lojaId, cliente_id: input.clienteId, pedido_id: pedidoId, operador_id: adminId, tipo: "venda", valor: fiadoValorTotal, saldo_antes: saldoAntesFiado, saldo_depois: saldoDepoisFiado });
+        await tx.insert(fiadoLancamentos).values({ criado_em: await timestampLoja(lojaId), loja_id: lojaId, cliente_id: input.clienteId, pedido_id: pedidoId, operador_id: adminId, tipo: "venda", valor: fiadoValorTotal, saldo_antes: saldoAntesFiado, saldo_depois: saldoDepoisFiado });
       }
 
       // edicao com itens DIFERENTES: cancela o pedido antigo (repoe estoque) e cria este como novo
       if (pedidoEdicaoId) {
         await pedidoRestaurarEstoqueCancelado(tx, pedidoEdicaoId, lojaId);
         await tx.update(pedidos).set({ status: "cancelado" }).where(and(eq(pedidos.id, pedidoEdicaoId), eq(pedidos.loja_id, lojaId)));
-        await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoEdicaoId, status: "cancelado", loja_id: lojaId });
+        await tx.insert(pedidoStatusLog).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoEdicaoId, status: "cancelado", loja_id: lojaId });
       }
 
       return { apenasPagamento: false as const, pedidoId, pedidoEdicaoId };

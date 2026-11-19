@@ -3,6 +3,7 @@ import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos, pedidoItens, pedidoPagamentos, clientes, caixaTurnos, fiadoLancamentos } from "@/db/schema";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/relatorios.php (/sales): resumo + graficos +
@@ -16,8 +17,8 @@ import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 const dataCompetencia = sql<string>`to_char(coalesce(${caixaTurnos.aberto_em}, ${pedidos.criado_em}), 'YYYY-MM-DD')`;
 const joinCaixa = and(eq(caixaTurnos.id, pedidos.caixa_id), eq(caixaTurnos.loja_id, pedidos.loja_id));
 
-function resolverPeriodo(periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
-  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
+function resolverPeriodo(fuso: string, periodo: string, dataIni?: string, dataFim?: string): { inicio: string; fim: string } {
+  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
   if (periodo === "customizado") {
     return { inicio: dataIni || `${hojeISO.slice(0, 7)}-01`, fim: dataFim || hojeISO };
   }
@@ -53,7 +54,7 @@ export type RelatorioVendasResultado = {
 
 export async function relatorioVendas(input: RelatorioVendasInput): Promise<RelatorioVendasResultado> {
   const { lojaId } = input;
-  const { inicio, fim } = resolverPeriodo(input.periodo ?? "hoje", input.dataIni, input.dataFim);
+  const { inicio, fim } = resolverPeriodo(await fusoLoja(lojaId), input.periodo ?? "hoje", input.dataIni, input.dataFim);
   const pagina0 = Math.max(1, input.pagina ?? 1);
   const limite = ([10, 20, 50] as const).includes(input.limite as never) ? (input.limite as 10 | 20 | 50) : 10;
 

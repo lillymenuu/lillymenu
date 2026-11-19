@@ -4,6 +4,7 @@ import type { NeonTx } from "@/db";
 import { pedidoItens, pedidoComboItens, pedidoItemOpcoes, estoque, estoqueMovimentacoes } from "@/db/schema";
 import { sincronizarEstoqueVinculo } from "@/db/queries/estoqueVinculo";
 import { reporEstoqueVariacao } from "@/db/queries/variacaoEstoque";
+import { timestampLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/helpers/pedido_estoque_module.php
@@ -40,7 +41,7 @@ export async function pedidoRestaurarEstoqueCancelado(tx: NeonTx, pedidoId: numb
     if (produtoId <= 0 || quantidade <= 0) return;
     await tx.insert(estoque).values({ produto_id: produtoId, quantidade: 0, loja_id: lojaId }).onConflictDoNothing({ target: estoque.produto_id });
     await tx.update(estoque).set({ quantidade: sql`${estoque.quantidade} + ${quantidade}` }).where(and(eq(estoque.produto_id, produtoId), eq(estoque.loja_id, lojaId)));
-    await tx.insert(estoqueMovimentacoes).values({ produto_id: produtoId, tipo: "entrada", quantidade, origem: "pedido_cancelado", referencia_id: pedidoId, loja_id: lojaId });
+    await tx.insert(estoqueMovimentacoes).values({ criado_em: await timestampLoja(lojaId), produto_id: produtoId, tipo: "entrada", quantidade, origem: "pedido_cancelado", referencia_id: pedidoId, loja_id: lojaId });
     await sincronizarEstoqueVinculo(tx, produtoId, lojaId, { tipo: "entrada", quantidade, origem: "pedido_cancelado", referenciaId: pedidoId });
   }
 

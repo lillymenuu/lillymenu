@@ -3,7 +3,7 @@ import { and, eq, ne, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { garcons, pedidos, pedidoItens, mesas, pedidoStatusLog } from "@/db/schema";
 import { getConfigs } from "@/db/queries/config";
-import { timestampFortaleza } from "@/db/queries/tempo";
+import { timestampLoja, fusoLoja } from "@/db/queries/tempo";
 
 /*
  * Relatorio de desempenho por garcom (/waiter-report) — novo, sem equivalente no
@@ -29,8 +29,8 @@ import { timestampFortaleza } from "@/db/queries/tempo";
 
 export type Turno = "todos" | "manha" | "tarde" | "noite";
 
-function resolverPeriodo(periodo: string, dataIni?: string, dataFim?: string): { periodo: string; inicio: string; fim: string } {
-  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
+function resolverPeriodo(fuso: string, periodo: string, dataIni?: string, dataFim?: string): { periodo: string; inicio: string; fim: string } {
+  const hojeISO = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
   if (periodo === "customizado") {
     return { periodo, inicio: dataIni || `${hojeISO.slice(0, 7)}-01`, fim: dataFim || hojeISO };
   }
@@ -94,7 +94,7 @@ export async function listarGarconsAdmin(lojaId: number): Promise<{ id: number; 
 
 export async function relatorioGarcons(input: RelatorioGarcomInput): Promise<RelatorioGarcomResultado> {
   const { lojaId, garcomId } = input;
-  const { inicio, fim } = resolverPeriodo(input.periodo ?? "hoje", input.dataIni, input.dataFim);
+  const { inicio, fim } = resolverPeriodo(await fusoLoja(lojaId), input.periodo ?? "hoje", input.dataIni, input.dataFim);
   const turno = input.turno ?? "todos";
 
   const cfg = await getConfigs(lojaId, ["taxa_servico_pct"]);
@@ -188,7 +188,7 @@ export async function relatorioGarcons(input: RelatorioGarcomInput): Promise<Rel
     .where(and(eq(mesas.loja_id, lojaId), isNotNull(mesas.conta_solicitada_em)))
     .orderBy(mesas.conta_solicitada_em);
 
-  const agora = timestampFortaleza();
+  const agora = (await timestampLoja(lojaId));
   const chamadosAbertos: RelatorioGarcomChamado[] = await Promise.all(
     chamadosRaw.map(async (m) => {
       /* Pedido mais recente da mesa, independente do status: se ja fechou

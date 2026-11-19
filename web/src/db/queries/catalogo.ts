@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { categorias, produtos, produtoVariacoes, combos, estoque } from "@/db/schema";
 import { produtosComComplementos } from "@/db/queries/complementosVenda";
 import { aplicarReservaPdv, reservaMapaPdv } from "@/db/queries/pdvReservas";
+import { fusoLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de helpers/loja_catalogo.php (montarCatalogoLoja): monta
@@ -14,12 +15,11 @@ import { aplicarReservaPdv, reservaMapaPdv } from "@/db/queries/pdvReservas";
  */
 
 type DiaCod = "dom" | "seg" | "ter" | "qua" | "qui" | "sex" | "sab";
-const FUSO_LOJA = "America/Fortaleza";
 
-export function agoraNaLoja(): { dia: DiaCod; hora: string } {
+export function agoraNaLoja(fuso: string): { dia: DiaCod; hora: string } {
   const agora = new Date();
   const partes = new Intl.DateTimeFormat("en-US", {
-    timeZone: FUSO_LOJA,
+    timeZone: fuso,
     weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
@@ -132,7 +132,7 @@ function promoAtiva(
 }
 
 export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Promise<CatalogoLoja> {
-  const agora = agoraNaLoja();
+  const agora = agoraNaLoja(await fusoLoja(lojaId));
 
   const categoriasLinhas = await db
     .select({
@@ -296,7 +296,7 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
  * polling da Store pra detectar bloqueio mesmo sem o catalogo_versao mudar.
  */
 export async function categoriasBloqueadas(lojaId: number): Promise<number[]> {
-  const agora = agoraNaLoja();
+  const agora = agoraNaLoja(await fusoLoja(lojaId));
   const linhas = await db
     .select({ id: categorias.id, diasSemana: categorias.dias_semana, horarioIni: categorias.horario_ini, horarioFim: categorias.horario_fim })
     .from(categorias)

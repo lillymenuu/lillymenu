@@ -79,5 +79,7 @@ export async function GET(request: Request) {
     },
     taxa_entrega: { tipo: d.taxaEntrega.tipo, gratis: d.taxaEntrega.gratis, fixa: { valor: d.taxaEntrega.fixa.valor, tempo_min: d.taxaEntrega.fixa.tempoMin, tempo_max: d.taxaEntrega.fixa.tempoMax } },
     versiculo_dashboard_ativo: d.versiculoDashboardAtivo,
+    fuso_horario: d.fusoHorario,
+    fuso_horario_definido: d.fusoHorarioDefinido,
   });
 }

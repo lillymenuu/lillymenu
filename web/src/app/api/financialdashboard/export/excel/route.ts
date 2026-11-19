@@ -3,6 +3,7 @@ import { getSessaoAdmin } from "@/lib/session";
 import { getConfig } from "@/db/queries/config";
 import { getFinanceiroDashboard } from "@/lib/financeiroDashboardServer";
 import { gerarExcelFinanceiro } from "@/lib/financeiroDashboardExcel";
+import { fusoLoja } from "@/db/queries/tempo";
 
 export const runtime = "nodejs";
 
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
 
   const [dados, nomeLoja] = await Promise.all([getFinanceiroDashboard(sessao.lojaId, mes, ano), getConfig(sessao.lojaId, "nome_loja", "Loja")]);
 
-  const excel = await gerarExcelFinanceiro({ loja: { nome: nomeLoja }, dados });
+  const excel = await gerarExcelFinanceiro({ fuso: await fusoLoja(sessao.lojaId), loja: { nome: nomeLoja }, dados });
 
   return new Response(new Uint8Array(excel), {
     headers: {

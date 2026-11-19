@@ -2,7 +2,7 @@ import "server-only";
 import { and, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { pedidos, pedidoPagamentos, caixaTurnos, caixaMovimentacoes, admins, fiadoLancamentos, clientes } from "@/db/schema";
-import { dataFortaleza } from "@/db/queries/tempo";
+import { dataLoja } from "@/db/queries/tempo";
 
 /*
  * Equivalente de admin/api/v1/caixa_resumo.php: resumo/reconciliacao do
@@ -90,7 +90,7 @@ export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResul
   const caixaAtual = caixaLinhas[0];
   if (!caixaAtual) return { ok: true, caixa: null };
 
-  const hoje = dataFortaleza();
+  const hoje = (await dataLoja(lojaId));
   const diaAbertura = caixaAtual.abertoEm.slice(0, 10);
   const inicioOnline = `${diaAbertura} 00:00:00`;
   const dataLimiteFiado = diaAbertura < hoje ? `${hoje} 00:00:00` : caixaAtual.abertoEm;

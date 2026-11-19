@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, sql, asc, desc, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { motoboys, pedidos, clientes } from "@/db/schema";
-import { dataFortaleza, adicionarDiasFortaleza } from "@/db/queries/tempo";
+import { dataLoja, dataNoFuso, adicionarDiasNoFuso, fusoLoja } from "@/db/queries/tempo";
 import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 
 /*
@@ -13,14 +13,14 @@ import { pedidoCodigoBase, codigoDisplay } from "@/db/queries/pedidosAdmin";
 
 const RE_DATA = /^\d{4}-\d{2}-\d{2}$/;
 
-function resolverPeriodo(periodoInput: string, dataInicioInput: string, dataFimInput: string) {
-  const hoje = dataFortaleza();
+function resolverPeriodo(fuso: string, periodoInput: string, dataInicioInput: string, dataFimInput: string) {
+  const hoje = dataNoFuso(fuso);
   let periodo = periodoInput;
   let dataInicio: string;
   let dataFim: string;
 
   if (periodo === "7dias") {
-    dataInicio = adicionarDiasFortaleza(-6);
+    dataInicio = adicionarDiasNoFuso(fuso, -6);
     dataFim = hoje;
   } else if (periodo === "customizado" && RE_DATA.test(dataInicioInput) && RE_DATA.test(dataFimInput)) {
     dataInicio = dataInicioInput;
@@ -82,7 +82,7 @@ export type GerenciarMotoboysResultado = {
 };
 
 export async function gerenciarMotoboys(lojaId: number, periodoInput: string, dataInicioInput: string, dataFimInput: string): Promise<GerenciarMotoboysResultado> {
-  const { periodo, dataInicio, dataFim, inicioTimestamp, fimTimestamp } = resolverPeriodo(periodoInput, dataInicioInput, dataFimInput);
+  const { periodo, dataInicio, dataFim, inicioTimestamp, fimTimestamp } = resolverPeriodo(await fusoLoja(lojaId), periodoInput, dataInicioInput, dataFimInput);
 
   const [{ total }] = await db.select({ total: sql<string>`count(*)` }).from(motoboys).where(eq(motoboys.loja_id, lojaId));
 
@@ -151,7 +151,7 @@ export type ListarEntregasResultado = {
 };
 
 export async function listarEntregasMotoboy(lojaId: number, periodoInput: string, dataInicioInput: string, dataFimInput: string, pageInput: number, perPageInput: number): Promise<ListarEntregasResultado> {
-  const { inicioTimestamp, fimTimestamp } = resolverPeriodo(periodoInput, dataInicioInput, dataFimInput);
+  const { inicioTimestamp, fimTimestamp } = resolverPeriodo(await fusoLoja(lojaId), periodoInput, dataInicioInput, dataFimInput);
   const perPage = [5, 10, 25].includes(perPageInput) ? perPageInput : 10;
 
   const condicao = and(
@@ -207,7 +207,7 @@ export async function salvarMotoboy(lojaId: number, input: SalvarMotoboyInput): 
   const id = input.id && input.id > 0 ? input.id : 0;
   const nome = input.nome.trim();
   const whatsapp = input.whatsapp.replace(/\D+/g, "");
-  const dataCadastro = (input.dataCadastro ?? "").trim() || dataFortaleza();
+  const dataCadastro = (input.dataCadastro ?? "").trim() || (await dataLoja(lojaId));
   const ativo = input.ativo === undefined ? true : input.ativo;
 
   if (nome === "") return { ok: false, msg: "Informe o nome do motoboy." };

@@ -101,10 +101,10 @@ export function filtrosLabel(f: FiltrosDesperdicio): string[] {
   return partes;
 }
 
-/** Le os filtros da URL dos relatorios; periodo invalido cai no mes atual (America/Fortaleza). */
-export function filtrosDaUrl(params: URLSearchParams): FiltrosDesperdicio {
+/** Le os filtros da URL dos relatorios; periodo invalido cai no mes atual (no fuso da loja). */
+export function filtrosDaUrl(params: URLSearchParams, fuso = "America/Fortaleza"): FiltrosDesperdicio {
   const ym = /^\d{4}-(0[1-9]|1[0-2])$/;
-  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit" }).format(new Date());
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: fuso, year: "numeric", month: "2-digit" }).format(new Date());
   let de = params.get("de") ?? "";
   let ate = params.get("ate") ?? "";
   if (!ym.test(de)) de = hoje;
