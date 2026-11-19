@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { getSessaoAdmin } from "@/lib/session";
 import { getSidebarDataCached } from "@/lib/acessoRecurso";
 import { getLandingConfig, lc } from "@/db/queries/landingConfig";
+
+/* PWA do painel (so aqui, nao na loja publica dos clientes): no iPhone o Web Push do Gestor de
+   pedidos so funciona com o site adicionado a Tela de Inicio, aberto como app (sem barra do Safari). */
+export const metadata: Metadata = {
+  manifest: "/gestor.webmanifest",
+  appleWebApp: { capable: true, title: "LillyMenu", statusBarStyle: "default" },
+  icons: { apple: "/favicon_store.png" },
+};
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const sessao = await getSessaoAdmin();

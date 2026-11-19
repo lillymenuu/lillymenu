@@ -13,6 +13,7 @@ import { PrintReceiptDialog } from "./print-receipt-dialog";
 import { OrderSearchDialog } from "./order-search-dialog";
 import { ConfirmDialog } from "./confirm-dialog";
 import { LinkMotoboyDialog } from "./link-motoboy-dialog";
+import { PushNotificacoes } from "./push-notificacoes";
 import { COLUNAS, formatBRL } from "./constants";
 import { cn } from "cn";
 
@@ -200,6 +201,7 @@ export function OrderManager({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold">Gestor de Pedidos</h1>
         <div className="flex items-center gap-2">
+          <PushNotificacoes />
           <Button variant="outline" size="sm" className="rounded-full" onClick={() => setBuscaOpen(true)}>
             <Search size={14} /> Buscar pedido
           </Button>

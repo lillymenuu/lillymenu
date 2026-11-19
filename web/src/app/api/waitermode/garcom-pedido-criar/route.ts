@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { notificarPedidoNovo } from "@/lib/webPush";
 import { getSessaoGarcom } from "@/lib/session";
 import { criarPedidoMesa, type ItemPedidoMesa, type PagamentoMesaInput } from "@/db/queries/modoGarcom";
 
@@ -51,5 +52,9 @@ export async function POST(request: Request) {
     clienteNome: typeof b.cliente_nome === "string" ? b.cliente_nome : undefined,
   });
 
+  if (resultado.ok && "id" in resultado) {
+    const pedidoId = resultado.id;
+    after(() => notificarPedidoNovo(sessao.lojaId, pedidoId, "garcom"));
+  }
   return NextResponse.json(resultado);
 }

@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { notificarPedidoNovo } from "@/lib/webPush";
 import { criarPedidoLoja, type EnderecoPartes, type ItemCarrinho } from "@/db/queries/pedidoCriar";
 
 type ItemPayload = {
@@ -88,5 +89,9 @@ export async function POST(request: Request) {
   });
 
   if (!resultado.ok) return NextResponse.json(resultado);
+  /* Push no celular de quem ativou as notificacoes no Gestor de pedidos — depois da resposta. */
+  const lojaId = Number(b.loja_id);
+  const pedidoId = resultado.id;
+  after(() => notificarPedidoNovo(lojaId, pedidoId, "loja"));
   return NextResponse.json({ ok: true, id: resultado.id, codigo: resultado.codigo, token: String(resultado.id) });
 }

@@ -10,6 +10,18 @@ const nextConfig: NextConfig = {
    * (login, dashboard, api/*, etc.), entao e seguro como fallback de um
    * unico segmento.
    */
+  /* Service worker do Web Push: sempre buscar a versao nova (sem cache do navegador/CDN). */
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [{ source: "/:slug", destination: "/store/:slug" }];
   },

@@ -204,6 +204,13 @@
       "when": 1795012059751,
       "tag": "0028_impressao_fila_expira",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795098862178,
+      "tag": "0029_push_inscricoes",
+      "breakpoints": true
     }
   ]
 }

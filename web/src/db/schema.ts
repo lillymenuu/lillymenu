@@ -7,7 +7,7 @@
  *  - enum -> text com tipo TypeScript (validacao na aplicacao).
  *  - AUTO_INCREMENT -> identity "by default" (preserva os ids na migracao dos dados).
  */
-import { bigint, boolean, char, date, foreignKey, index, integer, jsonb, numeric, pgTable, primaryKey, smallint, text, time, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+import { bigint, boolean, char, date, foreignKey, index, integer, jsonb, numeric, pgTable, primaryKey, smallint, text, time, timestamp, unique, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 export const admins = pgTable(
   "admins",
@@ -1665,4 +1665,25 @@ export const midiaPareamentos = pgTable(
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
   },
   (t) => [unique("midia_pareamentos_codigo_unico").on(t.codigo)]
+);
+
+/*
+ * Web Push: aparelhos (celular/PC) que ativaram as notificacoes de pedido novo no Gestor de pedidos.
+ * Uma linha por inscricao do navegador (endpoint unico). No iPhone so funciona com o site adicionado
+ * a Tela de Inicio (PWA, iOS 16.4+). Inscricoes que o servico de push responde 404/410 sao apagadas.
+ */
+export const pushInscricoes = pgTable(
+  "push_inscricoes",
+  {
+    id: integer("id").generatedByDefaultAsIdentity().notNull().primaryKey(),
+    loja_id: integer("loja_id").notNull(),
+    admin_id: integer("admin_id").notNull(),
+    endpoint: text("endpoint").notNull(),
+    p256dh: varchar("p256dh", { length: 255 }).notNull(),
+    auth: varchar("auth", { length: 255 }).notNull(),
+    user_agent: varchar("user_agent", { length: 255 }),
+    criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
+    ultimo_envio_em: timestamp("ultimo_envio_em", { mode: "string" }),
+  },
+  (t) => [uniqueIndex("push_inscricoes_endpoint_unq").on(t.endpoint), index("push_inscricoes_idx_loja").on(t.loja_id)]
 );
