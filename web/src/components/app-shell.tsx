@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { Menu, X, LogOut, Store, ChevronLeft, ChevronRight, Gem } from "lucide-react";
+import { Menu, X, LogOut, Store, ChevronLeft, ChevronRight, Gem, Lock } from "lucide-react";
 import type { SidebarData } from "@/lib/sidebar";
 import { NAV_SECTIONS } from "@/components/sidebar-nav-config";
 import { NotificationBell } from "@/components/notification-bell";
@@ -387,8 +387,12 @@ function AppShellInner({
           <nav className="flex-1 px-2 py-3">
             <TooltipProvider delay={150}>
             {NAV_SECTIONS.map((section) => {
+              /* Itens "novo" que o plano nao inclui tambem aparecem (com cadeado) para divulgar a novidade. */
               const items = section.items.filter(
-                (item) => item.menuKey === null || sidebarData.menu[item.menuKey]
+                (item) =>
+                  item.menuKey === null ||
+                  sidebarData.menu[item.menuKey] ||
+                  (item.novo && sidebarData.bloqueadoPorPlano?.[item.menuKey])
               );
               if (items.length === 0) return null;
               return (
@@ -428,6 +432,32 @@ function AppShellInner({
                             <Tooltip>
                               <TooltipTrigger render={itemBloqueadoNode} />
                               <TooltipContent side="right">Disponível após renovar o plano</TooltipContent>
+                            </Tooltip>
+                          </li>
+                        );
+                      }
+                      const foraDoPlano = !!(item.novo && item.menuKey && !sidebarData.menu[item.menuKey]);
+                      if (foraDoPlano) {
+                        const linkUpgrade = (
+                          <Link href="/plan-details" className={cn(className, !collapsed && "text-foreground/45")} onClick={() => setMobileOpen(false)}>
+                            <span className="relative shrink-0">
+                              <Icon size={20} />
+                              <span className="absolute -bottom-1 -right-1.5 flex size-3.5 items-center justify-center rounded-full bg-card text-foreground/70 ring-1 ring-border">
+                                <Lock className="size-2" strokeWidth={3} />
+                              </span>
+                            </span>
+                            <span className={cn("min-w-0 truncate", collapsed && "md:hidden")}>{item.label}</span>
+                            <span className={cn("ml-auto flex shrink-0", collapsed && "md:hidden")}>
+                              <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold leading-none text-white">novo</span>
+                            </span>
+                            {collapsed && <span aria-hidden className="absolute right-2 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-primary max-md:hidden" />}
+                          </Link>
+                        );
+                        return (
+                          <li key={item.href}>
+                            <Tooltip>
+                              <TooltipTrigger render={linkUpgrade} />
+                              <TooltipContent side="right">{item.label}: novidade disponível em outro plano. Clique para ver os planos.</TooltipContent>
                             </Tooltip>
                           </li>
                         );

@@ -128,17 +128,17 @@ export async function getSidebarDataNeon(adminId: number, lojaId: number, perfil
     }
   }
 
-  const pode = (chave: string) => {
-    /* Niveis de usuario criados antes de Desperdicios ter chave propria so tem menu.estoque: herda dele. */
-    const permitidoPorUsuario =
-      !menuRestrito || menuPermitido.has(chave) || (chave === "menu.desperdicios" && menuPermitido.has("menu.estoque"));
-    const permitidoPorPlano = recursosPlano === null || chave === "menu.dashboard" || recursosPlano.includes(chave);
-    return permitidoPorUsuario && permitidoPorPlano;
-  };
+  /* Niveis de usuario criados antes de Desperdicios ter chave propria so tem menu.estoque: herda dele. */
+  const podeUsuario = (chave: string) =>
+    !menuRestrito || menuPermitido.has(chave) || (chave === "menu.desperdicios" && menuPermitido.has("menu.estoque"));
+  const podePlano = (chave: string) => recursosPlano === null || chave === "menu.dashboard" || recursosPlano.includes(chave);
 
   const menu: Record<string, boolean> = {};
+  /* O usuario tem permissao mas o plano nao inclui: o menu mostra itens "novo" com cadeado (upgrade). */
+  const bloqueadoPorPlano: Record<string, boolean> = {};
   for (const [chaveMenu, chavePermissao] of Object.entries(CHAVE_POR_MENU)) {
-    menu[chaveMenu] = pode(chavePermissao);
+    menu[chaveMenu] = podeUsuario(chavePermissao) && podePlano(chavePermissao);
+    if (podeUsuario(chavePermissao) && !podePlano(chavePermissao)) bloqueadoPorPlano[chaveMenu] = true;
   }
   menu.lojas = perfil === "superadmin";
   menu.gerenciamento = perfil === "superadmin";
@@ -199,5 +199,6 @@ export async function getSidebarDataNeon(adminId: number, lojaId: number, perfil
       perfil,
     },
     menu,
+    bloqueadoPorPlano,
   };
 }

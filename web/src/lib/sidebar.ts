@@ -24,4 +24,6 @@ export type SidebarData = {
     perfil: string;
   };
   menu: Record<string, boolean>;
+  /** Telas que o usuario poderia ver mas o plano da loja nao inclui (itens "novo" aparecem com cadeado). */
+  bloqueadoPorPlano?: Record<string, boolean>;
 };
