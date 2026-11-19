@@ -88,7 +88,18 @@ export function OrderManager({
 
   useEffect(() => {
     const interval = setInterval(carregarPedidos, 5000);
-    return () => clearInterval(interval);
+    /* Voltar pra aba/janela (ou o navegador acordar uma aba congelada) atualiza na hora, sem
+       esperar o proximo ciclo — evita clicar num pedido que ja mudou em outro aparelho. */
+    const aoVoltar = () => {
+      if (document.visibilityState === "visible") carregarPedidos();
+    };
+    window.addEventListener("focus", aoVoltar);
+    document.addEventListener("visibilitychange", aoVoltar);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", aoVoltar);
+      document.removeEventListener("visibilitychange", aoVoltar);
+    };
   }, [carregarPedidos]);
 
   useEffect(() => {
@@ -105,10 +116,12 @@ export function OrderManager({
   }, [searchParams]);
 
   async function moverStatus(id: number, status: string) {
+    /* Status que a tela mostra agora: o servidor recusa se o pedido ja mudou em outro aparelho. */
+    const statusAtual = pedidos.find((p) => p.id === id)?.status;
     ultimoSnapshotRef.current = ""; // forca re-render mesmo se o poll ainda nao pegou a mudanca
     setPedidos((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
     const endpoint = status === "finalizado" ? "/api/ordermanager/finalizar" : "/api/ordermanager/status";
-    const body = status === "finalizado" ? { id } : { id, status };
+    const body = status === "finalizado" ? { id } : { id, status, de: statusAtual };
     try {
       const res = await fetch(endpoint, {
         method: "POST",
@@ -147,11 +160,13 @@ export function OrderManager({
       const res = await fetch("/api/ordermanager/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: recusarId, status: "cancelado" }),
+        body: JSON.stringify({ id: recusarId, status: "cancelado", de: pedidos.find((p) => p.id === recusarId)?.status }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
         toast.error(data.msg ?? "Erro ao recusar o pedido.");
+        setRecusarId(null);
+        carregarPedidos();
         return;
       }
       toast.success("Pedido recusado.");

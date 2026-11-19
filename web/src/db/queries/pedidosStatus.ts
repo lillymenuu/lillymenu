@@ -75,19 +75,30 @@ async function promoverPontosPendentes(tx: NeonTx, lojaId: number, pedidoId: num
 export type ResultadoTrocaStatus = { ok: true } | { ok: false; msg: string };
 
 /** Equivalente de pedidos_status.php: move o pedido entre as colunas do kanban. */
-export async function atualizarStatusPedido(lojaId: number, adminId: number, pedidoId: number, status: string): Promise<ResultadoTrocaStatus> {
+/** Mensagem quando a tela estava desatualizada (pedido mexido em outro aparelho). */
+const MSG_DESATUALIZADO = "Este pedido já foi atualizado em outro aparelho. A tela foi recarregada.";
+
+/**
+ * `statusEsperado`: status que a tela mostrava ao clicar. Se o pedido ja mudou (ex.: finalizado no
+ * celular enquanto o computador ainda mostrava "Aceitar"), recusa em vez de desfazer a mudanca.
+ * Pedido finalizado/cancelado nunca volta por aqui (cancelar finalizado e o cancelarPedido).
+ */
+export async function atualizarStatusPedido(lojaId: number, adminId: number, pedidoId: number, status: string, statusEsperado?: string): Promise<ResultadoTrocaStatus> {
   if (!pedidoId || !status) return { ok: false, msg: "Pedido e status são obrigatórios." };
   if (!STATUS_VALIDOS.includes(status as StatusPedido)) return { ok: false, msg: "Status inválido." };
   const statusTipado = status as StatusPedido;
 
   const statusAntes = await withTransaction(async (tx) => {
-    const [atual] = await tx.select({ status: pedidos.status }).from(pedidos).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId))).limit(1);
+    const [atual] = await tx.select({ status: pedidos.status }).from(pedidos).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId))).limit(1).for("update");
     if (!atual) return null;
+    if (atual.status === statusTipado) return "sem_mudanca" as const;
+    if (atual.status === "finalizado" || atual.status === "cancelado") return "desatualizado" as const;
+    if (statusEsperado && atual.status !== statusEsperado) return "desatualizado" as const;
 
     await tx.update(pedidos).set({ status: statusTipado }).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId)));
     await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: statusTipado, loja_id: lojaId });
 
-    if (statusTipado === "cancelado" && atual.status !== "cancelado") {
+    if (statusTipado === "cancelado") {
       await pedidoRestaurarEstoqueCancelado(tx, pedidoId, lojaId);
       await cashbackCancelarPendente(tx, lojaId, pedidoId);
     } else if (statusTipado === "finalizado") {
@@ -100,6 +111,8 @@ export async function atualizarStatusPedido(lojaId: number, adminId: number, ped
   });
 
   if (statusAntes === null) return { ok: false, msg: "Pedido não encontrado." };
+  if (statusAntes === "sem_mudanca") return { ok: true };
+  if (statusAntes === "desatualizado") return { ok: false, msg: MSG_DESATUALIZADO };
 
   try {
     if (statusTipado === "finalizado") await syncFinalizedOrder(lojaId, pedidoId);
@@ -149,8 +162,12 @@ export async function finalizarPedido(lojaId: number, adminId: number, pedidoId:
   if (!pedidoId) return { ok: false, msg: "Pedido inválido." };
 
   const encontrado = await withTransaction(async (tx) => {
-    const [atual] = await tx.select({ id: pedidos.id }).from(pedidos).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId))).limit(1);
+    const [atual] = await tx.select({ status: pedidos.status }).from(pedidos).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId))).limit(1).for("update");
     if (!atual) return false;
+    /* Ja finalizado (clique duplo / outro aparelho): nao repete pontos, cashback e financeiro.
+       Cancelado nao se finaliza — a tela estava desatualizada. */
+    if (atual.status === "finalizado") return "ja_finalizado" as const;
+    if (atual.status === "cancelado") return "cancelado" as const;
 
     await tx.update(pedidos).set({ status: "finalizado" }).where(and(eq(pedidos.id, pedidoId), eq(pedidos.loja_id, lojaId)));
     await tx.insert(pedidoStatusLog).values({ pedido_id: pedidoId, status: "finalizado", loja_id: lojaId });
@@ -162,6 +179,8 @@ export async function finalizarPedido(lojaId: number, adminId: number, pedidoId:
   });
 
   if (!encontrado) return { ok: false, msg: "Pedido não encontrado." };
+  if (encontrado === "ja_finalizado") return { ok: true };
+  if (encontrado === "cancelado") return { ok: false, msg: MSG_DESATUALIZADO };
 
   try {
     await syncFinalizedOrder(lojaId, pedidoId);

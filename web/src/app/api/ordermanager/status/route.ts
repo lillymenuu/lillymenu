@@ -9,6 +9,8 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const id = Number(body.id ?? 0);
   const status = String(body.status ?? "");
-  const resultado = await atualizarStatusPedido(sessao.lojaId, sessao.id, id, status);
+  /* "de": status que a tela mostrava — recusa se o pedido ja mudou em outro aparelho. */
+  const de = typeof body.de === "string" && body.de ? body.de : undefined;
+  const resultado = await atualizarStatusPedido(sessao.lojaId, sessao.id, id, status, de);
   return NextResponse.json(resultado);
 }

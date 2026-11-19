@@ -109,11 +109,13 @@ export function NotificationBell({
       const res = await fetch("/api/ordermanager/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: pedido.id, status }),
+        /* "de": o servidor recusa se o pedido ja mudou em outro aparelho (ex.: finalizado no celular). */
+        body: JSON.stringify({ id: pedido.id, status, de: pedido.status }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
         toast.error(data.msg ?? "Erro ao atualizar o pedido.");
+        removerFlutuante(pedido.id);
         return;
       }
       toast.success(status === "cancelado" ? "Pedido recusado." : "Pedido aceito.");
@@ -209,6 +211,14 @@ export function NotificationBell({
       if (!data?.ok) return;
       const novosItens: NotifItem[] = data.pedidos || [];
       setItens(novosItens);
+
+      /* Card flutuante e uma foto do pedido na chegada: se o status mudou depois (aceito, finalizado
+         ou recusado em outro aparelho/tela), o card sai — senao o "Aceitar" dele desfaria a mudanca. */
+      const statusAtual = new Map(novosItens.filter((i) => i.tipo !== "avaliacao" && i.tipo !== "conta").map((i) => [i.id, i.status]));
+      setPedidosFlutuantes((prev) => {
+        const restantes = prev.filter((p) => !statusAtual.has(p.id) || statusAtual.get(p.id) === p.status);
+        return restantes.length === prev.length ? prev : restantes;
+      });
 
       const novos = novosItens.filter((i) => i.tipo === "novo");
       const maiorId = novos.length ? Math.max(...novos.map((i) => i.id)) : 0;
