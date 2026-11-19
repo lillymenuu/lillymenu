@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { BadgeCheck, Banknote, ShoppingBag, TrendingUp, Store } from "lucide-react";
@@ -10,7 +11,6 @@ import { StoreLinkField } from "@/components/store-link-field";
 import { VerseOfDay } from "@/components/verse-of-day";
 import { DashboardSparkline } from "@/components/dashboard-sparkline";
 import { getSessaoAdmin } from "@/lib/session";
-import { getSidebarDataNeon } from "@/db/queries/sidebar";
 import { montarDashboard } from "@/db/queries/dashboard";
 import { funilConversao } from "@/db/queries/funilConversao";
 import { getConfig } from "@/db/queries/config";
@@ -18,7 +18,7 @@ import { buscarVersiculoDoDia } from "@/db/queries/versiculoDoDia";
 import { reacaoVersiculoDoDia } from "@/db/queries/versiculoReacao";
 import { dataLoja } from "@/db/queries/tempo";
 import { formatBRLMilhar } from "@/components/ordermanager/constants";
-import { exigirRecurso } from "@/lib/acessoRecurso";
+import { exigirRecurso, getSidebarDataCached } from "@/lib/acessoRecurso";
 
 async function resolverLinkLoja(lojaId: number): Promise<string> {
   const linkLojaRaw = await getConfig(lojaId, "link_loja", "");
@@ -43,6 +43,22 @@ async function resolverLinkLoja(lojaId: number): Promise<string> {
   return slug !== "" ? `${base}${slug}` : "";
 }
 
+/* Versiculo vem de site externo: carrega em streaming para nao segurar KPIs e graficos. */
+async function VersiculoDashboard({ adminId, lojaId }: { adminId: number; lojaId: number }) {
+  const [versiculo, hoje] = await Promise.all([buscarVersiculoDoDia(), dataLoja(lojaId)]);
+  if (!versiculo) return null;
+  const reacao = await reacaoVersiculoDoDia(adminId, hoje);
+  return (
+    <VerseOfDay
+      texto={versiculo.texto}
+      referencia={versiculo.referencia}
+      data={hoje}
+      fonteUrl={versiculo.fonteUrl}
+      reacaoInicial={reacao === "gostou" || reacao === "nao_gostou" ? reacao : null}
+    />
+  );
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -60,25 +76,19 @@ export default async function DashboardPage({
   let funil: Awaited<ReturnType<typeof funilConversao>> | null = null;
   let erro: string | null = null;
 
-  try {
-    [data, linkLoja, funil] = await Promise.all([montarDashboard(sessao.lojaId, periodo), resolverLinkLoja(sessao.lojaId), funilConversao(sessao.lojaId, 7)]);
-  } catch {
-    erro = "Erro ao carregar o dashboard.";
-  }
+  /* Tudo em paralelo: antes sidebar, config e versiculo rodavam em fila depois das consultas principais. */
+  const [principal, menu, versiculoAtivo] = await Promise.all([
+    Promise.all([montarDashboard(sessao.lojaId, periodo), resolverLinkLoja(sessao.lojaId), funilConversao(sessao.lojaId, 7)]).catch(() => null),
+    /* mesmo cache por request do layout/exigirRecurso: nao refaz as consultas do menu */
+    getSidebarDataCached(sessao.id, sessao.lojaId, sessao.perfil)
+      .then((s) => s.menu)
+      .catch((): Record<string, boolean> => ({})),
+    getConfig(sessao.lojaId, "versiculo_dashboard_ativo", "1").then((v) => v !== "0"),
+  ]);
+  if (principal) [data, linkLoja, funil] = principal;
+  else erro = "Erro ao carregar o dashboard.";
 
   const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
-  let menu: Record<string, boolean> = {};
-  try {
-    const sidebarData = await getSidebarDataNeon(sessao.id, sessao.lojaId, sessao.perfil);
-    menu = sidebarData.menu;
-  } catch {
-    // busca fica vazia se o sidebar nao carregar; nao bloqueia o resto do dashboard
-  }
-
-  const versiculoAtivo = (await getConfig(sessao.lojaId, "versiculo_dashboard_ativo", "1")) !== "0";
-  const versiculo = versiculoAtivo ? await buscarVersiculoDoDia() : null;
-  const hojeVersiculo = (await dataLoja(sessao.lojaId));
-  const reacaoVersiculo = versiculo ? await reacaoVersiculoDoDia(sessao.id, hojeVersiculo) : null;
 
   if (erro || !data) {
     return (
@@ -185,14 +195,10 @@ export default async function DashboardPage({
         />
       )}
 
-      {versiculoAtivo && versiculo && (
-        <VerseOfDay
-          texto={versiculo.texto}
-          referencia={versiculo.referencia}
-          data={hojeVersiculo}
-          fonteUrl={versiculo.fonteUrl}
-          reacaoInicial={reacaoVersiculo === "gostou" || reacaoVersiculo === "nao_gostou" ? reacaoVersiculo : null}
-        />
+      {versiculoAtivo && (
+        <Suspense fallback={null}>
+          <VersiculoDashboard adminId={sessao.id} lojaId={sessao.lojaId} />
+        </Suspense>
       )}
 
       <Card>

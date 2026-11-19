@@ -158,7 +158,22 @@ function extrairVersiculo(html: string): { texto: string; referencia: string } |
 
 export type VersiculoDoDia = { texto: string; referencia: string; fonteUrl: string };
 
-export async function buscarVersiculoDoDia(): Promise<VersiculoDoDia | null> {
+/*
+ * O versiculo e o mesmo para todas as lojas e muda uma vez por dia; a pagina de origem tem ~400 KB.
+ * Buscar + parsear a cada abertura do dashboard custava ~1s+ por carregamento. Agora fica em memoria
+ * por dia (chave = data em Brasilia) e 1h no maximo; falha fica em cache curto para nao esperar o
+ * timeout de novo a cada request enquanto o site estiver fora.
+ */
+const TTL_OK_MS = 60 * 60_000;
+const TTL_FALHA_MS = 5 * 60_000;
+let cacheVersiculo: { dia: string; valor: VersiculoDoDia | null; expira: number } | null = null;
+let buscaEmAndamento: Promise<VersiculoDoDia | null> | null = null;
+
+function diaBrasilia(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+}
+
+async function buscarNaFonte(): Promise<VersiculoDoDia | null> {
   try {
     const res = await fetch(FONTE_URL, {
       signal: AbortSignal.timeout(6000),
@@ -173,4 +188,23 @@ export async function buscarVersiculoDoDia(): Promise<VersiculoDoDia | null> {
   } catch {
     return null;
   }
+}
+
+export async function buscarVersiculoDoDia(): Promise<VersiculoDoDia | null> {
+  const dia = diaBrasilia();
+  if (cacheVersiculo && cacheVersiculo.dia === dia && cacheVersiculo.expira > Date.now()) return cacheVersiculo.valor;
+  if (!buscaEmAndamento) {
+    buscaEmAndamento = buscarNaFonte()
+      .then((valor) => {
+        /* Falhou mas ja havia um versiculo de hoje: mantem o anterior. */
+        const anterior = cacheVersiculo?.dia === dia ? cacheVersiculo.valor : null;
+        const final = valor ?? anterior;
+        cacheVersiculo = { dia, valor: final, expira: Date.now() + (valor ? TTL_OK_MS : TTL_FALHA_MS) };
+        return final;
+      })
+      .finally(() => {
+        buscaEmAndamento = null;
+      });
+  }
+  return buscaEmAndamento;
 }
