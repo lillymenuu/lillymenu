@@ -131,7 +131,7 @@ export function PosCatalog({
   return (
     <div className="flex h-full flex-col gap-3">
       {/* Faixa branca (categorias + busca) sobre o fundo cinza da grade */}
-      <div className="-mx-4 -mt-4 flex shrink-0 flex-col gap-3 border-b bg-background px-4 pt-4 pb-3">
+      <div className="-mx-4 -mt-4 flex shrink-0 flex-col gap-3 rounded-b-2xl border-b bg-background px-4 pt-4 pb-3">
         <div className="relative min-w-0 shrink-0">
           <div ref={categoriasScrollRef} className="scrollbar-none flex gap-1.5 overflow-x-auto px-8 pb-1">
             {secoes.map((s) => (
