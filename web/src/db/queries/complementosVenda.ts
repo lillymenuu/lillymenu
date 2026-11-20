@@ -157,7 +157,9 @@ export async function precoMinimoComplementos(lojaId: number, produtoIds: number
   for (const g of grupos) {
     const precisa = Math.max(g.quantidade_minima, g.obrigatorio ? 1 : 0);
     if (precisa === 0) continue;
-    const doGrupo = itens.filter((i) => i.grupoId === g.id).map((i) => ({ preco: Number(i.preco ?? 0), podeRepetir: i.podeRepetir })).sort((a, b) => a.preco - b.preco);
+    let doGrupo = itens.filter((i) => i.grupoId === g.id).map((i) => ({ preco: Number(i.preco ?? 0), podeRepetir: i.podeRepetir })).sort((a, b) => a.preco - b.preco);
+    /* Pizza pela media: sabor a R$ 0,00 e cadastro incompleto, nao "pizza gratis" — fica fora do "a partir de". */
+    if (g.cobrar_media && doGrupo.some((i) => i.preco > 0)) doGrupo = doGrupo.filter((i) => i.preco > 0);
     if (doGrupo.length === 0) continue;
     /* o mais barato pode ser escolhido varias vezes se "pode repetir"; senao, os N mais baratos */
     let soma = 0;
