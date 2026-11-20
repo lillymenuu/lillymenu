@@ -150,7 +150,7 @@ export function PosCatalog({
         <button
           type="button"
           onClick={() => rolarCategorias(-1)}
-          className="absolute top-0 left-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-r from-background via-background/90 to-transparent text-muted-foreground"
+          className="absolute top-0 left-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-r from-zinc-100 via-zinc-100/90 to-transparent dark:from-background dark:via-background/90 text-muted-foreground"
           aria-label="Categorias anteriores"
         >
           <ChevronLeft className="size-4" />
@@ -158,7 +158,7 @@ export function PosCatalog({
         <button
           type="button"
           onClick={() => rolarCategorias(1)}
-          className="absolute top-0 right-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-l from-background via-background/90 to-transparent text-muted-foreground"
+          className="absolute top-0 right-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-l from-zinc-100 via-zinc-100/90 to-transparent dark:from-background dark:via-background/90 text-muted-foreground"
           aria-label="Próximas categorias"
         >
           <ChevronRight className="size-4" />
@@ -172,7 +172,7 @@ export function PosCatalog({
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Nome ou código"
-            className="h-8 rounded-full bg-muted/40 pl-8 text-xs"
+            className="h-8 rounded-full bg-background pl-8 text-xs"
           />
         </div>
         <button
