@@ -1019,8 +1019,9 @@ function LinhaComplemento({
   const travado = !ativo && (esgotado || (noLimite && !escolhaUnica));
 
   const texto = (
-    <div className="text-base text-neutral-900">
+    <div className="min-w-0 text-base text-neutral-900">
       {item.nome}
+      {item.descricao && <span className="mt-0.5 block text-[.8rem] leading-snug text-neutral-500">{item.descricao}</span>}
       <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{esgotado ? "Esgotado" : formatarPreco(item.preco)}</small>
     </div>
   );
