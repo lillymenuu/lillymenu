@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Calculator, X } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { MoneyInput } from "@/components/produtos/money-input";
 import { formatBRL } from "@/components/ordermanager/constants";
 import { formatDataHoraCurta } from "@/components/cliente/types";
 import type { CaixaAtual } from "@/lib/caixa";
+import { CalculadoraCedulas, totalContagem, type ContagemCedulas } from "@/components/cashcontrol/calculadora-cedulas";
 
 export function OpenCloseDialog({
   open,
@@ -31,6 +33,21 @@ export function OpenCloseDialog({
   const [obsAberta, setObsAberta] = useState(false);
   const [observacoes, setObservacoes] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [calcAberta, setCalcAberta] = useState(false);
+  const [contagem, setContagem] = useState<ContagemCedulas>({});
+
+  /* Com a calculadora aberta, o valor do campo e o total da contagem de cedulas. */
+  function mudarContagem(c: ContagemCedulas) {
+    setContagem(c);
+    const total = totalContagem(c);
+    if (modo === "fechar") setSaldoFinal(total);
+    else setSaldoInicial(total);
+  }
+
+  function alternarCalc() {
+    if (!calcAberta) mudarContagem(contagem);
+    setCalcAberta((v) => !v);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -38,6 +55,8 @@ export function OpenCloseDialog({
     setSaldoFinal(totalVendasAtual ? totalVendasAtual.toFixed(2) : "");
     setObsAberta(false);
     setObservacoes("");
+    setCalcAberta(false);
+    setContagem({});
   }, [open, totalVendasAtual]);
 
   async function confirmar() {
@@ -85,7 +104,7 @@ export function OpenCloseDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
+      <DialogContent className={`rounded-3xl transition-[max-width] ${calcAberta ? "max-w-2xl sm:max-w-2xl" : "max-w-sm sm:max-w-sm"}`}>
         <DialogHeader>
           <DialogTitle>{modo === "fechar" ? "Fechar caixa" : "Abrir caixa"}</DialogTitle>
         </DialogHeader>
@@ -107,8 +126,9 @@ export function OpenCloseDialog({
                 type="number"
                 step="0.01"
                 value={saldoFinal}
+                readOnly={calcAberta}
                 onChange={(e) => setSaldoFinal(e.target.value)}
-                className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-primary/60"
+                className={`h-10 rounded-full border-0 bg-muted/60 px-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-primary/60 ${calcAberta ? "w-full text-muted-foreground sm:w-56" : "w-full"}`}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -132,9 +152,33 @@ export function OpenCloseDialog({
               id="caixa-saldo-inicial"
               value={saldoInicial}
               onChange={setSaldoInicial}
-              className="h-10 w-full rounded-full border-0 bg-muted/60 px-4 text-sm"
+              readOnly={calcAberta}
+              className={`h-10 rounded-full border-0 bg-muted/60 px-4 text-sm ${calcAberta ? "w-full text-muted-foreground sm:w-56" : "w-full"}`}
             />
           </div>
+        )}
+        {calcAberta ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold">Contagem de cédulas</span>
+              <button
+                type="button"
+                onClick={alternarCalc}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="size-3.5" /> Ocultar contagem de cédulas
+              </button>
+            </div>
+            <CalculadoraCedulas contagem={contagem} onChange={mudarContagem} />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={alternarCalc}
+            className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5"
+          >
+            <Calculator className="size-3.5" /> Calculadora de cédulas
+          </button>
         )}
         <DialogFooter className="border-t-0 bg-transparent">
           <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
