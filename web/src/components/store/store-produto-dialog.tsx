@@ -874,11 +874,6 @@ function LinhaPassoCombo({
 }) {
   return (
     <div className={`flex items-center gap-2.5 border-b border-neutral-100 py-2 last:border-0 ${apagada ? "opacity-55" : ""}`}>
-      <div className="min-w-0 flex-1">
-        <div className="text-[.95rem] leading-tight text-neutral-900">{nome}</div>
-        {descricao && <div className="mt-0.5 text-[.8rem] leading-snug text-neutral-500">{descricao}</div>}
-        <div className="mt-0.5 text-[.82rem] text-neutral-400">{detalhe}</div>
-      </div>
       {imagem !== undefined && (
         <div className="size-[64px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
           {imagem ? (
@@ -891,6 +886,11 @@ function LinhaPassoCombo({
           )}
         </div>
       )}
+      <div className="min-w-0 flex-1">
+        <div className="text-[.95rem] leading-tight text-neutral-900">{nome}</div>
+        {descricao && <div className="mt-0.5 text-[.8rem] leading-snug text-neutral-500">{descricao}</div>}
+        <div className="mt-0.5 text-[.82rem] text-neutral-400">{detalhe}</div>
+      </div>
       <div className="flex shrink-0 items-center gap-1">
         <button
           type="button"
@@ -1019,10 +1019,18 @@ function LinhaComplemento({
   const travado = !ativo && (esgotado || (noLimite && !escolhaUnica));
 
   const texto = (
-    <div className="min-w-0 text-base text-neutral-900">
-      {item.nome}
-      {item.descricao && <span className="mt-0.5 block text-[.8rem] leading-snug text-neutral-500">{item.descricao}</span>}
-      <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{esgotado ? "Esgotado" : formatarPreco(item.preco)}</small>
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      {item.imagem ? (
+        <div className="size-[64px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={item.imagem} alt="" className="size-full object-cover" />
+        </div>
+      ) : null}
+      <div className="min-w-0 text-base text-neutral-900">
+        {item.nome}
+        {item.descricao && <span className="mt-0.5 block text-[.8rem] leading-snug text-neutral-500">{item.descricao}</span>}
+        <small className="mt-0.5 block text-[.8rem] font-semibold text-neutral-400">{esgotado ? "Esgotado" : formatarPreco(item.preco)}</small>
+      </div>
     </div>
   );
 
