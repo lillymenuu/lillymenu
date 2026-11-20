@@ -269,7 +269,8 @@ export async function salvarProduto(lojaId: number, input: SalvarProdutoInput): 
   const nome = input.nome.trim();
   const preco = Number(input.preco ?? 0);
   if (!nome) return { ok: false, msg: "Informe o nome do produto." };
-  if (preco <= 0) return { ok: false, msg: "Informe um preco valido." };
+  /* R$ 0,00 e permitido (ex.: pizza meio a meio cobrada so pelos sabores nos complementos). */
+  if (!Number.isFinite(preco) || preco < 0) return { ok: false, msg: "Informe um preco valido." };
 
   const categoriaId = input.categoriaId && input.categoriaId > 0 ? input.categoriaId : null;
   const codigo = (input.codigo ?? "").trim() || null;

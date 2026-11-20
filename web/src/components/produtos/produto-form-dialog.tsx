@@ -288,8 +288,9 @@ export function ProdutoFormDialog({
       setErro("Informe o nome do produto.");
       return false;
     }
+    /* R$ 0,00 e valido: pizza meio a meio cobra so pelos sabores (complementos). */
     const precoNum = parseFloat(preco.replace(",", "."));
-    if (!precoNum || precoNum <= 0) {
+    if (preco.trim() === "" || !Number.isFinite(precoNum) || precoNum < 0) {
       setAba("preco");
       setErro("Informe um preço válido.");
       return false;
