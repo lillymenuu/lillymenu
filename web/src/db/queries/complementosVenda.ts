@@ -131,3 +131,50 @@ export async function registrarComplementosItem(
   }
   if (linhas.length > 0) await tx.insert(pedidoItemOpcoes).values(linhas);
 }
+
+/**
+ * Menor valor que os complementos OBRIGATORIOS somam, por produto — base do "a partir de" no card de
+ * produto com preco R$ 0,00 (ex.: pizza meio a meio cobrada so pelos sabores). Respeita minimo,
+ * "pode repetir" e a cobranca pela media do grupo. Produtos sem grupo obrigatorio ficam de fora.
+ */
+export async function precoMinimoComplementos(lojaId: number, produtoIds: number[]): Promise<Map<number, number>> {
+  const resultado = new Map<number, number>();
+  if (produtoIds.length === 0) return resultado;
+
+  const [produtosLinhas, grupos, itens, vincProdutos, vincCategorias] = await Promise.all([
+    db.select({ id: produtos.id, categoriaId: produtos.categoria_id }).from(produtos).where(and(eq(produtos.loja_id, lojaId), inArray(produtos.id, produtoIds))),
+    db.select().from(complementosGrupos).where(and(eq(complementosGrupos.loja_id, lojaId), eq(complementosGrupos.ativo, true))),
+    db
+      .select({ grupoId: complementosItens.grupo_id, preco: complementosItens.preco, podeRepetir: complementosItens.pode_repetir })
+      .from(complementosItens)
+      .where(and(eq(complementosItens.loja_id, lojaId), eq(complementosItens.ativo, true))),
+    db.select({ grupoId: complementosGruposProdutos.grupo_id, produtoId: complementosGruposProdutos.produto_id }).from(complementosGruposProdutos).where(eq(complementosGruposProdutos.loja_id, lojaId)),
+    db.select({ grupoId: complementosGruposCategorias.grupo_id, categoriaId: complementosGruposCategorias.categoria_id }).from(complementosGruposCategorias).where(eq(complementosGruposCategorias.loja_id, lojaId)),
+  ]);
+
+  /* menor valor de cada grupo obrigatorio */
+  const minimoPorGrupo = new Map<number, number>();
+  for (const g of grupos) {
+    const precisa = Math.max(g.quantidade_minima, g.obrigatorio ? 1 : 0);
+    if (precisa === 0) continue;
+    const doGrupo = itens.filter((i) => i.grupoId === g.id).map((i) => ({ preco: Number(i.preco ?? 0), podeRepetir: i.podeRepetir })).sort((a, b) => a.preco - b.preco);
+    if (doGrupo.length === 0) continue;
+    /* o mais barato pode ser escolhido varias vezes se "pode repetir"; senao, os N mais baratos */
+    let soma = 0;
+    if (doGrupo[0].podeRepetir) soma = doGrupo[0].preco * precisa;
+    else for (let k = 0; k < precisa; k++) soma += (doGrupo[k] ?? doGrupo[doGrupo.length - 1]).preco;
+    minimoPorGrupo.set(g.id, g.cobrar_media ? Math.round((soma / precisa) * 100) / 100 : soma);
+  }
+  if (minimoPorGrupo.size === 0) return resultado;
+
+  for (const p of produtosLinhas) {
+    const grupoIds = new Set([
+      ...vincProdutos.filter((v) => v.produtoId === p.id).map((v) => v.grupoId),
+      ...(p.categoriaId ? vincCategorias.filter((v) => v.categoriaId === p.categoriaId).map((v) => v.grupoId) : []),
+    ]);
+    let total = 0;
+    for (const id of grupoIds) total += minimoPorGrupo.get(id) ?? 0;
+    if (total > 0) resultado.set(p.id, Math.round(total * 100) / 100);
+  }
+  return resultado;
+}

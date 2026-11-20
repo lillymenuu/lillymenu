@@ -65,6 +65,7 @@ function mapProduto(p: import("@/db/queries/catalogo").CatalogoProduto): StorePr
     esgotado: p.esgotado,
     tem_variacoes: p.temVariacoes ? 1 : 0,
     tem_complementos: p.temComplementos ? 1 : 0,
+    preco_a_partir: p.precoAPartir,
     quantidade_minima: p.quantidadeMinima,
     pontos_ganho: p.pontosGanho,
     destaque: p.destaque ? 1 : 0,

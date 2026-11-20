@@ -371,8 +371,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         <div className="flex flex-wrap items-center gap-1.5">
           {item.em_promo && <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(item.preco_base)}</span>}
           <span className="text-[.86rem] font-bold" style={{ color: brown }}>
-            {!combo && item.tem_variacoes === 1 && !item.em_promo ? "a partir de " : ""}
-            {formatarPreco(item.preco_final)}
+            {!combo && ((item.tem_variacoes === 1 && !item.em_promo) || ("preco_a_partir" in item && item.preco_a_partir)) ? "a partir de " : ""}
+            {formatarPreco(("preco_a_partir" in item && item.preco_a_partir) || item.preco_final)}
           </span>
         </div>
       </button>
@@ -969,8 +969,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                               </span>
                             )}
                             <span className="text-[.88rem] font-bold" style={{ color: brown }}>
-                              {produto.tem_variacoes === 1 && !produto.em_promo ? "a partir de " : ""}
-                              {formatarPreco(produto.preco_final)}
+                              {(produto.tem_variacoes === 1 && !produto.em_promo) || produto.preco_a_partir ? "a partir de " : ""}
+                              {formatarPreco(produto.preco_a_partir || produto.preco_final)}
                             </span>
                             {perfil.clubePontosAtivo && (produto.pontos_ganho ?? 0) > 0 && (
                               <span className="rounded-full bg-purple-700 px-1.5 py-px text-[.66rem] font-bold text-white">
@@ -1095,8 +1095,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                         <span className="text-[.74rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
                       )}
                       <span className="text-[.9rem] font-bold" style={{ color: brown }}>
-                        {produto.tem_variacoes === 1 && !produto.em_promo ? "A partir de " : ""}
-                        {formatarPreco(produto.preco_final)}
+                        {(produto.tem_variacoes === 1 && !produto.em_promo) || produto.preco_a_partir ? "A partir de " : ""}
+                        {formatarPreco(produto.preco_a_partir || produto.preco_final)}
                       </span>
                       {perfil.clubePontosAtivo && (produto.pontos_ganho ?? 0) > 0 && (
                         <span className="rounded-full bg-purple-700 px-1.5 py-px text-[.66rem] font-bold text-white">

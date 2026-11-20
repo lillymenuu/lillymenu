@@ -117,6 +117,8 @@ export type StoreProduto = {
   tem_variacoes: 0 | 1;
   /** Produto com grupos de complementos (tela Complementos) — abre o modal de opcoes mesmo sem variacoes. */
   tem_complementos?: 0 | 1;
+  /** Preco R$ 0,00 cobrado pelos complementos obrigatorios: menor valor possivel, exibido como "a partir de". */
+  preco_a_partir?: number | null;
   quantidade_minima?: number;
   pontos_ganho?: number;
   destaque?: number;

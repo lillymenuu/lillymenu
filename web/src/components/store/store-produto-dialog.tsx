@@ -557,6 +557,8 @@ export function StoreProdutoDialog({
           <div className="mb-4 flex flex-wrap items-center gap-2">
             {temVariacoes ? (
               <span className="text-[1rem] font-bold text-neutral-900">a partir de {formatarPreco(produto.preco_produto)}</span>
+            ) : produto.preco_a_partir ? (
+              <span className="text-[1rem] font-bold text-neutral-900">a partir de {formatarPreco(produto.preco_a_partir)}</span>
             ) : produto.em_promo ? (
               <div className="flex items-center gap-2">
                 <span className="text-[.8rem] text-neutral-400 line-through">{formatarPreco(produto.preco_base)}</span>
@@ -725,7 +727,11 @@ export function StoreProdutoDialog({
                 </h2>
                 {produto.descricao && <p className="mb-2 text-[.8rem] leading-normal text-neutral-500">{produto.descricao}</p>}
                 <p className="mb-3.5 flex items-center gap-2 text-[.86rem] font-bold text-neutral-900">
-                  {temVariacoes ? `a partir de ${formatarPreco(produto.preco_produto)}` : formatarPreco(produto.preco_final)}
+                  {temVariacoes
+                    ? `a partir de ${formatarPreco(produto.preco_produto)}`
+                    : produto.preco_a_partir
+                      ? `a partir de ${formatarPreco(produto.preco_a_partir)}`
+                      : formatarPreco(produto.preco_final)}
                   <PontosBadge pontos={pontosTotal} />
                 </p>
                 {opcoesConteudo}

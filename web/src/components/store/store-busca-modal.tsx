@@ -129,7 +129,7 @@ export function StoreBuscaModal({
                       nome={p.nome}
                       descricao={p.descricao}
                       imagem={p.imagem || PRODUTO_IMAGEM_PADRAO}
-                      preco={`${p.tem_variacoes === 1 && !p.em_promo ? "a partir de " : ""}${formatarPreco(p.preco_final)}`}
+                      preco={`${(p.tem_variacoes === 1 && !p.em_promo) || p.preco_a_partir ? "a partir de " : ""}${formatarPreco(p.preco_a_partir || p.preco_final)}`}
                       precoRiscado={p.em_promo ? formatarPreco(p.preco_base) : null}
                       pontos={mostrarPontos && (p.pontos_ganho ?? 0) > 0 ? (p.pontos_ganho ?? 0) : 0}
                       esgotado={p.esgotado}

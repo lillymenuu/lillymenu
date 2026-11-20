@@ -2,7 +2,7 @@ import "server-only";
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categorias, produtos, produtoVariacoes, combos, estoque } from "@/db/schema";
-import { produtosComComplementos } from "@/db/queries/complementosVenda";
+import { precoMinimoComplementos, produtosComComplementos } from "@/db/queries/complementosVenda";
 import { aplicarReservaPdv, reservaMapaPdv } from "@/db/queries/pdvReservas";
 import { fusoLoja } from "@/db/queries/tempo";
 
@@ -83,6 +83,8 @@ export type CatalogoProduto = {
   pontosGanho: number;
   temVariacoes: boolean;
   temComplementos: boolean;
+  /** Produto com preco R$ 0,00 cobrado pelos complementos obrigatorios: menor valor possivel ("a partir de"). */
+  precoAPartir: number | null;
   destaque: boolean;
   estoque: number;
   esgotado: boolean;
@@ -193,6 +195,11 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
     .orderBy(sql`${produtos.ordem} is null, ${produtos.ordem}, ${produtos.nome}`);
 
   const comComplementos = await produtosComComplementos(lojaId);
+  /* So produtos de R$ 0,00 com complementos (ex.: pizza meio a meio): o card mostra "a partir de". */
+  const precoAPartir = await precoMinimoComplementos(
+    lojaId,
+    produtosLinhas.filter((p) => comComplementos.has(p.id) && !p.temVariacoes && Number(p.preco ?? 0) === 0).map((p) => p.id)
+  );
   const produtosPorCategoria: Record<number, CatalogoProduto[]> = {};
   for (const p of produtosLinhas) {
     if (p.categoriaId == null) continue;
@@ -221,6 +228,7 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
       pontosGanho: p.pontosGanho,
       temVariacoes: p.temVariacoes,
       temComplementos: comComplementos.has(p.id),
+      precoAPartir: precoAPartir.get(p.id) ?? null,
       destaque: p.destaque,
       estoque: estoqueDisponivel,
       esgotado: estoqueDisponivel <= 0,
