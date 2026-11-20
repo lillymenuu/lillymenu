@@ -47,16 +47,18 @@ export function PosProdutoCard({
         selecionado ? "border-primary bg-primary/5" : ""
       } ${semEstoque ? "opacity-50" : ""} ${abreModalOpcoes(produto) && !semEstoque && restante > 0 ? "cursor-pointer" : ""}`}
     >
-      <div className="relative h-[124px] shrink-0 bg-muted">
-        {
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt={produto.nome} className="size-full object-cover" />
-        }
-        {emPromo ? (
-          <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
-            Promo
-          </span>
-        ) : null}
+      <div className="shrink-0 px-1.5 pt-1.5">
+        <div className="relative h-[118px] overflow-hidden rounded-lg bg-muted">
+          {
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt={produto.nome} className="size-full object-cover" />
+          }
+          {emPromo ? (
+            <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+              Promo
+            </span>
+          ) : null}
+        </div>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden px-2 pt-1.5">
         <div className="line-clamp-2 text-[12.5px] leading-tight font-medium text-foreground">{produto.nome}</div>
