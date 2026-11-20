@@ -27,6 +27,17 @@ export function SelecionarClienteDialog({
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
   const buscaTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const buscaRef = useRef<HTMLDivElement>(null);
+
+  /* A lista flutua sobre o formulario: clicar fora dela fecha. */
+  useEffect(() => {
+    if (!mostrarResultados) return;
+    function fora(e: MouseEvent) {
+      if (buscaRef.current && !buscaRef.current.contains(e.target as Node)) setMostrarResultados(false);
+    }
+    document.addEventListener("mousedown", fora);
+    return () => document.removeEventListener("mousedown", fora);
+  }, [mostrarResultados]);
 
   useEffect(() => {
     if (!open) return;
@@ -101,7 +112,7 @@ export function SelecionarClienteDialog({
         </DialogHeader>
         <p className="text-sm text-muted-foreground">Preencha os dados para buscar ou adicionar um cliente</p>
 
-        <div className="relative">
+        <div ref={buscaRef} className="relative">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="fiado-busca-cliente">Busque pelo cliente</Label>
             <div className="relative">
@@ -111,13 +122,15 @@ export function SelecionarClienteDialog({
                 placeholder="Busque por número ou nome"
                 value={busca}
                 onChange={(e) => handleBuscaChange(e.target.value)}
+                onFocus={() => resultados !== null && busca.trim() !== "" && setMostrarResultados(true)}
                 className="h-10 w-full rounded-full border-0 bg-muted/60 pr-8 pl-4 text-sm"
               />
               <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
           {mostrarResultados && (
-            <div className="mt-1.5 max-h-44 overflow-y-auto rounded-lg border bg-popover">
+            /* Lista flutuante (por cima do formulario), para nao esticar o modal */
+            <div className="scrollbar-thin absolute inset-x-0 top-full z-20 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border bg-popover py-1 shadow-lg">
               {resultados?.length === 0 && (
                 <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum cliente encontrado.</div>
               )}
