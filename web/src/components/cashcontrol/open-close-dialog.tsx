@@ -171,19 +171,13 @@ export function OpenCloseDialog({
             </div>
             <CalculadoraCedulas contagem={contagem} onChange={mudarContagem} />
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={alternarCalc}
-            className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5"
-          >
-            <Calculator className="size-3.5" /> Calculadora de cédulas
-          </button>
-        )}
+        ) : null}
         <DialogFooter className="border-t-0 bg-transparent">
-          <Button variant="outline" className="rounded-full font-normal" onClick={() => onOpenChange(false)} disabled={salvando}>
-            Cancelar
-          </Button>
+          {!calcAberta && (
+            <Button variant="outline" className="rounded-full font-normal text-primary" onClick={alternarCalc} disabled={salvando}>
+              <Calculator className="size-4" /> Calculadora de cédulas
+            </Button>
+          )}
           <Button className="rounded-full font-normal" onClick={confirmar} disabled={salvando}>
             {salvando ? "Salvando..." : modo === "fechar" ? "Fechar caixa" : "Abrir caixa"}
           </Button>
