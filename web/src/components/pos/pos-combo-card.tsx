@@ -52,7 +52,7 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
         <button
           type="button"
           disabled
-          className="flex size-8 shrink-0 cursor-not-allowed items-center justify-center rounded-full border text-muted-foreground opacity-40"
+          className="flex size-8 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-muted text-foreground/50"
         >
           <Minus className="size-4" />
         </button>

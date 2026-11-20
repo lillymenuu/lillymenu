@@ -83,7 +83,7 @@ export function PosProdutoCard({
           type="button"
           disabled={semEstoque || qtd === 0 || abreModalOpcoes(produto)}
           onClick={() => onAlterarQtd(-1)}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-primary text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-muted disabled:text-foreground/50"
         >
           <Minus className="size-4" />
         </button>
