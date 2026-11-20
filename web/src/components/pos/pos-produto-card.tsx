@@ -47,8 +47,8 @@ export function PosProdutoCard({
         selecionado ? "border-primary bg-primary/5" : ""
       } ${semEstoque ? "opacity-50" : ""} ${abreModalOpcoes(produto) && !semEstoque && restante > 0 ? "cursor-pointer" : ""}`}
     >
-      <div className="shrink-0 px-1.5 pt-1.5">
-        <div className="relative h-[118px] overflow-hidden rounded-lg bg-muted">
+      <div className="shrink-0 px-2.5 pt-2.5">
+        <div className="relative h-[114px] overflow-hidden rounded-xl bg-muted">
           {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt={produto.nome} className="size-full object-cover" />
