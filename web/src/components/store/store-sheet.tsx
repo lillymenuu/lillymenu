@@ -52,9 +52,9 @@ export function StoreSheet({
       <DialogContent
         showCloseButton={false}
         style={{ maxWidth }}
-        className={cn("top-0 left-1/2 h-dvh w-full translate-y-0 -translate-x-1/2 gap-0 rounded-none bg-white p-0 sm:top-0", contentClassName)}
+        className={cn("top-0 left-1/2 h-dvh w-full grid-cols-1 translate-y-0 -translate-x-1/2 gap-0 overflow-x-hidden rounded-none bg-white p-0 sm:top-0", contentClassName)}
       >
-        <div className="flex h-full min-h-0 flex-col">
+        <div className="flex h-full min-h-0 min-w-0 flex-col">
           {(title || onBack || rightAction) && (
             <div className="flex shrink-0 items-center justify-between gap-2 border-b border-neutral-100 px-4 py-3">
               <div className="flex min-w-8 items-center">
@@ -78,7 +78,7 @@ export function StoreSheet({
               </div>
             </div>
           )}
-          <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto">{children}</div>
+          <div className="scrollbar-hidden min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">{children}</div>
           {footer && <div className="shrink-0 border-t border-neutral-100 px-4 py-3">{footer}</div>}
         </div>
       </DialogContent>

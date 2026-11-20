@@ -365,7 +365,7 @@ export function StoreCartSheet({
                           }
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[.82rem] font-semibold text-neutral-900">{nomeBaseItem(linhas[0].nome)}</p>
+                          <p className="text-[.82rem] font-semibold [overflow-wrap:anywhere] text-neutral-900">{nomeBaseItem(linhas[0].nome)}</p>
                           <p className="mt-0.5 text-[.7rem] font-semibold text-neutral-500">{tituloEscolha}</p>
                         </div>
                       </div>
@@ -435,7 +435,7 @@ export function StoreCartSheet({
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-2">
-                              {primeira ? <p className="text-[.82rem] font-semibold text-neutral-900">{nomeExibido}</p> : <span />}
+                              {primeira ? <p className="min-w-0 text-[.82rem] font-semibold [overflow-wrap:anywhere] text-neutral-900">{nomeExibido}</p> : <span />}
                               <button
                                 type="button"
                                 onClick={() => onRemover(item.key)}
