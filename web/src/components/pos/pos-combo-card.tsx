@@ -23,18 +23,20 @@ export function PosComboCard({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: nu
         qtd > 0 ? "border-primary bg-primary/5" : ""
       }`}
     >
-      <div className="relative h-[124px] shrink-0 bg-muted">
-        {combo.imagem ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={combo.imagem} alt={combo.nome} className="size-full object-cover" />
-        ) : (
-          <div className="flex size-full items-center justify-center text-muted-foreground/40">
-            <Layers className="size-7" />
-          </div>
-        )}
-        <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
-          Combo
-        </span>
+      <div className="shrink-0 px-2.5 pt-2.5">
+        <div className="relative h-[114px] overflow-hidden rounded-xl bg-muted">
+          {combo.imagem ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={combo.imagem} alt={combo.nome} className="size-full object-cover" />
+          ) : (
+            <div className="flex size-full items-center justify-center text-muted-foreground/40">
+              <Layers className="size-7" />
+            </div>
+          )}
+          <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+            Combo
+          </span>
+        </div>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden px-2 pt-1.5">
         <div className="line-clamp-2 text-[12.5px] leading-tight font-medium text-foreground">{combo.nome}</div>
