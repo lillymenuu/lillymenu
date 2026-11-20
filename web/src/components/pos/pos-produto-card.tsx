@@ -54,7 +54,7 @@ export function PosProdutoCard({
             <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt={produto.nome} className="size-full object-cover" />
           }
           {emPromo ? (
-            <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+            <span className="absolute left-1.5 top-1.5 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-semibold text-white">
               Promo
             </span>
           ) : null}
