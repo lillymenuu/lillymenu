@@ -130,58 +130,61 @@ export function PosCatalog({
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="relative min-w-0 shrink-0">
-        <div ref={categoriasScrollRef} className="scrollbar-none flex gap-1.5 overflow-x-auto px-8 pb-1">
-          {secoes.map((s) => (
-            <button
-              key={s.categoria.id}
-              type="button"
-              onClick={() => irParaSecao(s.categoria.id)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                categoriaAtiva === s.categoria.id
-                  ? "bg-primary text-primary-foreground"
-                  : "border bg-background text-primary hover:bg-primary/5"
-              }`}
-            >
-              {s.categoria.nome}
-            </button>
-          ))}
+      {/* Faixa branca (categorias + busca) sobre o fundo cinza da grade */}
+      <div className="-mx-4 -mt-4 flex shrink-0 flex-col gap-3 border-b bg-background px-4 pt-4 pb-3">
+        <div className="relative min-w-0 shrink-0">
+          <div ref={categoriasScrollRef} className="scrollbar-none flex gap-1.5 overflow-x-auto px-8 pb-1">
+            {secoes.map((s) => (
+              <button
+                key={s.categoria.id}
+                type="button"
+                onClick={() => irParaSecao(s.categoria.id)}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  categoriaAtiva === s.categoria.id
+                    ? "bg-primary text-primary-foreground"
+                    : "border bg-background text-primary hover:bg-primary/5"
+                }`}
+              >
+                {s.categoria.nome}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => rolarCategorias(-1)}
+            className="absolute top-0 left-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-r from-background via-background/90 to-transparent text-muted-foreground"
+            aria-label="Categorias anteriores"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => rolarCategorias(1)}
+            className="absolute top-0 right-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-l from-background via-background/90 to-transparent text-muted-foreground"
+            aria-label="Próximas categorias"
+          >
+            <ChevronRight className="size-4" />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => rolarCategorias(-1)}
-          className="absolute top-0 left-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-r from-zinc-100 via-zinc-100/90 to-transparent dark:from-background dark:via-background/90 text-muted-foreground"
-          aria-label="Categorias anteriores"
-        >
-          <ChevronLeft className="size-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => rolarCategorias(1)}
-          className="absolute top-0 right-0 flex h-[calc(100%-4px)] w-7 items-center justify-center bg-gradient-to-l from-zinc-100 via-zinc-100/90 to-transparent dark:from-background dark:via-background/90 text-muted-foreground"
-          aria-label="Próximas categorias"
-        >
-          <ChevronRight className="size-4" />
-        </button>
-      </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Nome ou código"
-            className="h-8 rounded-full bg-background pl-8 text-xs"
-          />
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Nome ou código"
+              className="h-8 rounded-full bg-muted/40 pl-8 text-xs"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={onAbrirAvulso}
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Plus className="size-4" /> Item avulso
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onAbrirAvulso}
-          className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          <Plus className="size-4" /> Item avulso
-        </button>
       </div>
 
       <div className="relative min-h-0 flex-1">
