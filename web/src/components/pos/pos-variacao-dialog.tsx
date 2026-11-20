@@ -13,6 +13,7 @@ import {
   dicaCompletaDoGrupo,
   grupoPendente,
   precoComplementos,
+  ignoraPrecoDoProduto,
   minimoDoGrupo,
   qtdNoGrupo,
   rotuloComplementos,
@@ -204,7 +205,15 @@ export function PosVariacaoDialog({
   const variacaoSelecionada = variacoes.find((v) => v.id === variacaoId) ?? null;
   /* Variacao com estoque proprio limita a quantidade pelo saldo dela. */
   const limiteQtd = variacaoSelecionada?.estoque != null ? Math.min(estoqueDisponivel, variacaoSelecionada.estoque) : estoqueDisponivel;
-  const precoBase = variacaoSelecionada ? (variacaoSelecionada.preco > 0 ? variacaoSelecionada.preco : produto.preco) : produto.preco;
+  /* Pizza pela media: o preco do produto nao soma (o valor e a media dos sabores). */
+  const precoBase =
+    variacoes.length === 0 && ignoraPrecoDoProduto(complementos)
+      ? 0
+      : variacaoSelecionada
+        ? variacaoSelecionada.preco > 0
+          ? variacaoSelecionada.preco
+          : produto.preco
+        : produto.preco;
   const gruposSelecionados = gruposOpcoes.map((g) => ({ grupo: g, itens: g.itens.filter((it) => selecoesGrupos[g.id]?.includes(it.id)) }));
   const gruposTotal = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
   const precoUnitario = precoBase + gruposTotal + precoComplementos(complementos, selecaoComplementos);

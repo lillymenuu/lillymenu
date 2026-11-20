@@ -18,6 +18,7 @@ import {
   grupoPendente,
   itensEscolhidos,
   precoComplementos,
+  ignoraPrecoDoProduto,
   qtdNoGrupo,
   rotuloComplementos,
   type ComplementoGrupoVenda,
@@ -122,7 +123,10 @@ export function StoreProdutoDialog({
     itens: g.itens.filter((it) => selecoesGrupos[g.id]?.includes(it.id)),
   }));
 
-  const precoBase = temVariacoes
+  const complementos: ComplementoGrupoVenda[] = detalhe?.complementos ?? [];
+  const precoBase = !temVariacoes && ignoraPrecoDoProduto(complementos)
+    ? 0
+    : temVariacoes
     ? variacaoSelecionada
       ? variacaoSelecionada.preco > 0
         ? variacaoSelecionada.preco
@@ -132,7 +136,6 @@ export function StoreProdutoDialog({
         : produto.preco_produto
     : produto.preco_final;
   const precoGrupos = gruposSelecionados.reduce((s, g) => s + g.itens.reduce((s2, it) => s2 + it.preco, 0), 0);
-  const complementos: ComplementoGrupoVenda[] = detalhe?.complementos ?? [];
   const precoUnitario = precoBase + precoGrupos + precoComplementos(complementos, selecaoComplementos);
 
   /* Quantidade por variacao: cada sabor tem seu contador. O estoque de cada um desconta o que o

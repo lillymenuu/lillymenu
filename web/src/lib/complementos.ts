@@ -87,6 +87,14 @@ export function alterarSelecao(selecao: SelecaoComplementos, grupo: ComplementoG
   return { ...selecao, [grupo.id]: doGrupo };
 }
 
+/**
+ * Produto com grupo "cobrar pela media" (pizza meio a meio): o preco do produto serve so de vitrine
+ * no card — o valor cobrado e a media dos sabores, sem somar o preco do produto por cima.
+ */
+export function ignoraPrecoDoProduto(grupos: ComplementoGrupoVenda[]): boolean {
+  return grupos.some((g) => g.cobrarMedia);
+}
+
 export function precoComplementos(grupos: ComplementoGrupoVenda[], selecao: SelecaoComplementos): number {
   let total = 0;
   for (const g of grupos) {
