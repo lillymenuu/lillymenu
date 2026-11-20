@@ -539,7 +539,7 @@ function ProdutoLinha({
           <img src={produto.imagem || PRODUTO_IMAGEM_PADRAO} alt="" loading="lazy" className="size-full object-cover" />
         </button>
         {emPromo ? (
-          <span className="absolute top-1.5 left-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">Promo</span>
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">Promo</span>
         ) : null}
 
         {mostraStepper ? (
@@ -582,7 +582,7 @@ function ComboLinha({ combo, qtd, onAbrir }: { combo: PosCombo; qtd: number; onA
         <span className="flex items-center gap-1.5">
           <span className="line-clamp-2 text-[15px] leading-snug font-semibold">{combo.nome}</span>
         </span>
-        <span className="mt-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-primary uppercase">Combo</span>
+        <span className="mt-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">Combo</span>
         <span className="mt-1.5 flex items-baseline gap-1.5">
           {combo.tipo_preco === "por_item" ? (
             <span className="text-[13px] font-semibold text-muted-foreground">Soma dos itens escolhidos</span>
