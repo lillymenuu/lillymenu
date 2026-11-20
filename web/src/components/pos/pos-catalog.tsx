@@ -129,9 +129,9 @@ export function PosCatalog({
   }
 
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="flex h-full flex-col">
       {/* Faixa branca (categorias + busca) sobre o fundo cinza da grade */}
-      <div className="-mx-4 -mt-4 flex shrink-0 flex-col gap-3 rounded-b-2xl border-b bg-background px-4 pt-4 pb-3">
+      <div className="relative z-10 -mx-4 -mt-4 flex shrink-0 flex-col gap-3 rounded-b-2xl border-b bg-background px-4 pt-4 pb-3">
         <div className="relative min-w-0 shrink-0">
           <div ref={categoriasScrollRef} className="scrollbar-none flex gap-1.5 overflow-x-auto px-8 pb-1">
             {secoes.map((s) => (
@@ -187,8 +187,8 @@ export function PosCatalog({
         </div>
       </div>
 
-      <div className="relative min-h-0 flex-1">
-        <div ref={scrollRef} onScroll={onScroll} className="scrollbar-hover-fade -mr-4 h-full space-y-5 overflow-y-auto pr-3">
+      <div className="relative -mt-4 min-h-0 flex-1">
+        <div ref={scrollRef} onScroll={onScroll} className="scrollbar-hover-fade -mr-4 h-full scroll-pt-7 space-y-5 overflow-y-auto pt-7 pr-3">
           {secoes.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Nenhum produto encontrado.</div>
           ) : (
