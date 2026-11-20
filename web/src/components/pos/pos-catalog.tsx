@@ -188,7 +188,7 @@ export function PosCatalog({
       </div>
 
       <div className="relative min-h-0 flex-1">
-        <div ref={scrollRef} onScroll={onScroll} className="h-full space-y-5 overflow-y-auto pr-1">
+        <div ref={scrollRef} onScroll={onScroll} className="scrollbar-hover-fade -mr-4 h-full space-y-5 overflow-y-auto pr-3">
           {secoes.length === 0 ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Nenhum produto encontrado.</div>
           ) : (
