@@ -257,7 +257,7 @@ export function PosVariacaoDialog({
     ? gruposOpcoes.map((g) => ({ ...g, itens: g.itens.filter((it) => it.nome.toLowerCase().includes(termo)) })).filter((g) => g.itens.length > 0)
     : gruposOpcoes;
   const complementosFiltrados = termo
-    ? complementos.map((g) => ({ ...g, itens: g.itens.filter((it) => it.nome.toLowerCase().includes(termo)) })).filter((g) => g.itens.length > 0)
+    ? complementos.map((g) => ({ ...g, itens: g.itens.filter((it) => `${it.nome} ${it.descricao ?? ""}`.toLowerCase().includes(termo)) })).filter((g) => g.itens.length > 0)
     : complementos;
   const semResultado = termo && variacoesFiltradas.length === 0 && gruposFiltrados.length === 0 && complementosFiltrados.length === 0;
 
@@ -784,6 +784,11 @@ function CardComplemento({
   const conteudo = (
     <span className="min-w-0">
       <span className="block text-sm leading-tight font-medium">{item.nome}</span>
+      {item.descricao && (
+        <span className="mt-0.5 line-clamp-2 block text-xs leading-snug text-muted-foreground/80" title={item.descricao}>
+          {item.descricao}
+        </span>
+      )}
       <span className="mt-0.5 block text-xs text-muted-foreground">{esgotado ? "Esgotado" : formatBRL(item.preco)}</span>
     </span>
   );
