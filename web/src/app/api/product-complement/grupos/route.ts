@@ -44,6 +44,7 @@ export async function POST(request: Request) {
     obrigatorio: body.obrigatorio === true,
     quantidadeMinima: Number(body.quantidade_minima ?? 0),
     quantidadeMaxima: Number(body.quantidade_maxima ?? 0),
+    cobrarMedia: typeof body.cobrar_media === "boolean" ? body.cobrar_media : undefined,
     produtoIds: idsNumericos(body.produto_ids),
     categoriaIds: idsNumericos(body.categoria_ids),
   });

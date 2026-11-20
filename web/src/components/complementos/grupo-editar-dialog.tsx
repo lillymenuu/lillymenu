@@ -128,6 +128,7 @@ function ConteudoGrupo({
   const [obrigatorio, setObrigatorio] = useState(grupo.obrigatorio);
   const [minimo, setMinimo] = useState(String(grupo.quantidadeMinima));
   const [maximo, setMaximo] = useState(String(grupo.quantidadeMaxima));
+  const [cobrarMedia, setCobrarMedia] = useState(grupo.cobrarMedia);
   const [produtoIds, setProdutoIds] = useState<number[]>(grupo.produtoIds);
   const [categoriaIds, setCategoriaIds] = useState<number[]>(grupo.categoriaIds);
   const [buscaProduto, setBuscaProduto] = useState("");
@@ -173,6 +174,7 @@ function ConteudoGrupo({
           obrigatorio,
           quantidade_minima: min,
           quantidade_maxima: max,
+          cobrar_media: cobrarMedia,
           produto_ids: produtoIds,
           categoria_ids: categoriaIds,
         }),
@@ -301,6 +303,12 @@ function ConteudoGrupo({
               <input id="editar-grupo-max" inputMode="numeric" className={CAMPO_CLASSE} value={maximo} onChange={(e) => setMaximo(apenasNumero(e.target.value))} />
               <span className="text-xs text-muted-foreground">Número máximo de itens que o cliente irá conseguir escolher. Use 0 para não limitar.</span>
             </div>
+            <LinhaSwitch
+              titulo="Cobrar pela média (pizza meio a meio)"
+              texto="Para pizza meio a meio: o valor é a média dos sabores escolhidos, então cadastre cada sabor com o preço da pizza inteira. Deixe desligado para açaí, adicionais etc. (soma os itens)."
+              checked={cobrarMedia}
+              onChange={setCobrarMedia}
+            />
           </div>
         )}
 

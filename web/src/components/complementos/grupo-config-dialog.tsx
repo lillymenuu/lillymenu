@@ -52,6 +52,7 @@ export function GrupoConfigDialog({
   const [obrigatorio, setObrigatorio] = useState(grupo?.obrigatorio ?? false);
   const [minimo, setMinimo] = useState(String(grupo?.quantidadeMinima ?? 0));
   const [maximo, setMaximo] = useState(String(grupo ? grupo.quantidadeMaxima : 1));
+  const [cobrarMedia, setCobrarMedia] = useState(grupo?.cobrarMedia ?? false);
   const [produtoIds, setProdutoIds] = useState<number[]>(grupo?.produtoIds ?? (produtoFixoId ? [produtoFixoId] : []));
   const [categoriaIds, setCategoriaIds] = useState<number[]>(grupo?.categoriaIds ?? []);
   const [abaVinculo, setAbaVinculo] = useState<"produtos" | "categorias">("produtos");
@@ -108,6 +109,7 @@ export function GrupoConfigDialog({
           obrigatorio,
           quantidade_minima: min,
           quantidade_maxima: max,
+          cobrar_media: cobrarMedia,
           produto_ids: produtoIds,
           categoria_ids: categoriaIds,
         }),
@@ -239,6 +241,13 @@ export function GrupoConfigDialog({
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">Deixe a quantidade máxima em 0 para não limitar as escolhas.</p>
+              <div className="flex items-center justify-between gap-4 rounded-2xl border p-4">
+                <div>
+                  <div className="text-sm font-semibold">Cobrar pela média (pizza meio a meio)</div>
+                  <div className="text-sm text-muted-foreground">Para pizza meio a meio: o valor é a média dos sabores escolhidos, então cadastre cada sabor com o preço da pizza inteira. Deixe desligado para açaí, adicionais etc. (soma os itens).</div>
+                </div>
+                <Switch checked={cobrarMedia} onCheckedChange={(v) => setCobrarMedia(v === true)} />
+              </div>
             </div>
           )}
 

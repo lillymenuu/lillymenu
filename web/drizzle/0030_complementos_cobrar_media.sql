@@ -1,0 +1,1 @@
+ALTER TABLE "complementos_grupos" ADD COLUMN "cobrar_media" boolean DEFAULT false NOT NULL;

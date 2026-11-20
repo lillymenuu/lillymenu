@@ -43,6 +43,7 @@ export async function complementosDoProduto(lojaId: number, produtoId: number): 
       obrigatorio: g.obrigatorio,
       minimo: g.quantidade_minima,
       maximo: g.quantidade_maxima,
+      cobrarMedia: g.cobrar_media,
       itens: itens
         .filter((i) => i.grupo_id === g.id)
         .map((i) => ({

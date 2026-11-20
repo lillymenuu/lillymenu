@@ -211,6 +211,13 @@
       "when": 1795098862178,
       "tag": "0029_push_inscricoes",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795134610367,
+      "tag": "0030_complementos_cobrar_media",
+      "breakpoints": true
     }
   ]
 }

@@ -10,7 +10,7 @@ import type { PosCartDetalheGrupo, PosCartItem, PosGrupoOpcoes, PosProduto, PosV
 import {
   alterarSelecao,
   complementosParaEnvio,
-  dicaDoGrupo,
+  dicaCompletaDoGrupo,
   grupoPendente,
   precoComplementos,
   minimoDoGrupo,
@@ -293,7 +293,9 @@ export function PosVariacaoDialog({
     }
     for (const { grupo, item, qtd: q } of itensEscolhidos(complementos, selecaoComplementos)) {
       const existente = lista.find((d) => d.titulo === grupo.nome);
-      const linha = { qtd: q, nome: item.nome, preco: item.preco * q };
+      /* Grupo pela media (pizza meio a meio): cada sabor mostra a sua fracao, e as linhas somam o valor cobrado. */
+      const qtdGrupo = grupo.cobrarMedia ? Object.values(selecaoComplementos[grupo.id] ?? {}).reduce((s, n) => s + n, 0) : 1;
+      const linha = { qtd: q, nome: item.nome, preco: Math.round(((item.preco * q) / Math.max(1, qtdGrupo)) * 100) / 100 };
       if (existente) existente.itens.push(linha);
       else lista.push({ titulo: grupo.nome, itens: [linha] });
     }
@@ -671,7 +673,7 @@ export function PosVariacaoDialog({
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 mb-2.5 text-xs text-muted-foreground">{dicaDoGrupo(grupo)}</p>
+                      <p className="mt-1 mb-2.5 text-xs text-muted-foreground">{dicaCompletaDoGrupo(grupo)}</p>
 
                       <div className={cn("grid gap-3", visualizacaoGrade ? "grid-cols-2" : "grid-cols-1")}>
                         {grupo.itens.map((it) => (

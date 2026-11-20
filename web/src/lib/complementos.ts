@@ -22,6 +22,8 @@ export type ComplementoGrupoVenda = {
   minimo: number;
   /** 0 = sem limite. */
   maximo: number;
+  /** Pizza meio a meio: cobra a media dos itens escolhidos (cada sabor cadastrado com o preco da pizza inteira). */
+  cobrarMedia?: boolean;
   itens: ComplementoItemVenda[];
 };
 
@@ -55,6 +57,12 @@ export function dicaDoGrupo(grupo: ComplementoGrupoVenda): string {
   return "Escolha quantas opções quiser.";
 }
 
+/** Dica do grupo + aviso de cobranca pela media (exibido para o cliente e no PDV). */
+export function dicaCompletaDoGrupo(grupo: ComplementoGrupoVenda): string {
+  const base = dicaDoGrupo(grupo);
+  return grupo.cobrarMedia ? `${base} O valor é a média dos sabores escolhidos.` : base;
+}
+
 /**
  * Nova quantidade do item depois de um clique. Grupo de escolha unica (maximo 1) troca a
  * opcao; nos demais respeita o maximo do grupo, o "pode repetir" e o estoque do item.
@@ -81,7 +89,17 @@ export function alterarSelecao(selecao: SelecaoComplementos, grupo: ComplementoG
 
 export function precoComplementos(grupos: ComplementoGrupoVenda[], selecao: SelecaoComplementos): number {
   let total = 0;
-  for (const g of grupos) for (const it of g.itens) total += it.preco * (selecao[g.id]?.[it.id] ?? 0);
+  for (const g of grupos) {
+    let soma = 0;
+    let qtdTotal = 0;
+    for (const it of g.itens) {
+      const qtd = selecao[g.id]?.[it.id] ?? 0;
+      soma += it.preco * qtd;
+      qtdTotal += qtd;
+    }
+    /* Media: meia Calabresa (50) + meia Camarao (80) = 65; um sabor so = preco cheio dele. */
+    total += g.cobrarMedia ? (qtdTotal > 0 ? Math.round((soma / qtdTotal) * 100) / 100 : 0) : soma;
+  }
   return total;
 }
 

@@ -311,6 +311,8 @@ export const complementosGrupos = pgTable(
     obrigatorio: boolean("obrigatorio").notNull().default(false),
     quantidade_minima: integer("quantidade_minima").notNull().default(0),
     quantidade_maxima: integer("quantidade_maxima").notNull().default(0),
+    /* Pizza meio a meio: o preco do grupo e a media dos itens escolhidos (em vez da soma). */
+    cobrar_media: boolean("cobrar_media").notNull().default(false),
     loja_id: integer("loja_id").notNull().default(1),
   }
 );

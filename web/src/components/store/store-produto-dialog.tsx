@@ -14,7 +14,7 @@ import type { StoreCartItem, StoreProduto, StoreProdutoVariacoes } from "@/lib/s
 import {
   alterarSelecao,
   complementosParaEnvio,
-  dicaDoGrupo,
+  dicaCompletaDoGrupo,
   grupoPendente,
   itensEscolhidos,
   precoComplementos,
@@ -447,7 +447,7 @@ export function StoreProdutoDialog({
                 <span className={`text-[.72rem] font-bold ${pendente ? "text-red-500" : "text-emerald-600"}`}>{pendente ? "Obrigatório" : "Ok"}</span>
               )}
             </div>
-            <p className="mb-1.5 text-[.74rem] text-neutral-500">{dicaDoGrupo(grupo)}</p>
+            <p className="mb-1.5 text-[.74rem] text-neutral-500">{dicaCompletaDoGrupo(grupo)}</p>
             {grupo.itens.map((it) => (
               <LinhaComplemento
                 key={it.id}
@@ -656,7 +656,7 @@ export function StoreProdutoDialog({
                       secaoRefs.current[`complemento-${grupo.id}`] = el;
                     }}
                   >
-                    <CabecalhoPasso titulo={grupo.nome} obrigatorio={grupo.obrigatorio || grupo.minimo > 0} dica={dicaDoGrupo(grupo)} />
+                    <CabecalhoPasso titulo={grupo.nome} obrigatorio={grupo.obrigatorio || grupo.minimo > 0} dica={dicaCompletaDoGrupo(grupo)} />
                     <div>
                       {grupo.itens.map((it) => (
                         <LinhaComplementoCombo
@@ -665,6 +665,7 @@ export function StoreProdutoDialog({
                           qtd={selecaoComplementos[grupo.id]?.[it.id] ?? 0}
                           escolhaUnica={grupo.maximo === 1}
                           noLimite={noLimite}
+                          media={grupo.cobrarMedia}
                           onAlterar={(delta) => alterarComplemento(grupo, it, delta)}
                         />
                       ))}
@@ -922,12 +923,15 @@ function LinhaComplementoCombo({
   qtd,
   escolhaUnica,
   noLimite,
+  media,
   onAlterar,
 }: {
   item: ComplementoItemVenda;
   qtd: number;
   escolhaUnica: boolean;
   noLimite: boolean;
+  /** Grupo cobrado pela media: o preco e do sabor inteiro, nao um acrescimo. */
+  media?: boolean;
   onAlterar: (delta: 1 | -1) => void;
 }) {
   const esgotado = item.estoque !== null && item.estoque <= 0;
@@ -940,7 +944,7 @@ function LinhaComplementoCombo({
     <LinhaPassoCombo
       nome={item.nome}
       descricao={item.descricao}
-      detalhe={esgotado ? "Esgotado" : item.preco > 0 ? `+ ${formatarPreco(item.preco)}` : "Sem custo adicional"}
+      detalhe={esgotado ? "Esgotado" : media ? formatarPreco(item.preco) : item.preco > 0 ? `+ ${formatarPreco(item.preco)}` : "Sem custo adicional"}
       imagem={item.imagem || undefined}
       apagada={esgotado && qtd === 0}
       qtd={qtd}

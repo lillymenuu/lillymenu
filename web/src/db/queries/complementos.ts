@@ -36,6 +36,7 @@ export type ComplementoGrupo = {
   obrigatorio: boolean;
   quantidadeMinima: number;
   quantidadeMaxima: number;
+  cobrarMedia: boolean;
   produtoIds: number[];
   categoriaIds: number[];
   itens: ComplementoItem[];
@@ -60,6 +61,7 @@ export async function listarComplementos(lojaId: number): Promise<ComplementoGru
     obrigatorio: g.obrigatorio,
     quantidadeMinima: g.quantidade_minima,
     quantidadeMaxima: g.quantidade_maxima,
+    cobrarMedia: g.cobrar_media,
     produtoIds: vinculosProdutos.filter((v) => v.grupoId === g.id).map((v) => v.produtoId),
     categoriaIds: vinculosCategorias.filter((v) => v.grupoId === g.id).map((v) => v.categoriaId),
     itens: itens
@@ -112,6 +114,8 @@ export type SalvarGrupoInput = {
   obrigatorio: boolean;
   quantidadeMinima: number;
   quantidadeMaxima: number;
+  /** undefined = nao altera (telas que nao mostram a opcao). */
+  cobrarMedia?: boolean;
   produtoIds: number[];
   categoriaIds: number[];
 };
@@ -145,6 +149,7 @@ export async function salvarGrupoComplemento(lojaId: number, input: SalvarGrupoI
     opcional: !obrigatorio,
     quantidade_minima: min,
     quantidade_maxima: max,
+    ...(input.cobrarMedia !== undefined ? { cobrar_media: input.cobrarMedia } : {}),
   };
 
   const id = await withTransaction(async (tx) => {
@@ -200,6 +205,7 @@ export async function clonarGrupoComplemento(lojaId: number, grupoId: number): P
         obrigatorio: grupo.obrigatorio,
         quantidade_minima: grupo.quantidade_minima,
         quantidade_maxima: grupo.quantidade_maxima,
+        cobrar_media: grupo.cobrar_media,
         loja_id: lojaId,
       })
       .returning({ id: complementosGrupos.id });
