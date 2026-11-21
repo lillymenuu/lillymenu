@@ -230,6 +230,13 @@ function montarSecoes(brand: string, email: string): Secao[] {
             "O Lojista deve usar os dados dos seus clientes somente para fins legítimos ligados ao seu negócio e atender aos pedidos dos titulares, como correção ou exclusão de dados.",
             "A " + brand + " adota medidas de segurança para proteger as informações e não vende dados a terceiros.",
             "Alguns recursos dependem de serviços de terceiros, como o Mercado Pago (pagamento da assinatura), o Google (login) e o WhatsApp. O uso desses serviços também segue as regras de cada um.",
+            <>
+              Os detalhes sobre quais dados são tratados, com quem são compartilhados e como exercer seus direitos estão na{" "}
+              <Link href="/privacidade" className="font-medium text-[var(--landing-accent)] underline underline-offset-2">
+                Política de privacidade
+              </Link>
+              .
+            </>,
           ]}
         />
       ),

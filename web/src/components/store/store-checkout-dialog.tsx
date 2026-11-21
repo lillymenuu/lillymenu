@@ -1205,6 +1205,14 @@ export function StoreCheckoutDialog({
                   {enviando ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Enviar pedido"}
                 </button>
               )}
+              {etapa === "resumo" && (
+                <p className="mt-2 text-center text-[.68rem] leading-snug text-neutral-400">
+                  Seus dados são usados pela loja para preparar e entregar o pedido.{" "}
+                  <a href="/privacidade" target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                    Política de privacidade
+                  </a>
+                </p>
+              )}
             </div>
           </div>
         </DialogContent>

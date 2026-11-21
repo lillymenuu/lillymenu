@@ -129,9 +129,14 @@ export function LandingFooter({
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-[#e5e7eb] pt-6 text-xs text-[#6b7280] sm:flex-row">
           <span>© {new Date().getFullYear()} {brand}. Todos os direitos reservados.</span>
-          <a href="/termos" className="hover:text-[#111827]">
-            Termos de uso
-          </a>
+          <div className="flex gap-4">
+            <a href="/termos" className="hover:text-[#111827]">
+              Termos de uso
+            </a>
+            <a href="/privacidade" className="hover:text-[#111827]">
+              Política de privacidade
+            </a>
+          </div>
         </div>
       </div>
     </footer>

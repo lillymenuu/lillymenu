@@ -374,6 +374,10 @@ export function HeroSignupForm({
               Ao se cadastrar, você concorda com os{" "}
               <a href="/termos" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
                 Termos de uso
+              </a>{" "}
+              e a{" "}
+              <a href="/privacidade" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                Política de privacidade
               </a>
               .
             </p>
