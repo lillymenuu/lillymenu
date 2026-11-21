@@ -93,8 +93,10 @@ export async function resgatarPontos(lojaId: number, clienteId: number, produtoI
 
   const produtoResumo = { id: produto.id, nome: produto.nome ?? "", preco: Number(produto.preco ?? 0) };
 
+  /* saldoNovo aqui e o saldo projetado: o debito de verdade acontece uma unica vez, dentro da
+     transacao de criarPedidoLoja (item com pontosPendente). */
   if (apenasValidar) {
-    return { ok: true, produto: produtoResumo, custo, saldoAntes: saldo, saldoNovo: saldo };
+    return { ok: true, produto: produtoResumo, custo, saldoAntes: saldo, saldoNovo: saldo - custo };
   }
 
   const saldoNovo = saldo - custo;

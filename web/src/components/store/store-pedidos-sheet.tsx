@@ -59,7 +59,7 @@ function parseAgendamento(agendRaw: string | null): string {
   }
 }
 
-type PedidoResumoItem = { id: number; tipo: string; forma_pagamento: string; total: number; criado_em: string };
+type PedidoResumoItem = { id: number; tipo: string; forma_pagamento: string; total: number; criado_em: string; token: string };
 
 export function StorePedidosSheet({
   open,
@@ -106,11 +106,10 @@ export function StorePedidosSheet({
   const [avaliacaoPedidoId, setAvaliacaoPedidoId] = useState<number | null>(null);
 
   async function buscarCards() {
-    const clienteId = cliente?.id ?? 0;
     const resultados = await Promise.all(
       pedidosResumo.map(async (h) => {
         try {
-          const res = await fetch(`/api/store/pedido-status?id=${h.id}${clienteId ? `&cliente_id=${clienteId}` : ""}`);
+          const res = await fetch(`/api/store/pedido-status?id=${h.id}&token=${encodeURIComponent(h.token)}`);
           const data: StorePedidoStatusResposta = await res.json();
           return data.ok && data.pedido ? data : null;
         } catch {
@@ -562,6 +561,7 @@ export function StorePedidosSheet({
         nomeLoja={perfil.nomeLoja}
         lojaId={perfil.loja_id}
         pedidoId={avaliacaoPedidoId}
+        pedidoToken={(detalhes ?? []).find((p) => p.id === avaliacaoPedidoId)?.token ?? ""}
         horario={formatarHorario((detalhes ?? []).find((p) => p.id === avaliacaoPedidoId)?.criado_em ?? "")}
         itens={
           (itensPorPedido[avaliacaoPedidoId ?? -1] ?? []).map((i) => ({

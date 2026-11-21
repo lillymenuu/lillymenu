@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { notificarPedidoNovo } from "@/lib/webPush";
 import { criarPedidoLoja, type EnderecoPartes, type ItemCarrinho } from "@/db/queries/pedidoCriar";
 import { recalcularPedidoLoja } from "@/db/queries/pedidoRecalculo";
+import { tokenPedido } from "@/db/queries/tokenPublico";
 
 type ItemPayload = {
   id?: number;
@@ -100,5 +101,5 @@ export async function POST(request: Request) {
   const lojaId = Number(b.loja_id);
   const pedidoId = resultado.id;
   after(() => notificarPedidoNovo(lojaId, pedidoId, "loja"));
-  return NextResponse.json({ ok: true, id: resultado.id, codigo: resultado.codigo, token: String(resultado.id) });
+  return NextResponse.json({ ok: true, id: resultado.id, codigo: resultado.codigo, token: tokenPedido(resultado.id) });
 }

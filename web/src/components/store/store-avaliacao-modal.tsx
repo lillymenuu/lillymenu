@@ -13,6 +13,7 @@ export function StoreAvaliacaoModal({
   nomeLoja,
   lojaId,
   pedidoId,
+  pedidoToken,
   horario,
   itens,
   onAvaliado,
@@ -22,6 +23,7 @@ export function StoreAvaliacaoModal({
   nomeLoja: string;
   lojaId: number;
   pedidoId: number | null;
+  pedidoToken: string;
   horario: string;
   itens: { produto_nome: string; quantidade: number; preco: number | string }[];
   onAvaliado: (pedidoId: number) => void;
@@ -47,7 +49,7 @@ export function StoreAvaliacaoModal({
       const res = await fetch("/api/store/avaliacao-salvar", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ pedido_id: String(pedidoId), nota: String(nota), descricao, loja_id: String(lojaId) }),
+        body: new URLSearchParams({ pedido_id: String(pedidoId), token: pedidoToken, nota: String(nota), descricao, loja_id: String(lojaId) }),
       });
       const data = await res.json();
       if (data.ok) {

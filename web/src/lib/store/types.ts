@@ -252,27 +252,19 @@ export type StorePedidosClienteResposta = {
     nome: string;
     telefone: string;
     saldo: number;
-    cashback_saldo: number;
-    rua: string;
-    numero: string;
-    bairro: string;
-    cidade: string;
-    estado: string;
-    cep: string;
-    complemento: string;
+    /** Assinado pelo servidor: prova que o cliente entrou com o telefone (resgate de pontos). */
+    token: string;
   };
   pedidos?: {
     id: number;
     status: string;
     total: string | number;
-    taxa_entrega: string | number;
     forma_pagamento: string;
     criado_em: string;
     tipo: string;
-    endereco_entrega: string;
-    subtotal: string | number | null;
     codigo: number | string;
-    itens: { produto_nome: string; quantidade: number; preco: string | number; observacoes: string }[];
+    /** Assinado pelo servidor: exigido por pedido-status e avaliacao-salvar. */
+    token: string;
   }[];
 };
 
@@ -299,6 +291,7 @@ export type StorePedidoStatusResposta = {
     agendamento: string | null;
     agendamento_em: string | null;
     tipo_agendamento: string | null;
+    token?: string;
   };
   itens?: { produto_nome: string; quantidade: number; preco: number | string; observacoes: string }[];
 };

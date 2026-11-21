@@ -320,13 +320,18 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
           if (p.length === 0) throw new Error("Um produto resgatado não está mais disponível para resgate.");
           custoTotal += p[0].pontosCusto * Math.max(1, r.qtd || 1);
         }
-        const cli = await tx.select({ pontosSaldo: clientes.pontos_saldo }).from(clientes).where(eq(clientes.id, clienteId)).limit(1);
-        const saldoAntes = cli[0]?.pontosSaldo ?? 0;
-        if (saldoAntes < custoTotal) {
-          throw new Error(`Pontos insuficientes. Você tem ${saldoAntes} pts e o resgate custa ${custoTotal} pts.`);
+        /* Debito atomico: so desconta se ainda houver saldo (dois pedidos simultaneos nao gastam o mesmo ponto duas vezes). */
+        const [debitado] = await tx
+          .update(clientes)
+          .set({ pontos_saldo: sql`${clientes.pontos_saldo} - ${custoTotal}` })
+          .where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId), sql`${clientes.pontos_saldo} >= ${custoTotal}`))
+          .returning({ saldoDepois: clientes.pontos_saldo });
+        if (!debitado) {
+          const cli = await tx.select({ pontosSaldo: clientes.pontos_saldo }).from(clientes).where(eq(clientes.id, clienteId)).limit(1);
+          throw new Error(`Pontos insuficientes. Você tem ${cli[0]?.pontosSaldo ?? 0} pts e o resgate custa ${custoTotal} pts.`);
         }
-        const saldoDepois = saldoAntes - custoTotal;
-        await tx.update(clientes).set({ pontos_saldo: saldoDepois }).where(eq(clientes.id, clienteId));
+        const saldoDepois = debitado.saldoDepois;
+        const saldoAntes = saldoDepois + custoTotal;
         await tx.insert(pontosMovimentacoes).values({
           cliente_id: clienteId,
           tipo: "resgate",

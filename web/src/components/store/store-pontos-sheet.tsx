@@ -18,6 +18,7 @@ export function StorePontosSheet({
   onOpenChange,
   lojaId,
   clienteId,
+  clienteToken,
   clienteNome,
   saldoInicial,
   itensCarrinho,
@@ -28,6 +29,7 @@ export function StorePontosSheet({
   onOpenChange: (v: boolean) => void;
   lojaId: number;
   clienteId: number | null;
+  clienteToken: string;
   clienteNome: string;
   saldoInicial: number;
   itensCarrinho: StoreCartItem[];
@@ -78,7 +80,7 @@ export function StorePontosSheet({
       const res = await fetch("/api/store/pontos-resgatar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cliente_id: clienteId, produto_id: confirmProduto.id, loja_id: lojaId }),
+        body: JSON.stringify({ cliente_id: clienteId, cliente_token: clienteToken, produto_id: confirmProduto.id, loja_id: lojaId, apenas_validar: true }),
       });
       const data: StorePontosResgatarResposta = await res.json();
       if (!data.ok || data.saldo_novo === undefined) {

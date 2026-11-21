@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 import { detalhePedidoPublico } from "@/db/queries/storeCliente";
+import { conferirTokenPedido } from "@/db/queries/tokenPublico";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const id = Number(url.searchParams.get("id") ?? "0");
-  const clienteId = Number(url.searchParams.get("cliente_id") ?? "0");
+  const token = url.searchParams.get("token") ?? "";
 
   if (!id) {
     return NextResponse.json({ ok: false, msg: "ID invalido" });
   }
+  /* O id e sequencial: sem o token assinado, qualquer um lia nome/telefone/endereco de qualquer pedido. */
+  if (!conferirTokenPedido(id, token)) {
+    return NextResponse.json({ ok: false, msg: "Acesso negado" }, { status: 403 });
+  }
 
-  const resultado = await detalhePedidoPublico(id, clienteId);
+  const resultado = await detalhePedidoPublico(id, 0);
   if (!resultado.ok) return NextResponse.json(resultado);
 
   const p = resultado.pedido;
@@ -36,6 +41,7 @@ export async function GET(request: Request) {
       agendamento: p.agendamento,
       agendamento_em: null,
       tipo_agendamento: null,
+      token,
     },
     itens: resultado.itens.map((i) => ({ produto_nome: i.produtoNome, quantidade: i.quantidade, preco: i.preco, observacoes: i.observacoes })),
   });

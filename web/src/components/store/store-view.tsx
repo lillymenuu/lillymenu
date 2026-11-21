@@ -92,7 +92,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [pedidosSheetAberto, setPedidosSheetAberto] = useState(false);
   const [pedidosCliente, setPedidosCliente] = useState<StorePedidosClienteResposta["cliente"] | null>(null);
   const [pedidosResumo, setPedidosResumo] = useState<
-    { id: number; tipo: string; forma_pagamento: string; total: number; criado_em: string }[]
+    { id: number; tipo: string; forma_pagamento: string; total: number; criado_em: string; token: string }[]
   >([]);
   const [pontosSheetAberto, setPontosSheetAberto] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(catalogo.categorias[0]?.id ?? null);
@@ -1289,6 +1289,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               forma_pagamento: p.forma_pagamento,
               total: Number(p.total),
               criado_em: p.criado_em,
+              token: p.token,
             }))
           );
           setAuthModalAberto(false);
@@ -1310,6 +1311,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         onOpenChange={setPontosSheetAberto}
         lojaId={perfil.loja_id}
         clienteId={pedidosCliente?.id ?? null}
+        clienteToken={pedidosCliente?.token ?? ""}
         clienteNome={pedidosCliente?.nome ?? ""}
         saldoInicial={pedidosCliente?.saldo ?? 0}
         itensCarrinho={cart.itens}

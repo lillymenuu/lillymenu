@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { statusMesaPublico } from "@/db/queries/storeCliente";
+import { tokenPedido } from "@/db/queries/tokenPublico";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -31,7 +32,9 @@ export async function GET(request: Request) {
         avaliado: p.pedido.avaliado,
         criado_em: p.pedido.criadoEm,
         nome: p.pedido.nome,
-        telefone: p.pedido.telefone,
+        /* telefone de quem pediu nao sai na rota publica da mesa */
+        telefone: "",
+        token: tokenPedido(p.pedido.id),
         agendamento: p.pedido.agendamento,
         agendamento_em: null,
         tipo_agendamento: null,
