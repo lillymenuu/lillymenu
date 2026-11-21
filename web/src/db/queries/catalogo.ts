@@ -113,7 +113,7 @@ export type CatalogoLoja = {
   promoAutoPopup: CatalogoProduto | null;
 };
 
-function promoAtiva(
+export function promoAtiva(
   precoBase: number,
   precoPromocional: number | null,
   promoDesativado: boolean,

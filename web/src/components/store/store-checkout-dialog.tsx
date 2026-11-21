@@ -507,6 +507,7 @@ export function StoreCheckoutDialog({
           total,
           itens: itens.map((i) => ({
             id: i.id,
+            tipo: i.tipo,
             nome: i.nome,
             preco: i.precoUnit,
             qtd: i.qtd,

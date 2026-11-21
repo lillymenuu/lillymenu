@@ -48,6 +48,8 @@ import { enfileirarImpressaoPedidoOnline } from "@/db/queries/impressaoFila";
 
 export type ItemCarrinho = {
   id?: number;
+  /** "combo" quando o id e de combos (o cardapio envia; sem ele, combosels preenchido indica combo). */
+  tipo?: "produto" | "combo";
   nome: string;
   preco: number;
   qtd: number;

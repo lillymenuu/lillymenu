@@ -1,9 +1,11 @@
 import { NextResponse, after } from "next/server";
 import { notificarPedidoNovo } from "@/lib/webPush";
 import { criarPedidoLoja, type EnderecoPartes, type ItemCarrinho } from "@/db/queries/pedidoCriar";
+import { recalcularPedidoLoja } from "@/db/queries/pedidoRecalculo";
 
 type ItemPayload = {
   id?: number;
+  tipo?: string;
   nome?: string;
   preco?: number;
   qtd?: number;
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
   const itensRaw = Array.isArray(b.itens) ? (b.itens as ItemPayload[]) : [];
   const itens: ItemCarrinho[] = itensRaw.map((i) => ({
     id: i.id,
+    tipo: i.tipo === "combo" ? "combo" : "produto",
     nome: String(i.nome ?? ""),
     preco: Number(i.preco ?? 0),
     qtd: Number(i.qtd ?? 1),
@@ -61,7 +64,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const resultado = await criarPedidoLoja({
+  const recalculo = await recalcularPedidoLoja({
     lojaId: Number(b.loja_id),
     clienteNome: String(b.cliente_nome ?? ""),
     clienteTelefone: String(b.cliente_telefone ?? ""),
@@ -88,6 +91,10 @@ export async function POST(request: Request) {
     clienteCpfCnpj: typeof b.cliente_cpf_cnpj === "string" ? b.cliente_cpf_cnpj : undefined,
   });
 
+  /* Precos, taxas, cupom e total sao refeitos no servidor (ver pedidoRecalculo.ts). */
+  if (!recalculo.ok) return NextResponse.json(recalculo);
+
+  const resultado = await criarPedidoLoja(recalculo.input);
   if (!resultado.ok) return NextResponse.json(resultado);
   /* Push no celular de quem ativou as notificacoes no Gestor de pedidos — depois da resposta. */
   const lojaId = Number(b.loja_id);
