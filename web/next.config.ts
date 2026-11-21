@@ -13,6 +13,18 @@ const nextConfig: NextConfig = {
   /* Service worker do Web Push: sempre buscar a versao nova (sem cache do navegador/CDN). */
   async headers() {
     return [
+      /* Cabecalhos de seguranca em todas as paginas: impede o painel de ser embutido em iframe de
+         outro site (clickjacking), bloqueia "adivinhacao" de tipo de arquivo e limita o Referer. */
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000" },
+        ],
+      },
       {
         source: "/sw.js",
         headers: [

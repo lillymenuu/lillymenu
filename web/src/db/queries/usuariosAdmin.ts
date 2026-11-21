@@ -1,4 +1,5 @@
 import "server-only";
+import { randomInt } from "node:crypto";
 import { and, eq, ne, notInArray, sql, asc } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { admins, permissoesNiveis, permissoesUsuarios } from "@/db/schema";
@@ -164,7 +165,7 @@ const ALFABETO_CODIGO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 async function gerarCodigoAcessoUnico(): Promise<string> {
   for (;;) {
     let codigo = "";
-    for (let i = 0; i < 5; i++) codigo += ALFABETO_CODIGO[Math.floor(Math.random() * ALFABETO_CODIGO.length)];
+    for (let i = 0; i < 5; i++) codigo += ALFABETO_CODIGO[randomInt(ALFABETO_CODIGO.length)];
     const [existe] = await db.select({ id: admins.id }).from(admins).where(eq(admins.codigo_acesso, codigo)).limit(1);
     if (!existe) return codigo;
   }

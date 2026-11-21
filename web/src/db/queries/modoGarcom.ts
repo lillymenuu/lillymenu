@@ -1,4 +1,5 @@
 import "server-only";
+import { randomInt } from "node:crypto";
 import { and, eq, ne, inArray, isNotNull, notInArray, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db, withTransaction, type NeonTx } from "@/db";
@@ -33,7 +34,7 @@ const ALFABETO_CODIGO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
 function gerarCodigoAcesso(): string {
   let codigo = "";
-  for (let i = 0; i < 5; i++) codigo += ALFABETO_CODIGO[Math.floor(Math.random() * ALFABETO_CODIGO.length)];
+  for (let i = 0; i < 5; i++) codigo += ALFABETO_CODIGO[randomInt(ALFABETO_CODIGO.length)];
   return codigo;
 }
 
