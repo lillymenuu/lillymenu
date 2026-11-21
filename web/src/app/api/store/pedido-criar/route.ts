@@ -3,6 +3,7 @@ import { notificarPedidoNovo } from "@/lib/webPush";
 import { criarPedidoLoja, type EnderecoPartes, type ItemCarrinho } from "@/db/queries/pedidoCriar";
 import { recalcularPedidoLoja } from "@/db/queries/pedidoRecalculo";
 import { tokenPedido } from "@/db/queries/tokenPublico";
+import { limitar } from "@/lib/limiteTentativas";
 
 type ItemPayload = {
   id?: number;
@@ -27,6 +28,9 @@ function lerEnderecoPartes(v: unknown): EnderecoPartes | undefined {
 }
 
 export async function POST(request: Request) {
+  const bloqueio = await limitar(request, "store-pedido-criar", { max: 30, janelaSegundos: 600 });
+  if (bloqueio) return bloqueio;
+
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json({ ok: false, msg: "Corpo invalido" }, { status: 400 });

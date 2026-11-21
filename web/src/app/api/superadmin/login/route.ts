@@ -2,11 +2,16 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { verificarCredenciaisSuperadmin, criarSessao } from "@/db/queries/auth";
 import { SA_TOKEN_COOKIE } from "@/lib/superAuthCookie";
+import { limitar } from "@/lib/limiteTentativas";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email : "";
   const senha = typeof body?.senha === "string" ? body.senha : "";
+
+  /* Painel do superadmin: limite mais rigido (10 por IP, 5 por e-mail a cada 15 minutos). */
+  const bloqueio = await limitar(request, "superadmin-login", { max: 10, janelaSegundos: 900 }, { valor: email, max: 5, janelaSegundos: 900 });
+  if (bloqueio) return bloqueio;
 
   if (!email || !senha) {
     return NextResponse.json({ ok: false, erro: "Informe email e senha." }, { status: 422 });

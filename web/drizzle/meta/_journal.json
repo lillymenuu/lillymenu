@@ -218,6 +218,13 @@
       "when": 1795134610367,
       "tag": "0030_complementos_cobrar_media",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795280706540,
+      "tag": "0031_limites_tentativas",
+      "breakpoints": true
     }
   ]
 }

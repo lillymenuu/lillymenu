@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { checarCashback } from "@/db/queries/cashback";
+import { limitar } from "@/lib/limiteTentativas";
 
 export async function GET(request: Request) {
+  const bloqueio = await limitar(request, "store-cashback-check", { max: 60, janelaSegundos: 600 });
+  if (bloqueio) return bloqueio;
+
   const url = new URL(request.url);
   const tel = url.searchParams.get("tel") ?? "";
   const lojaId = Number(url.searchParams.get("loja_id") ?? "0");

@@ -2,11 +2,16 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { verificarCredenciais, criarSessao } from "@/db/queries/auth";
 import { TOKEN_COOKIE } from "@/lib/authCookie";
+import { limitar } from "@/lib/limiteTentativas";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email : "";
   const senha = typeof body?.senha === "string" ? body.senha : "";
+
+  /* Forca bruta: 20 tentativas por IP e 10 por e-mail a cada 15 minutos. */
+  const bloqueio = await limitar(request, "login", { max: 20, janelaSegundos: 900 }, { valor: email, max: 10, janelaSegundos: 900 });
+  if (bloqueio) return bloqueio;
 
   if (!email || !senha) {
     return NextResponse.json(

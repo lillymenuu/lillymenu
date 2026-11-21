@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { pedidosPorCliente } from "@/db/queries/storeCliente";
 import { tokenCliente, tokenPedido } from "@/db/queries/tokenPublico";
+import { limitar } from "@/lib/limiteTentativas";
 
 export async function GET(request: Request) {
+  const bloqueio = await limitar(request, "store-pedidos-por-cliente", { max: 30, janelaSegundos: 600 });
+  if (bloqueio) return bloqueio;
+
   const url = new URL(request.url);
   const tel = url.searchParams.get("tel") ?? "";
   const lojaId = Number(url.searchParams.get("loja_id") ?? "0");

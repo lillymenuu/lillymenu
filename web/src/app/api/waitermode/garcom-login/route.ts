@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verificarCredenciaisGarcom, criarSessaoGarcom } from "@/db/queries/garcomAuth";
 import { GARCOM_TOKEN_COOKIE } from "@/lib/garcomAuthCookie";
 import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
+import { limitar } from "@/lib/limiteTentativas";
 
 /* Equivalente de public/api/garcom_login.php. */
 export async function POST(request: Request) {
@@ -9,6 +10,10 @@ export async function POST(request: Request) {
   const lojaId = Number(body?.loja_id ?? 0);
   const email = String(body?.email ?? "");
   const codigo = String(body?.codigo ?? "");
+
+  /* Codigo de acesso tem 5 caracteres: sem limite, dava pra testar todos. */
+  const bloqueio = await limitar(request, "garcom-login", { max: 20, janelaSegundos: 900 }, { valor: `${lojaId}:${email}`, max: 10, janelaSegundos: 900 });
+  if (bloqueio) return bloqueio;
 
   if (!email.trim() || !codigo.trim() || lojaId <= 0) {
     return NextResponse.json({ ok: false, msg: "Informe o e-mail e o código de acesso." }, { status: 400 });

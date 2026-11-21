@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { salvarAvaliacaoCliente } from "@/db/queries/avaliacoes";
 import { conferirTokenPedido } from "@/db/queries/tokenPublico";
+import { limitar } from "@/lib/limiteTentativas";
 
 export async function POST(request: Request) {
+  const bloqueio = await limitar(request, "store-avaliacao-salvar", { max: 30, janelaSegundos: 600 });
+  if (bloqueio) return bloqueio;
+
   const body = await request.formData().catch(() => null);
   if (!body) {
     return NextResponse.json({ ok: false, msg: "Corpo invalido" }, { status: 400 });

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { criarLeadEspecialista } from "@/db/queries/signup";
+import { limitar } from "@/lib/limiteTentativas";
 
 export async function POST(request: Request) {
+  const bloqueio = await limitar(request, "leads-especialista", { max: 5, janelaSegundos: 3600 });
+  if (bloqueio) return bloqueio;
+
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ ok: false, msg: "Dados inválidos." }, { status: 400 });
 

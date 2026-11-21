@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { verificarDuplicidadeCadastro } from "@/db/queries/signup";
+import { limitar } from "@/lib/limiteTentativas";
 
 /* Usado pelo cadastro da landing ao sair dos campos: avisa na hora se e-mail, telefone ou CPF/CNPJ ja tem conta.
    O bloqueio de verdade fica em criarContaLoja(), que confere de novo ao enviar. */
 export async function POST(request: Request) {
+  const bloqueio = await limitar(request, "signup-verificar", { max: 20, janelaSegundos: 900 });
+  if (bloqueio) return bloqueio;
+
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ ok: false, msg: "Dados inválidos." }, { status: 400 });
 

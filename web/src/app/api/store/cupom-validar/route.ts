@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { validarCupom } from "@/db/queries/cupons";
+import { limitar } from "@/lib/limiteTentativas";
 
 export async function POST(request: Request) {
+  const bloqueio = await limitar(request, "store-cupom-validar", { max: 40, janelaSegundos: 600 });
+  if (bloqueio) return bloqueio;
+
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json({ ok: false, msg: "Corpo invalido" }, { status: 400 });

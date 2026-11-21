@@ -1689,3 +1689,18 @@ export const pushInscricoes = pgTable(
   },
   (t) => [uniqueIndex("push_inscricoes_endpoint_unq").on(t.endpoint), index("push_inscricoes_idx_loja").on(t.loja_id)]
 );
+
+/*
+ * Limite de tentativas (login, reset de senha, cadastro, rotas publicas do cardapio). Uma linha
+ * por chave ("login:ip:1.2.3.4", "login:email:x@y.com"...): contador dentro de uma janela de tempo.
+ * Ver lib/limiteTentativas.ts. Linhas velhas sao apagadas sozinhas de tempos em tempos.
+ */
+export const limitesTentativas = pgTable(
+  "limites_tentativas",
+  {
+    chave: varchar("chave", { length: 255 }).notNull().primaryKey(),
+    tentativas: integer("tentativas").notNull().default(0),
+    janela_inicio: timestamp("janela_inicio", { withTimezone: true, mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => [index("limites_tentativas_janela_idx").on(t.janela_inicio)]
+);
