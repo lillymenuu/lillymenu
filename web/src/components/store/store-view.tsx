@@ -77,6 +77,15 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   const [perfil, setPerfil] = useState(perfilInicial);
   const cart = useStoreCart(perfil.loja_id);
 
+  /* Menu de baixo do celular so aparece depois que o cliente comeca a rolar a pagina. */
+  const [navVisivel, setNavVisivel] = useState(false);
+  useEffect(() => {
+    const aoRolar = () => setNavVisivel(window.scrollY > 80);
+    aoRolar();
+    window.addEventListener("scroll", aoRolar, { passive: true });
+    return () => window.removeEventListener("scroll", aoRolar);
+  }, []);
+
   const [produtoAberto, setProdutoAberto] = useState<StoreProduto | null>(null);
   const [comboAberto, setComboAberto] = useState<StoreCombo | null>(null);
   const [cartAberto, setCartAberto] = useState(false);
@@ -1157,10 +1166,21 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           </div>
         )}
 
-        {/* Bottom nav flutuante — so mobile, no desktop esses itens ja estao no topo */}
+        {/* Bottom nav flutuante — so mobile, no desktop esses itens ja estao no topo. Fica escondido
+            no topo da pagina e aparece (deslizando de baixo) quando o cliente comeca a rolar; a linha
+            do grid encolhe junto, entao o carrinho desce para o lugar dele. */}
+        <div
+          className={`grid w-full max-w-[520px] transition-[grid-template-rows,opacity,margin,translate] duration-300 ease-out lg:hidden ${
+            navVisivel ? "grid-rows-[1fr] translate-y-0 opacity-100" : "-mt-2 grid-rows-[0fr] translate-y-6 opacity-0"
+          }`}
+          aria-hidden={!navVisivel}
+          inert={!navVisivel}
+        >
         <nav
           aria-label="Menu da loja"
-          className="pointer-events-auto flex w-full max-w-[520px] gap-1 rounded-full border border-white/70 bg-white/60 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,.12)] ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 lg:hidden"
+          className={`flex min-h-0 w-full gap-1 rounded-full border border-white/70 bg-white/60 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,.12)] ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 ${
+            navVisivel ? "pointer-events-auto" : "pointer-events-none"
+          }`}
         >
           {(() => {
             const pontosAtivo = (authModalAberto && authDestino === "pontos") || pontosSheetAberto;
@@ -1204,6 +1224,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
             );
           })()}
         </nav>
+        </div>
       </div>
 
       <StoreProdutoDialog
