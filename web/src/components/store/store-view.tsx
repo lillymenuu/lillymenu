@@ -380,7 +380,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
   }
 
   return (
-    <div className="min-h-screen bg-white pb-[86px] lg:pb-10" style={{ ["--store-pink" as string]: "#e63770" }}>
+    <div className={`min-h-screen bg-white ${cart.totalItens > 0 ? "pb-[calc(170px+env(safe-area-inset-bottom))] lg:pb-24" : "pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-10"}`} style={{ ["--store-pink" as string]: "#e63770" }}>
       {catalogoAtualizadoVisivel && (
         <button
           type="button"
@@ -1127,80 +1127,83 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
         </a>
       </div>
 
-      {/* Barra do carrinho + menu de baixo num bloco fixo so: no celular o carrinho encosta no menu
-          (sem vao) e os dois ficam com efeito de vidro; no desktop so o carrinho aparece, branco. */}
+      {/* Barra do carrinho + menu de baixo. No celular os dois flutuam como cartoes de vidro
+          (estilo Instagram), com margem das bordas e respeitando a area segura do iPhone; no desktop
+          so o carrinho aparece, como barra branca de ponta a ponta. */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-40 border-t border-white/60 bg-white/70 shadow-[0_-6px_20px_rgba(0,0,0,.07)] backdrop-blur-xl backdrop-saturate-150 lg:border-neutral-100 lg:bg-white lg:backdrop-blur-none ${
+        className={`pointer-events-none fixed inset-x-0 bottom-0 z-40 flex flex-col items-center gap-2 px-3 pb-[max(env(safe-area-inset-bottom),12px)] lg:gap-0 lg:px-0 lg:pb-0 ${
           cart.totalItens > 0 ? "" : "lg:hidden"
         }`}
       >
-      {cart.totalItens > 0 && (
-        <div className="flex justify-center border-b border-black/5 px-4 py-2.5 lg:border-b-0">
-          <div className="flex w-full max-w-[901px] items-center justify-between gap-3">
-            <div>
-              <p className="text-[.72rem] text-neutral-500">Subtotal</p>
-              <p className="flex items-baseline gap-1 text-[.9rem] font-bold text-neutral-900">
-                {formatarPreco(cart.subtotal)}
-                <span className="text-[.72rem] font-normal text-neutral-500">{cart.totalItens} itens</span>
-              </p>
+        {cart.totalItens > 0 && (
+          <div className="pointer-events-auto flex w-full max-w-[520px] justify-center rounded-2xl border border-white/70 bg-white/65 px-4 py-2.5 shadow-[0_8px_30px_rgba(0,0,0,.12)] ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 lg:max-w-none lg:rounded-none lg:border-x-0 lg:border-b-0 lg:border-neutral-100 lg:bg-white lg:shadow-[0_-6px_20px_rgba(0,0,0,.07)] lg:ring-0 lg:backdrop-blur-none">
+            <div className="flex w-full max-w-[901px] items-center justify-between gap-3">
+              <div>
+                <p className="text-[.72rem] text-neutral-500">Subtotal</p>
+                <p className="flex items-baseline gap-1 text-[.9rem] font-bold text-neutral-900">
+                  {formatarPreco(cart.subtotal)}
+                  <span className="text-[.72rem] font-normal text-neutral-500">{cart.totalItens} itens</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCartAberto(true)}
+                className="shrink-0 rounded-full px-5 py-2.5 text-[.86rem] font-bold text-white"
+                style={{ background: brown }}
+              >
+                Ver carrinho
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setCartAberto(true)}
-              className="shrink-0 rounded-full px-5 py-2.5 text-[.86rem] font-bold text-white"
-              style={{ background: brown }}
-            >
-              Ver carrinho
-            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Bottom nav — so mobile, no desktop esses itens ja estao no topo */}
-      <div className="flex justify-center lg:hidden">
-        <div className="flex w-full max-w-[901px]">
-          <button type="button" className="flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide" style={{ color: brown }}>
-            <List size={20} />
-            Menu
-          </button>
-          {perfil.clubePontosAtivo && (
-            <button
-              type="button"
-              onClick={() => {
-                setAuthDestino("pontos");
-                setAuthModalAberto(true);
-              }}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide ${
-                (authModalAberto && authDestino === "pontos") || pontosSheetAberto ? "" : "text-neutral-400"
-              }`}
-              style={(authModalAberto && authDestino === "pontos") || pontosSheetAberto ? { color: brown } : undefined}
-            >
-              <Coins size={20} />
-              Pontos
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={abrirPromoNav}
-            className={`flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide ${promoListaAberta ? "" : "text-neutral-400"}`}
-            style={promoListaAberta ? { color: brown } : undefined}
-          >
-            <Gift size={20} />
-            Promoção
-          </button>
-          <button
-            type="button"
-            onClick={() => abrirMeusPedidos()}
-            className={`flex flex-1 flex-col items-center gap-0.5 py-2 pb-2.5 text-[.62rem] font-bold tracking-wide ${
-              (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? "" : "text-neutral-400"
-            }`}
-            style={(authModalAberto && authDestino === "pedidos") || pedidosSheetAberto ? { color: brown } : undefined}
-          >
-            <ShoppingBag size={20} />
-            Pedidos
-          </button>
-        </div>
-      </div>
+        {/* Bottom nav flutuante — so mobile, no desktop esses itens ja estao no topo */}
+        <nav
+          aria-label="Menu da loja"
+          className="pointer-events-auto flex w-full max-w-[520px] gap-1 rounded-full border border-white/70 bg-white/60 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,.12)] ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 lg:hidden"
+        >
+          {(() => {
+            const pontosAtivo = (authModalAberto && authDestino === "pontos") || pontosSheetAberto;
+            const pedidosAtivo = (authModalAberto && authDestino === "pedidos") || pedidosSheetAberto;
+            const menuAtivo = !pontosAtivo && !pedidosAtivo && !promoListaAberta;
+            const item = (ativo: boolean) => ({
+              className: `flex flex-1 cursor-pointer flex-col items-center gap-0.5 rounded-full py-1.5 text-[.62rem] font-bold tracking-wide transition-colors duration-200 ${
+                ativo ? "" : "text-neutral-500 active:bg-black/5"
+              }`,
+              style: ativo ? { color: brown, background: `color-mix(in srgb, ${brown} 13%, transparent)` } : undefined,
+              "aria-current": ativo ? ("page" as const) : undefined,
+            });
+            return (
+              <>
+                <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} {...item(menuAtivo)}>
+                  <List size={19} />
+                  Menu
+                </button>
+                {perfil.clubePontosAtivo && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthDestino("pontos");
+                      setAuthModalAberto(true);
+                    }}
+                    {...item(pontosAtivo)}
+                  >
+                    <Coins size={19} />
+                    Pontos
+                  </button>
+                )}
+                <button type="button" onClick={abrirPromoNav} {...item(promoListaAberta)}>
+                  <Gift size={19} />
+                  Promoção
+                </button>
+                <button type="button" onClick={() => abrirMeusPedidos()} {...item(pedidosAtivo)}>
+                  <ShoppingBag size={19} />
+                  Pedidos
+                </button>
+              </>
+            );
+          })()}
+        </nav>
       </div>
 
       <StoreProdutoDialog
