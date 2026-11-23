@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { categorias, produtos, configuracoes } from "@/db/schema";
+import { categorias, produtos, combos, configuracoes } from "@/db/schema";
 
 /* Equivalente de admin/api/v1/categorias.php (GET/POST/PUT/DELETE). */
 
@@ -30,6 +30,28 @@ export async function reordenarCategorias(lojaId: number, ordemIds: number[]): P
   for (let i = 0; i < ids.length; i++) {
     await db.update(categorias).set({ ordem: i + 1 }).where(and(eq(categorias.id, ids[i]), eq(categorias.loja_id, lojaId)));
   }
+  await bumpCatalogoVersao(lojaId);
+  return { ok: true };
+}
+
+/* Ordem dos produtos e combos dentro de uma categoria (usada no PDV balcao e no cardapio da loja). */
+export async function reordenarItensCategoria(
+  lojaId: number,
+  categoriaId: number,
+  produtoIds: number[],
+  comboIds: number[]
+): Promise<{ ok: true } | { ok: false; msg: string }> {
+  const pIds = produtoIds.filter((n) => Number.isInteger(n) && n > 0);
+  const cIds = comboIds.filter((n) => Number.isInteger(n) && n > 0);
+  if (categoriaId <= 0 || (pIds.length === 0 && cIds.length === 0)) return { ok: false, msg: "Lista de ordem invalida." };
+  await Promise.all([
+    ...pIds.map((id, i) =>
+      db.update(produtos).set({ ordem: i + 1 }).where(and(eq(produtos.id, id), eq(produtos.loja_id, lojaId), eq(produtos.categoria_id, categoriaId)))
+    ),
+    ...cIds.map((id, i) =>
+      db.update(combos).set({ ordem: i + 1 }).where(and(eq(combos.id, id), eq(combos.loja_id, lojaId), eq(combos.categoria_id, categoriaId)))
+    ),
+  ]);
   await bumpCatalogoVersao(lojaId);
   return { ok: true };
 }

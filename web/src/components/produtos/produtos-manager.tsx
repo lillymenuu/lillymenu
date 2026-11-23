@@ -37,6 +37,7 @@ import { ProdutoFormDialog } from "./produto-form-dialog";
 import { ComboFormDialog } from "./combo-form-dialog";
 import { CriarCategoriaDialog } from "./criar-categoria-dialog";
 import { ReordenarCategoriasDialog } from "./reordenar-categorias-dialog";
+import { ReordenarItensDialog } from "./reordenar-itens-dialog";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { ConfirmDialog } from "@/components/ordermanager/confirm-dialog";
 
@@ -64,6 +65,7 @@ export function ProdutosManager({
   const [formOpen, setFormOpen] = useState(false);
   const [categoriaDialogOpen, setCategoriaDialogOpen] = useState(false);
   const [reordenarOpen, setReordenarOpen] = useState(false);
+  const [categoriaReordenarItens, setCategoriaReordenarItens] = useState<Categoria | null>(null);
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
   const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(null);
   const [categoriaParaNovoProduto, setCategoriaParaNovoProduto] = useState<number | null>(null);
@@ -72,6 +74,16 @@ export function ProdutosManager({
   const [categoriaParaNovoCombo, setCategoriaParaNovoCombo] = useState<number | null>(null);
   const [categoriaParaExcluir, setCategoriaParaExcluir] = useState<Categoria | null>(null);
   const [excluindoCategoria, setExcluindoCategoria] = useState(false);
+
+  /* Lista completa (sem filtros de busca/status), na ordem atual, para a tela de reordenar. */
+  const itensReordenar = useMemo(() => {
+    const catId = categoriaReordenarItens?.id;
+    if (!catId) return { produtos: [], combos: [] };
+    return {
+      produtos: produtos.filter((p) => p.categoria_id === catId).map((p) => ({ id: p.id, nome: p.nome })),
+      combos: combos.filter((c) => c.categoria_id === catId).map((c) => ({ id: c.id, nome: c.nome })),
+    };
+  }, [categoriaReordenarItens, produtos, combos]);
 
   const produtosFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -320,6 +332,7 @@ export function ProdutosManager({
                       >
                         Editar categoria
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setCategoriaReordenarItens(categoria)}>Reordenar itens</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <button
@@ -493,6 +506,17 @@ export function ProdutosManager({
       />
       <CriarCategoriaDialog open={categoriaDialogOpen} onOpenChange={setCategoriaDialogOpen} categoria={categoriaEditando} />
       <ReordenarCategoriasDialog open={reordenarOpen} onOpenChange={setReordenarOpen} categorias={categorias} />
+      {categoriaReordenarItens && (
+        <ReordenarItensDialog
+          key={categoriaReordenarItens.id}
+          open
+          onOpenChange={(v) => !v && setCategoriaReordenarItens(null)}
+          categoriaId={categoriaReordenarItens.id}
+          categoriaNome={categoriaReordenarItens.nome}
+          produtos={itensReordenar.produtos}
+          combos={itensReordenar.combos}
+        />
+      )}
       <ComboFormDialog
         open={comboFormOpen}
         onOpenChange={setComboFormOpen}
