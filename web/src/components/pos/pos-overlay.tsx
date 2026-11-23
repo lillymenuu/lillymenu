@@ -9,6 +9,8 @@ import { formatarCpfCnpj, validarCpfCnpj } from "@/lib/cpfCnpj";
 import { PosCatalog } from "@/components/pos/pos-catalog";
 import { PosCartList } from "@/components/pos/pos-cart-list";
 import { PosVariacaoDialog } from "@/components/pos/pos-variacao-dialog";
+import { PosProdutoDialog } from "@/components/pos/pos-produto-dialog";
+import type { PosProduto } from "@/lib/pos";
 import { consumoDoCarrinho } from "@/components/pos/estoque-carrinho";
 import { PosComboDialog } from "@/components/pos/pos-combo-dialog";
 import { PosAvulsoDialog } from "@/components/pos/pos-avulso-dialog";
@@ -126,6 +128,7 @@ export function PosOverlay({
 
   const [telaCheia, setTelaCheia] = useState(false);
   const [sairEdicaoAberto, setSairEdicaoAberto] = useState(false);
+  const [produtoDetalhe, setProdutoDetalhe] = useState<PosProduto | null>(null);
 
   // Editando um pedido, fechar sem salvar descarta as alteracoes — confirma antes.
   function pedirFechar() {
@@ -233,6 +236,7 @@ export function PosOverlay({
                   onDefinirQtdProduto={definirQtdProduto}
                   onAbrirCombo={setComboAberto}
                   onAbrirAvulso={() => setAvulsoAberto(true)}
+                  onAbrirProduto={setProdutoDetalhe}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Erro ao carregar catálogo.</div>
@@ -420,6 +424,28 @@ export function PosOverlay({
         />
       ) : null}
 
+      {produtoDetalhe && (
+        <PosProdutoDialog
+          key={produtoDetalhe.id}
+          produto={produtoDetalhe}
+          estoqueDisponivel={restanteDoProduto(produtoDetalhe)}
+          onOpenChange={(v) => !v && setProdutoDetalhe(null)}
+          onAdicionar={(qtd, observacoes) =>
+            /* Sem observacao soma na mesma linha dos botoes +/- do card; com observacao vira linha propria. */
+            cart.adicionar({
+              ...(observacoes ? {} : { rowKey: `produto-${produtoDetalhe.id}` }),
+              produtoId: produtoDetalhe.id,
+              nome: produtoDetalhe.nome,
+              qtd,
+              preco: produtoDetalhe.preco_promocional ?? produtoDetalhe.preco,
+              observacoes,
+              usarPontos: false,
+              imagem: produtoDetalhe.imagem,
+              estoque: produtoDetalhe.estoque,
+            })
+          }
+        />
+      )}
       <PosVariacaoDialog
         produto={produtoVariacao}
         itemEditando={itemVariacaoEditando}

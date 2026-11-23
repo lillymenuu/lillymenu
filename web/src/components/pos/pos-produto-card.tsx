@@ -14,6 +14,7 @@ export function PosProdutoCard({
   onAdicionar,
   onAlterarQtd,
   onDefinirQtd,
+  onAbrirDetalhe,
 }: {
   produto: PosProduto;
   qtd: number;
@@ -21,12 +22,15 @@ export function PosProdutoCard({
   onAdicionar: (produto: PosProduto) => void;
   onAlterarQtd: (delta: number) => void;
   onDefinirQtd: (qtd: number) => void;
+  /** Abre o modal do produto simples (foto grande, descricao, observacao). */
+  onAbrirDetalhe: (produto: PosProduto) => void;
 }) {
   const semEstoque = produto.estoque <= 0;
   const precoExibido = produto.preco_promocional ?? produto.preco;
   const emPromo = produto.preco_promocional !== null;
   const restante = Math.max(0, estoqueRestante);
   const selecionado = qtd > 0;
+  const clicavel = !semEstoque && restante > 0;
 
   const [texto, setTexto] = useState(String(qtd));
 
@@ -42,10 +46,14 @@ export function PosProdutoCard({
 
   return (
     <div
-      onClick={() => abreModalOpcoes(produto) && !semEstoque && restante > 0 && onAdicionar(produto)}
+      onClick={() => {
+        if (!clicavel) return;
+        if (abreModalOpcoes(produto)) onAdicionar(produto);
+        else onAbrirDetalhe(produto);
+      }}
       className={`flex h-[246px] w-[182px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card transition-colors ${
         selecionado ? "border-primary bg-primary/5" : ""
-      } ${semEstoque ? "opacity-50" : ""} ${abreModalOpcoes(produto) && !semEstoque && restante > 0 ? "cursor-pointer" : ""}`}
+      } ${semEstoque ? "opacity-50" : ""} ${clicavel ? "cursor-pointer" : ""}`}
     >
       <div className="shrink-0 px-2.5 pt-2.5">
         <div className="relative h-[114px] overflow-hidden rounded-xl bg-muted">
@@ -78,7 +86,8 @@ export function PosProdutoCard({
           {restante > 0 ? `${restante} em estoque` : "Sem estoque"}
         </div>
       </div>
-      <div className="flex shrink-0 items-center justify-between p-1.5">
+      {/* Os botoes +/- e o campo de quantidade agem direto, sem abrir o modal do card. */}
+      <div className="flex shrink-0 items-center justify-between p-1.5" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           disabled={semEstoque || qtd === 0 || abreModalOpcoes(produto)}

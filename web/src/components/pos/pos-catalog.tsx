@@ -19,6 +19,7 @@ export function PosCatalog({
   onDefinirQtdProduto,
   onAbrirCombo,
   onAbrirAvulso,
+  onAbrirProduto,
 }: {
   catalogo: PosCatalogoResposta;
   itensCarrinho: PosCartItem[];
@@ -27,6 +28,7 @@ export function PosCatalog({
   onDefinirQtdProduto: (produto: PosProduto, qtd: number) => void;
   onAbrirCombo: (combo: PosCombo) => void;
   onAbrirAvulso: () => void;
+  onAbrirProduto: (produto: PosProduto) => void;
 }) {
   const [busca, setBusca] = useState("");
   const [mostrarTopo, setMostrarTopo] = useState(false);
@@ -208,6 +210,7 @@ export function PosCatalog({
                       onAdicionar={onAdicionarProduto}
                       onAlterarQtd={(delta) => onAlterarQtdProduto(p, delta)}
                       onDefinirQtd={(qtd) => onDefinirQtdProduto(p, qtd)}
+                      onAbrirDetalhe={onAbrirProduto}
                     />
                   ))}
                 </div>
