@@ -61,6 +61,49 @@ function tocarAlarme() {
   }
 }
 
+/* Tempo que o card de pedido novo da loja fica na tela antes de sumir sozinho. O pedido
+   continua no sino e no Gestor de Pedidos; o card e so o aviso. */
+const SEGUNDOS_CARD_FLUTUANTE = 8;
+
+/** Card flutuante de pedido novo: entra descendo, fica alguns segundos e sai subindo.
+    O tempo pausa enquanto o mouse esta em cima (o lojista indo clicar em Aceitar) ou
+    enquanto o dialog de vincular entregador desse pedido esta aberto. */
+function CardFlutuante({
+  pausado,
+  onSumir,
+  children,
+}: {
+  pausado: boolean;
+  onSumir: () => void;
+  children: (sumir: () => void) => React.ReactNode;
+}) {
+  const [saindo, setSaindo] = useState(false);
+  const [mouseEmCima, setMouseEmCima] = useState(false);
+  const parado = pausado || mouseEmCima;
+
+  useEffect(() => {
+    if (parado || saindo) return;
+    const t = setTimeout(() => setSaindo(true), SEGUNDOS_CARD_FLUTUANTE * 1000);
+    return () => clearTimeout(t);
+  }, [parado, saindo]);
+
+  return (
+    <div
+      onMouseEnter={() => setMouseEmCima(true)}
+      onMouseLeave={() => setMouseEmCima(false)}
+      onAnimationEnd={(e) => saindo && e.target === e.currentTarget && onSumir()}
+      className={cn(
+        "pointer-events-auto relative w-full max-w-[280px]",
+        saindo
+          ? "pointer-events-none animate-out fade-out slide-out-to-top-12 fill-mode-forwards duration-500 ease-in"
+          : "animate-in fade-in slide-in-from-top-8 duration-300"
+      )}
+    >
+      {children(() => setSaindo(true))}
+    </div>
+  );
+}
+
 export function NotificationBell({
   lojaId,
   phpAdminUrl,
@@ -450,13 +493,12 @@ export function NotificationBell({
   const flutuantes = mounted && pedidosFlutuantes.length > 0 && (
     <div className="pointer-events-none fixed inset-x-0 top-4 z-40 flex flex-col items-center gap-3 px-4">
       {pedidosFlutuantes.map((pedido) => (
-        <div
-          key={pedido.id}
-          className="pointer-events-auto relative w-full max-w-[280px] animate-in fade-in slide-in-from-top-8 duration-300"
-        >
+        <CardFlutuante key={pedido.id} pausado={vincularFlutuante?.id === pedido.id} onSumir={() => removerFlutuante(pedido.id)}>
+          {(sumir) => (
+          <>
           <button
             type="button"
-            onClick={() => removerFlutuante(pedido.id)}
+            onClick={sumir}
             aria-label="Dispensar"
             className="absolute -right-2 -top-2 z-10 flex size-6 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground"
           >
@@ -472,7 +514,9 @@ export function NotificationBell({
             onDragStart={(e) => e.preventDefault()}
             onDragEnd={() => {}}
           />
-        </div>
+          </>
+          )}
+        </CardFlutuante>
       ))}
     </div>
   );
