@@ -1,5 +1,6 @@
 "use client";
 
+import { LandingMarca } from "./landing-marca";
 import { useEffect, useState } from "react";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,17 +51,9 @@ export function LandingHeader({
         rolado ? "border-[#e5e7eb] bg-white/70 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-xl" : "border-transparent bg-white"
       )}
     >
-      <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 sm:px-6">
-        <a href="#top" onClick={(e) => aoClicarAncora(e, "#top")} className="flex items-center gap-2 text-[17px] font-bold">
-          {logoImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoImage} alt={brand} className="size-8 rounded-lg object-contain" />
-          ) : (
-            <span className="flex size-8 items-center justify-center rounded-lg bg-[var(--landing-accent)] text-sm font-bold text-white">
-              {brand.charAt(0)}
-            </span>
-          )}
-          <span>{brand}</span>
+      <div className="mx-auto flex h-[72px] max-w-[1180px] items-center justify-between px-4 sm:px-6">
+        <a href="#top" onClick={(e) => aoClicarAncora(e, "#top")} aria-label={brand} className="group flex items-center">
+          <LandingMarca brand={brand} logoImage={logoImage} />
         </a>
 
         <nav className="hidden items-center gap-1 text-sm font-medium text-[#4b5563] min-[880px]:flex">

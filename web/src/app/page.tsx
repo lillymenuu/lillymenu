@@ -20,7 +20,7 @@ import { ScrollToTopButton } from "@/components/landing/scroll-to-top-button";
 export const revalidate = 300;
 
 /* Fonte da superficie publica (Persuade — ver DESIGN.md), escopada so a landing: o resto do app (admin, login) usa Geist. */
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700"] });
+const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700", "800"] });
 
 export default async function LandingPage() {
   const config = await getLandingConfig();

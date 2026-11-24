@@ -8,7 +8,7 @@ import { corAcentoLanding } from "@/lib/landing";
 
 export const revalidate = 300;
 
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700"] });
+const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700", "800"] });
 
 /* Data da versao vigente — atualizar sempre que o texto mudar (secao "Alteracoes desta politica"). */
 const ATUALIZADO_EM = "21/11/2026";

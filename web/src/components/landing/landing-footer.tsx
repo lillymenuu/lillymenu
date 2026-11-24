@@ -1,3 +1,4 @@
+import { LandingMarcaNome } from "./landing-marca";
 import { remapLegacyHref, aplicarBrand } from "@/lib/landing";
 import { SmoothAnchor } from "./smooth-anchor";
 
@@ -60,7 +61,7 @@ export function LandingFooter({
       <div className="mx-auto max-w-[1180px] px-4 py-12 sm:px-6">
         <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
           <div className="flex max-w-sm flex-col gap-3">
-            <span className="text-[17px] font-extrabold">{brand}</span>
+            <LandingMarcaNome brand={brand} className="text-[20px]" />
             <p className="text-sm text-[#6b7280]">Sistema de gestão para negócios de alimentação — PDV, delivery próprio e financeiro em um só lugar.</p>
           </div>
           <div className="flex items-center gap-3 text-[#6b7280]">
