@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Star, MessageSquareOff } from "lucide-react";
+import { Star, MessageSquareOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { getSessaoAdmin } from "@/lib/session";
 import { listarAvaliacoes } from "@/db/queries/avaliacoes";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -47,6 +47,13 @@ function formatarData(iso: string, comHora = true) {
     year: "numeric",
     ...(comHora ? { hour: "2-digit", minute: "2-digit" } : {}),
   });
+}
+
+/** Ate 5 paginas visiveis, com a atual no meio sempre que possivel. */
+function paginasVisiveis(atual: number, total: number, max = 5): number[] {
+  const inicio = Math.max(1, Math.min(atual - Math.floor(max / 2), total - max + 1));
+  const fim = Math.min(total, inicio + max - 1);
+  return Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i);
 }
 
 function buildQuery(params: Record<string, string | number | undefined>) {
@@ -265,7 +272,18 @@ export default async function AvaliacoesPage({
 
               {data.paginas > 1 && (
                 <div className="mt-4 flex items-center justify-center gap-1">
-                  {Array.from({ length: data.paginas }, (_, i) => i + 1).map((p) => (
+                  <Link
+                    aria-label="Página anterior"
+                    aria-disabled={data.pagina <= 1}
+                    href={`/avaliacoes${buildQuery({ nota: filtroNota, busca: filtroBusca, pagina: Math.max(1, data.pagina - 1) })}`}
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      data.pagina <= 1 && "pointer-events-none opacity-40"
+                    )}
+                  >
+                    <ChevronLeft size={16} />
+                  </Link>
+                  {paginasVisiveis(data.pagina, data.paginas).map((p) => (
                     <Link
                       key={p}
                       href={`/avaliacoes${buildQuery({
@@ -283,6 +301,17 @@ export default async function AvaliacoesPage({
                       {p}
                     </Link>
                   ))}
+                  <Link
+                    aria-label="Próxima página"
+                    aria-disabled={data.pagina >= data.paginas}
+                    href={`/avaliacoes${buildQuery({ nota: filtroNota, busca: filtroBusca, pagina: Math.min(data.paginas, data.pagina + 1) })}`}
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      data.pagina >= data.paginas && "pointer-events-none opacity-40"
+                    )}
+                  >
+                    <ChevronRight size={16} />
+                  </Link>
                 </div>
               )}
             </CardContent>
