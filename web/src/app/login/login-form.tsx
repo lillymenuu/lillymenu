@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /* Campos e botoes do login em formato pilula (cantos totalmente arredondados). */
-const CAMPO = "h-11 rounded-full px-4";
+const CAMPO = "h-11 rounded-full px-4 focus-visible:border-neutral-400 focus-visible:ring-0";
 const BOTAO = "h-11 rounded-full";
 
 const ERROS_GOOGLE: Record<string, string> = {
