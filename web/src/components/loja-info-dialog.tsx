@@ -40,7 +40,7 @@ export function LojaInfoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-w-md gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-md">
+      <DialogContent showCloseButton={false} className="max-w-[calc(100%-2rem)] gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-2xl">
         <DialogTitle className="sr-only">Informações da loja</DialogTitle>
 
         {/* Capa de ponta a ponta, com o botao de fechar por cima */}
@@ -63,36 +63,37 @@ export function LojaInfoDialog({
           </DialogClose>
         </div>
 
-        {/* Perfil: logo sobre a capa, nome, selo e status */}
-        <div className="px-5">
-          <div className="-mt-10 flex size-20 items-center justify-center overflow-hidden rounded-full bg-muted text-2xl font-bold text-foreground shadow-md ring-4 ring-background">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={loja.nome} className="size-full object-cover" />
-            ) : (
-              loja.inicial
-            )}
+        {/* Duas colunas: perfil (logo sobre a capa, nome e etiquetas) e, ao lado, as informacoes.
+            No celular as colunas empilham. */}
+        <div className="grid gap-x-5 gap-y-4 px-5 pb-5 sm:grid-cols-[200px_1fr]">
+          <div className="min-w-0">
+            {/* relative + z-10: sem isso a capa (posicionada) e pintada por cima e corta a logo. */}
+            <div className="relative z-10 -mt-10 flex size-20 items-center justify-center overflow-hidden rounded-full bg-muted text-2xl font-bold text-foreground shadow-md ring-4 ring-background">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt={loja.nome} className="size-full object-cover" />
+              ) : (
+                loja.inicial
+              )}
+            </div>
+
+            <div className="mt-3 flex items-start gap-1.5">
+              <h2 className="text-lg leading-tight font-semibold text-foreground">{loja.nome}</h2>
+              {loja.verificada && <BadgeCheck size={18} className="mt-0.5 shrink-0 text-primary" aria-label="Loja verificada" />}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">Loja principal</span>
+              {/* "aberta" so diz se a loja NAO foi fechada manualmente (o horario nao entra aqui), entao so avisa quando esta fechada. */}
+              {!loja.aberta && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 font-medium text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-red-500" />
+                  Fechada manualmente
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="mt-3 flex items-center gap-1.5">
-            <h2 className="truncate text-lg leading-tight font-semibold text-foreground">{loja.nome}</h2>
-            {loja.verificada && <BadgeCheck size={18} className="shrink-0 text-primary" aria-label="Loja verificada" />}
-          </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">Loja principal</span>
-            {/* "aberta" so diz se a loja NAO foi fechada manualmente (o horario nao entra aqui), entao so avisa quando esta fechada. */}
-            {!loja.aberta && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 font-medium text-muted-foreground">
-                <span className="size-1.5 rounded-full bg-red-500" />
-                Fechada manualmente
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Informacoes agrupadas num cartao so */}
-        <div className="p-5 pt-4">
-          <div className="divide-y divide-border/70 overflow-hidden rounded-2xl border bg-muted/30">
+          <div className="divide-y divide-border/70 self-start overflow-hidden rounded-2xl border bg-muted/30 sm:mt-4">
             <LinhaInfo icone={<Phone size={15} />} rotulo="Contato" vazio={loja.contato === ""}>
               {loja.contato !== "" ? loja.contato : "Não informado"}
             </LinhaInfo>
