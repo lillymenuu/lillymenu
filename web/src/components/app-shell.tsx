@@ -274,7 +274,7 @@ function AppShellInner({
                   className="size-9 shrink-0 rounded-xl object-contain shadow-[0_8px_18px_-6px_rgb(156_85_35/0.5)]"
                 />
                 <div className="min-w-0">
-                  <div className={cn(poppinsMarca.className, "whitespace-nowrap text-[15px] leading-none font-extrabold tracking-[-0.02em] text-[#0f172a] dark:text-foreground")}>
+                  <div className={cn(poppinsMarca.className, "whitespace-nowrap text-[17px] leading-none font-extrabold tracking-[-0.02em] text-[#0f172a] dark:text-foreground")}>
                     Lilly <span className="text-primary">Menu</span>
                   </div>
                   <div className="mt-1 whitespace-nowrap text-[10px] text-muted-foreground">Sistema de Gestão</div>
