@@ -9,6 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+/* Campos e botoes do login em formato pilula (cantos totalmente arredondados). */
+const CAMPO = "h-11 rounded-full px-4";
+const BOTAO = "h-11 rounded-full";
+
 const ERROS_GOOGLE: Record<string, string> = {
   google_nao_configurado: "Login com Google indisponível no momento.",
   google_falha: "Não foi possível entrar com o Google. Tente novamente.",
@@ -94,7 +98,7 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
               <p className="text-sm text-muted-foreground">Entre com seu e-mail e senha para acessar o painel.</p>
             </div>
 
-            <a href="/api/auth/google/start" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}>
+            <a href="/api/auth/google/start" className={cn(buttonVariants({ variant: "outline", size: "lg" }), BOTAO, "w-full")}>
               <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
                 <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z" />
                 <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z" />
@@ -118,37 +122,37 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
                   type="text"
                   autoComplete="username"
                   placeholder="voce@exemplo.com"
+                  className={CAMPO}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="senha">Senha</Label>
-                  <button
-                    type="button"
-                    onClick={() => setResetAberto(true)}
-                    className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                  >
-                    Esqueceu a senha?
-                  </button>
-                </div>
+                <Label htmlFor="senha">Senha</Label>
                 <Input
                   id="senha"
                   type="password"
                   autoComplete="current-password"
                   placeholder="Sua senha"
+                  className={CAMPO}
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setResetAberto(true)}
+                  className="self-end px-1 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Esqueceu a senha?
+                </button>
               </div>
               {searchParams.get("reset") === "1" && (
                 <p className="text-sm text-emerald-600 dark:text-emerald-400">Senha redefinida com sucesso. Faça login com a nova senha.</p>
               )}
               {erro && <p className="text-sm text-destructive">{erro}</p>}
-              <Button type="submit" disabled={carregando} size="lg" className="mt-2 w-full">
+              <Button type="submit" disabled={carregando} size="lg" className={cn(BOTAO, "mt-2 w-full")}>
                 {carregando ? "Entrando..." : "Entrar"}
               </Button>
             </form>
@@ -175,12 +179,13 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
                   id="reset-email"
                   type="email"
                   placeholder="voce@exemplo.com"
+                  className={CAMPO}
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   required
                 />
               </div>
-              <Button type="submit" disabled={resetEnviando} className="w-full">
+              <Button type="submit" disabled={resetEnviando} className={cn(BOTAO, "w-full")}>
                 {resetEnviando ? "Enviando..." : "Enviar link de redefinição"}
               </Button>
             </form>
