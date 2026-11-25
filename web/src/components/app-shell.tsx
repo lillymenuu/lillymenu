@@ -608,6 +608,7 @@ function AppShellInner({
         open={lojaInfoOpen}
         onOpenChange={setLojaInfoOpen}
         loja={sidebarData.loja}
+        plano={sidebarData.plano}
         phpAdminUrl={phpAdminUrl}
       />
       <ValidadeAviso lojaId={sidebarData.loja.id} />
