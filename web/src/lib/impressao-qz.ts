@@ -521,6 +521,12 @@ function construirLinhasCupom(dados: Dados, perfil: PerfilImpressao): Linha[] {
       linhas.push(linha(linhaValor("Valor:", formatMoney(pg.valor), cols)));
       if (String(pg.forma || "").toLowerCase() === "dinheiro") {
         const troco = parseFloat(String(pedido.troco ?? 0));
+        if (troco > 0) {
+          /* Quanto o cliente entrega em dinheiro. Pedido antigo sem valor_pago: valor + troco (mesma regra do detalhe do pedido). */
+          const valorPago = parseFloat(String(pedido.valor_pago ?? 0));
+          const pagaCom = valorPago > 0 ? valorPago : Number(pg.valor) + troco;
+          linhas.push(linha(linhaValor("Cliente paga com:", formatMoney(pagaCom), cols)));
+        }
         linhas.push(linha(linhaValor("Troco:", troco > 0 ? formatMoney(troco) : "Nao", cols)));
       }
     });
