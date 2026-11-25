@@ -121,7 +121,7 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
                   id="email"
                   type="text"
                   autoComplete="username"
-                  placeholder="voce@exemplo.com"
+                  placeholder="seuemail.com"
                   className={CAMPO}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -134,7 +134,7 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
                   id="senha"
                   type="password"
                   autoComplete="current-password"
-                  placeholder="Sua senha"
+                  placeholder="sua senha"
                   className={CAMPO}
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
@@ -178,7 +178,7 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
                 <Input
                   id="reset-email"
                   type="email"
-                  placeholder="voce@exemplo.com"
+                  placeholder="seuemail.com"
                   className={CAMPO}
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
