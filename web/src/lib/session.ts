@@ -8,6 +8,7 @@ import { exigirSuperadmin } from "@/db/queries/superadminAuth";
 import { validarSessaoGarcom, type GarcomAutenticado } from "@/db/queries/garcomAuth";
 import { bloquearSeAssinaturaExpirada, lojaPublicaBloqueada } from "@/db/queries/assinatura";
 import { getSidebarDataNeon } from "@/db/queries/sidebar";
+import { souAdminPrincipal } from "@/db/queries/usuariosAdmin";
 import { HEADER_ROTA_API, recursosExigidosApi } from "@/lib/recursosApi";
 
 /*
@@ -62,6 +63,16 @@ export async function getSessaoAdminParaCobranca(): Promise<AdminAutenticado | n
   const admin = await validarSessao(token);
   if (!admin || admin.perfil === "superadmin") return null;
   return admin;
+}
+
+/**
+ * Assinatura/pagamento (/plan-details e suas APIs): so o dono da loja (admin principal). Usuarios
+ * da equipe nao veem cobrancas nem os dados de cobranca (CPF/telefone) do dono.
+ */
+export async function getSessaoDonoParaCobranca(): Promise<AdminAutenticado | null> {
+  const sessao = await getSessaoAdminParaCobranca();
+  if (!sessao) return null;
+  return (await souAdminPrincipal(sessao.id, sessao.perfil)) ? sessao : null;
 }
 
 /** Sessao do superadmin. Igual a admin/helpers/superadmin_auth.php::apiSuperadminExigir. */

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessaoAdminParaCobranca } from "@/lib/session";
+import { getSessaoDonoParaCobranca } from "@/lib/session";
 import { consultarStatusPix } from "@/db/queries/pagamentoPix";
 
 export async function GET(request: NextRequest) {
-  const sessao = await getSessaoAdminParaCobranca();
+  const sessao = await getSessaoDonoParaCobranca();
   if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
 
   const cobrancaId = Number(request.nextUrl.searchParams.get("cobranca_id") ?? "0");

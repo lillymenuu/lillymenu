@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/components/ordermanager/constants";
 import { formatDataCurta, formatDataHoraCurta } from "@/components/cliente/types";
 import type { Transacao } from "@/lib/assinatura";
+import { maskTelefone } from "@/lib/telefone";
 
 function statusBadge(status: string) {
   if (status === "pago") return <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">{status}</Badge>;
@@ -82,7 +83,7 @@ function TransacaoDetalheDialog({
               <div className="flex justify-between"><span className="text-muted-foreground">Nome</span><span>{p.nome || "-"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">E-mail</span><span>{p.email || "-"}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">CPF</span><span>{p.cpf || "-"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Telefone</span><span>{p.telefone || "-"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Telefone</span><span>{p.telefone ? maskTelefone(p.telefone) : "-"}</span></div>
             </div>
           </div>
         )}

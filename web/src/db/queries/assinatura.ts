@@ -245,7 +245,14 @@ export async function detalheTransacao(lojaId: number, adminId: number, cobranca
     .limit(1);
   if (!transacao) return { ok: false, msg: "Transacao nao encontrada." };
 
-  const [admin] = await db.select({ nome: admins.nome, email: admins.email }).from(admins).where(eq(admins.id, adminId)).limit(1);
+  /* Pagador = dono da loja (admin principal: perfil admin com senha), nunca quem esta logado. */
+  void adminId;
+  const [admin] = await db
+    .select({ nome: admins.nome, email: admins.email })
+    .from(admins)
+    .where(and(eq(admins.loja_id, lojaId), eq(admins.perfil, "admin"), eq(admins.ativo, true), sql`${admins.senha} is not null and ${admins.senha} <> ''`))
+    .orderBy(admins.id)
+    .limit(1);
 
   const cfgRaw = await db.select({ chave: configuracoes.chave, valor: configuracoes.valor }).from(configuracoes).where(and(eq(configuracoes.loja_id, lojaId), inArray(configuracoes.chave, ["cobranca_cpf", "cobranca_telefone"])));
   const cfg: Record<string, string> = {};
@@ -258,7 +265,9 @@ export async function detalheTransacao(lojaId: number, adminId: number, cobranca
   };
 }
 
-export async function salvarPerfilCobranca(lojaId: number, cpf: string, telefone: string): Promise<{ ok: true } | { ok: false; msg: string }> {
+export async function salvarPerfilCobranca(lojaId: number, cpf: string, telefoneBruto: string): Promise<{ ok: true } | { ok: false; msg: string }> {
+  /* Grava so os digitos; a tela aplica a mascara (00) 00000-0000. */
+  const telefone = telefoneBruto.replace(/\D/g, "");
   try {
     await db.insert(configuracoes).values({ loja_id: lojaId, chave: "cobranca_cpf", valor: cpf.trim() }).onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor: cpf.trim() } });
     await db.insert(configuracoes).values({ loja_id: lojaId, chave: "cobranca_telefone", valor: telefone.trim() }).onConflictDoUpdate({ target: [configuracoes.loja_id, configuracoes.chave], set: { valor: telefone.trim() } });

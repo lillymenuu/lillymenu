@@ -14,6 +14,7 @@ import { formatDataCurta } from "@/components/cliente/types";
 import { HistoricoDialog } from "@/components/plandetails/historico-dialog";
 import { RenovacaoPagamento } from "@/components/plandetails/renovacao-pagamento";
 import type { AssinaturaDetalheResposta } from "@/lib/assinatura";
+import { maskTelefone } from "@/lib/telefone";
 
 /** Dias entre hoje e a data (pode ser negativo se ja passou). Mesmo cuidado de fuso do formatDataCurta. */
 function diasAte(iso: string | null): number | null {
@@ -54,7 +55,7 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
   const [renovarAberto, setRenovarAberto] = useState(false);
 
   const [cpf, setCpf] = useState(dados.perfil_cobranca.cpf);
-  const [telefone, setTelefone] = useState(dados.perfil_cobranca.telefone);
+  const [telefone, setTelefone] = useState(maskTelefone(dados.perfil_cobranca.telefone));
   const [salvandoPerfil, setSalvandoPerfil] = useState(false);
   const [perfilPreenchido, setPerfilPreenchido] = useState(
     dados.perfil_cobranca.cpf !== "" && dados.perfil_cobranca.telefone !== ""
@@ -249,7 +250,7 @@ export function PlanDetailsManager({ dados }: { dados: AssinaturaDetalheResposta
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="perfil-telefone">Telefone</Label>
-                  <Input id="perfil-telefone" placeholder="(00) 00000-0000" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+                  <Input id="perfil-telefone" placeholder="(00) 00000-0000" inputMode="tel" value={telefone} onChange={(e) => setTelefone(maskTelefone(e.target.value))} />
                 </div>
               </div>
               <Button type="submit" className="rounded-xl font-normal" disabled={salvandoPerfil}>

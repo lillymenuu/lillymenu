@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getSessaoAdminParaCobranca } from "@/lib/session";
+import { getSessaoDonoParaCobranca } from "@/lib/session";
 import { criarPagamentoPix } from "@/db/queries/pagamentoPix";
 
 export async function POST(request: Request) {
-  const sessao = await getSessaoAdminParaCobranca();
+  const sessao = await getSessaoDonoParaCobranca();
   if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
 
   const body = await request.json().catch(() => null);

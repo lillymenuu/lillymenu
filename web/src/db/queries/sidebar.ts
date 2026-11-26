@@ -142,6 +142,9 @@ export async function getSidebarDataNeon(adminId: number, lojaId: number, perfil
     menu[chaveMenu] = podeUsuario(chavePermissao) && podePlano(chavePermissao);
     if (podeUsuario(chavePermissao) && !podePlano(chavePermissao)) bloqueadoPorPlano[chaveMenu] = true;
   }
+  /* Assinatura: so o dono da loja (admin principal: perfil admin com senha; a equipe nao tem senha). */
+  const [donoLinha] = await db.select({ senha: admins.senha }).from(admins).where(eq(admins.id, adminId)).limit(1);
+  menu.assinatura = perfil === "admin" && Boolean(donoLinha?.senha && donoLinha.senha.trim() !== "");
   menu.lojas = perfil === "superadmin";
   menu.gerenciamento = perfil === "superadmin";
 

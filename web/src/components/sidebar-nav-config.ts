@@ -118,7 +118,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { menuKey: "controleFiado", label: "Controle de fiado", icon: BookText, href: "/storecredittracking", migrated: true },
       { menuKey: "cupons", label: "Cupons", icon: Ticket, href: "/coupons", migrated: true },
       { menuKey: null, label: "Avaliações", icon: Star, href: "/avaliacoes", migrated: true },
-      { menuKey: null, label: "Assinatura", icon: CreditCard, href: "/plan-details", migrated: true },
+      { menuKey: "assinatura", label: "Assinatura", icon: CreditCard, href: "/plan-details", migrated: true },
       { menuKey: "configuracoes", label: "Configurações", icon: Settings, href: "/settings", migrated: true },
       { menuKey: null, label: "Suporte", icon: Headset, href: "/suporte", migrated: true },
     ],
