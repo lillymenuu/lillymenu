@@ -102,7 +102,7 @@ export function SaLojasManager({ inicial, phpAdminUrl }: { inicial: SaLojasRespo
   }[confirmar.acao];
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4">
+    <div className="mx-auto flex max-w-7xl flex-col gap-4 min-[1800px]:max-w-none">
       <div>
         <h2 className="text-2xl font-semibold">Lojas</h2>
         <p className="text-sm text-muted-foreground">Gerencie as lojas cadastradas, cobranças, leads e configurações da plataforma.</p>

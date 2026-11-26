@@ -71,7 +71,7 @@ export function FinancialPaymentMethodsManager({ dadosIniciais }: { dadosIniciai
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 p-4 sm:p-6">
+    <div className="mx-auto max-w-5xl space-y-5 min-[1800px]:max-w-none p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">Formas de pagamento</h1>

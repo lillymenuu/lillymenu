@@ -114,7 +114,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
   const fim = Math.min(dados.page * dados.per_page, dados.total);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl space-y-5 min-[1800px]:max-w-none p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">Lançamentos financeiros</h1>

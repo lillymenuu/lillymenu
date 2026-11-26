@@ -90,7 +90,7 @@ export default async function AvaliacoesPage({
   const temFiltro = Boolean(filtroNota || filtroBusca);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 min-[1800px]:max-w-none">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Avaliações dos Clientes</h1>

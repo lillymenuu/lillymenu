@@ -303,7 +303,7 @@ export function DesperdicioManager({ dadosIniciais }: { dadosIniciais: Desperdic
   const periodo = `${MESES_NOMES[dados.mes - 1]} de ${dados.ano}`;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl space-y-6 min-[1800px]:max-w-none p-4 sm:p-6">
       {/* Cabecalho */}
       <div className="flex animate-in fade-in slide-in-from-bottom-2 flex-col gap-3 duration-500 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex items-start gap-3">

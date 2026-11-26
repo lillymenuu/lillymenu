@@ -168,7 +168,7 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl space-y-6 min-[1800px]:max-w-none p-4 sm:p-6">
       <div className="flex animate-in fade-in slide-in-from-bottom-2 flex-col gap-3 duration-500 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">Dashboard financeiro</h1>

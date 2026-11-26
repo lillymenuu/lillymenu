@@ -253,7 +253,7 @@ export function SettingsManager({
   let indiceAnimacao = 0;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10 p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl space-y-10 min-[1800px]:max-w-none p-4 sm:p-6">
       <header className="relative overflow-hidden rounded-3xl border bg-linear-to-br from-primary/10 via-card to-card p-6 sm:p-8">
         <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-primary/15 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-24 left-1/3 size-56 rounded-full bg-primary/5 blur-3xl" />

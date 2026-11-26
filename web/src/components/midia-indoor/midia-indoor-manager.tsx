@@ -134,7 +134,7 @@ export function MidiaIndoorManager({
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-5 p-4 sm:p-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-5 min-[1800px]:max-w-none p-4 sm:p-6">
       <div className="flex items-start gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <MonitorPlay className="size-5" />

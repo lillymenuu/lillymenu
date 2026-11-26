@@ -214,7 +214,7 @@ export function ProdutosManager({
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6 p-6">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 p-6 min-[1800px]:max-w-none">
       <ScrollToTop />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
