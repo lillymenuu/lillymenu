@@ -35,11 +35,18 @@ export async function listarNiveisAcesso(lojaId: number): Promise<NivelAcesso[]>
       slug: permissoesNiveis.slug,
       permissoesJson: permissoesNiveis.permissoes_json,
       lojaId: permissoesNiveis.loja_id,
-      usuarios: sql<string>`(select count(*) from ${permissoesUsuarios} pu join ${admins} a on a.id = pu.admin_id
-        where pu.permissao_id = ${permissoesNiveis.id} and a.loja_id = ${lojaId} and a.ativo)`,
     })
     .from(permissoesNiveis)
     .where(visivelParaLoja(lojaId));
+
+  /* Quantos usuarios ativos DESTA loja usam cada nivel (os padrao sao compartilhados entre lojas). */
+  const contagens = await db
+    .select({ permissaoId: permissoesUsuarios.permissao_id, total: sql<string>`count(*)` })
+    .from(permissoesUsuarios)
+    .innerJoin(admins, eq(admins.id, permissoesUsuarios.admin_id))
+    .where(and(eq(admins.loja_id, lojaId), eq(admins.ativo, true)))
+    .groupBy(permissoesUsuarios.permissao_id);
+  const usuariosPorNivel = new Map(contagens.map((c) => [c.permissaoId, Number(c.total)]));
 
   const niveis = linhas.map((l): NivelAcesso => {
     const padrao = l.lojaId === null ? NIVEIS_PADRAO_INFO[l.slug] : undefined;
@@ -50,7 +57,7 @@ export async function listarNiveisAcesso(lojaId: number): Promise<NivelAcesso[]>
       acessoTotal: padrao?.acessoTotal ?? false,
       descricao: padrao?.descricao ?? "",
       permissoes: padrao?.acessoTotal ? [...CHAVES_PERMISSOES] : lerPermissoes(l.permissoesJson),
-      usuarios: Number(l.usuarios ?? 0),
+      usuarios: usuariosPorNivel.get(l.id) ?? 0,
     };
   });
 
