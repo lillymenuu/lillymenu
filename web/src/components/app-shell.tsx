@@ -539,9 +539,8 @@ function AppShellInner({
             })}
             </TooltipProvider>
           </nav>
-          </div>
 
-          {/* Rodape fixo (fora da area que rola): admin logado e Sair. */}
+          {/* Rodape (rola junto com o menu): admin logado e Sair. */}
           <div
             className={cn(
               "flex shrink-0 items-center justify-between gap-1 py-3 pr-2 pl-4 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))]",
@@ -565,6 +564,7 @@ function AppShellInner({
             >
               <LogOut size={16} />
             </button>
+          </div>
           </div>
         </div>
       </aside>
