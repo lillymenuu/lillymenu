@@ -263,8 +263,9 @@ function AppShellInner({
           )}
         />
 
-        <div className="scrollbar-thin relative z-10 flex h-full flex-col overflow-y-auto overflow-x-hidden">
-          <div className="flex items-center justify-between gap-2 p-4 max-md:pt-[max(1rem,env(safe-area-inset-top))]">
+        {/* Topo (marca + recolher) fixo; so o restante do menu rola, com a barra aparecendo apenas com o mouse em cima. */}
+        <div className="relative z-10 flex h-full flex-col overflow-x-hidden">
+          <div className="flex shrink-0 items-center justify-between gap-2 p-4 max-md:pt-[max(1rem,env(safe-area-inset-top))]">
             {!collapsed && (
               <div className="flex min-w-0 items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -304,6 +305,7 @@ function AppShellInner({
             </button>
           </div>
 
+          <div className="scrollbar-hover-fade flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
           <div
             className={cn(
               "border-b p-4",
@@ -562,6 +564,7 @@ function AppShellInner({
             >
               <LogOut size={16} />
             </button>
+          </div>
           </div>
         </div>
       </aside>
