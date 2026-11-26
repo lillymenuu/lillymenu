@@ -93,8 +93,8 @@ export function ClientsManager({
           <h1 className="text-lg font-semibold">Clientes</h1>
           <p className="text-sm text-muted-foreground">Aqui você cadastra e gerencia seus clientes.</p>
         </div>
-        <Button size="sm" className="rounded-full" onClick={() => setCriarOpen(true)}>
-          <Plus size={14} /> Cadastrar cliente
+        <Button className="h-10 rounded-full px-5" onClick={() => setCriarOpen(true)}>
+          <Plus size={16} /> Cadastrar cliente
         </Button>
       </div>
 
@@ -153,7 +153,7 @@ export function ClientsManager({
                           e.stopPropagation();
                           setEditarId(c.id);
                         }}
-                        className="text-primary hover:underline"
+                        className="text-muted-foreground hover:text-foreground hover:underline"
                       >
                         {c.nome}
                       </button>
@@ -200,6 +200,7 @@ export function ClientsManager({
         open={perfilId !== null}
         onOpenChange={(v) => !v && setPerfilId(null)}
         clienteId={perfilId}
+        onAlterado={() => carregar(busca, pagina)}
       />
 
       {editarId !== null && (

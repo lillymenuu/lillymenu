@@ -23,10 +23,13 @@ export function ClientePerfilDialog({
   open,
   onOpenChange,
   clienteId,
+  onAlterado,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   clienteId: number | null;
+  /** Chamado depois de editar o cadastro pelo perfil, para quem abriu atualizar a lista. */
+  onAlterado?: () => void;
 }) {
   const [aba, setAba] = useState("perfil");
   const [carregando, setCarregando] = useState(false);
@@ -143,7 +146,10 @@ export function ClientePerfilDialog({
             open={editarOpen}
             onOpenChange={setEditarOpen}
             clienteId={clienteId}
-            onSalvo={carregar}
+            onSalvo={() => {
+              carregar();
+              onAlterado?.();
+            }}
           />
           <RegistrarFiadoDialog
             open={fiadoOpen}
