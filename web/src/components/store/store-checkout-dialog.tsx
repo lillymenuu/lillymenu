@@ -1488,12 +1488,12 @@ export function StoreCheckoutDialog({
       </Dialog>
 
       <Dialog open={cashbackModalAberto} onOpenChange={setCashbackModalAberto}>
-        <DialogContent showCloseButton={false} className="max-w-md gap-0 p-5 sm:max-w-md">
-          <p className="text-[.92rem] font-bold text-neutral-900">Voce tem cashback disponivel! 🎉</p>
+        <DialogContent showCloseButton={false} className="max-w-md gap-0 p-5 sm:max-w-md duration-300 ease-out data-open:slide-in-from-bottom-4 data-closed:duration-150">
+          <p className="text-[.92rem] font-bold text-neutral-900">Você tem cashback disponível! 🎉</p>
           <p className="mt-1.5 text-[.86rem] text-neutral-700">
-            Total disponivel: <strong className="font-bold" style={{ color: brown }}>{formatarPreco(cashbackDisponivel)}</strong>
+            Total disponível: <strong className="font-bold" style={{ color: brown }}>{formatarPreco(cashbackDisponivel)}</strong>
           </p>
-          <p className="mt-3 text-[.84rem] text-neutral-700">Qual valor do cashback voce deseja utilizar nesse pedido?</p>
+          <p className="mt-3 text-[.84rem] text-neutral-700">Qual valor do cashback você deseja utilizar nesse pedido?</p>
 
           <label className="mt-3 mb-1.5 block text-[.72rem] font-semibold tracking-wide text-neutral-500 uppercase">Valor</label>
           <input
@@ -1506,13 +1506,13 @@ export function StoreCheckoutDialog({
           {cashbackValorInput.trim() !== "" && !cashbackValorInputValido && (
             <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-[.78rem] text-red-700">
               <AlertCircle size={14} className="shrink-0" />
-              Valor maximo disponivel: {formatarPreco(cashbackDisponivel)}
+              Valor máximo disponível: {formatarPreco(cashbackDisponivel)}
             </div>
           )}
 
           <div className="mt-5 flex justify-end gap-2">
             <button type="button" onClick={() => setCashbackModalAberto(false)} className="rounded-lg px-4 py-2.5 text-[.84rem] font-semibold text-neutral-500">
-              Agora nao
+              Agora não
             </button>
             <button
               type="button"

@@ -255,7 +255,7 @@ export function StoreComboDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           showCloseButton={false}
-          className="flex h-[min(650px,calc(100dvh-24px))] w-[1040px]! max-w-[calc(100%-24px)]! gap-0 overflow-hidden rounded-[24px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)]"
+          className="flex h-[min(650px,calc(100dvh-24px))] duration-300 ease-out data-open:slide-in-from-bottom-4 data-closed:duration-150 w-[1040px]! max-w-[calc(100%-24px)]! gap-0 overflow-hidden rounded-[24px] bg-white p-0 shadow-[0_24px_60px_rgba(0,0,0,.3)]"
         >
           <DialogTitle className="sr-only">{combo.nome}</DialogTitle>
 
