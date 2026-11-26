@@ -79,6 +79,44 @@ export async function verificarSenhaPorId(adminId: number, lojaId: number, senha
 }
 
 /** Igual a verificarCredenciais, mas so aceita perfil "superadmin" + ativo=1 (igual ao WHERE de superadmin_login.php: inativo cai no mesmo 401 generico, sem 403 separado). */
+/** Mesmo alfabeto de gerarCodigoAcessoUnico (usuariosAdmin): sem 0/O, 1/I/L. */
+const RE_CODIGO_ACESSO = /^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{5}$/;
+
+/**
+ * Login pelo codigo de acesso rapido (gerado no cadastro do usuario em Configuracoes > Usuarios).
+ * Nunca autentica superadmin por codigo. O limite de tentativas fica na rota.
+ */
+export async function verificarCodigoAcesso(codigoBruto: string): Promise<AdminAutenticado | null> {
+  const codigo = codigoBruto.trim().toUpperCase();
+  if (!RE_CODIGO_ACESSO.test(codigo)) return null;
+
+  const [admin] = await db
+    .select({
+      id: admins.id,
+      nome: admins.nome,
+      email: admins.email,
+      perfil: admins.perfil,
+      ativo: admins.ativo,
+      lojaId: admins.loja_id,
+      lojaAtiva: lojas.ativo,
+    })
+    .from(admins)
+    .leftJoin(lojas, eq(lojas.id, admins.loja_id))
+    .where(eq(admins.codigo_acesso, codigo))
+    .limit(1);
+
+  if (!admin || admin.perfil === "superadmin") return null;
+  return {
+    id: admin.id,
+    nome: admin.nome ?? "",
+    email: admin.email ?? "",
+    perfil: admin.perfil,
+    lojaId: admin.lojaId,
+    lojaAtiva: admin.lojaAtiva ?? false,
+    ativo: admin.ativo ?? false,
+  };
+}
+
 export async function verificarCredenciaisSuperadmin(login: string, senha: string): Promise<AdminAutenticado | null> {
   const admin = await verificarCredenciais(login, senha);
   if (!admin || admin.perfil !== "superadmin" || !admin.ativo) return null;

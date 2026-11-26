@@ -2,12 +2,13 @@
 
 import { type ReactNode, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BarChart3, CheckCircle2, ShieldCheck, Smartphone } from "lucide-react";
+import { BarChart3, CheckCircle2, Hash, ShieldCheck, Smartphone } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "cn";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CodigoAcesso } from "./codigo-acesso";
 
 /* Campos e botoes do login em formato pilula (cantos totalmente arredondados). */
 const CAMPO = "h-11 rounded-full px-4 focus-visible:border-neutral-400 focus-visible:ring-0";
@@ -38,6 +39,12 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
   const [resetEmail, setResetEmail] = useState("");
   const [resetEnviando, setResetEnviando] = useState(false);
   const [resetEnviado, setResetEnviado] = useState(false);
+  const [modoCodigo, setModoCodigo] = useState(false);
+
+  function entrou(assinaturaBloqueada: boolean) {
+    router.push(assinaturaBloqueada ? "/plan-details" : searchParams.get("next") || "/dashboard");
+    router.refresh();
+  }
 
   async function handleResetRequest(e: React.FormEvent) {
     e.preventDefault();
@@ -78,8 +85,7 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
         return;
       }
 
-      router.push(data.assinaturaBloqueada ? "/plan-details" : searchParams.get("next") || "/dashboard");
-      router.refresh();
+      entrou(Boolean(data.assinaturaBloqueada));
     } catch {
       setErro("Erro de conexao. Tente novamente.");
     } finally {
@@ -92,6 +98,10 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
       <div className="flex flex-col p-6 md:p-10">
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">
+            {modoCodigo ? (
+              <CodigoAcesso onVoltar={() => setModoCodigo(false)} onEntrou={entrou} />
+            ) : (
+            <>
             <div className="mb-8 flex flex-col gap-1.5">
               <div className="mb-4">{marca}</div>
               <h1 className="text-2xl font-semibold tracking-tight">Bem-vindo de volta</h1>
@@ -107,6 +117,14 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
               </svg>
               Entrar com Google
             </a>
+            <button
+              type="button"
+              onClick={() => setModoCodigo(true)}
+              className={cn(buttonVariants({ variant: "outline", size: "lg" }), BOTAO, "mt-3 w-full")}
+            >
+              <Hash className="size-4" />
+              Código de acesso rápido
+            </button>
 
             <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
               <span className="h-px flex-1 bg-border" />
@@ -156,6 +174,8 @@ export function LoginForm({ marca, brand }: { marca: ReactNode; brand: string })
                 {carregando ? "Entrando..." : "Entrar"}
               </Button>
             </form>
+            </>
+            )}
           </div>
         </div>
 
