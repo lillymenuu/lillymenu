@@ -167,7 +167,7 @@ export function PosOverlay({
       onKeyDown={(e) => e.key === "Escape" && !document.fullscreenElement && !sairEdicaoAberto && pedirFechar()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-[2px] animate-in fade-in duration-200 sm:p-4"
     >
-      <div className="flex h-full w-full max-w-[1680px] flex-col overflow-hidden rounded-3xl bg-background shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 duration-200">
+      <div className="flex h-full w-full max-w-[1680px] flex-col min-[1800px]:max-w-none overflow-hidden rounded-3xl bg-background shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 duration-200">
         <header className="flex shrink-0 items-center justify-between border-b bg-card px-5 py-1.5">
           <div className="flex items-center gap-2">
             <div className="flex size-6 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -225,7 +225,7 @@ export function PosOverlay({
             onAberto={recarregarCaixa}
           />
         ) : (
-          <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
+          <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px] min-[1800px]:grid-cols-[1fr_440px]">
             <div className="min-h-0 min-w-0 border-b bg-zinc-100 p-4 dark:bg-muted/60 lg:border-b-0 lg:border-r">
               {catalogo ? (
                 <PosCatalog
