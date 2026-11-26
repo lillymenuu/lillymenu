@@ -287,6 +287,7 @@ export type ClienteStats = {
   pedidosFeitos: number;
   avaliacaoMedia: number | null;
   cashbackValidoAte: string | null;
+  bloqueado: boolean;
 };
 
 export async function clienteStats(lojaId: number, clienteId: number): Promise<{ ok: true; stats: ClienteStats } | { ok: false; msg: string }> {
@@ -311,6 +312,7 @@ export async function clienteStats(lojaId: number, clienteId: number): Promise<{
       cashbackSaldo: clientes.cashback_saldo,
       pontosSaldo: clientes.pontos_saldo,
       saldoFiado: clientes.saldo_fiado,
+      bloqueadoEm: clientes.bloqueado_em,
     })
     .from(clientes)
     .where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)))
@@ -379,6 +381,23 @@ export async function clienteStats(lojaId: number, clienteId: number): Promise<{
       pedidosFeitos: totalPed,
       avaliacaoMedia,
       cashbackValidoAte,
+      bloqueado: cliente.bloqueadoEm !== null,
     },
   };
+}
+
+/** Bloqueia (ou desbloqueia) o cliente: bloqueado, ele nao consegue fazer pedidos pelo cardapio da loja. */
+export async function definirBloqueioCliente(
+  lojaId: number,
+  clienteId: number,
+  bloquear: boolean
+): Promise<{ ok: true; bloqueado: boolean } | { ok: false; msg: string }> {
+  if (!clienteId) return { ok: false, msg: "Cliente invalido." };
+  const linhas = await db
+    .update(clientes)
+    .set({ bloqueado_em: bloquear ? await timestampLoja(lojaId) : null })
+    .where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)))
+    .returning({ id: clientes.id });
+  if (linhas.length === 0) return { ok: false, msg: "Cliente nao encontrado." };
+  return { ok: true, bloqueado: bloquear };
 }

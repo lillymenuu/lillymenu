@@ -225,6 +225,13 @@
       "when": 1795280706540,
       "tag": "0031_limites_tentativas",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1795660815528,
+      "tag": "0032_clientes_bloqueado",
+      "breakpoints": true
     }
   ]
 }

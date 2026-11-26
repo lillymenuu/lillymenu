@@ -23,6 +23,7 @@ export type ClienteStats = {
   ultimo_pedido: string | null;
   pedidos_feitos: number;
   avaliacao_media: number | null;
+  bloqueado: boolean;
 };
 
 export type ClientePedido = {

@@ -205,6 +205,8 @@ export const clientes = pgTable(
     pontos_saldo: integer("pontos_saldo").notNull().default(0),
     loja_id: integer("loja_id").notNull().default(1),
     saldo_fiado: numeric("saldo_fiado", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
+    /** Preenchido quando a loja bloqueia o cliente: ele nao consegue mais fazer pedidos pelo cardapio. */
+    bloqueado_em: timestamp("bloqueado_em", { mode: "string" }),
   }
 );
 

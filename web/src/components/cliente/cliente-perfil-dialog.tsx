@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { User, Receipt, Star, Gift, MapPin } from "lucide-react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { User, Receipt, Star, Gift, MapPin, Ban } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ClientePerfilTab } from "./cliente-perfil-tab";
@@ -36,6 +36,8 @@ export function ClientePerfilDialog({
   const [stats, setStats] = useState<ClienteStats | null>(null);
   const [editarOpen, setEditarOpen] = useState(false);
   const [fiadoOpen, setFiadoOpen] = useState(false);
+  const [confirmarBloqueioOpen, setConfirmarBloqueioOpen] = useState(false);
+  const [salvandoBloqueio, setSalvandoBloqueio] = useState(false);
 
   useEffect(() => {
     if (!open || !clienteId) return;
@@ -60,6 +62,31 @@ export function ClientePerfilDialog({
       .finally(() => setCarregando(false));
   }
 
+  async function definirBloqueio(bloquear: boolean) {
+    if (!clienteId) return;
+    setSalvandoBloqueio(true);
+    try {
+      const res = await fetch("/api/cliente/bloquear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: clienteId, bloquear }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!data?.ok) {
+        toast.error(data?.msg ?? "Não foi possível atualizar o cliente.");
+        return;
+      }
+      setStats((prev) => (prev ? { ...prev, bloqueado: data.bloqueado } : prev));
+      setConfirmarBloqueioOpen(false);
+      toast.success(data.bloqueado ? "Cliente bloqueado" : "Cliente desbloqueado");
+      onAlterado?.();
+    } catch {
+      toast.error("Não foi possível atualizar o cliente.");
+    } finally {
+      setSalvandoBloqueio(false);
+    }
+  }
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,7 +98,14 @@ export function ClientePerfilDialog({
                   {(stats?.nome || "C").charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <DialogTitle className="truncate font-medium">{stats?.nome ?? "Cliente"}</DialogTitle>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <DialogTitle className="truncate font-medium">{stats?.nome ?? "Cliente"}</DialogTitle>
+                    {stats?.bloqueado && (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                        <Ban size={11} /> Bloqueado
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs font-normal text-muted-foreground">
                     Cliente desde: {stats ? formatDataCurta(stats.criado_em) : "-"}
                   </div>
@@ -130,6 +164,17 @@ export function ClientePerfilDialog({
               Registrar fiado
             </Button>
             <Button
+              variant="outline"
+              className={cn(
+                "rounded-full font-normal",
+                stats?.bloqueado ? "" : "border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              )}
+              onClick={() => (stats?.bloqueado ? definirBloqueio(false) : setConfirmarBloqueioOpen(true))}
+              disabled={!clienteId || !stats || salvandoBloqueio}
+            >
+              {stats?.bloqueado ? "Desbloquear cliente" : "Bloquear cliente"}
+            </Button>
+            <Button
               className="rounded-full font-normal"
               onClick={() => setEditarOpen(true)}
               disabled={!clienteId}
@@ -159,6 +204,25 @@ export function ClientePerfilDialog({
           />
         </>
       )}
+      <Dialog open={confirmarBloqueioOpen} onOpenChange={(v) => !salvandoBloqueio && setConfirmarBloqueioOpen(v)}>
+        <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Bloquear cliente?</DialogTitle>
+            <DialogDescription>
+              {stats?.nome ? <strong className="font-medium text-foreground">{stats.nome}</strong> : "Este cliente"} não conseguirá
+              mais fazer pedidos pelo cardápio da loja. Você pode desbloquear a qualquer momento.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t-0 bg-transparent">
+            <Button variant="outline" className="rounded-full font-normal" onClick={() => setConfirmarBloqueioOpen(false)} disabled={salvandoBloqueio}>
+              Cancelar
+            </Button>
+            <Button className="rounded-full bg-red-600 font-normal text-white hover:bg-red-700" onClick={() => definirBloqueio(true)} disabled={salvandoBloqueio}>
+              {salvandoBloqueio ? "Bloqueando..." : "Bloquear"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

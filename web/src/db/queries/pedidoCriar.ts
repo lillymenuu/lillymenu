@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { db, withTransaction, type NeonTx } from "@/db";
 import { lojaPublicaBloqueada } from "@/db/queries/assinatura";
 import { registrarComplementosItem } from "@/db/queries/complementosVenda";
@@ -165,6 +165,22 @@ export async function criarPedidoLoja(input: CriarPedidoInput): Promise<CriarPed
 
   if (await lojaPublicaBloqueada(lojaId)) {
     return { ok: false, msg: "Esta loja nao esta aceitando pedidos no momento." };
+  }
+
+  /* Cliente bloqueado pela loja (perfil do cliente no admin): nao faz pedido pelo cardapio. */
+  const [bloqueado] = await db
+    .select({ id: clientes.id })
+    .from(clientes)
+    .where(
+      and(
+        eq(clientes.loja_id, lojaId),
+        or(eq(telefoneSemMascara, telefone), eq(clientes.telefone, formatarTelefoneBR(telefone))),
+        isNotNull(clientes.bloqueado_em)
+      )
+    )
+    .limit(1);
+  if (bloqueado) {
+    return { ok: false, msg: "Não foi possível concluir o pedido. Entre em contato com a loja." };
   }
 
   /* pedido de mesa (QR Code escaneado na mesa) — mesma mesa validada em montarPerfilLoja,

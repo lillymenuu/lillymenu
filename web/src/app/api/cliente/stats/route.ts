@@ -28,5 +28,6 @@ export async function GET(request: NextRequest) {
     ultimo_pedido: s.ultimoPedido,
     pedidos_feitos: s.pedidosFeitos,
     avaliacao_media: s.avaliacaoMedia,
+    bloqueado: s.bloqueado,
   });
 }
