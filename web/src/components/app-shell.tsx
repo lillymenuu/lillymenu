@@ -539,18 +539,19 @@ function AppShellInner({
             })}
             </TooltipProvider>
           </nav>
+          </div>
 
+          {/* Rodape fixo (fora da area que rola): admin logado e Sair. */}
           <div
             className={cn(
-              "flex items-center justify-between gap-2 border-t p-4",
-              collapsed ? "border-white/15" : "border-border",
+              "flex shrink-0 items-center justify-between gap-1 py-3 pr-2 pl-4 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))]",
               collapsed && "md:justify-center md:px-2"
             )}
           >
             {!collapsed && (
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium text-foreground">{sidebarData.admin.nome}</div>
-                <div className="truncate text-xs text-muted-foreground">{sidebarData.admin.email}</div>
+                <div className="text-[11px] leading-tight break-all text-muted-foreground">{sidebarData.admin.email}</div>
               </div>
             )}
             <button
@@ -564,7 +565,6 @@ function AppShellInner({
             >
               <LogOut size={16} />
             </button>
-          </div>
           </div>
         </div>
       </aside>
