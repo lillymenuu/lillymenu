@@ -365,11 +365,23 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
       caixaId = c?.id ?? null;
     }
   }
+  /* Sem caixa proprio: usa o caixa aberto hoje na loja (ex.: o admin abriu o caixa e o atendente,
+     que entrou com o proprio usuario, lanca as vendas nele). Mesma regra do resumo do caixa e de
+     caixaAtribuirPedidoFinalizado, que ja tratam o caixa como da loja. */
+  if (!caixaId) {
+    const [c] = await db
+      .select({ id: caixaTurnos.id })
+      .from(caixaTurnos)
+      .where(and(eq(caixaTurnos.status, "aberto"), eq(caixaTurnos.loja_id, lojaId), sql`to_char(${caixaTurnos.aberto_em}, 'YYYY-MM-DD') = ${hojeCaixa}`))
+      .orderBy(sql`${caixaTurnos.id} desc`)
+      .limit(1);
+    caixaId = c?.id ?? null;
+  }
   if (!caixaId) {
     const [anterior] = await db
       .select({ abertoEm: caixaTurnos.aberto_em })
       .from(caixaTurnos)
-      .where(and(eq(caixaTurnos.operador_id, adminId), eq(caixaTurnos.status, "aberto"), eq(caixaTurnos.loja_id, lojaId)))
+      .where(and(eq(caixaTurnos.status, "aberto"), eq(caixaTurnos.loja_id, lojaId)))
       .orderBy(sql`${caixaTurnos.id} desc`)
       .limit(1);
     if (anterior) {
