@@ -20,6 +20,8 @@ import {
   ShoppingBasket,
   UtensilsCrossed,
   type LucideIcon,
+  PencilLine,
+  UserPlus,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -155,6 +157,7 @@ type PedidoDetalhe = {
   motoboy_nome: string | null;
   motoboy_whatsapp: string | null;
   editado_por: string | null;
+  criado_por: string | null;
   mesa_nome: string | null;
   mesa_conta_solicitada_em: string | null;
   garcom_nome: string | null;
@@ -414,9 +417,20 @@ export function OrderDetailDialog({
                   </div>
                 )}
 
-                {pedido.editado_por && (
-                  <div className="text-left text-[10px] text-muted-foreground">
-                    Editado por: <span className="font-medium text-foreground">{pedido.editado_por}</span>
+                {(pedido.criado_por || pedido.editado_por) && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-muted/50 px-3 py-2 text-[11px] text-muted-foreground">
+                    {pedido.criado_por && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <UserPlus size={12} className="shrink-0" />
+                        Criado por <span className="font-medium text-foreground">{pedido.criado_por}</span>
+                      </span>
+                    )}
+                    {pedido.editado_por && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <PencilLine size={12} className="shrink-0" />
+                        Editado por <span className="font-medium text-foreground">{pedido.editado_por}</span>
+                      </span>
+                    )}
                   </div>
                 )}
 

@@ -439,9 +439,17 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
   // Na edicao, o cashback que o proprio pedido ja usou ja saiu do saldo do cliente — ele volta a
   // contar como disponivel pra este pedido, senao reaplicar o mesmo valor falhava por saldo insuficiente.
   let cashbackUsadoOriginal = 0;
+  /* Quem lancou o pedido original: a edicao que muda itens recria o pedido, e o novo continua
+     com o autor original (quem editou fica no log "pedido_editado"). null = loja online/garcom. */
+  let operadorOriginal: number | null = adminId;
   if (pedidoEdicaoId) {
-    const [original] = await db.select({ usado: pedidos.cashback_usado, clienteId: pedidos.cliente_id }).from(pedidos).where(and(eq(pedidos.id, pedidoEdicaoId), eq(pedidos.loja_id, lojaId))).limit(1);
+    const [original] = await db
+      .select({ usado: pedidos.cashback_usado, clienteId: pedidos.cliente_id, operadorId: pedidos.operador_id })
+      .from(pedidos)
+      .where(and(eq(pedidos.id, pedidoEdicaoId), eq(pedidos.loja_id, lojaId)))
+      .limit(1);
     if (original && original.clienteId === input.clienteId) cashbackUsadoOriginal = Math.max(0, Number(original.usado) || 0);
+    if (original) operadorOriginal = original.operadorId;
   }
 
   const cashbackUsadoInput = Math.max(0, toFloat(input.cashbackUsado));
@@ -622,7 +630,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
 
       const camposPedido: Record<string, unknown> = {
         cliente_id: input.clienteId,
-        operador_id: adminId,
+        operador_id: operadorOriginal,
         caixa_id: caixaId,
         mesa_id: input.mesaIdOriginal ?? null,
         garcom_id: input.garcomIdOriginal ?? null,
@@ -787,6 +795,8 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
     await registrarOperacao(adminId, "pedido_criado", `pedido:${resultadoTx.pedidoId}`, { total, tipo: input.tipo });
     if (resultadoTx.pedidoEdicaoId) {
       await registrarOperacao(adminId, "pedido_editado", `pedido:${resultadoTx.pedidoEdicaoId}`, { novo_pedido: resultadoTx.pedidoId });
+      /* Tambem no pedido novo, pra o detalhe dele mostrar quem editou. */
+      await registrarOperacao(adminId, "pedido_editado", `pedido:${resultadoTx.pedidoId}`, { pedido_original: resultadoTx.pedidoEdicaoId });
     }
 
     // Venda rapida: pula o Gestor de Pedidos e ja finaliza (mesma rotina do botao

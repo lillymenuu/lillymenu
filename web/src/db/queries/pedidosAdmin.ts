@@ -330,7 +330,7 @@ export type ClienteStats = {
 
 export type DetalhePedidoResultado =
   | { ok: false; msg: string }
-  | { ok: true; pedido: Record<string, unknown> & { codigo: number; editadoPor: string | null }; clienteStats: ClienteStats; itens: ItemPedido[]; pagamentos: PagamentoDetalhado[] };
+  | { ok: true; pedido: Record<string, unknown> & { codigo: number; editadoPor: string | null; criadoPor: string | null }; clienteStats: ClienteStats; itens: ItemPedido[]; pagamentos: PagamentoDetalhado[] };
 
 export async function detalhePedido(lojaId: number, pedidoId: number): Promise<DetalhePedidoResultado> {
   const linhas = await db
@@ -462,6 +462,17 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
     .orderBy(desc(operacaoLogs.criado_em), desc(operacaoLogs.id))
     .limit(1);
 
+  /* Quem lancou: usuario do painel (PDV) ou, sem operador, o canal de origem. */
+  let criadoPor: string | null = null;
+  if (linha.pedido.operador_id) {
+    const [operador] = await db.select({ nome: admins.nome }).from(admins).where(and(eq(admins.id, linha.pedido.operador_id), eq(admins.loja_id, lojaId))).limit(1);
+    criadoPor = operador?.nome || null;
+  } else if (linha.pedido.origem === "loja") {
+    criadoPor = "Cardápio online";
+  } else if (linha.pedido.origem === "garcom") {
+    criadoPor = linha.garcomNome ? `Garçom ${linha.garcomNome}` : "Modo garçom";
+  }
+
   return {
     ok: true,
     pedido: {
@@ -476,6 +487,7 @@ export async function detalhePedido(lojaId: number, pedidoId: number): Promise<D
       garcom_nome: linha.garcomNome,
       codigo: codigoDisplay(linha.pedido.id, base),
       editadoPor: editoLinha?.nome ?? null,
+      criadoPor,
     },
     clienteStats: stats,
     itens: itensLinhas,

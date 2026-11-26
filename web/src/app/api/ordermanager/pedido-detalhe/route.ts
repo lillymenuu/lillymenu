@@ -10,10 +10,10 @@ export async function GET(request: NextRequest) {
   const resultado = await detalhePedido(sessao.lojaId, id);
   if (!resultado.ok) return NextResponse.json(resultado);
 
-  const { editadoPor, ...pedidoResto } = resultado.pedido;
+  const { editadoPor, criadoPor, ...pedidoResto } = resultado.pedido;
   return NextResponse.json({
     ok: true,
-    pedido: { ...pedidoResto, editado_por: editadoPor },
+    pedido: { ...pedidoResto, editado_por: editadoPor, criado_por: criadoPor },
     cliente_stats: {
       pedidos_feitos: resultado.clienteStats.pedidosFeitos,
       ticket_medio: resultado.clienteStats.ticketMedio,
