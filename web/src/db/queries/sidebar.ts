@@ -69,7 +69,9 @@ export async function getSidebarDataNeon(adminId: number, lojaId: number, perfil
       /* json invalido: trata como sem restricao */
     }
   }
-  const menuRestrito = menuPermitido.size > 0;
+  /* Usuario com nivel atribuido (fora o de acesso total) so ve o que o nivel libera, mesmo que a
+     lista esteja vazia ou invalida; sem nivel (admin principal), sem restricao. */
+  const menuRestrito = permLinhas.length > 0 && !nivelAcessoTotal;
 
   /* 2. recursos do plano (recursos_json), se a loja nao for superadmin */
   let recursosPlano: string[] | null = null;

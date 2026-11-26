@@ -1,8 +1,9 @@
 import "server-only";
 import { randomInt } from "node:crypto";
-import { and, eq, ne, notInArray, sql, asc } from "drizzle-orm";
+import { and, eq, ne, sql, asc, isNull, inArray, or } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import { admins, permissoesNiveis, permissoesUsuarios } from "@/db/schema";
+import { NIVEIS_PADRAO_INFO } from "@/lib/permissoes";
 
 /*
  * Equivalente de admin/api/v1/usuarios_listar.php, usuarios_salvar.php,
@@ -15,7 +16,7 @@ import { admins, permissoesNiveis, permissoesUsuarios } from "@/db/schema";
  * garante tudo isso.
  */
 
-async function souAdminPrincipal(adminId: number, perfil: string): Promise<boolean> {
+export async function souAdminPrincipal(adminId: number, perfil: string): Promise<boolean> {
   if (perfil !== "admin") return false;
   const [linha] = await db.select({ senha: admins.senha }).from(admins).where(eq(admins.id, adminId)).limit(1);
   return Boolean(linha?.senha && linha.senha.trim() !== "");
@@ -72,8 +73,7 @@ async function garantirNiveisPadrao(): Promise<void> {
 }
 
 function rotuloNivelUsuario(perfil: string, permissaoSlug: string | null, permissaoNome: string | null): string {
-  if (permissaoSlug === "nivel-1") return "Admin";
-  if (permissaoSlug === "nivel-2") return "Garçom";
+  if (permissaoSlug && NIVEIS_PADRAO_INFO[permissaoSlug]) return NIVEIS_PADRAO_INFO[permissaoSlug].nome;
   if (permissaoSlug) return permissaoNome ?? "Personalizada";
   return perfil === "admin" ? "Admin" : "Sem permissão";
 }
@@ -109,16 +109,18 @@ export async function listarUsuarios(lojaId: number, adminId: number, perfil: st
     .from(permissoesNiveis)
     .where(sql`${permissoesNiveis.slug} in ('nivel-1','nivel-2','nivel-3')`);
   const ordemSlug = ["nivel-1", "nivel-2", "nivel-3"];
-  const niveis = [...niveisRaw].sort((a, b) => ordemSlug.indexOf(a.slug) - ordemSlug.indexOf(b.slug));
+  /* Nome amigavel dos padrao (no banco estao como "Nivel 1/2/3"). */
+  const niveis = [...niveisRaw]
+    .sort((a, b) => ordemSlug.indexOf(a.slug) - ordemSlug.indexOf(b.slug))
+    .map((n) => ({ ...n, nome: NIVEIS_PADRAO_INFO[n.slug]?.nome ?? n.nome }));
   const nivelAdminId = niveis.find((n) => n.slug === "nivel-1")?.id ?? 0;
   const nivelGarcomId = niveis.find((n) => n.slug === "nivel-2")?.id ?? 0;
 
+  /* Niveis criados pela loja em /settings/permissions (mesmo os que ainda nao tem usuario). */
   const niveisPersonalizados = await db
-    .selectDistinct({ id: permissoesNiveis.id, nome: permissoesNiveis.nome, slug: permissoesNiveis.slug })
+    .select({ id: permissoesNiveis.id, nome: permissoesNiveis.nome, slug: permissoesNiveis.slug })
     .from(permissoesNiveis)
-    .innerJoin(permissoesUsuarios, eq(permissoesUsuarios.permissao_id, permissoesNiveis.id))
-    .innerJoin(admins, eq(admins.id, permissoesUsuarios.admin_id))
-    .where(and(eq(admins.loja_id, lojaId), notInArray(permissoesNiveis.slug, ["nivel-1", "nivel-2"])))
+    .where(eq(permissoesNiveis.loja_id, lojaId))
     .orderBy(asc(permissoesNiveis.nome));
 
   const usuariosRaw = await db
@@ -194,7 +196,18 @@ export async function salvarUsuario(lojaId: number, adminId: number, perfil: str
     if (!pertence) return { ok: false, msg: "Usuario nao pertence a esta loja." };
   }
 
-  const [nivel] = await db.select({ slug: permissoesNiveis.slug }).from(permissoesNiveis).where(eq(permissoesNiveis.id, permissaoId)).limit(1);
+  /* So aceita nivel padrao do sistema ou personalizado desta loja (nunca o de outra loja). */
+  const [nivel] = await db
+    .select({ slug: permissoesNiveis.slug })
+    .from(permissoesNiveis)
+    .where(
+      and(
+        eq(permissoesNiveis.id, permissaoId),
+        or(and(isNull(permissoesNiveis.loja_id), inArray(permissoesNiveis.slug, Object.keys(NIVEIS_PADRAO_INFO))), eq(permissoesNiveis.loja_id, lojaId))
+      )
+    )
+    .limit(1);
+  if (!nivel) return { ok: false, msg: "Nível de acesso inválido." };
   const perfilNovo = perfilPorNivel(nivel?.slug ?? null);
 
   const codigoGerado = id === 0 ? await gerarCodigoAcessoUnico() : "";

@@ -178,7 +178,7 @@ export function SettingsManager({
         { id: "loja-info", icon: Store, title: "Informações da loja", desc: "Defina nome, logo e identidade da marca." },
         { id: "menu-custom", icon: Palette, title: "Customize o menu", desc: "Ajuste cores, banners e layout do cardapio." },
         { id: "usuarios", icon: Users, title: "Usuários", desc: "Gerencie contas e acessos da equipe." },
-        { id: "permissoes", icon: ShieldCheck, title: "Permissões", desc: "Defina niveis e politicas de acesso.", linkOut: "permissoes.php" },
+        { id: "permissoes", icon: ShieldCheck, title: "Permissões", desc: "Crie níveis de acesso e defina o que cada usuário pode usar." },
         { id: "selo-verificacao", icon: BadgeCheck, title: "Selo de verificação", desc: "Verifique seu contato e exiba o selo de loja verificada no cardápio.", badge: "Novo" },
         { id: "horarios", icon: Clock, title: "Horário de funcionamento", desc: "Configure abertura, fechamento e dias ativos." },
         {
@@ -236,7 +236,7 @@ export function SettingsManager({
   function abrirCard(id: string) {
     if (id === "versiculo-dashboard") return;
     if (id === "permissoes") {
-      window.open(`${phpAdminUrl}/admin/permissoes.php`, "_blank");
+      router.push("/settings/permissions");
       return;
     }
     if (id === "pedidos-agendados") {

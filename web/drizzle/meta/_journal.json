@@ -232,6 +232,13 @@
       "when": 1795660815528,
       "tag": "0032_clientes_bloqueado",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795726897756,
+      "tag": "0033_permissoes_niveis_loja",
+      "breakpoints": true
     }
   ]
 }

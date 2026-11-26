@@ -1185,9 +1185,12 @@ export const permissoesNiveis = pgTable(
     permissoes_json: text("permissoes_json").notNull(),
     criado_em: timestamp("criado_em", { mode: "string" }).notNull().defaultNow(),
     atualizado_em: timestamp("atualizado_em", { mode: "string" }),
+    /** Loja dona do nivel personalizado. null = nivel padrao do sistema (nivel-1/2/3), visivel a todas. */
+    loja_id: integer("loja_id"),
   },
   (t) => [
     unique("permissoes_niveis_slug").on(t.slug),
+    index("permissoes_niveis_idx_loja").on(t.loja_id),
   ]
 );
 
