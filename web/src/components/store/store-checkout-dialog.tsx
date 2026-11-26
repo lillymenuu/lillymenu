@@ -1488,7 +1488,7 @@ export function StoreCheckoutDialog({
       </Dialog>
 
       <Dialog open={cashbackModalAberto} onOpenChange={setCashbackModalAberto}>
-        <DialogContent showCloseButton={false} className="max-w-md gap-0 p-5 sm:max-w-md duration-300 ease-out data-open:slide-in-from-bottom-4 data-closed:duration-150">
+        <DialogContent showCloseButton={false} className="w-[calc(100%-32px)] max-w-md gap-0 rounded-2xl p-5 sm:max-w-md duration-300 ease-out data-open:slide-in-from-bottom-4 data-closed:duration-150">
           <p className="text-[.92rem] font-bold text-neutral-900">Você tem cashback disponível! 🎉</p>
           <p className="mt-1.5 text-[.86rem] text-neutral-700">
             Total disponível: <strong className="font-bold" style={{ color: brown }}>{formatarPreco(cashbackDisponivel)}</strong>
