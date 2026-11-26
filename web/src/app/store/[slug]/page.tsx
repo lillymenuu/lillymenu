@@ -158,6 +158,7 @@ export default async function StorePage({
     pausaAtivaTitulo: perfilNeon.pausaAtivaTitulo,
     pausaAtivaFim: perfilNeon.pausaAtivaFim,
     proximoHorario: perfilNeon.proximoHorario,
+    fechaAs: perfilNeon.fechaAs,
     lojaContato: perfilNeon.lojaContato,
     lojaWhatsappPedidos: perfilNeon.lojaWhatsappPedidos,
     lojaInstagram: perfilNeon.lojaInstagram,

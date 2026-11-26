@@ -51,6 +51,7 @@ export type StorePerfil = {
   pausaAtivaTitulo: string;
   pausaAtivaFim: string;
   proximoHorario: string;
+  fechaAs: string;
   lojaContato: string;
   lojaWhatsappPedidos: string;
   lojaInstagram: string;

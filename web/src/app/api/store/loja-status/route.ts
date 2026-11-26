@@ -26,6 +26,7 @@ export async function GET(request: Request) {
     pausaTitulo: perfil.pausaAtivaTitulo,
     pausaFim: perfil.pausaAtivaFim,
     proximoHorario: perfil.proximoHorario,
+    fechaAs: perfil.fechaAs,
     entAtiva: perfil.entAtiva,
     retAtiva: perfil.retAtiva,
     semana: perfil.semanaHorarios,

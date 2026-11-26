@@ -181,6 +181,8 @@ export type PerfilLoja = {
   pausaAtivaTitulo: string;
   pausaAtivaFim: string;
   proximoHorario: string;
+  /** Loja aberta: horario em que fecha hoje ("19:30"); vazio quando nao ha horario definido. */
+  fechaAs: string;
   lojaContato: string;
   lojaWhatsappPedidos: string;
   lojaInstagram: string;
@@ -428,6 +430,17 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
     if (!proximoHorario && cfg.horario_abertura) proximoHorario = `às ${cfg.horario_abertura}`;
   }
 
+  /* Aberta: mesmo criterio do estaAberto (horario do dia da semana, senao o horario geral). */
+  let fechaAs = "";
+  if (lojaAberta) {
+    const hs = jsonOuVazio<Record<string, AgendHorario>>(cfg.horarios_semana || "", {});
+    const fuso = await fusoLoja(lojaId);
+    const dataHoje = new Intl.DateTimeFormat("en-CA", { timeZone: fuso }).format(new Date());
+    const ckHoje = new Date(`${dataHoje}T00:00:00`).getDay() + 1;
+    const hdHoje = hs[ckHoje] ?? hs[String(ckHoje)];
+    fechaAs = hdHoje?.fim || cfg.horario_fechamento || "";
+  }
+
   const lojaContato = cfg.loja_contato || "";
   // Numero que recebe os pedidos no WhatsApp (modal "Receber pedidos"); sem ele, cai no
   // contato da loja. Sem o DDI 55, que o link wa.me ja acrescenta.
@@ -555,6 +568,7 @@ export async function montarPerfilLoja(lojaId: number, opts: { mesaNumero?: numb
     pausaAtivaTitulo,
     pausaAtivaFim,
     proximoHorario,
+    fechaAs,
     lojaContato,
     lojaWhatsappPedidos,
     lojaInstagram,

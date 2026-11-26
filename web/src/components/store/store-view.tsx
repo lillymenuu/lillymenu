@@ -55,13 +55,28 @@ function consumoVariacoesDoProduto(itens: { tipo: string; id: number; variacaoId
 
 /* Mesma prioridade do loja.php: pausa programada ativa mostra o titulo dela. */
 function textoStatusLoja(perfil: StorePerfil) {
-  if (perfil.lojaAberta) return "Aberto agora";
+  if (perfil.lojaAberta) return perfil.fechaAs ? `Aberto até às ${perfil.fechaAs.slice(0, 5)}` : "Aberto agora";
   if (perfil.pausaAtivaTitulo) {
     // Titulo que ja fala em pausa (ex.: "Pausa programada") dispensa o prefixo, senao repete.
     const titulo = perfil.pausaAtivaTitulo.trim();
     return /^pausa/i.test(titulo) ? titulo : `Pausa programada: ${titulo}`;
   }
-  return `Fechado${perfil.proximoHorario ? ` • abre ${perfil.proximoHorario}` : ""}`;
+  return `Fechado${perfil.proximoHorario ? `, abriremos ${perfil.proximoHorario}` : ""}`;
+}
+
+/** Etiqueta de status: verde com ponto quando aberta, vermelha quando fechada/em pausa. */
+function StatusLojaPill({ perfil, className = "" }: { perfil: StorePerfil; className?: string }) {
+  const aberta = perfil.lojaAberta;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[.78rem] leading-none font-semibold ${
+        aberta ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+      } ${className}`}
+    >
+      <span className={`size-1.5 shrink-0 rounded-full ${aberta ? "bg-emerald-500" : "bg-red-500"}`} />
+      {textoStatusLoja(perfil)}
+    </span>
+  );
 }
 
 export function StoreView({ perfil, catalogo }: { perfil: StorePerfil; catalogo: StoreCatalogo }) {
@@ -189,6 +204,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
           pausaAtivaTitulo: d.pausaTitulo || "",
           pausaAtivaFim: d.pausaFim || "",
           proximoHorario: d.proximoHorario || "",
+          fechaAs: d.fechaAs || "",
           semanaHorarios: Array.isArray(d.semana) ? d.semana : p.semanaHorarios,
         }));
         if (d.catalogoVersao && d.catalogoVersao !== catalogoVersaoRef.current) {
@@ -487,9 +503,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               {[perfil.lojaCidade, perfil.lojaBairro].filter(Boolean).join(", ")}
             </p>
           )}
-          <p className={`text-[.82rem] font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`} style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}>
-            {textoStatusLoja(perfil)}
-          </p>
+          <StatusLojaPill perfil={perfil} />
         </div>
       </div>
 
@@ -611,12 +625,7 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
               )}
             </div>
             <div className="flex flex-wrap items-center gap-1.5 text-[.9rem]">
-              <span
-                className={`font-semibold ${perfil.lojaAberta ? "text-emerald-600" : ""}`}
-                style={perfil.lojaAberta ? undefined : { color: "var(--store-pink)" }}
-              >
-                {textoStatusLoja(perfil)}
-              </span>
+              <StatusLojaPill perfil={perfil} />
               {(perfil.lojaBairro || perfil.lojaCidade) && (
                 <>
                   <span className="text-neutral-300">•</span>
