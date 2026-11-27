@@ -12,7 +12,6 @@ import { LandingSignup } from "@/components/landing/landing-signup";
 import { LandingPlanos } from "@/components/landing/landing-planos";
 import { LandingCta } from "@/components/landing/landing-cta";
 import { LandingContato } from "@/components/landing/landing-contato";
-import { LandingFinalCta } from "@/components/landing/landing-final-cta";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { WhatsappFloatButton } from "@/components/landing/whatsapp-float-button";
 import { ScrollToTopButton } from "@/components/landing/scroll-to-top-button";
@@ -110,8 +109,6 @@ export default async function LandingPage() {
         />
 
         <LandingSignup faturamentoOpcoes={faturamentoOpcoes} segmentoOpcoes={segmentoOpcoes} leadLabels={leadLabels} />
-
-        <LandingFinalCta />
 
         <LandingCta
           titulo={lc(config, "cta_title", "Fale com um especialista")}
