@@ -101,7 +101,7 @@ export async function buscarClientesRecentes(lojaId: number, limite: number): Pr
 
 export type LancamentoFiado = {
   id: number;
-  tipo: "venda" | "pagamento";
+  tipo: "venda" | "pagamento" | "estorno";
   valor: number;
   saldoAntes: number;
   saldoDepois: number;

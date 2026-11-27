@@ -581,7 +581,7 @@ export const fiadoLancamentos = pgTable(
     cliente_id: integer("cliente_id").notNull(),
     pedido_id: integer("pedido_id"),
     operador_id: integer("operador_id"),
-    tipo: text("tipo").$type<"venda" | "pagamento">().notNull(),
+    tipo: text("tipo").$type<"venda" | "pagamento" | "estorno">().notNull(),
     forma_pagamento: varchar("forma_pagamento", { length: 30 }),
     valor: numeric("valor", { precision: 10, scale: 2, mode: "number" }).notNull(),
     saldo_antes: numeric("saldo_antes", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),

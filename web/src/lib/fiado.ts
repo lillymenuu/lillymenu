@@ -39,7 +39,7 @@ export async function getFiadoClientes(lojaId: number, params: FiadoClientesPara
 
 export type FiadoLancamento = {
   id: number;
-  tipo: "venda" | "pagamento";
+  tipo: "venda" | "pagamento" | "estorno";
   valor: number;
   saldo_antes: number;
   saldo_depois: number;

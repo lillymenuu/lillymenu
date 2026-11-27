@@ -1,5 +1,6 @@
 import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { estornarFiadoDoPedido, fiadoLiquidoDoPedido } from "@/db/queries/fiadoPedido";
 import { db, withTransaction, type NeonTx } from "@/db";
 import {
   pedidos,
@@ -636,6 +637,19 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
             await tx.insert(pedidoPagamentos).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoEdicaoId, forma: p.forma, valor: p.valor, taxa_maquininha: taxaPagamento, loja_id: lojaId });
           }
 
+          /* Fiado: se a parte paga no fiado mudou, estorna a antiga e lanca a nova. */
+          const fiadoAtual = await fiadoLiquidoDoPedido(tx, lojaId, pedidoEdicaoId);
+          if (Math.abs(fiadoAtual.valor - fiadoValorTotal) > 0.009) {
+            await estornarFiadoDoPedido(tx, lojaId, pedidoEdicaoId, adminId, "Pagamento do pedido editado");
+            if (fiadoValorTotal > 0.009) {
+              const [c] = await tx.select({ saldoFiado: clientes.saldo_fiado }).from(clientes).where(and(eq(clientes.id, input.clienteId), eq(clientes.loja_id, lojaId))).limit(1);
+              const saldoAntesFiado = c?.saldoFiado ?? 0;
+              const saldoDepoisFiado = saldoAntesFiado + fiadoValorTotal;
+              await tx.update(clientes).set({ saldo_fiado: saldoDepoisFiado }).where(and(eq(clientes.id, input.clienteId), eq(clientes.loja_id, lojaId)));
+              await tx.insert(fiadoLancamentos).values({ criado_em: await timestampLoja(lojaId), loja_id: lojaId, cliente_id: input.clienteId, pedido_id: pedidoEdicaoId, operador_id: adminId, tipo: "venda", valor: fiadoValorTotal, saldo_antes: saldoAntesFiado, saldo_depois: saldoDepoisFiado });
+            }
+          }
+
           return { apenasPagamento: true as const, pedidoId: pedidoEdicaoId };
         }
       }
@@ -776,6 +790,7 @@ export async function salvarPedidoPdv(input: SalvarPedidoPdvInput): Promise<Salv
 
       // edicao com itens DIFERENTES: cancela o pedido antigo (repoe estoque) e cria este como novo
       if (pedidoEdicaoId) {
+        await estornarFiadoDoPedido(tx, lojaId, pedidoEdicaoId, adminId, "Pedido editado (substituído por um novo)");
         await pedidoRestaurarEstoqueCancelado(tx, pedidoEdicaoId, lojaId);
         await tx.update(pedidos).set({ status: "cancelado" }).where(and(eq(pedidos.id, pedidoEdicaoId), eq(pedidos.loja_id, lojaId)));
         await tx.insert(pedidoStatusLog).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoEdicaoId, status: "cancelado", loja_id: lojaId });

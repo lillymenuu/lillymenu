@@ -33,7 +33,7 @@ export function LancamentoDetalheDialog({
           <div className="flex flex-col gap-2 text-sm">
             <div className="flex flex-col gap-0.5 rounded-lg bg-muted/40 px-3 py-2">
               <span className="text-xs text-muted-foreground">Tipo</span>
-              <span>{ehPago ? "Pagamento" : "Fiado"}</span>
+              <span>{lancamento.tipo === "estorno" ? "Estorno (pedido cancelado/editado)" : ehPago ? "Pagamento" : "Fiado"}</span>
             </div>
             <div className="flex flex-col gap-0.5 rounded-lg bg-muted/40 px-3 py-2">
               <span className="text-xs text-muted-foreground">Valor</span>

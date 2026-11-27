@@ -1,4 +1,5 @@
 import "server-only";
+import { estornarFiadoDoPedido } from "@/db/queries/fiadoPedido";
 import { and, eq, sql } from "drizzle-orm";
 import { db, withTransaction } from "@/db";
 import type { NeonTx } from "@/db";
@@ -143,6 +144,8 @@ export async function cancelarPedido(lojaId: number, adminId: number, perfil: st
     await tx.insert(pedidoStatusLog).values({ criado_em: await timestampLoja(lojaId), pedido_id: pedidoId, status: "cancelado", loja_id: lojaId });
     await pedidoRestaurarEstoqueCancelado(tx, pedidoId, lojaId);
     await cashbackCancelarPendente(tx, lojaId, pedidoId);
+    /* Parte paga no fiado volta ao saldo do cliente (antes ficava devendo por um pedido cancelado). */
+    await estornarFiadoDoPedido(tx, lojaId, pedidoId, adminId, "Pedido cancelado");
     return "cancelado" as const;
   });
 

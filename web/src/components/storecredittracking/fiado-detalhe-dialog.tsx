@@ -101,6 +101,7 @@ export function FiadoDetalheDialog({
                   )}
                   {dados.lancamentos.map((l) => {
                     const ehPago = l.tipo === "pagamento";
+                    const ehEstorno = l.tipo === "estorno";
                     return (
                       <button
                         key={l.id}
@@ -109,15 +110,19 @@ export function FiadoDetalheDialog({
                         className="flex items-center justify-between rounded-2xl border px-3 py-2 text-left text-sm hover:bg-muted/40"
                       >
                         <div className="flex items-center gap-2">
-                          {ehPago ? (
+                          {ehEstorno ? (
+                            <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400">Estornado</Badge>
+                          ) : ehPago ? (
                             <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">Pago</Badge>
                           ) : (
                             <Badge variant="secondary">Fiado</Badge>
                           )}
                           <span>
-                            {ehPago
-                              ? `${formatBRL(l.valor)} - ${FORMA_LABELS[l.forma_pagamento ?? ""] ?? "Outros"}`
-                              : `-${formatBRL(l.valor)}`}
+                            {ehEstorno
+                              ? `${formatBRL(l.valor)} - ${l.observacao ?? "Estorno"}`
+                              : ehPago
+                                ? `${formatBRL(l.valor)} - ${FORMA_LABELS[l.forma_pagamento ?? ""] ?? "Outros"}`
+                                : `-${formatBRL(l.valor)}`}
                           </span>
                         </div>
                         <div className="text-xs text-muted-foreground">{formatDataHoraCurta(l.criado_em)}</div>
