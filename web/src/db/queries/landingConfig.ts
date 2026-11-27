@@ -74,7 +74,7 @@ export function getPlanosMarketing(config: LandingConfigMap): PlanoMarketing[] {
       cor: lc(config, `${slug}_cor`),
       badge: lc(config, `${slug}_badge`),
       botaoTexto: lc(config, `${slug}_botao_texto`, "Falar com especialista"),
-      botaoLink: lc(config, `${slug}_botao_link`, "#contato"),
+      botaoLink: lc(config, `${slug}_botao_link`, "#fale-conosco"),
     }))
     .filter((p) => p.ativo && p.nome !== "");
 }

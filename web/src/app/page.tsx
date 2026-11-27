@@ -10,7 +10,6 @@ import { LandingSolucoes } from "@/components/landing/landing-solucoes";
 import { LandingSegmentos } from "@/components/landing/landing-segmentos";
 import { LandingSignup } from "@/components/landing/landing-signup";
 import { LandingPlanos } from "@/components/landing/landing-planos";
-import { LandingCta } from "@/components/landing/landing-cta";
 import { LandingContato } from "@/components/landing/landing-contato";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { WhatsappFloatButton } from "@/components/landing/whatsapp-float-button";
@@ -39,13 +38,6 @@ export default async function LandingPage() {
   const beneficios = [1, 2, 3, 4, 5, 6]
     .map((n) => ({ titulo: lc(config, `planos_beneficio${n}_titulo`), texto: lc(config, `planos_beneficio${n}_texto`) }))
     .filter((b) => b.titulo !== "");
-
-  const ctaItens = [1, 2, 3]
-    .map((n) => ({
-      titulo: aplicarBrand(lc(config, `cta_item${n}_titulo`), brand),
-      texto: lc(config, `cta_item${n}_texto`),
-    }))
-    .filter((i) => i.titulo !== "");
 
   const leadLabels = {
     titulo: lc(config, "lead_title", "Cadastre sua loja"),
@@ -109,15 +101,6 @@ export default async function LandingPage() {
         />
 
         <LandingSignup faturamentoOpcoes={faturamentoOpcoes} segmentoOpcoes={segmentoOpcoes} leadLabels={leadLabels} />
-
-        <LandingCta
-          titulo={lc(config, "cta_title", "Fale com um especialista")}
-          texto={lc(config, "cta_text")}
-          itens={ctaItens}
-          botaoTexto={lc(config, "cta_button_text", "Falar agora")}
-          faturamentoOpcoes={faturamentoOpcoes}
-          modeloNegocioOpcoes={segmentoOpcoes}
-        />
 
         <LandingContato />
       </main>
