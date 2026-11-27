@@ -1,5 +1,6 @@
 "use client";
 
+import { FinanceiroAtalhos } from "@/components/financeiro-atalhos";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,6 +32,7 @@ export function FinancialDreManager({ dadosIniciais }: { dadosIniciais: Financei
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 min-[1800px]:max-w-none p-4 sm:p-6">
+      <FinanceiroAtalhos />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">DRE</h1>

@@ -1,5 +1,6 @@
 "use client";
 
+import { FinanceiroAtalhos } from "@/components/financeiro-atalhos";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
@@ -115,6 +116,7 @@ export function FinancialTransactionsManager({ dadosIniciais }: { dadosIniciais:
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 min-[1800px]:max-w-none p-4 sm:p-6">
+      <FinanceiroAtalhos />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">Lançamentos financeiros</h1>
