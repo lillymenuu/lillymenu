@@ -35,6 +35,7 @@ import { PRODUTO_IMAGEM_PADRAO } from "@/lib/produtoImagem";
 import type { Combo } from "@/lib/combos";
 import { ProdutoFormDialog } from "./produto-form-dialog";
 import { ComboFormDialog } from "./combo-form-dialog";
+import { ComboCategoriaDialog } from "./combo-categoria-dialog";
 import { CriarCategoriaDialog } from "./criar-categoria-dialog";
 import { ReordenarCategoriasDialog } from "./reordenar-categorias-dialog";
 import { ReordenarItensDialog } from "./reordenar-itens-dialog";
@@ -72,6 +73,7 @@ export function ProdutosManager({
   const [comboFormOpen, setComboFormOpen] = useState(false);
   const [comboEditando, setComboEditando] = useState<Combo | null>(null);
   const [categoriaParaNovoCombo, setCategoriaParaNovoCombo] = useState<number | null>(null);
+  const [comboCategoriaOpen, setComboCategoriaOpen] = useState(false);
   const [categoriaParaExcluir, setCategoriaParaExcluir] = useState<Categoria | null>(null);
   const [excluindoCategoria, setExcluindoCategoria] = useState(false);
 
@@ -140,10 +142,11 @@ export function ProdutosManager({
     setFormOpen(true);
   }
 
+  /* Novo combo comeca escolhendo a categoria (ja marcada com a da linha clicada). */
   function abrirNovoCombo(categoriaId?: number) {
     setComboEditando(null);
     setCategoriaParaNovoCombo(categoriaId ?? null);
-    setComboFormOpen(true);
+    setComboCategoriaOpen(true);
   }
 
   function abrirEdicaoCombo(combo: Combo) {
@@ -517,6 +520,17 @@ export function ProdutosManager({
           combos={itensReordenar.combos}
         />
       )}
+      <ComboCategoriaDialog
+        open={comboCategoriaOpen}
+        onOpenChange={setComboCategoriaOpen}
+        categorias={categorias}
+        inicial={categoriaParaNovoCombo}
+        onContinuar={(id) => {
+          setCategoriaParaNovoCombo(id);
+          setComboCategoriaOpen(false);
+          setComboFormOpen(true);
+        }}
+      />
       <ComboFormDialog
         open={comboFormOpen}
         onOpenChange={setComboFormOpen}

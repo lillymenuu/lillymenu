@@ -38,7 +38,8 @@ function mapProduto(p: ProdutoPdv): StoreProduto {
 }
 
 function mapCombo(c: ComboPdv): StoreCombo {
-  const emPromo = c.precoPromocional !== null && c.precoPromocional > 0;
+  const porOpcao = c.tipoPreco === "por_item";
+  const emPromo = !porOpcao && c.precoPromocional !== null && c.precoPromocional > 0;
   const precoFinal = emPromo ? c.precoPromocional! : c.preco;
   return {
     id: c.id,
@@ -51,6 +52,7 @@ function mapCombo(c: ComboPdv): StoreCombo {
     desc_pct: emPromo ? Math.round((1 - precoFinal / c.preco) * 100) : 0,
     imagem: c.imagem ?? "",
     tipo: "combo",
+    por_opcao: porOpcao,
   };
 }
 

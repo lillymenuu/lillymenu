@@ -1,194 +1,273 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Search } from "lucide-react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import type { Produto } from "@/lib/produtos";
-import type { ComboPasso, ComboPassoSalvarResposta } from "@/lib/combos";
+import { cn } from "cn";
 
-/*
- * Cria/edita um passo do combo — salva imediatamente (precisa de
- * comboId, o combo ja tem que existir), igual ao legado
- * (admin/api/combo_passo_save.php). Depois de salvar, avisa o pai via
- * onSalvo pra recarregar a lista de passos.
- */
+/** Passo do combo enquanto e montado no formulario (so e gravado ao salvar o combo). */
+export type PassoRascunho = {
+  chave: string;
+  id?: number;
+  nome: string;
+  descricao: string;
+  obrigatorio: boolean;
+  min: string;
+  max: string;
+  permiteRepetir: boolean;
+  opcoes: { id: number; nome: string; preco: number }[];
+};
+
+export function novaChavePasso(): string {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+/** "Obrigatorio · escolhe 1 · 2 opcoes" */
+export function resumoRegraPasso(p: PassoRascunho): string {
+  const min = Number(p.min) || 0;
+  const max = Number(p.max) || 1;
+  const qtd = `${p.opcoes.length} ${p.opcoes.length === 1 ? "opção" : "opções"}`;
+  if (!p.obrigatorio) return `Opcional · até ${max} · ${qtd}`;
+  const escolhe = min === max ? `escolhe ${min}` : `escolhe de ${min} a ${max}`;
+  return `Obrigatório · ${escolhe} · ${qtd}`;
+}
+
+/** Valida as regras do passo; devolve a mensagem de erro ou null. */
+export function validarPasso(p: PassoRascunho): string | null {
+  if (!p.nome.trim()) return "Informe o nome do passo.";
+  if (p.opcoes.length === 0) return "Escolha pelo menos uma opção.";
+  const max = parseInt(p.max, 10);
+  if (!Number.isFinite(max) || max < 1)
+    return "O máximo precisa ser pelo menos 1.";
+  if (p.obrigatorio) {
+    const min = parseInt(p.min, 10);
+    if (!Number.isFinite(min) || min < 1)
+      return "Em um passo obrigatório, o mínimo precisa ser pelo menos 1.";
+    if (min > max) return "O mínimo não pode ser maior que o máximo.";
+  }
+  if (!p.permiteRepetir && max > p.opcoes.length) {
+    return `Com ${p.opcoes.length} ${p.opcoes.length === 1 ? "opção" : "opções"}, o máximo é ${p.opcoes.length}. Ative "repetir o mesmo item" para permitir mais.`;
+  }
+  return null;
+}
+
+/** "Como chamar este passo?": nome, regra (opcional/obrigatorio), minimo/maximo e as opcoes escolhidas. */
 export function ComboPassoDialog({
   open,
   onOpenChange,
-  comboId,
   passo,
-  produtos,
-  onSalvo,
+  onChange,
+  novo,
+  onAlterarOpcoes,
+  onConfirmar,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  comboId: number | null;
-  passo: ComboPasso | null;
-  produtos: Produto[];
-  onSalvo: () => void;
+  passo: PassoRascunho;
+  onChange: (p: PassoRascunho) => void;
+  novo: boolean;
+  onAlterarOpcoes: () => void;
+  onConfirmar: () => void;
 }) {
-  const [nome, setNome] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [obrigatorio, setObrigatorio] = useState(true);
-  const [minItens, setMinItens] = useState("1");
-  const [maxItens, setMaxItens] = useState("1");
-  const [permiteRepetir, setPermiteRepetir] = useState(false);
-  const [selecionados, setSelecionados] = useState<Set<number>>(new Set());
-  const [busca, setBusca] = useState("");
-  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setBusca("");
-    if (passo) {
-      setNome(passo.nome);
-      setDescricao(passo.descricao ?? "");
-      setObrigatorio(passo.obrigatorio === 1);
-      setMinItens(String(passo.min_itens));
-      setMaxItens(String(passo.max_itens));
-      setPermiteRepetir(passo.permite_repetir === 1);
-      setSelecionados(new Set(passo.opcoes.map((o) => o.id)));
-    } else {
-      setNome("");
-      setDescricao("");
-      setObrigatorio(true);
-      setMinItens("1");
-      setMaxItens("1");
-      setPermiteRepetir(false);
-      setSelecionados(new Set());
-    }
-  }, [open, passo]);
-
-  function toggleProduto(id: number) {
-    setSelecionados((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  function set<K extends keyof PassoRascunho>(
+    campo: K,
+    valor: PassoRascunho[K],
+  ) {
+    setErro(null);
+    onChange({ ...passo, [campo]: valor });
   }
 
-  const produtosAtivos = produtos.filter((p) => p.ativo === 1 && p.estoque_quantidade > 0);
-  const termo = busca.trim().toLowerCase();
-  const produtosFiltrados = termo ? produtosAtivos.filter((p) => p.nome.toLowerCase().includes(termo)) : produtosAtivos;
-
-  async function salvar() {
-    if (!comboId) return;
-    const nomeLimpo = nome.trim();
-    if (!nomeLimpo) {
-      toast.error("Informe o nome do passo.");
+  function confirmar() {
+    const msg = validarPasso(passo);
+    if (msg) {
+      setErro(msg);
       return;
     }
-    if (selecionados.size === 0) {
-      toast.error("Adicione pelo menos uma opção ao passo.");
-      return;
-    }
-
-    setSalvando(true);
-    try {
-      const res = await fetch("/api/combos/passo-salvar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          passo_id: passo?.id ?? 0,
-          combo_id: comboId,
-          nome: nomeLimpo,
-          descricao: descricao.trim(),
-          obrigatorio: obrigatorio ? 1 : 0,
-          min_itens: Math.max(0, parseInt(minItens, 10) || 0),
-          max_itens: Math.max(1, parseInt(maxItens, 10) || 1),
-          permite_repetir: permiteRepetir ? 1 : 0,
-          produto_ids: [...selecionados].join(","),
-        }),
-      });
-      const data: ComboPassoSalvarResposta | { ok: false; msg?: string } = await res.json();
-      if (!data.ok) {
-        toast.error(data.msg ?? "Erro ao salvar o passo.");
-        return;
-      }
-      toast.success(passo ? "Passo atualizado." : "Passo criado.");
-      onSalvo();
-      onOpenChange(false);
-    } catch {
-      toast.error("Erro ao salvar o passo.");
-    } finally {
-      setSalvando(false);
-    }
+    onConfirmar();
   }
+
+  const campo = "h-10 rounded-full border-0 bg-muted/60 px-4";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] rounded-3xl w-[520px] max-w-[calc(100%-2rem)] flex-col sm:max-w-[520px]">
-        <DialogHeader>
-          <DialogTitle>{passo ? "Editar passo" : "Novo passo"}</DialogTitle>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) setErro(null);
+        onOpenChange(v);
+      }}
+    >
+      <DialogContent overlayForceRender className="flex max-h-[90vh] w-[600px] flex-col gap-0 rounded-3xl p-0 sm:max-w-[600px]">
+        <DialogHeader className="gap-1 px-6 pt-6 pb-4">
+          <DialogTitle className="text-base">
+            Como chamar este passo?
+          </DialogTitle>
+          <DialogDescription>
+            {novo
+              ? "Sugerimos um nome pelas opções escolhidas. Você pode trocar."
+              : "Ajuste o nome, a regra e as opções deste passo."}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
-          <div className="space-y-1">
-            <Label className="text-xs">Nome do passo</Label>
-            <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder='Ex.: "Escolha sua pizza"' />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Descrição (opcional)</Label>
-            <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Ajuda a explicar o que deve ser escolhido" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center justify-between gap-2 rounded-lg border p-3">
-              <span className="text-sm font-medium">Obrigatório</span>
-              <Switch checked={obrigatorio} onCheckedChange={(v) => setObrigatorio(v === true)} />
-            </div>
-            <div className="flex items-center justify-between gap-2 rounded-lg border p-3">
-              <span className="text-sm font-medium">Permite repetir</span>
-              <Switch checked={permiteRepetir} onCheckedChange={(v) => setPermiteRepetir(v === true)} />
-            </div>
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 pb-2">
+          <div className="flex flex-col gap-1.5 p-0.5">
+            <label htmlFor="passo-nome" className="text-sm font-medium">
+              Nome do passo<span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="passo-nome"
+              value={passo.nome}
+              onChange={(e) => set("nome", e.target.value)}
+              maxLength={120}
+              className={campo}
+            />
+            <span className="text-xs text-muted-foreground">
+              É o que o cliente lê no cardápio.
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Mínimo de itens</Label>
-              <Input type="number" min={0} value={minItens} onChange={(e) => setMinItens(e.target.value)} />
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">Regra</span>
+            <div className="flex w-fit items-center gap-1 rounded-full bg-muted p-1 text-sm">
+              {[
+                { valor: false, rotulo: "Opcional" },
+                { valor: true, rotulo: "Obrigatório" },
+              ].map((o) => (
+                <button
+                  key={o.rotulo}
+                  type="button"
+                  onClick={() => {
+                    setErro(null);
+                    onChange({
+                      ...passo,
+                      obrigatorio: o.valor,
+                      min: o.valor
+                        ? Number(passo.min) >= 1
+                          ? passo.min
+                          : "1"
+                        : "0",
+                    });
+                  }}
+                  className={cn(
+                    "rounded-full px-3.5 py-1.5 font-medium transition-colors",
+                    passo.obrigatorio === o.valor
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {o.rotulo}
+                </button>
+              ))}
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Máximo de itens</Label>
-              <Input type="number" min={1} value={maxItens} onChange={(e) => setMaxItens(e.target.value)} />
-            </div>
+            <span className="text-xs text-muted-foreground">
+              {passo.obrigatorio
+                ? "O cliente precisa escolher para concluir o combo."
+                : "O cliente pode pular este passo."}
+            </span>
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Produtos disponíveis neste passo</Label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto" className="pl-9" />
-            </div>
-            <div className="max-h-56 overflow-y-auto rounded-lg border">
-              {produtosFiltrados.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">Nenhum produto encontrado.</div>
-              ) : (
-                produtosFiltrados.map((p) => (
-                  <label key={p.id} className="flex cursor-pointer items-center gap-2.5 border-b px-3 py-2 last:border-b-0 hover:bg-muted/50">
-                    <input type="checkbox" checked={selecionados.has(p.id)} onChange={() => toggleProduto(p.id)} className="size-4 accent-primary" />
-                    <span className="min-w-0 flex-1 truncate text-sm">{p.nome}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">R$ {p.preco_base.toFixed(2).replace(".", ",")}</span>
-                  </label>
-                ))
+          <div className="grid grid-cols-2 gap-4 p-0.5">
+            {passo.obrigatorio && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="passo-min" className="text-sm font-medium">
+                  No mínimo<span className="text-destructive">*</span>
+                </label>
+                <Input
+                  id="passo-min"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  value={passo.min}
+                  onChange={(e) => set("min", e.target.value)}
+                  className={campo}
+                />
+              </div>
+            )}
+            <div
+              className={cn(
+                "flex flex-col gap-1.5",
+                !passo.obrigatorio && "col-span-2 sm:col-span-1",
               )}
+            >
+              <label htmlFor="passo-max" className="text-sm font-medium">
+                No máximo<span className="text-destructive">*</span>
+              </label>
+              <Input
+                id="passo-max"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={passo.max}
+                onChange={(e) => set("max", e.target.value)}
+                className={campo}
+              />
             </div>
-            <div className="text-right text-xs text-muted-foreground">{selecionados.size} selecionado{selecionados.size !== 1 ? "s" : ""}</div>
           </div>
+
+          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3">
+            <span>
+              <span className="block text-sm font-medium">
+                Pode repetir o mesmo item
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                Ex.: escolher 2 unidades do mesmo sabor.
+              </span>
+            </span>
+            <Switch
+              checked={passo.permiteRepetir}
+              onCheckedChange={(v) => set("permiteRepetir", v === true)}
+            />
+          </label>
+
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                {passo.opcoes.length}{" "}
+                {passo.opcoes.length === 1 ? "opção" : "opções"}
+              </span>
+              <button
+                type="button"
+                onClick={onAlterarOpcoes}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Alterar
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {passo.opcoes.map((o) => (
+                <span
+                  key={o.id}
+                  className="rounded-full bg-muted px-2.5 py-1 text-xs"
+                >
+                  {o.nome}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {erro && <p className="text-sm text-destructive">{erro}</p>}
         </div>
 
-        <DialogFooter className="border-t-0 bg-transparent">
-          <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)} disabled={salvando}>
+        <DialogFooter className="mx-0 mb-0 rounded-b-3xl border-t-0 bg-transparent px-6 pt-3 pb-6">
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() => onOpenChange(false)}
+          >
             Cancelar
           </Button>
-          <Button className="rounded-full" onClick={salvar} disabled={salvando}>
-            {salvando ? "Salvando..." : "Salvar passo"}
+          <Button className="rounded-full px-5" onClick={confirmar}>
+            {novo ? "Adicionar passo" : "Salvar passo"}
           </Button>
         </DialogFooter>
       </DialogContent>

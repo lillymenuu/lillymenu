@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { combos, produtos } from "@/db/schema";
+import { comboPassoOpcoes, combos, produtos } from "@/db/schema";
 import { promoAtiva } from "@/db/queries/catalogo";
 import { variacoesProdutoPdv } from "@/db/queries/produtoVariacoesPdv";
 import { complementosDoProduto } from "@/db/queries/complementosVenda";
@@ -49,11 +49,29 @@ async function precoUnitarioItem(lojaId: number, item: ItemCarrinho): Promise<nu
   const ehCombo = item.tipo === "combo" || (item.combosels != null && item.combosels.length > 0);
   if (ehCombo) {
     const [combo] = await db
-      .select({ preco: combos.preco, precoPromocional: combos.preco_promocional, promoDesativado: combos.promo_desativado })
+      .select({ preco: combos.preco, precoPromocional: combos.preco_promocional, promoDesativado: combos.promo_desativado, tipoPreco: combos.tipo_preco })
       .from(combos)
       .where(and(eq(combos.id, id), eq(combos.loja_id, lojaId), eq(combos.ativo, true)))
       .limit(1);
     if (!combo) return null;
+    /* "Preco por opcao": soma dos produtos escolhidos (so valem opcoes cadastradas nos passos deste combo). */
+    if (combo.tipoPreco === "por_item") {
+      const sels = (item.combosels ?? []).filter((s) => Number(s.id) > 0);
+      if (sels.length === 0) return null;
+      const opcoes = await db
+        .select({ produtoId: comboPassoOpcoes.produto_id, preco: produtos.preco })
+        .from(comboPassoOpcoes)
+        .innerJoin(produtos, and(eq(produtos.id, comboPassoOpcoes.produto_id), eq(produtos.loja_id, comboPassoOpcoes.loja_id)))
+        .where(and(eq(comboPassoOpcoes.combo_id, id), eq(comboPassoOpcoes.loja_id, lojaId), inArray(comboPassoOpcoes.produto_id, sels.map((s) => Number(s.id)))));
+      const precoPorProduto = new Map(opcoes.map((o) => [o.produtoId, Number(o.preco ?? 0)]));
+      let soma = 0;
+      for (const s of sels) {
+        const preco = precoPorProduto.get(Number(s.id));
+        if (preco === undefined) return null;
+        soma += preco * Math.max(1, Number(s.qtd ?? 1));
+      }
+      return arred(soma);
+    }
     return promoAtiva(Number(combo.preco ?? 0), combo.precoPromocional, combo.promoDesativado, null, null).precoFinal;
   }
 

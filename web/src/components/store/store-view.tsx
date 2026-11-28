@@ -944,7 +944,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                               <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
                             )}
                             <span className="text-[.88rem] font-bold" style={{ color: brown }}>
-                              {formatarPreco(combo.preco_final)}
+                              {combo.por_opcao ? "a partir de " : ""}
+{formatarPreco(combo.preco_final)}
                             </span>
                           </div>
                         </div>
@@ -1068,7 +1069,8 @@ function StoreViewInner({ perfil: perfilInicial, catalogo }: { perfil: StorePerf
                         <span className="text-[.74rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>
                       )}
                       <span className="text-[.9rem] font-bold" style={{ color: brown }}>
-                        {formatarPreco(combo.preco_final)}
+                        {combo.por_opcao ? "a partir de " : ""}
+{formatarPreco(combo.preco_final)}
                       </span>
                     </div>
                   </button>

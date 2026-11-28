@@ -116,7 +116,7 @@ export function StoreBuscaModal({
                       nome={combo.nome}
                       descricao={combo.descricao}
                       imagem={combo.imagem}
-                      preco={formatarPreco(combo.preco_final)}
+                      preco={`${combo.por_opcao ? "a partir de " : ""}${formatarPreco(combo.preco_final)}`}
                       precoRiscado={combo.em_promo ? formatarPreco(combo.preco_base) : null}
                       combo
                       cor={brown}

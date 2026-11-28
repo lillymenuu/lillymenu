@@ -189,6 +189,12 @@ export function StoreComboDialog({
   });
   const podeAdicionar = !carregando && !erroCarregar && passosFaltando.length === 0;
 
+  /* Combo "preco por opcao": o valor e a soma dos itens escolhidos (antes de escolher, "a partir de"). */
+  const porOpcao = combo.por_opcao === true;
+  const somaOpcoes = passos.reduce((s, p) => s + p.opcoes.reduce((t, o) => t + (selecoes[p.id]?.[o.id] ?? 0) * (o.preco ?? 0), 0), 0);
+  const precoUnit = porOpcao ? Math.round(somaOpcoes * 100) / 100 : combo.preco_final;
+  const precoTopo = porOpcao && somaOpcoes === 0 ? `a partir de ${formatarPreco(combo.preco_final)}` : formatarPreco(precoUnit);
+
   function adicionar() {
     if (!combo || !podeAdicionar) return;
     const combosels = passos.flatMap((p) => {
@@ -204,7 +210,7 @@ export function StoreComboDialog({
       id: combo.id,
       tipo: "combo",
       nome: combo.nome,
-      precoUnit: combo.preco_final,
+      precoUnit,
       qtd,
       obs: obsFinal,
       obsUsuario: obs.trim() || undefined,
@@ -218,7 +224,7 @@ export function StoreComboDialog({
   const footer = somenteVisualizar ? (
     <div className="flex justify-end">
       <div className="rounded-xl bg-neutral-100 px-4 py-3 text-[.9rem] font-medium text-neutral-900">
-        {formatarPreco(combo.preco_final)}
+        {precoTopo}
       </div>
     </div>
   ) : (
@@ -236,7 +242,7 @@ export function StoreComboDialog({
         className="flex-1 rounded-full py-3.5 text-[.9rem] font-bold text-white transition-colors disabled:cursor-not-allowed"
         style={{ background: podeAdicionar ? brown : "#c0a88a" }}
       >
-        {passosFaltando.length > 0 ? `Selecione "${passosFaltando[0].nome}"` : `Adicionar ${formatarPreco(combo.preco_final * qtd)}`}
+        {passosFaltando.length > 0 ? `Selecione "${passosFaltando[0].nome}"` : `Adicionar ${formatarPreco(precoUnit * qtd)}`}
       </button>
     </div>
   );
@@ -275,7 +281,7 @@ export function StoreComboDialog({
             <div className="mt-1.5 flex items-baseline gap-1.5">
               {combo.em_promo && <span className="text-[.86rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>}
               <span className="text-[1rem] font-bold" style={{ color: brown }}>
-                {formatarPreco(combo.preco_final)}
+                {precoTopo}
               </span>
             </div>
             {combo.descricao && <p className="mt-2 text-[.86rem] leading-relaxed text-neutral-500">{combo.descricao}</p>}
@@ -341,7 +347,11 @@ export function StoreComboDialog({
                             >
                               <div className="min-w-0 flex-1">
                                 <div className="line-clamp-2 text-[.84rem] leading-tight text-neutral-900">{opc.nome}</div>
-                                {opc.esgotado && <div className="mt-0.5 text-[.7rem] text-neutral-400">Esgotado</div>}
+                                {opc.esgotado ? (
+                                  <div className="mt-0.5 text-[.7rem] text-neutral-400">Esgotado</div>
+                                ) : (
+                                  porOpcao && <div className="mt-0.5 text-[.74rem] font-semibold text-neutral-700">{formatarPreco(opc.preco ?? 0)}</div>
+                                )}
                               </div>
                               <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
                                 {opc.imagem ? (
@@ -468,7 +478,7 @@ export function StoreComboDialog({
               <span className="text-[1rem] font-bold text-emerald-600">{formatarPreco(combo.preco_final)}</span>
             </div>
           ) : (
-            <span className="text-[1rem] font-bold text-neutral-900">{formatarPreco(combo.preco_final)}</span>
+            <span className="text-[1rem] font-bold text-neutral-900">{precoTopo}</span>
           )}
         </div>
 
@@ -521,7 +531,7 @@ export function StoreComboDialog({
                           <div className="min-w-0 flex-1">
                             <div className="text-[.8rem] leading-tight text-neutral-900">{opc.nome}</div>
                             <div className="mt-0.5 text-[.68rem] text-neutral-400">
-                              {opc.esgotado ? "Esgotado" : "Incluido no valor do combo"}
+                              {opc.esgotado ? "Esgotado" : porOpcao ? formatarPreco(opc.preco ?? 0) : "Incluído no valor do combo"}
                             </div>
                           </div>
                           <div className="size-[64px] shrink-0 overflow-hidden rounded-xl bg-neutral-100">

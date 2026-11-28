@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       min_itens: p.minItens,
       max_itens: p.maxItens,
       permite_repetir: p.permiteRepetir ? 1 : 0,
-      opcoes: p.opcoes.map((o) => ({ id: o.id, nome: o.nome, imagem: o.imagem ?? "", estoque: o.estoque, esgotado: o.esgotado })),
+      opcoes: p.opcoes.map((o) => ({ id: o.id, nome: o.nome, preco: o.preco, imagem: o.imagem ?? "", estoque: o.estoque, esgotado: o.esgotado })),
     })),
   });
 }

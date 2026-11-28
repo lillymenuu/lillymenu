@@ -136,6 +136,8 @@ export type StoreCombo = {
   desc_pct: number;
   imagem: string;
   tipo: "combo";
+  /** Combo "preco por opcao": o cliente paga a soma dos itens escolhidos; preco_final e o menor valor possivel. */
+  por_opcao?: boolean;
 };
 
 export type StoreCategoria = {
@@ -171,6 +173,8 @@ export type StoreProdutoVariacoes = {
 export type StoreComboPassoOpcao = {
   id: number;
   nome: string;
+  /** Preco do produto (usado nos combos "preco por opcao"). */
+  preco?: number;
   imagem: string;
   estoque: number;
   esgotado: boolean;

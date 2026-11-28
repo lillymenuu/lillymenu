@@ -395,7 +395,8 @@ function GarcomAppInterno({
                             <div className="flex items-center gap-1.5">
                               {combo.em_promo && <span className="text-[.72rem] text-neutral-400 line-through">{formatarPreco(combo.preco_base)}</span>}
                               <span className="text-[.88rem] font-bold" style={{ color: brown }}>
-                                {formatarPreco(combo.preco_final)}
+                                {combo.por_opcao ? "a partir de " : ""}
+{formatarPreco(combo.preco_final)}
                               </span>
                             </div>
                           </div>

@@ -84,6 +84,7 @@ function mapCombo(c: import("@/db/queries/catalogo").CatalogoCombo): StoreCombo 
     desc_pct: c.descPct,
     imagem: c.imagem ?? "",
     tipo: "combo",
+    por_opcao: c.porOpcao,
   };
 }
 

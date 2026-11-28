@@ -100,6 +100,8 @@ export type CatalogoCombo = {
   precoFinal: number;
   emPromo: boolean;
   descPct: number;
+  /** tipo_preco "por_item": paga a soma das opcoes escolhidas; precoBase/precoFinal = menor valor possivel. */
+  porOpcao: boolean;
 };
 
 export type CatalogoCategoria = { id: number; nome: string; modoExibicao: string };
@@ -246,6 +248,7 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
       imagem: combos.imagem,
       precoPromocional: combos.preco_promocional,
       promoDesativado: combos.promo_desativado,
+      tipoPreco: combos.tipo_preco,
     })
     .from(combos)
     .where(and(eq(combos.loja_id, lojaId), eq(combos.ativo, true), isNotNull(combos.categoria_id), inArray(combos.categoria_id, idsCategorias)))
@@ -255,7 +258,10 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
   for (const c of combosLinhas) {
     if (c.categoriaId == null) continue;
     const precoBase = Number(c.preco ?? 0);
-    const { emPromo, precoFinal, descPct } = promoAtiva(precoBase, c.precoPromocional, c.promoDesativado, null, null);
+    const porOpcao = c.tipoPreco === "por_item";
+    const { emPromo, precoFinal, descPct } = porOpcao
+      ? { emPromo: false, precoFinal: precoBase, descPct: 0 }
+      : promoAtiva(precoBase, c.precoPromocional, c.promoDesativado, null, null);
     const item: CatalogoCombo = {
       id: c.id,
       tipo: "combo",
@@ -266,6 +272,7 @@ export async function montarCatalogoLoja(lojaId: number, phpAdminUrl = ""): Prom
       precoFinal,
       emPromo,
       descPct,
+      porOpcao,
     };
     (combosPorCategoria[c.categoriaId] ??= []).push(item);
   }
