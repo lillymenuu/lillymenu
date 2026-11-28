@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { getSessaoAdmin } from "@/lib/session";
 import { getSidebarDataCached } from "@/lib/acessoRecurso";
 import { getLandingConfig, lc } from "@/db/queries/landingConfig";
+import { cadastroInicialPendente } from "@/db/queries/cadastroLoja";
 
 /* PWA do painel (so aqui, nao na loja publica dos clientes): no iPhone o Web Push do Gestor de
    pedidos so funciona com o site adicionado a Tela de Inicio, aberto como app (sem barra do Safari). */
@@ -19,15 +20,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const sessao = await getSessaoAdmin();
   if (!sessao) redirect("/login");
 
-  const [sidebarData, landingCfg] = await Promise.all([
+  const [sidebarData, landingCfg, cadastroPendente] = await Promise.all([
     getSidebarDataCached(sessao.id, sessao.lojaId, sessao.perfil),
     getLandingConfig(),
+    /* So o dono (perfil admin) e travado no cadastro inicial; funcionarios nao editam a loja. */
+    sessao.perfil === "admin" ? cadastroInicialPendente(sessao.lojaId) : Promise.resolve(false),
   ]);
 
   const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
 
   return (
-    <AppShell sidebarData={sidebarData} phpAdminUrl={phpAdminUrl} logoPlataforma={lc(landingCfg, "logo_image")}>
+    <AppShell sidebarData={sidebarData} phpAdminUrl={phpAdminUrl} logoPlataforma={lc(landingCfg, "logo_image")} cadastroPendente={cadastroPendente && !!sidebarData.menu.configuracoes}>
       {children}
     </AppShell>
   );

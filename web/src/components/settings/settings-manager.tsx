@@ -113,13 +113,17 @@ export function SettingsManager({
   dadosIniciais,
   phpAdminUrl,
   pedidosAgendadosDisponivel,
+  cadastroPendente: cadastroPendenteInicial = false,
 }: {
   dadosIniciais: ConfiguracoesDetalhe;
   phpAdminUrl: string;
   pedidosAgendadosDisponivel: boolean;
+  cadastroPendente?: boolean;
 }) {
   const [dados, setDados] = useState(dadosIniciais);
-  const [aberto, setAberto] = useState<CardId | null>(null);
+  /* Primeiro acesso: Informacoes da loja ja abre, e nao fecha ate o cadastro chegar a 100%. */
+  const [cadastroPendente, setCadastroPendente] = useState(cadastroPendenteInicial);
+  const [aberto, setAberto] = useState<CardId | null>(cadastroPendenteInicial ? "loja-info" : null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -129,7 +133,7 @@ export function SettingsManager({
       router.replace("/scheduled-orders");
       return;
     }
-    if (abrirParam) setAberto(abrirParam as CardId);
+    if (abrirParam && !cadastroPendenteInicial) setAberto(abrirParam as CardId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [versiculoAtivo, setVersiculoAtivo] = useState(dados.versiculo_dashboard_ativo);
@@ -391,7 +395,15 @@ export function SettingsManager({
         loja={dados.loja}
         lojaLinkBase={dados.loja_link_base}
         phpAdminUrl={phpAdminUrl}
-        onSalvo={recarregar}
+        obrigatorio={cadastroPendente}
+        onSalvo={(aindaPendente) => {
+          recarregar();
+          if (cadastroPendente && !aindaPendente) {
+            setCadastroPendente(false);
+            // Recarrega o layout (servidor) pra liberar o resto do painel.
+            router.refresh();
+          }
+        }}
       />
       <MenuCustomDialog
         open={aberto === "menu-custom"}

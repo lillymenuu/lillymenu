@@ -172,6 +172,8 @@ export async function criarContaLoja(input: CadastroLojaInput): Promise<Cadastro
     nome_loja: empresa,
     loja_contato: whatsapp,
     pedido_codigo_base: String(Number(maxPedidoId)),
+    /* Primeiro acesso ao painel abre Informacoes da loja e so libera ao chegar a 100% (lib/cadastroLoja). */
+    cadastro_inicial_pendente: "1",
     ...(digitos.length === 14 ? { loja_cnpj: cpfCnpj } : { cobranca_cpf: cpfCnpj }),
     ...(cep && { loja_cep: cep }),
     ...(rua && { loja_rua: rua }),

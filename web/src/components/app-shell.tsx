@@ -31,6 +31,7 @@ export function AppShell(props: {
   phpAdminUrl: string;
   bloqueado?: boolean;
   logoPlataforma?: string;
+  cadastroPendente?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -45,12 +46,14 @@ function AppShellInner({
   phpAdminUrl,
   bloqueado = false,
   logoPlataforma,
+  cadastroPendente = false,
   children,
 }: {
   sidebarData: SidebarData;
   phpAdminUrl: string;
   bloqueado?: boolean;
   logoPlataforma?: string;
+  cadastroPendente?: boolean;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -87,6 +90,13 @@ function AppShellInner({
       clearInterval(interval);
     };
   }, [sidebarData.menu.whatslilly]);
+
+  /* Primeiro acesso: enquanto Informacoes da loja nao chega a 100%, o painel fica preso em
+     /settings (o modal abre sozinho la, sem poder fechar). */
+  const presoNoCadastro = cadastroPendente && pathname !== "/settings";
+  useEffect(() => {
+    if (presoNoCadastro) router.replace("/settings");
+  }, [presoNoCadastro, router]);
 
   /* Computador com impressora vinculada atende pedidos de impressao vindos de outros computadores. */
   useEffect(() => iniciarFilaImpressao(), []);
@@ -601,7 +611,7 @@ function AppShellInner({
             </div>
           </div>
         </header>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1">{presoNoCadastro ? null : children}</main>
         <footer className="border-t border-border py-4 text-center text-sm text-foreground">
           Lilly Menu Digital ©{new Date().getFullYear()}
         </footer>

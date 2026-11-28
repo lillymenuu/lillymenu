@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Trash2, Upload, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,6 +12,7 @@ import { cn } from "cn";
 import type { ConfiguracoesDetalhe } from "@/lib/settings";
 import { BannerCropDialog } from "@/components/settings/banner-crop-dialog";
 import { maskTelefone } from "@/lib/telefone";
+import { progressoCadastroLoja } from "@/lib/cadastroLoja";
 
 type Loja = ConfiguracoesDetalhe["loja"];
 
@@ -87,6 +89,7 @@ export function LojaInfoDialog({
   loja,
   lojaLinkBase,
   phpAdminUrl,
+  obrigatorio = false,
   onSalvo,
 }: {
   open: boolean;
@@ -94,7 +97,10 @@ export function LojaInfoDialog({
   loja: Loja;
   lojaLinkBase: string;
   phpAdminUrl: string;
-  onSalvo: () => void;
+  /** Primeiro acesso: nao fecha e mostra o % ate o cadastro ficar completo. */
+  obrigatorio?: boolean;
+  /** Recebe se o cadastro inicial continua pendente depois de salvar. */
+  onSalvo: (cadastroPendente: boolean) => void;
 }) {
   const [nome, setNome] = useState(loja.nome);
   const [contato, setContato] = useState(maskTelefone(loja.contato));
@@ -122,6 +128,7 @@ export function LojaInfoDialog({
   const [perfilRemover, setPerfilRemover] = useState(false);
 
   const [salvando, setSalvando] = useState(false);
+  const router = useRouter();
   const capaInputRef = useRef<HTMLInputElement>(null);
   const perfilInputRef = useRef<HTMLInputElement>(null);
   const cepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -227,6 +234,22 @@ export function LojaInfoDialog({
 
   const linkCompleto = `${lojaLinkBase}${encodeURIComponent(linkSlug)}`;
 
+  const progresso = progressoCadastroLoja({
+    capa: capaPreview, perfil: perfilPreview, nome, contato, cpf, cnpj, linkSlug,
+    cep, numero, rua, bairro, cidade, estado,
+  });
+
+  function alterarAberto(v: boolean) {
+    if (!v && obrigatorio) return;
+    onOpenChange(v);
+  }
+
+  async function sair() {
+    await fetch("/api/logout", { method: "POST" }).catch(() => null);
+    router.push("/login");
+    router.refresh();
+  }
+
   function alterarLinkSlug(valor: string) {
     setLinkSlug(slugificarLink(valor));
   }
@@ -280,8 +303,13 @@ export function LojaInfoDialog({
         toast.error(data.msg ?? "Erro ao salvar.");
         return;
       }
-      toast.success("Informações da loja salvas.");
-      onSalvo();
+      const aindaPendente = data.cadastroPendente === true;
+      onSalvo(aindaPendente);
+      if (obrigatorio && aindaPendente) {
+        toast.success("Progresso salvo. Complete os campos que faltam para liberar o painel.");
+        return;
+      }
+      toast.success(obrigatorio ? "Cadastro concluído! O painel foi liberado." : "Informações da loja salvas.");
       onOpenChange(false);
     } catch {
       toast.error("Erro ao salvar.");
@@ -291,11 +319,41 @@ export function LojaInfoDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[88vh] w-[776px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[776px]">
+    <Dialog open={open} onOpenChange={alterarAberto} disablePointerDismissal={obrigatorio}>
+      <DialogContent
+        showCloseButton={!obrigatorio}
+        className="flex max-h-[88vh] w-[776px] max-w-[calc(100%-2rem)] flex-col rounded-3xl sm:max-w-[776px]"
+      >
         <DialogHeader>
-          <DialogTitle>Informações da loja</DialogTitle>
+          <DialogTitle>{obrigatorio ? "Complete o cadastro da sua loja" : "Informações da loja"}</DialogTitle>
         </DialogHeader>
+
+        {obrigatorio ? (
+          <div className="space-y-1.5">
+            <p className="text-xs text-muted-foreground">
+              Antes de usar o painel, preencha as informações da sua loja. Elas aparecem para os seus clientes no cardápio.
+            </p>
+            <div className="flex items-center gap-3">
+              <div
+                className="h-2 flex-1 overflow-hidden rounded-full bg-muted"
+                role="progressbar"
+                aria-valuenow={progresso.percentual}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Cadastro da loja"
+              >
+                <div
+                  className={cn("h-full rounded-full transition-all duration-300", progresso.percentual === 100 ? "bg-emerald-500" : "bg-primary")}
+                  style={{ width: `${progresso.percentual}%` }}
+                />
+              </div>
+              <span className="w-24 shrink-0 text-right text-xs font-semibold tabular-nums">{progresso.percentual}% concluído</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {progresso.faltando.length > 0 ? `Falta: ${progresso.faltando.join(", ")}.` : "Tudo pronto! Clique em Concluir cadastro."}
+            </p>
+          </div>
+        ) : null}
 
         <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-1">
         <div className="relative mb-9">
@@ -442,8 +500,13 @@ export function LojaInfoDialog({
         </div>
 
         <DialogFooter className="border-t-0 bg-transparent">
+          {obrigatorio ? (
+            <Button variant="ghost" className="rounded-full sm:mr-auto" onClick={sair}>
+              Sair
+            </Button>
+          ) : null}
           <Button className="rounded-full" onClick={salvar} disabled={salvando}>
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando..." : !obrigatorio ? "Salvar" : progresso.percentual === 100 ? "Concluir cadastro" : "Salvar progresso"}
           </Button>
         </DialogFooter>
       </DialogContent>

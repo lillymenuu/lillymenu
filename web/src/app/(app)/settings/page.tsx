@@ -6,6 +6,7 @@ import { getConfiguracoesDetalhe } from "@/lib/settingsServer";
 import { temRecursoPlano } from "@/db/queries/assinatura";
 import { SettingsManager } from "@/components/settings/settings-manager";
 import { exigirRecurso } from "@/lib/acessoRecurso";
+import { cadastroInicialPendente } from "@/db/queries/cadastroLoja";
 
 export default async function SettingsPage() {
   await exigirRecurso("configuracoes");
@@ -14,12 +15,14 @@ export default async function SettingsPage() {
 
   let dados: Awaited<ReturnType<typeof getConfiguracoesDetalhe>> | null = null;
   let pedidosAgendadosDisponivel = true;
+  let cadastroPendente = false;
   let erro: string | null = null;
 
   try {
-    [dados, pedidosAgendadosDisponivel] = await Promise.all([
+    [dados, pedidosAgendadosDisponivel, cadastroPendente] = await Promise.all([
       getConfiguracoesDetalhe(sessao.lojaId, sessao.id, sessao.perfil),
       temRecursoPlano(sessao.lojaId, sessao.perfil, "menu.pedidos_agendados"),
+      sessao.perfil === "admin" ? cadastroInicialPendente(sessao.lojaId) : Promise.resolve(false),
     ]);
   } catch {
     erro = "Erro ao carregar a tela de configurações.";
@@ -38,7 +41,7 @@ export default async function SettingsPage() {
   const phpAdminUrl = process.env.NEXT_PUBLIC_PHP_ADMIN_URL ?? "";
   return (
     <>
-      <SettingsManager dadosIniciais={dados} phpAdminUrl={phpAdminUrl} pedidosAgendadosDisponivel={pedidosAgendadosDisponivel} />
+      <SettingsManager dadosIniciais={dados} phpAdminUrl={phpAdminUrl} pedidosAgendadosDisponivel={pedidosAgendadosDisponivel} cadastroPendente={cadastroPendente} />
       <ScrollToTop />
     </>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessaoAdmin } from "@/lib/session";
 import { salvarConfiguracoes } from "@/db/queries/configuracoesLoja";
+import { atualizarCadastroInicial } from "@/db/queries/cadastroLoja";
 
 export async function POST(request: Request) {
   const sessao = await getSessaoAdmin();
@@ -10,5 +11,9 @@ export async function POST(request: Request) {
   if (!body) return NextResponse.json({ ok: false, msg: "Dados invalidos." }, { status: 400 });
 
   const resultado = await salvarConfiguracoes(sessao.lojaId, body);
-  return NextResponse.json(resultado);
+  if (!resultado.ok) return NextResponse.json(resultado);
+
+  /* Primeiro acesso: o painel so e liberado quando Informacoes da loja chega a 100%. */
+  const cadastroPendente = await atualizarCadastroInicial(sessao.lojaId);
+  return NextResponse.json({ ...resultado, cadastroPendente });
 }
