@@ -169,10 +169,20 @@ function Corpo({
             <SelectTrigger className="h-10 w-full rounded-full border-0 bg-muted/60 px-4">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas</SelectItem>
+            <SelectContent
+              alignItemWithTrigger={false}
+              sideOffset={6}
+              className="max-h-72 rounded-xl p-1.5 shadow-lg"
+            >
+              <SelectItem value="todas" className="rounded-lg py-2 pl-3">
+                Todas
+              </SelectItem>
               {categoriasComItens.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
+                <SelectItem
+                  key={c.id}
+                  value={String(c.id)}
+                  className="rounded-lg py-2 pl-3"
+                >
                   {c.nome}
                 </SelectItem>
               ))}
