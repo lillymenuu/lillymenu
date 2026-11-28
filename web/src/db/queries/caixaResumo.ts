@@ -73,7 +73,8 @@ export type CaixaResumoResultado =
     };
 
 export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResultado> {
-  const caixaLinhas = await db
+  /* Consultas independentes rodam juntas (antes eram ~9 em fila e o PDV demorava a abrir). */
+  const caixaPromise = db
     .select({
       id: caixaTurnos.id,
       status: caixaTurnos.status,
@@ -86,11 +87,10 @@ export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResul
     .where(and(eq(caixaTurnos.status, "aberto"), eq(caixaTurnos.loja_id, lojaId)))
     .orderBy(desc(caixaTurnos.id))
     .limit(1);
+  const [caixaLinhas, hoje] = await Promise.all([caixaPromise, dataLoja(lojaId)]);
 
   const caixaAtual = caixaLinhas[0];
   if (!caixaAtual) return { ok: true, caixa: null };
-
-  const hoje = (await dataLoja(lojaId));
   const diaAbertura = caixaAtual.abertoEm.slice(0, 10);
   const inicioOnline = `${diaAbertura} 00:00:00`;
   const dataLimiteFiado = diaAbertura < hoje ? `${hoje} 00:00:00` : caixaAtual.abertoEm;
@@ -102,7 +102,7 @@ export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResul
     or(eq(pedidos.caixa_id, caixaAtual.id), and(isNull(pedidos.caixa_id), gte(competenciaDatetime, inicioOnline)))
   );
 
-  const [resumoLinha] = await db
+  const resumoPromise = db
     .select({
       subtotal: sql<string>`coalesce(sum(${pedidos.subtotal}),0)`,
       desconto: sql<string>`coalesce(sum(${pedidos.desconto}),0)`,
@@ -116,7 +116,7 @@ export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResul
     .where(wherePedidos);
 
   const formaGroupExpr = sql<string>`coalesce(nullif(${pedidoPagamentos.forma}, ''), nullif(${pedidos.forma_pagamento}, ''), 'outro')`;
-  const pagamentosLinhas = await db
+  const pagamentosPromise = db
     .select({ forma: formaGroupExpr, total: sql<string>`coalesce(sum(coalesce(${pedidoPagamentos.valor}, ${pedidos.total})),0)` })
     .from(pedidos)
     .leftJoin(pedidoPagamentos, and(eq(pedidoPagamentos.pedido_id, pedidos.id), eq(pedidoPagamentos.loja_id, pedidos.loja_id)))
@@ -125,40 +125,23 @@ export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResul
     .groupBy(formaGroupExpr);
 
   const formaFiadoExpr = sql<string>`coalesce(nullif(${fiadoLancamentos.forma_pagamento}, ''), 'outro')`;
-  const pagamentosFiadoLinhas = await db
+  const pagamentosFiadoPromise = db
     .select({ forma: formaFiadoExpr, total: sql<string>`coalesce(sum(${fiadoLancamentos.valor}),0)` })
     .from(fiadoLancamentos)
     .where(and(eq(fiadoLancamentos.loja_id, lojaId), eq(fiadoLancamentos.tipo, "pagamento"), gte(fiadoLancamentos.criado_em, dataLimiteFiado)))
     .groupBy(formaFiadoExpr);
 
-  const totaisPagamento: Record<FormaNormalizada, number> = { pix: 0, credito: 0, debito: 0, dinheiro: 0, voucher: 0, outro: 0 };
-  for (const p of [...pagamentosLinhas, ...pagamentosFiadoLinhas]) {
-    totaisPagamento[normalizarForma(p.forma)] += num(p.total);
-  }
-
-  const totalVendas = num(resumoLinha?.totalVendas);
-  const taxaEntrega = num(resumoLinha?.taxaEntrega);
-  const taxaMaquininha = num(resumoLinha?.taxaMaquininha);
-  const troco = num(resumoLinha?.troco);
-
-  const [{ saldoInicialDia }] = await db
+  const saldoInicialPromise = db
     .select({ saldoInicialDia: sql<string>`coalesce(sum(${caixaTurnos.saldo_inicial}),0)` })
     .from(caixaTurnos)
     .where(and(eq(caixaTurnos.loja_id, lojaId), sql`to_char(${caixaTurnos.aberto_em}, 'YYYY-MM-DD') = ${hoje}`));
 
-  let suprimentosTotal = 0;
-  let sangriasTotal = 0;
-  const movsAgrupados = await db
+  const movsPromise = db
     .select({ tipo: caixaMovimentacoes.tipo, total: sql<string>`coalesce(sum(${caixaMovimentacoes.valor}),0)` })
     .from(caixaMovimentacoes)
     .where(and(eq(caixaMovimentacoes.loja_id, lojaId), sql`to_char(${caixaMovimentacoes.criado_em}, 'YYYY-MM-DD') = ${hoje}`))
     .groupBy(caixaMovimentacoes.tipo);
-  for (const m of movsAgrupados) {
-    if (m.tipo === "suprimento") suprimentosTotal = num(m.total);
-    else if (m.tipo === "sangria") sangriasTotal = num(m.total);
-  }
-
-  const pedidosLinhas = await db
+  const pedidosPromise = db
     .select({
       pagamentoId: pedidoPagamentos.id,
       pedidoId: pedidos.id,
@@ -172,6 +155,39 @@ export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResul
     .leftJoin(caixaTurnos, and(eq(caixaTurnos.id, pedidos.caixa_id), eq(caixaTurnos.loja_id, pedidos.loja_id)))
     .where(wherePedidos);
 
+  const fiadoPromise = db
+    .select({ id: fiadoLancamentos.id, forma: fiadoLancamentos.forma_pagamento, valor: fiadoLancamentos.valor, criadoEm: fiadoLancamentos.criado_em, nome: clientes.nome })
+    .from(fiadoLancamentos)
+    .innerJoin(clientes, and(eq(clientes.id, fiadoLancamentos.cliente_id), eq(clientes.loja_id, fiadoLancamentos.loja_id)))
+    .where(and(eq(fiadoLancamentos.loja_id, lojaId), eq(fiadoLancamentos.tipo, "pagamento"), gte(fiadoLancamentos.criado_em, dataLimiteFiado)));
+
+  const [[resumoLinha], pagamentosLinhas, pagamentosFiadoLinhas, [{ saldoInicialDia }], movsAgrupados, pedidosLinhas, fiadoLinhas] = await Promise.all([
+    resumoPromise,
+    pagamentosPromise,
+    pagamentosFiadoPromise,
+    saldoInicialPromise,
+    movsPromise,
+    pedidosPromise,
+    fiadoPromise,
+  ]);
+
+  const totaisPagamento: Record<FormaNormalizada, number> = { pix: 0, credito: 0, debito: 0, dinheiro: 0, voucher: 0, outro: 0 };
+  for (const p of [...pagamentosLinhas, ...pagamentosFiadoLinhas]) {
+    totaisPagamento[normalizarForma(p.forma)] += num(p.total);
+  }
+
+  const totalVendas = num(resumoLinha?.totalVendas);
+  const taxaEntrega = num(resumoLinha?.taxaEntrega);
+  const taxaMaquininha = num(resumoLinha?.taxaMaquininha);
+  const troco = num(resumoLinha?.troco);
+
+  let suprimentosTotal = 0;
+  let sangriasTotal = 0;
+  for (const m of movsAgrupados) {
+    if (m.tipo === "suprimento") suprimentosTotal = num(m.total);
+    else if (m.tipo === "sangria") sangriasTotal = num(m.total);
+  }
+
   const movimentosPedidos: MovimentoCaixa[] = pedidosLinhas.map((p) => ({
     uid: p.pagamentoId ? `pg-${p.pagamentoId}` : `pd-${p.pedidoId}`,
     forma: normalizarForma(p.forma),
@@ -181,12 +197,6 @@ export async function resumoCaixaAtual(lojaId: number): Promise<CaixaResumoResul
     direcao: "entrada",
     origem: "LILLY",
   }));
-
-  const fiadoLinhas = await db
-    .select({ id: fiadoLancamentos.id, forma: fiadoLancamentos.forma_pagamento, valor: fiadoLancamentos.valor, criadoEm: fiadoLancamentos.criado_em, nome: clientes.nome })
-    .from(fiadoLancamentos)
-    .innerJoin(clientes, and(eq(clientes.id, fiadoLancamentos.cliente_id), eq(clientes.loja_id, fiadoLancamentos.loja_id)))
-    .where(and(eq(fiadoLancamentos.loja_id, lojaId), eq(fiadoLancamentos.tipo, "pagamento"), gte(fiadoLancamentos.criado_em, dataLimiteFiado)));
 
   const movimentosFiado: MovimentoCaixa[] = fiadoLinhas.map((f) => ({
     uid: `fp-${f.id}`,

@@ -38,13 +38,14 @@ export type ComboPdv = {
 export type CatalogoPdvResultado = { categorias: CategoriaPdv[]; produtos: ProdutoPdv[]; combos: ComboPdv[] };
 
 export async function catalogoPdv(lojaId: number): Promise<CatalogoPdvResultado> {
-  const categoriasRaw = await db
+  /* As 4 consultas sao independentes: rodam juntas (o PDV abre mais rapido). */
+  const categoriasPromise = db
     .select({ id: categorias.id, nome: categorias.nome })
     .from(categorias)
     .where(and(eq(categorias.loja_id, lojaId), eq(categorias.ativo, true)))
     .orderBy(sql`${categorias.ordem} is null`, asc(categorias.ordem), asc(categorias.nome));
 
-  const produtosRaw = await db
+  const produtosPromise = db
     .select({
       id: produtos.id,
       nome: produtos.nome,
@@ -69,7 +70,18 @@ export async function catalogoPdv(lojaId: number): Promise<CatalogoPdvResultado>
     .where(and(eq(produtos.loja_id, lojaId), eq(produtos.ativo, true), eq(produtos.disponivel_catalogo, true)))
     .orderBy(sql`${produtos.ordem} is null`, asc(produtos.ordem), asc(produtos.nome));
 
-  const comComplementos = await produtosComComplementos(lojaId);
+  const combosPromise = db
+    .select({ id: combos.id, nome: combos.nome, categoriaId: combos.categoria_id, imagem: combos.imagem, tipoPreco: combos.tipo_preco, preco: combos.preco, precoPromocional: combos.preco_promocional, promoDesativado: combos.promo_desativado })
+    .from(combos)
+    .where(and(eq(combos.loja_id, lojaId), eq(combos.ativo, true)))
+    .orderBy(sql`${combos.ordem} is null`, asc(combos.ordem), asc(combos.nome));
+
+  const [categoriasRaw, produtosRaw, comComplementos, combosRaw] = await Promise.all([
+    categoriasPromise,
+    produtosPromise,
+    produtosComComplementos(lojaId),
+    combosPromise,
+  ]);
   const produtosResultado: ProdutoPdv[] = produtosRaw.map((p) => {
     const emPromo = p.precoPromocional !== null && Number(p.precoPromocional) > 0 && !p.promoDesativado;
     return {
@@ -89,12 +101,6 @@ export async function catalogoPdv(lojaId: number): Promise<CatalogoPdvResultado>
       grupoEstoqueId: p.grupoEstoqueId,
     };
   });
-
-  const combosRaw = await db
-    .select({ id: combos.id, nome: combos.nome, categoriaId: combos.categoria_id, imagem: combos.imagem, tipoPreco: combos.tipo_preco, preco: combos.preco, precoPromocional: combos.preco_promocional, promoDesativado: combos.promo_desativado })
-    .from(combos)
-    .where(and(eq(combos.loja_id, lojaId), eq(combos.ativo, true)))
-    .orderBy(sql`${combos.ordem} is null`, asc(combos.ordem), asc(combos.nome));
 
   const combosResultado: ComboPdv[] = combosRaw.map((c) => {
     const emPromo = c.precoPromocional !== null && Number(c.precoPromocional) > 0 && !c.promoDesativado;

@@ -1,6 +1,7 @@
 "use client";
 
 import { ouvirCatalogoAlterado } from "@/lib/catalogoSync";
+import { avisarPedidoAlterado } from "@/lib/pedidosSync";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { imprimirAutomaticoPedido, imprimirManual, mensagemErroQZ } from "@/lib/impressao-qz";
@@ -515,6 +516,7 @@ export function usePosPedido({
         toast.error(data.msg ?? "Erro ao finalizar pedido.");
         return;
       }
+      avisarPedidoAlterado();
       toast.success(pedidoEditandoId ? "Pedido atualizado com sucesso!" : `Pedido #${data.codigo} criado com sucesso!`);
       if (imprimir) {
         // "Finalizar e imprimir": mesmo fluxo do botao Imprimir do pedido (impressora deste computador

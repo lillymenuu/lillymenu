@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ouvirPedidoAlterado } from "@/lib/pedidosSync";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { Search, Plus, Filter, MoreVertical } from "lucide-react";
@@ -110,7 +111,10 @@ export function OrderManager({
     };
     window.addEventListener("focus", aoVoltar);
     document.addEventListener("visibilitychange", aoVoltar);
+    /* Pedido lancado/editado no PDV (mesma aba ou outra) aparece na hora. */
+    const pararPedidos = ouvirPedidoAlterado(carregarPedidos);
     return () => {
+      pararPedidos();
       clearInterval(interval);
       window.removeEventListener("focus", aoVoltar);
       document.removeEventListener("visibilitychange", aoVoltar);
