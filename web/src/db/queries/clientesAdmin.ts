@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, ne, gte, ilike, or, sql, desc } from "drizzle-orm";
-import { db } from "@/db";
-import { clientes, pedidos, avaliacoes, cashbackMovimentacoes } from "@/db/schema";
+import { db, withTransaction } from "@/db";
+import { clientes, pedidos, avaliacoes, cashbackMovimentacoes, pontosMovimentacoes, fiadoLancamentos, mesas, listasTransmissaoMembros } from "@/db/schema";
 import { apenasDigitos, formatarTelefoneBR, telefoneSemMascara } from "@/db/queries/telefone";
 import { dataLoja, timestampLoja } from "@/db/queries/tempo";
 
@@ -420,6 +420,44 @@ export async function clienteStats(lojaId: number, clienteId: number): Promise<{
 }
 
 /** Bloqueia (ou desbloqueia) o cliente: bloqueado, ele nao consegue fazer pedidos pelo cardapio da loja. */
+/*
+ * Exclui o cliente da loja. Para nao quebrar relatorios nem o financeiro, so e permitido quando ele
+ * nao tem pedidos, nao tem movimentacao de fiado e nao esta ligado a uma mesa (Modo Garcom). Nesses
+ * casos a resposta sugere bloquear. Os registros que so existem por causa dele (cashback, pontos,
+ * avaliacoes sem pedido, listas de transmissao) saem junto, na mesma transacao.
+ */
+export async function excluirCliente(lojaId: number, clienteId: number): Promise<{ ok: true } | { ok: false; msg: string }> {
+  if (!clienteId) return { ok: false, msg: "Cliente invalido." };
+  const doCliente = (col: typeof pedidos.cliente_id) => sql`${col} = ${clienteId}`;
+
+  const [[existe], [ped], [fia], mesasDoCliente] = await Promise.all([
+    db.select({ id: clientes.id, saldoFiado: clientes.saldo_fiado }).from(clientes).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId))).limit(1),
+    db.select({ n: sql<number>`count(*)::int` }).from(pedidos).where(and(eq(pedidos.loja_id, lojaId), doCliente(pedidos.cliente_id))),
+    db.select({ n: sql<number>`count(*)::int` }).from(fiadoLancamentos).where(and(eq(fiadoLancamentos.loja_id, lojaId), eq(fiadoLancamentos.cliente_id, clienteId))),
+    db.select({ nome: mesas.nome }).from(mesas).where(and(eq(mesas.loja_id, lojaId), eq(mesas.cliente_id, clienteId))),
+  ]);
+  if (!existe) return { ok: false, msg: "Cliente não encontrado." };
+
+  const bloqueie = "Para impedir novos pedidos, use \"Bloquear cliente\".";
+  if (mesasDoCliente.length > 0) return { ok: false, msg: `Este cadastro é usado pela ${mesasDoCliente.map((m) => m.nome).join(", ")} no Modo Garçom e não pode ser excluído.` };
+  if (Number(ped?.n ?? 0) > 0) {
+    const n = Number(ped.n);
+    return { ok: false, msg: `Este cliente tem ${n} ${n === 1 ? "pedido" : "pedidos"} no histórico e não pode ser excluído, para manter os relatórios corretos. ${bloqueie}` };
+  }
+  if (Number(existe.saldoFiado ?? 0) > 0.009 || Number(fia?.n ?? 0) > 0) {
+    return { ok: false, msg: `Este cliente tem movimentação de fiado e não pode ser excluído. ${bloqueie}` };
+  }
+
+  await withTransaction(async (tx) => {
+    await tx.delete(cashbackMovimentacoes).where(and(eq(cashbackMovimentacoes.loja_id, lojaId), eq(cashbackMovimentacoes.cliente_id, clienteId)));
+    await tx.delete(pontosMovimentacoes).where(and(eq(pontosMovimentacoes.loja_id, lojaId), eq(pontosMovimentacoes.cliente_id, clienteId)));
+    await tx.delete(avaliacoes).where(and(eq(avaliacoes.loja_id, lojaId), eq(avaliacoes.cliente_id, clienteId)));
+    await tx.delete(listasTransmissaoMembros).where(eq(listasTransmissaoMembros.cliente_id, clienteId));
+    await tx.delete(clientes).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
+  });
+  return { ok: true };
+}
+
 export async function definirBloqueioCliente(
   lojaId: number,
   clienteId: number,

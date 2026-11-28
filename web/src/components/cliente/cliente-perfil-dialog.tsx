@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { User, Receipt, Star, Gift, MapPin, Ban } from "lucide-react";
+import { User, Receipt, Star, Gift, MapPin, Ban, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -38,6 +38,8 @@ export function ClientePerfilDialog({
   const [fiadoOpen, setFiadoOpen] = useState(false);
   const [confirmarBloqueioOpen, setConfirmarBloqueioOpen] = useState(false);
   const [salvandoBloqueio, setSalvandoBloqueio] = useState(false);
+  const [confirmarExclusaoOpen, setConfirmarExclusaoOpen] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
 
   useEffect(() => {
     if (!open || !clienteId) return;
@@ -84,6 +86,32 @@ export function ClientePerfilDialog({
       toast.error("Não foi possível atualizar o cliente.");
     } finally {
       setSalvandoBloqueio(false);
+    }
+  }
+
+  async function excluir() {
+    if (!clienteId) return;
+    setExcluindo(true);
+    try {
+      const res = await fetch("/api/cliente/excluir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: clienteId }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!data?.ok) {
+        toast.error(data?.msg ?? "Não foi possível excluir o cliente.");
+        setConfirmarExclusaoOpen(false);
+        return;
+      }
+      toast.success("Cliente excluído");
+      setConfirmarExclusaoOpen(false);
+      onOpenChange(false);
+      onAlterado?.();
+    } catch {
+      toast.error("Não foi possível excluir o cliente.");
+    } finally {
+      setExcluindo(false);
     }
   }
 
@@ -154,7 +182,18 @@ export function ClientePerfilDialog({
             )}
           </div>
 
-          <DialogFooter className="border-t-0 bg-transparent">
+          <DialogFooter className="border-t-0 bg-transparent sm:flex-wrap">
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:mr-auto"
+              onClick={() => setConfirmarExclusaoOpen(true)}
+              disabled={!clienteId || !stats || excluindo}
+              aria-label="Excluir cliente"
+              title="Excluir cliente"
+            >
+              <Trash2 className="size-4" />
+            </Button>
             <Button
               variant="outline"
               className="rounded-full font-normal"
@@ -204,6 +243,26 @@ export function ClientePerfilDialog({
           />
         </>
       )}
+      <Dialog open={confirmarExclusaoOpen} onOpenChange={(v) => !excluindo && setConfirmarExclusaoOpen(v)}>
+        <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Excluir cliente?</DialogTitle>
+            <DialogDescription>
+              {stats?.nome ? <strong className="font-medium text-foreground">{stats.nome}</strong> : "Este cliente"} será removido
+              da sua lista de clientes. Essa ação não pode ser desfeita. Clientes com pedidos ou fiado não podem ser excluídos;
+              para eles, use &quot;Bloquear cliente&quot;.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t-0 bg-transparent">
+            <Button variant="outline" className="rounded-full font-normal" onClick={() => setConfirmarExclusaoOpen(false)} disabled={excluindo}>
+              Cancelar
+            </Button>
+            <Button className="rounded-full bg-red-600 font-normal text-white hover:bg-red-700" onClick={excluir} disabled={excluindo}>
+              {excluindo ? "Excluindo..." : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={confirmarBloqueioOpen} onOpenChange={(v) => !salvandoBloqueio && setConfirmarBloqueioOpen(v)}>
         <DialogContent className="max-w-sm rounded-3xl sm:max-w-sm">
           <DialogHeader>
