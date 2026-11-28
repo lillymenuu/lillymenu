@@ -1,9 +1,10 @@
 "use client";
 
 import { FinanceiroAtalhos } from "@/components/financeiro-atalhos";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown, Wallet, Percent, PieChart, BarChart3, Landmark, ClipboardList, FileText, FileSpreadsheet } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Percent, PieChart, BarChart3, Landmark, ClipboardList, FileText, FileSpreadsheet, HandCoins, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,7 +131,7 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
     }
   }
 
-  const { resumo_mensal: resumo, dashboard, dre } = dados;
+  const { resumo_mensal: resumo, dashboard, dre, contas_receber: receber } = dados;
   const contas = dashboard.accounts;
   const porPagamento = dashboard.income_by_payment_method;
   const porCategoria = dashboard.expense_by_category;
@@ -224,6 +225,50 @@ export function FinancialDashboardManager({ dadosIniciais }: { dadosIniciais: Fi
         />
         <KpiTile titulo="Margem" valor={`${fmtPct(resumo.margin_percent)}%`} icon={Percent} tone="neutral" delay={180} />
       </div>
+
+      <SectionCard titulo="Contas a receber (fiado)" icon={HandCoins} delay={200}>
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div className="space-y-3">
+            <div>
+              <div className="text-2xl font-semibold tabular-nums text-amber-600">{formatBRLMilhar(receber.total_aberto)}</div>
+              <div className="text-xs text-muted-foreground">
+                em aberto hoje · {receber.clientes_devendo} {receber.clientes_devendo === 1 ? "cliente devendo" : "clientes devendo"}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg border p-2">
+                <div className="text-muted-foreground">Vendido no fiado ({MESES_LABEL[dados.mes]})</div>
+                <div className="font-semibold tabular-nums">{formatBRLMilhar(receber.lancado_mes)}</div>
+              </div>
+              <div className="rounded-lg border p-2">
+                <div className="text-muted-foreground">Recebido de fiado ({MESES_LABEL[dados.mes]})</div>
+                <div className="font-semibold tabular-nums text-emerald-600">{formatBRLMilhar(receber.recebido_mes)}</div>
+              </div>
+            </div>
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              O fiado não entra na receita no dia da venda: ele vira receita quando o cliente paga, no Controle de fiado.
+            </p>
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <div className="mb-1.5 text-xs font-medium text-muted-foreground">Maiores saldos em aberto</div>
+            {receber.maiores_devedores.length === 0 ? (
+              <div className="text-xs text-muted-foreground">Nenhum cliente com fiado em aberto.</div>
+            ) : (
+              <div className="space-y-1">
+                {receber.maiores_devedores.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between gap-3 rounded-md px-1 py-1 text-sm transition-colors hover:bg-muted/60">
+                    <span className="min-w-0 truncate">{c.nome || "Cliente sem nome"}</span>
+                    <span className="shrink-0 font-medium tabular-nums">{formatBRLMilhar(c.saldo)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Link href="/storecredittracking" className="mt-auto inline-flex items-center gap-1 self-end pt-2 text-xs font-medium text-primary hover:underline">
+              Ver controle de fiado <ArrowRight size={12} />
+            </Link>
+          </div>
+        </div>
+      </SectionCard>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard titulo="Fluxo de caixa" icon={PieChart} delay={220}>

@@ -1,9 +1,11 @@
 import "server-only";
 import { detalheDashboardFinanceiro } from "@/db/queries/financeiroRelatorios";
+import { resumoContasReceberFiado } from "@/db/queries/fiado";
 import type { FinanceiroDashboardResposta } from "@/lib/financeiroDashboard";
 
 export async function getFinanceiroDashboard(lojaId: number, mes?: number, ano?: number): Promise<FinanceiroDashboardResposta> {
   const resultado = await detalheDashboardFinanceiro(lojaId, mes, ano);
+  const receber = await resumoContasReceberFiado(lojaId, resultado.mes, resultado.ano);
 
   return {
     ok: true,
@@ -39,6 +41,13 @@ export async function getFinanceiroDashboard(lojaId: number, mes?: number, ano?:
       net_profit: resultado.dre.netProfit,
       margin_percent: resultado.dre.marginPercent,
       lines: resultado.dre.lines.map((l) => ({ type: l.type, category_name: l.categoryName, group_name: l.groupName, total: l.total })),
+    },
+    contas_receber: {
+      total_aberto: receber.totalAberto,
+      clientes_devendo: receber.clientesDevendo,
+      lancado_mes: receber.lancadoMes,
+      recebido_mes: receber.recebidoMes,
+      maiores_devedores: receber.maioresDevedores,
     },
   };
 }

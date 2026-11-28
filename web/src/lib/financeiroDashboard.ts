@@ -38,6 +38,8 @@ export type FinanceiroDashboardResposta = {
     margin_percent: number;
     lines: { type: string; category_name: string; group_name: string; total: number }[];
   };
+  /** Fiado em aberto (contas a receber): fora da receita ate o cliente pagar. */
+  contas_receber: { total_aberto: number; clientes_devendo: number; lancado_mes: number; recebido_mes: number; maiores_devedores: { id: number; nome: string | null; saldo: number }[] };
 };
 
 export const MESES_LABEL: Record<number, string> = {

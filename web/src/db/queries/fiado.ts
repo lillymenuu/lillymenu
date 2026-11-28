@@ -255,3 +255,46 @@ export async function registrarPagamentoFiado(lojaId: number, operadorId: number
 
   return { ok: true, saldoFiado: saldoDepois };
 }
+
+/*
+ * Contas a receber (fiado) para o dashboard financeiro. O fiado nao entra como receita na venda
+ * (so quando o cliente paga), entao aqui ele aparece a parte: o saldo em aberto hoje e o
+ * movimento do mes escolhido (fiado lancado = vendas - estornos; recebido = pagamentos).
+ */
+export type ContasReceberFiado = {
+  totalAberto: number;
+  clientesDevendo: number;
+  lancadoMes: number;
+  recebidoMes: number;
+  maioresDevedores: { id: number; nome: string | null; saldo: number }[];
+};
+
+export async function resumoContasReceberFiado(lojaId: number, mes: number, ano: number): Promise<ContasReceberFiado> {
+  const comSaldo = and(eq(clientes.loja_id, lojaId), gt(clientes.saldo_fiado, LIMIAR_SALDO));
+  const [[resumo], [movimento], maiores] = await Promise.all([
+    db.select({ total: sql<string>`coalesce(sum(${clientes.saldo_fiado}), 0)`, qtd: sql<string>`count(*)` }).from(clientes).where(comSaldo),
+    db
+      .select({
+        vendas: sql<string>`coalesce(sum(${fiadoLancamentos.valor}) filter (where ${fiadoLancamentos.tipo} = 'venda'), 0)`,
+        estornos: sql<string>`coalesce(sum(${fiadoLancamentos.valor}) filter (where ${fiadoLancamentos.tipo} = 'estorno'), 0)`,
+        pagamentos: sql<string>`coalesce(sum(${fiadoLancamentos.valor}) filter (where ${fiadoLancamentos.tipo} = 'pagamento'), 0)`,
+      })
+      .from(fiadoLancamentos)
+      .where(
+        and(
+          eq(fiadoLancamentos.loja_id, lojaId),
+          sql`extract(month from ${fiadoLancamentos.criado_em}) = ${mes}`,
+          sql`extract(year from ${fiadoLancamentos.criado_em}) = ${ano}`
+        )
+      ),
+    db.select({ id: clientes.id, nome: clientes.nome, saldo: clientes.saldo_fiado }).from(clientes).where(comSaldo).orderBy(desc(clientes.saldo_fiado)).limit(5),
+  ]);
+  const r2 = (v: number) => Math.round(v * 100) / 100;
+  return {
+    totalAberto: r2(Number(resumo?.total ?? 0)),
+    clientesDevendo: Number(resumo?.qtd ?? 0),
+    lancadoMes: r2(Math.max(0, Number(movimento?.vendas ?? 0) - Number(movimento?.estornos ?? 0))),
+    recebidoMes: r2(Number(movimento?.pagamentos ?? 0)),
+    maioresDevedores: maiores.map((m) => ({ id: m.id, nome: m.nome, saldo: r2(Number(m.saldo ?? 0)) })),
+  };
+}
