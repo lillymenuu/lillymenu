@@ -99,7 +99,7 @@ export function PosEntregaDialog({
 
   async function buscarClientes(termo: string) {
     try {
-      const res = await fetch(`/api/pos/clientes-busca?q=${encodeURIComponent(termo)}`);
+      const res = await fetch(`/api/pos/clientes-busca?recentes=1&q=${encodeURIComponent(termo)}`);
       const data = await res.json();
       setResultados(data.ok ? data.clientes : []);
       setMostrarResultados(true);
@@ -112,12 +112,8 @@ export function PosEntregaDialog({
   function handleBuscaChange(v: string) {
     setBusca(v);
     if (buscaTimer.current) clearTimeout(buscaTimer.current);
-    if (v.trim() === "") {
-      setMostrarResultados(false);
-      setResultados(null);
-      return;
-    }
-    buscaTimer.current = setTimeout(() => buscarClientes(v), 300);
+    /* Campo vazio volta a mostrar os 5 ultimos clientes que pediram. */
+    buscaTimer.current = setTimeout(() => buscarClientes(v), v.trim() === "" ? 0 : 300);
   }
 
   function selecionarCliente(c: PosClienteBusca) {
@@ -233,6 +229,10 @@ export function PosEntregaDialog({
                 className={cn(campoClasse, "pl-9")}
                 value={busca}
                 onChange={(e) => handleBuscaChange(e.target.value)}
+                onFocus={() => {
+                  if (!mostrarResultados) buscarClientes(busca);
+                }}
+                onBlur={() => setTimeout(() => setMostrarResultados(false), 150)}
               />
             </div>
             {mostrarResultados && (

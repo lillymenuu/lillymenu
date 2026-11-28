@@ -99,6 +99,26 @@ export async function buscarClientesRecentes(lojaId: number, limite: number): Pr
     .limit(limite);
 }
 
+/* Busca de cliente do modal de entrega do PDV: ate `limite` clientes, quem pediu mais recentemente
+   primeiro. Campo vazio = so clientes que ja fizeram pedido (os ultimos que pediram). */
+export async function buscarClientesUltimosPedidos(lojaId: number, busca: string, limite: number): Promise<ClienteFiadoBusca[]> {
+  const buscaLimpa = busca.trim();
+  const ultimoPedido = sql`(select max(p.criado_em) from pedidos p where p.cliente_id = ${clientes.id} and p.loja_id = ${lojaId})`;
+  let condicao = and(eq(clientes.loja_id, lojaId), sql`${ultimoPedido} is not null`)!;
+  if (buscaLimpa !== "") {
+    const buscaTel = apenasDigitos(buscaLimpa);
+    const partes = [ilike(clientes.nome, `%${buscaLimpa}%`)];
+    if (buscaTel !== "") partes.push(ilike(telefoneSemMascara, `%${buscaTel}%`));
+    condicao = and(eq(clientes.loja_id, lojaId), or(...partes))!;
+  }
+  return db
+    .select({ id: clientes.id, nome: clientes.nome, telefone: clientes.telefone })
+    .from(clientes)
+    .where(condicao)
+    .orderBy(sql`${ultimoPedido} desc nulls last`, clientes.nome)
+    .limit(limite);
+}
+
 export type LancamentoFiado = {
   id: number;
   tipo: "venda" | "pagamento" | "estorno";
