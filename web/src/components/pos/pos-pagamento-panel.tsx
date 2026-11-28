@@ -144,12 +144,18 @@ export function PosPagamentoPanel({
     setPagamentosRegistrados((prev) => [...prev, { forma, valor: Number(aplicado.toFixed(2)) }]);
   }
 
+  /* Valor da linha em dinheiro: o que foi digitado no campo (ex.: R$ 100 de um pedido de R$ 195, o
+     resto em outra forma), limitado ao restante. Antes usava sempre o restante inteiro. */
+  const digitadoAgora = Math.max(0, Number(valorInput.replace(",", ".")) || 0);
+  const valorDinheiro = Math.round(Math.min(digitadoAgora > 0 ? digitadoAgora : restante, restante) * 100) / 100;
+
   function confirmarTroco(recebida: number | null) {
-    if (restante <= 0) return;
-    setPagamentosRegistrados((prev) => [...prev, { forma: "dinheiro", valor: restante }]);
-    setDinheiroRecebido(recebida !== null ? Math.max(recebida, restante) : restante);
-    if (recebida !== null && recebida > restante + 0.009) {
-      toast.success(`Troco: ${formatBRL(recebida - restante)}`);
+    if (restante <= 0 || valorDinheiro <= 0) return;
+    const linha = valorDinheiro;
+    setPagamentosRegistrados((prev) => [...prev, { forma: "dinheiro", valor: linha }]);
+    setDinheiroRecebido((antes) => antes + (recebida !== null ? Math.max(recebida, linha) : linha));
+    if (recebida !== null && recebida > linha + 0.009) {
+      toast.success(`Troco: ${formatBRL(recebida - linha)}`);
     }
     setTrocoModalAberto(false);
   }
@@ -270,7 +276,7 @@ export function PosPagamentoPanel({
       <PosTrocoDialog
         open={trocoModalAberto}
         onOpenChange={setTrocoModalAberto}
-        quantiaACobrar={restante}
+        quantiaACobrar={valorDinheiro}
         onConfirmar={confirmarTroco}
       />
 
