@@ -290,6 +290,8 @@ export const comboPassoOpcoes = pgTable(
     loja_id: integer("loja_id").notNull(),
     produto_id: integer("produto_id").notNull(),
     preco_adicional: numeric("preco_adicional", { precision: 10, scale: 2, mode: "number" }).notNull().default(0),
+    /** Preco desta opcao dentro do combo "preco por opcao"; null = preco normal do produto. */
+    preco_combo: numeric("preco_combo", { precision: 10, scale: 2, mode: "number" }),
     ativo: boolean("ativo").notNull().default(true),
     ordem: integer("ordem"),
   },

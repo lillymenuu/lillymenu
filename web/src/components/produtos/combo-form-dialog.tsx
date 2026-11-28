@@ -28,7 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { MoneyInput } from "./money-input";
 import { ImageCropDialog } from "./image-crop-dialog";
 import { ComboCategoriaDialog } from "./combo-categoria-dialog";
-import { ComboItensDialog } from "./combo-itens-dialog";
+import { ComboItensDialog, urlImagemProduto } from "./combo-itens-dialog";
 import {
   ComboPassoDialog,
   novaChavePasso,
@@ -59,13 +59,26 @@ function numero(v: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** Preco da opcao dentro do combo: o definido no combo ou, se vazio, o preco normal do produto. */
+function precoNoCombo(o: PassoRascunho["opcoes"][number]): number {
+  return o.precoCombo !== "" ? numero(o.precoCombo) : o.preco;
+}
+
+/** "escolhe 1", "escolhe de 1 a 3", "ate 2" */
+function regraCurta(p: PassoRascunho): string {
+  const min = Number(p.min) || 0;
+  const max = Number(p.max) || 1;
+  if (!p.obrigatorio) return `até ${max}`;
+  return min === max ? `escolhe ${min}` : `escolhe de ${min} a ${max}`;
+}
+
 /** Menor valor possivel de um combo "preco por opcao": soma, nos passos obrigatorios, do minimo de itens pela opcao mais barata. */
 function precoMinimoPorOpcao(passos: PassoRascunho[]): number {
   let total = 0;
   for (const p of passos) {
     if (!p.obrigatorio || p.opcoes.length === 0) continue;
     const min = Math.max(1, parseInt(p.min, 10) || 1);
-    const precos = p.opcoes.map((o) => o.preco).sort((a, b) => a - b);
+    const precos = p.opcoes.map(precoNoCombo).sort((a, b) => a - b);
     total += p.permiteRepetir
       ? precos[0] * min
       : precos.slice(0, min).reduce((s, x) => s + x, 0);
@@ -294,6 +307,11 @@ function ComboFormCorpo({
           id: o.id,
           nome: o.nome,
           preco: Number(o.preco) || 0,
+          imagem: o.imagem,
+          precoCombo:
+            o.preco_combo !== null && o.preco_combo !== undefined
+              ? String(Number(o.preco_combo))
+              : "",
         })),
       })),
     );
@@ -356,9 +374,16 @@ function ComboFormCorpo({
     const anteriores = new Map(passoDraft.opcoes.map((o) => [o.id, o]));
     const opcoes = ids.map((id) => {
       const p = produtos.find((x) => x.id === id);
+      const antes = anteriores.get(id);
       return p
-        ? { id, nome: p.nome, preco: Number(p.preco_base) || 0 }
-        : (anteriores.get(id) ?? { id, nome: `#${id}`, preco: 0 });
+        ? {
+            id,
+            nome: p.nome,
+            preco: Number(p.preco_base) || 0,
+            imagem: p.imagem,
+            precoCombo: antes?.precoCombo ?? "",
+          }
+        : (antes ?? { id, nome: `#${id}`, preco: 0, precoCombo: "" });
     });
     const sugestao = sugerirNomePasso(ids, produtos);
     /* So troca o nome se ele estiver vazio ou ainda for a sugestao anterior. */
@@ -386,6 +411,21 @@ function ComboFormCorpo({
     setPassoDraft(null);
     setErro(null);
   }
+  function alterarPrecoOpcao(chave: string, produtoId: number, valor: string) {
+    setPassos((atual) =>
+      atual.map((p) =>
+        p.chave !== chave
+          ? p
+          : {
+              ...p,
+              opcoes: p.opcoes.map((o) =>
+                o.id === produtoId ? { ...o, precoCombo: valor } : o,
+              ),
+            },
+      ),
+    );
+  }
+
   function removerPasso(idx: number) {
     setPassos((atual) => atual.filter((_, i) => i !== idx));
   }
@@ -488,6 +528,17 @@ function ComboFormCorpo({
             max_itens: Math.max(1, parseInt(p.max, 10) || 1),
             permite_repetir: p.permiteRepetir ? 1 : 0,
             produto_ids: p.opcoes.map((o) => o.id).join(","),
+            /* So grava preco proprio no combo "por opcao" e quando difere do preco normal. */
+            precos_combo: Object.fromEntries(
+              p.opcoes.map((o) => [
+                o.id,
+                porItem &&
+                o.precoCombo !== "" &&
+                numero(o.precoCombo) !== o.preco
+                  ? numero(o.precoCombo)
+                  : null,
+              ]),
+            ),
           },
         );
         if (!r.ok) {
@@ -845,10 +896,15 @@ function ComboFormCorpo({
       <p className="mt-2 text-sm text-muted-foreground">
         {tipoPreco === "por_combo"
           ? "Um valor só, qualquer que seja a opção que o cliente escolher."
-          : "O cliente paga a soma dos preços dos itens que escolher (o preço de cada produto no cadastro)."}
+          : "O combo custa a soma das opções que o cliente escolher. Já preenchemos com o preço normal de cada produto."}
       </p>
 
-      <div className="mt-5 rounded-2xl border p-5">
+      <div
+        className={cn(
+          "mt-5",
+          tipoPreco === "por_combo" && "rounded-2xl border p-5",
+        )}
+      >
         {tipoPreco === "por_combo" ? (
           <div className="space-y-4">
             <div className="flex flex-col gap-1.5 p-0.5">
@@ -897,29 +953,56 @@ function ComboFormCorpo({
             Adicione os passos do combo para ver os preços das opções.
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-7">
             {passos.map((p, idx) => (
-              <div key={p.chave}>
-                <div className="mb-1.5 text-sm font-semibold">
+              <section key={p.chave}>
+                <div className="text-sm font-semibold">
                   {idx + 1}. {p.nome}
-                  <span className="ml-1.5 font-normal text-muted-foreground">
-                    · {p.obrigatorio ? "obrigatório" : "opcional"}
-                  </span>
                 </div>
-                <div className="divide-y rounded-xl border">
+                <div className="mt-0.5 text-sm text-muted-foreground">
+                  {p.opcoes.length} {p.opcoes.length === 1 ? "opção" : "opções"}{" "}
+                  · {p.obrigatorio ? "obrigatório" : "opcional"} ·{" "}
+                  {regraCurta(p)}
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {p.opcoes.map((o) => (
-                    <div
-                      key={o.id}
-                      className="flex items-center justify-between gap-3 px-3.5 py-2 text-sm"
-                    >
-                      <span className="min-w-0 truncate">{o.nome}</span>
-                      <span className="shrink-0 font-medium tabular-nums">
-                        {brl(o.preco)}
-                      </span>
+                    <div key={o.id} className="rounded-2xl border p-3.5">
+                      <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={urlImagemProduto(
+                            o.imagem ??
+                              produtos.find((x) => x.id === o.id)?.imagem,
+                            phpAdminUrl,
+                          )}
+                          alt=""
+                          className="size-11 shrink-0 rounded-lg object-cover"
+                        />
+                        <span className="line-clamp-2 min-w-0 text-[13px] leading-snug font-medium">
+                          {o.nome}
+                        </span>
+                      </div>
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        Fora do combo: {brl(o.preco)}
+                      </div>
+                      <label
+                        htmlFor={`preco-op-${p.chave}-${o.id}`}
+                        className="mt-2.5 mb-1.5 block text-sm font-medium"
+                      >
+                        Preço no combo
+                      </label>
+                      <MoneyInput
+                        id={`preco-op-${p.chave}-${o.id}`}
+                        value={
+                          o.precoCombo !== "" ? o.precoCombo : String(o.preco)
+                        }
+                        onChange={(v) => alterarPrecoOpcao(p.chave, o.id, v)}
+                        className={campo}
+                      />
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
             ))}
             <div className="flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3 text-sm">
               <span className="text-muted-foreground">

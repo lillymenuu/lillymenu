@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { comboPassoOpcoes, combos, produtos } from "@/db/schema";
 import { promoAtiva } from "@/db/queries/catalogo";
@@ -59,7 +59,7 @@ async function precoUnitarioItem(lojaId: number, item: ItemCarrinho): Promise<nu
       const sels = (item.combosels ?? []).filter((s) => Number(s.id) > 0);
       if (sels.length === 0) return null;
       const opcoes = await db
-        .select({ produtoId: comboPassoOpcoes.produto_id, preco: produtos.preco })
+        .select({ produtoId: comboPassoOpcoes.produto_id, preco: sql<string>`coalesce(${comboPassoOpcoes.preco_combo}, ${produtos.preco})` })
         .from(comboPassoOpcoes)
         .innerJoin(produtos, and(eq(produtos.id, comboPassoOpcoes.produto_id), eq(produtos.loja_id, comboPassoOpcoes.loja_id)))
         .where(and(eq(comboPassoOpcoes.combo_id, id), eq(comboPassoOpcoes.loja_id, lojaId), inArray(comboPassoOpcoes.produto_id, sels.map((s) => Number(s.id)))));

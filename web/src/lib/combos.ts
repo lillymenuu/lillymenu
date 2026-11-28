@@ -16,6 +16,8 @@ export type ComboPassoOpcao = {
   id: number;
   nome: string;
   preco: number | string;
+  /** Preco no combo "preco por opcao" (null = preco do produto). */
+  preco_combo?: number | string | null;
   imagem: string | null;
   estoque: number;
   esgotado: boolean;

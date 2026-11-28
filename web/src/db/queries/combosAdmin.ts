@@ -57,7 +57,7 @@ export async function listarCombos(lojaId: number): Promise<ComboResumo[]> {
   return linhas;
 }
 
-export type OpcaoPassoCombo = { id: number; nome: string | null; preco: number | null; imagem: string | null; estoque: number; esgotado: boolean };
+export type OpcaoPassoCombo = { id: number; nome: string | null; preco: number | null; precoCombo: number | null; imagem: string | null; estoque: number; esgotado: boolean };
 export type PassoCombo = { id: number; nome: string; descricao: string | null; obrigatorio: boolean; minItens: number; maxItens: number; permiteRepetir: boolean; opcoes: OpcaoPassoCombo[] };
 export type ComboDetalhe = {
   id: number;
@@ -103,7 +103,7 @@ export async function detalheCombo(lojaId: number, comboId: number): Promise<{ o
   const passos: PassoCombo[] = [];
   for (const passo of passosLinhas) {
     const opcoesLinhas = await db
-      .select({ id: comboPassoOpcoes.produto_id, nome: produtos.nome, preco: produtos.preco, imagem: produtos.imagem, estoque: sql<number>`coalesce(${estoque.quantidade}, 0)` })
+      .select({ id: comboPassoOpcoes.produto_id, nome: produtos.nome, preco: produtos.preco, precoCombo: comboPassoOpcoes.preco_combo, imagem: produtos.imagem, estoque: sql<number>`coalesce(${estoque.quantidade}, 0)` })
       .from(comboPassoOpcoes)
       .innerJoin(produtos, and(eq(produtos.id, comboPassoOpcoes.produto_id), eq(produtos.loja_id, comboPassoOpcoes.loja_id)))
       .leftJoin(estoque, and(eq(estoque.produto_id, comboPassoOpcoes.produto_id), eq(estoque.loja_id, comboPassoOpcoes.loja_id)))
@@ -212,6 +212,8 @@ export type SalvarPassoComboInput = {
   maxItens?: number;
   permiteRepetir?: boolean;
   produtoIds: number[];
+  /** Preco de cada opcao no combo "preco por opcao" (produtoId -> preco); ausente/null = preco do produto. */
+  precosCombo?: Record<number, number | null>;
 };
 
 export async function salvarPassoCombo(lojaId: number, input: SalvarPassoComboInput): Promise<{ ok: true; passoId: number } | { ok: false; msg: string }> {
@@ -247,7 +249,14 @@ export async function salvarPassoCombo(lojaId: number, input: SalvarPassoComboIn
 
   await db.delete(comboPassoOpcoes).where(and(eq(comboPassoOpcoes.passo_id, passoId), eq(comboPassoOpcoes.loja_id, lojaId)));
   for (const pid of produtoIds) {
-    await db.insert(comboPassoOpcoes).values({ passo_id: passoId, combo_id: input.comboId, loja_id: lojaId, produto_id: pid });
+    const precoCombo = input.precosCombo?.[pid];
+    await db.insert(comboPassoOpcoes).values({
+      passo_id: passoId,
+      combo_id: input.comboId,
+      loja_id: lojaId,
+      produto_id: pid,
+      preco_combo: precoCombo !== undefined && precoCombo !== null && Number.isFinite(precoCombo) && precoCombo >= 0 ? Math.round(precoCombo * 100) / 100 : null,
+    });
   }
 
   await bumpCatalogoVersao(lojaId);

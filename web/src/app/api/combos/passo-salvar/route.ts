@@ -10,6 +10,18 @@ function parseIdsCsv(value: unknown): number[] {
     .filter((n) => Number.isInteger(n) && n > 0);
 }
 
+/** { "12": 9.5, "13": null } -> { 12: 9.5, 13: null } */
+function parsePrecos(value: unknown): Record<number, number | null> | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const out: Record<number, number | null> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    const id = Number(k);
+    if (!Number.isInteger(id) || id <= 0) continue;
+    out[id] = v === null || v === "" || v === undefined ? null : Number(v);
+  }
+  return out;
+}
+
 export async function POST(request: Request) {
   const sessao = await getSessaoAdmin();
   if (!sessao) return NextResponse.json({ ok: false, msg: "Nao autenticado." }, { status: 401 });
@@ -27,6 +39,7 @@ export async function POST(request: Request) {
     maxItens: Number(body.max_itens ?? 1),
     permiteRepetir: Boolean(Number(body.permite_repetir ?? 0)),
     produtoIds: parseIdsCsv(body.produto_ids),
+    precosCombo: parsePrecos(body.precos_combo),
   });
 
   if (!resultado.ok) return NextResponse.json(resultado);

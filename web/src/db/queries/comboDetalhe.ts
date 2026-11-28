@@ -44,7 +44,7 @@ export async function detalheCombo(lojaId: number, comboId: number): Promise<{ o
   const passos: PassoCombo[] = [];
   for (const passo of passosRaw) {
     const opcoesRaw = await db
-      .select({ id: comboPassoOpcoes.produto_id, nome: produtos.nome, preco: produtos.preco, imagem: produtos.imagem, estoque: estoque.quantidade })
+      .select({ id: comboPassoOpcoes.produto_id, nome: produtos.nome, preco: sql<string>`coalesce(${comboPassoOpcoes.preco_combo}, ${produtos.preco})`, imagem: produtos.imagem, estoque: estoque.quantidade })
       .from(comboPassoOpcoes)
       .innerJoin(produtos, and(eq(produtos.id, comboPassoOpcoes.produto_id), eq(produtos.loja_id, comboPassoOpcoes.loja_id)))
       .leftJoin(estoque, and(eq(estoque.produto_id, comboPassoOpcoes.produto_id), eq(estoque.loja_id, comboPassoOpcoes.loja_id)))

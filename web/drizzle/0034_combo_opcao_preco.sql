@@ -1,0 +1,1 @@
+ALTER TABLE "combo_passo_opcoes" ADD COLUMN "preco_combo" numeric(10, 2);

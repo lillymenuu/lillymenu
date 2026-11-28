@@ -239,6 +239,13 @@
       "when": 1795726897756,
       "tag": "0033_permissoes_niveis_loja",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795831266601,
+      "tag": "0034_combo_opcao_preco",
+      "breakpoints": true
     }
   ]
 }

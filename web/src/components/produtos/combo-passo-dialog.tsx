@@ -24,7 +24,14 @@ export type PassoRascunho = {
   min: string;
   max: string;
   permiteRepetir: boolean;
-  opcoes: { id: number; nome: string; preco: number }[];
+  /** preco = preco normal do produto; precoCombo = preco no combo "por opcao" ("" = usa o normal). */
+  opcoes: {
+    id: number;
+    nome: string;
+    preco: number;
+    imagem?: string | null;
+    precoCombo: string;
+  }[];
 };
 
 export function novaChavePasso(): string {
@@ -107,7 +114,10 @@ export function ComboPassoDialog({
         onOpenChange(v);
       }}
     >
-      <DialogContent overlayForceRender className="flex max-h-[90vh] w-[600px] flex-col gap-0 rounded-3xl p-0 sm:max-w-[600px]">
+      <DialogContent
+        overlayForceRender
+        className="flex max-h-[90vh] w-[600px] flex-col gap-0 rounded-3xl p-0 sm:max-w-[600px]"
+      >
         <DialogHeader className="gap-1 px-6 pt-6 pb-4">
           <DialogTitle className="text-base">
             Como chamar este passo?
