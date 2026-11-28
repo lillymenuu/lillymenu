@@ -172,7 +172,7 @@ function Corpo({
             <SelectContent
               alignItemWithTrigger={false}
               sideOffset={6}
-              className="max-h-72 rounded-xl p-1.5 shadow-lg"
+              className="scrollbar-hidden max-h-72 rounded-xl p-1.5 shadow-lg"
             >
               <SelectItem value="todas" className="rounded-lg py-2 pl-3">
                 Todas
