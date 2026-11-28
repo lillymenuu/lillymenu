@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
+  ArrowLeft,
   Folder,
   GripVertical,
   ImageIcon,
@@ -195,6 +196,62 @@ function ComboFormCorpo({
   const [excluindo, setExcluindo] = useState(false);
   const [confirmExcluirOpen, setConfirmExcluirOpen] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  /* Ao abrir uma parte pelo resumo, guarda como estava: a seta de voltar desfaz; "Concluir" mantem. */
+  const copiaAntesDeEditar = useRef<{
+    nome: string;
+    descricao: string;
+    categoriaId: number | null;
+    ativo: boolean;
+    imagemPreview: string | null;
+    imagemBase64: string | null;
+    imagemRemover: boolean;
+    passos: PassoRascunho[];
+    tipoPreco: ComboTipoPreco;
+    preco: string;
+    promoAtiva: boolean;
+    precoPromocional: string;
+  } | null>(null);
+
+  function editarParte(t: Tela) {
+    copiaAntesDeEditar.current = {
+      nome,
+      descricao,
+      categoriaId,
+      ativo,
+      imagemPreview,
+      imagemBase64,
+      imagemRemover,
+      passos,
+      tipoPreco,
+      preco,
+      promoAtiva,
+      precoPromocional,
+    };
+    setErro(null);
+    setTela(t);
+  }
+
+  function voltarSemSalvarParte() {
+    const c = copiaAntesDeEditar.current;
+    if (c) {
+      setNome(c.nome);
+      setDescricao(c.descricao);
+      setCategoriaId(c.categoriaId);
+      setAtivo(c.ativo);
+      setImagemPreview(c.imagemPreview);
+      setImagemBase64(c.imagemBase64);
+      setImagemRemover(c.imagemRemover);
+      setPassos(c.passos);
+      setTipoPreco(c.tipoPreco);
+      setPreco(c.preco);
+      setPromoAtiva(c.promoAtiva);
+      setPrecoPromocional(c.precoPromocional);
+    }
+    copiaAntesDeEditar.current = null;
+    setErro(null);
+    setTela("resumo");
+  }
 
   function aplicarDetalhe(
     data: ComboDetalheResposta | { ok: false; msg?: string },
@@ -518,7 +575,21 @@ function ComboFormCorpo({
             </div>
           </div>
         )}
-        <h2 className="text-xl font-semibold tracking-tight">{titulo}</h2>
+        <div className="flex items-center gap-2">
+          {editando && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="-ml-2 rounded-full"
+              onClick={voltarSemSalvarParte}
+              aria-label="Voltar ao resumo sem alterar"
+              title="Voltar sem alterar"
+            >
+              <ArrowLeft size={20} />
+            </Button>
+          )}
+          <h2 className="text-xl font-semibold tracking-tight">{titulo}</h2>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">{subtitulo}</p>
       </>
     );
@@ -937,10 +1008,7 @@ function ComboFormCorpo({
               variant="outline"
               size="sm"
               className="shrink-0 rounded-full px-3.5"
-              onClick={() => {
-                setErro(null);
-                setTela(l.tela);
-              }}
+              onClick={() => editarParte(l.tela)}
             >
               Editar
             </Button>
