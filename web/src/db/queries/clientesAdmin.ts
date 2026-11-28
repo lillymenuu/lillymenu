@@ -204,6 +204,8 @@ export async function criarCliente(lojaId: number, input: ClienteInput): Promise
   const enderecoInput = (input.endereco ?? "").trim();
 
   if (nome === "") return { ok: false, msg: "Nome e obrigatorio." };
+  /* Evita salvar nome no lugar do telefone (ex.: campos trocados no PDV). */
+  if (telefone !== "" && telefone.replace(/\D/g, "").length < 10) return { ok: false, msg: "Telefone invalido. Informe DDD + numero." };
 
   const endereco = montarEndereco({ rua, numero, bairro, cidade, estado, cep, complemento, enderecoInput });
 

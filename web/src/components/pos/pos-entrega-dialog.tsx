@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { MoneyInput } from "@/components/produtos/money-input";
 import { formatBRL } from "@/components/ordermanager/constants";
+import { maskTelefone } from "@/lib/telefone";
 import type { PosCepLookupResposta, PosClienteBusca, PosClienteStats } from "@/lib/pos";
 import type { PosEndereco } from "@/components/pos/pos-tipo-pedido";
 
@@ -58,7 +59,7 @@ export function PosEntregaDialog({
     setResultados(null);
     setMostrarResultados(false);
     setClienteId(cliente?.id ?? null);
-    setTelefone(cliente?.telefone ?? "");
+    setTelefone(maskTelefone(cliente?.telefone ?? ""));
     setNome(cliente?.nome ?? "");
     const enderecoJaPreenchido = endereco.rua.trim() !== "";
     setRascunho(enderecoJaPreenchido ? endereco : ENDERECO_VAZIO);
@@ -123,7 +124,7 @@ export function PosEntregaDialog({
 
   function selecionarCliente(c: PosClienteBusca) {
     setClienteId(c.id);
-    setTelefone(c.telefone);
+    setTelefone(maskTelefone(c.telefone));
     setNome(c.nome);
     setBusca("");
     setMostrarResultados(false);
@@ -266,11 +267,12 @@ export function PosEntregaDialog({
           <div className="space-y-1">
             <Label className={labelClasse}>Número de contato</Label>
             <Input
-              placeholder="Ex.: (11) 9 8888-9999"
+              placeholder="(00) 00000-0000"
+              inputMode="tel"
               className={campoClasse}
               value={telefone}
               onChange={(e) => {
-                setTelefone(e.target.value);
+                setTelefone(maskTelefone(e.target.value));
                 setClienteId(null);
               }}
             />
