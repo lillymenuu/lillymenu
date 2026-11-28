@@ -53,7 +53,10 @@ export function ComboItensDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent overlayForceRender className="flex h-[90vh] w-[940px] flex-col gap-0 rounded-3xl p-0 sm:max-w-[940px]">
+      <DialogContent
+        overlayForceRender
+        className="flex h-[90vh] w-[940px] flex-col gap-0 rounded-3xl p-0 sm:max-w-[940px]"
+      >
         <Corpo
           produtos={produtos}
           categorias={categorias}
@@ -211,10 +214,7 @@ function Corpo({
                   aria-checked={marcado}
                   onClick={() => alternar(p.id)}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl border p-2.5 text-left transition-colors",
-                    marcado
-                      ? "border-primary bg-primary/5"
-                      : "hover:bg-muted/50",
+                    "flex items-center gap-3 rounded-2xl border p-2.5 text-left transition-colors hover:bg-muted/50",
                   )}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
