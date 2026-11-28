@@ -56,7 +56,7 @@ export function PosClienteSection({
   async function buscarClientes(termo: string) {
     setCarregando(true);
     try {
-      const res = await fetch(`/api/pos/clientes-busca?q=${encodeURIComponent(termo)}`);
+      const res = await fetch(`/api/pos/clientes-busca?recentes=1&q=${encodeURIComponent(termo)}`);
       const data = await res.json();
       setResultados(data.ok ? data.clientes : []);
     } catch {
@@ -124,8 +124,8 @@ export function PosClienteSection({
             </div>
 
             {comboAberto && (
-              <div className="animate-in fade-in slide-in-from-top-0.5 ease-out absolute z-20 mt-1.5 w-full overflow-hidden rounded-2xl border bg-popover shadow-lg duration-150">
-                <div className="max-h-52 overflow-y-auto">
+              <div className="animate-in fade-in-0 slide-in-from-top-1 absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl bg-popover shadow-lg ring-1 ring-foreground/10 duration-150">
+                <div className="scrollbar-hidden max-h-[min(18rem,40vh)] overflow-y-auto p-1.5">
                   {carregando ? (
                     <div className="px-3 py-3 text-center text-xs text-muted-foreground">Carregando...</div>
                   ) : resultados && resultados.length > 0 ? (
@@ -134,7 +134,7 @@ export function PosClienteSection({
                         key={c.id}
                         type="button"
                         onClick={() => selecionarCliente(c)}
-                        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs transition-colors duration-150 hover:bg-muted/40"
+                        className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-accent hover:text-accent-foreground"
                       >
                         <span className="max-w-[150px] truncate font-medium">{c.nome || "Sem nome"}</span>
                         <span className="shrink-0 text-muted-foreground">{c.telefone}</span>
@@ -142,7 +142,7 @@ export function PosClienteSection({
                     ))
                   ) : (
                     <div className="px-3 py-3 text-center text-xs text-muted-foreground">
-                      {busca.trim() ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado ainda."}
+                      {busca.trim() ? "Nenhum cliente encontrado." : "Nenhum cliente fez pedido ainda."}
                     </div>
                   )}
                 </div>
