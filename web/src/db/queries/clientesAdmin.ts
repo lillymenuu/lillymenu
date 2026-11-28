@@ -271,6 +271,39 @@ export async function atualizarCliente(lojaId: number, id: number, input: Client
   return { ok: true };
 }
 
+/** Atualiza so o endereco do cliente (usado ao confirmar a entrega no PDV). Mantem o estado ja cadastrado. */
+export async function salvarEnderecoCliente(
+  lojaId: number,
+  clienteId: number,
+  e: { rua: string; numero: string; bairro: string; cidade: string; cep: string; complemento: string }
+): Promise<{ ok: true } | { ok: false; msg: string }> {
+  if (!clienteId) return { ok: false, msg: "Cliente invalido." };
+  const rua = (e.rua ?? "").trim();
+  if (rua === "") return { ok: false, msg: "Informe a rua." };
+  const [atual] = await db.select({ estado: clientes.estado }).from(clientes).where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId))).limit(1);
+  if (!atual) return { ok: false, msg: "Cliente nao encontrado." };
+  const numero = (e.numero ?? "").trim();
+  const bairro = (e.bairro ?? "").trim();
+  const cidade = (e.cidade ?? "").trim();
+  const cep = (e.cep ?? "").trim();
+  const complemento = (e.complemento ?? "").trim();
+  const estado = (atual.estado ?? "").trim();
+  const endereco = montarEndereco({ rua, numero, bairro, cidade, estado, cep, complemento, enderecoInput: "" });
+  await db
+    .update(clientes)
+    .set({
+      endereco: endereco || null,
+      rua,
+      numero: numero || null,
+      bairro: bairro || null,
+      cidade: cidade || null,
+      cep: cep || null,
+      complemento: complemento || null,
+    })
+    .where(and(eq(clientes.id, clienteId), eq(clientes.loja_id, lojaId)));
+  return { ok: true };
+}
+
 export type ClienteStats = {
   nome: string;
   telefone: string;

@@ -165,13 +165,34 @@ async function calcularTaxaDinamica(distancia: number, lojaId: number, porKm: bo
 
 export type ResultadoCepLookup = { ok: true; cep: string; logradouro: string; bairro: string; cidade: string; estado: string; distanciaKm: number; taxaEntrega: number } | { ok: false; msg: string };
 
+/* Cache curto por loja+CEP (na instancia do servidor): o mesmo cliente/CEP no PDV nao refaz as
+   consultas externas (geocodificacao, rota, ViaCEP), que sao a parte lenta. */
+const CACHE_CEP_MS = 10 * 60 * 1000;
+const cacheCep = new Map<string, { em: number; resultado: ResultadoCepLookup }>();
+
 export async function buscarCep(lojaId: number, cepInput: string): Promise<ResultadoCepLookup> {
   const cep = cepInput.replace(/\D/g, "");
   if (cep.length !== 8) return { ok: false, msg: "CEP invalido." };
 
-  const lojaCep = (await getConfig(lojaId, "loja_cep", "")).replace(/\D/g, "");
+  const chave = `${lojaId}:${cep}`;
+  const guardado = cacheCep.get(chave);
+  if (guardado && Date.now() - guardado.em < CACHE_CEP_MS) return guardado.resultado;
+
+  const resultado = await buscarCepSemCache(lojaId, cep);
+  if (resultado.ok) {
+    if (cacheCep.size > 500) cacheCep.clear();
+    cacheCep.set(chave, { em: Date.now(), resultado });
+  }
+  return resultado;
+}
+
+async function buscarCepSemCache(lojaId: number, cep: string): Promise<ResultadoCepLookup> {
+  const [lojaCepCfg, tipoTaxa] = await Promise.all([getConfig(lojaId, "loja_cep", ""), getConfig(lojaId, "taxa_entrega_tipo", "fixa")]);
+  const lojaCep = lojaCepCfg.replace(/\D/g, "");
   if (lojaCep.length !== 8) return { ok: false, msg: "CEP da loja nao configurado." };
 
+  /* Taxa por area: a busca do poligono corre junto com a geocodificacao (sao independentes). */
+  const areaPromise = tipoTaxa === "area" ? buscarTaxaAreaPorCep(lojaId, cep) : Promise.resolve(null);
   const [origem, destino] = await Promise.all([obterCoordsPorCep(lojaCep), obterCoordsPorCep(cep)]);
   if (!origem || !destino) return { ok: false, msg: "Nao foi possivel localizar o CEP." };
 
@@ -185,13 +206,13 @@ export async function buscarCep(lojaId: number, cepInput: string): Promise<Resul
     }
   }
 
-  const distanciaRotaBruta = await calcularDistanciaRotaKm(origem.lat, origem.lng, destino.lat, destino.lng);
+  /* Rota de carro (lenta) so quando a taxa depende da distancia; nos outros tipos basta a linha reta. */
+  const distanciaRotaBruta = tipoTaxa === "dinamica" ? await calcularDistanciaRotaKm(origem.lat, origem.lng, destino.lat, destino.lng) : null;
   const fatorCorrecaoRota = 2.0;
   const distanciaRota = distanciaRotaBruta !== null ? distanciaRotaBruta * fatorCorrecaoRota : null;
   const distancia = distanciaRota ?? calcularDistanciaKm(origem.lat, origem.lng, destino.lat, destino.lng);
 
   let taxaEntrega = 0;
-  const tipoTaxa = await getConfig(lojaId, "taxa_entrega_tipo", "fixa");
   if (tipoTaxa === "bairro" && destino.bairro) {
     const lista = await db.select({ bairro: taxasBairro.bairro, taxa: taxasBairro.taxa }).from(taxasBairro).where(eq(taxasBairro.loja_id, lojaId));
     const bairroAlvo = normalizarTexto(destino.bairro);
@@ -200,7 +221,7 @@ export async function buscarCep(lojaId: number, cepInput: string): Promise<Resul
   } else if (tipoTaxa === "dinamica") {
     taxaEntrega = await calcularTaxaDinamica(distancia, lojaId, false);
   } else if (tipoTaxa === "area") {
-    const area = await buscarTaxaAreaPorCep(lojaId, cep);
+    const area = await areaPromise;
     taxaEntrega = area?.atendido ? area.taxa : 0;
   }
 

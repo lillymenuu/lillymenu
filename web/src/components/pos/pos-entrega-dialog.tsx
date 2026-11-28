@@ -76,6 +76,7 @@ export function PosEntregaDialog({
   // endereco + taxa de entrega automaticamente (sem sobrescrever CEP/bairro
   // com o resultado da geocodificacao — o cadastro do cliente e a fonte).
   async function carregarEnderecoCliente(id: number) {
+    setBuscandoCep(true);
     try {
       const res = await fetch(`/api/cliente/stats?id=${id}`);
       const data: PosClienteStats = await res.json();
@@ -90,11 +91,15 @@ export function PosEntregaDialog({
           complemento: end.complemento,
         });
         const digitos = end.cep.replace(/\D/g, "");
-        if (digitos.length === 8) consultarCep(digitos, { atualizarEndereco: false });
+        if (digitos.length === 8) {
+          await consultarCep(digitos, { atualizarEndereco: false });
+          return;
+        }
       }
     } catch {
       // cliente sem endereco cadastrado — mantem os campos como estao
     }
+    setBuscandoCep(false);
   }
 
   async function buscarClientes(termo: string) {
@@ -197,6 +202,12 @@ export function PosEntregaDialog({
         setSalvando(false);
         return;
       }
+      /* Guarda o endereco no cadastro do cliente: no proximo pedido ele ja vem preenchido. */
+      await fetch("/api/pos/cliente-endereco", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cliente_id: idFinal, ...rascunho }),
+      }).catch(() => null);
       onConfirmar({
         cliente: { id: idFinal, nome, telefone },
         endereco: rascunho,
@@ -322,7 +333,9 @@ export function PosEntregaDialog({
               {editarTaxa ? (
                 <MoneyInput value={taxaManual} onChange={setTaxaManual} className="mt-1 h-8 w-28 rounded-full border-0 bg-muted/60 text-sm" />
               ) : (
-                <div className="text-lg font-semibold">{formatBRL(taxaCalculada)}</div>
+                <div className="text-lg font-semibold">
+                  {buscandoCep ? <span className="text-sm font-normal text-muted-foreground">Calculando...</span> : formatBRL(taxaCalculada)}
+                </div>
               )}
             </div>
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -333,7 +346,7 @@ export function PosEntregaDialog({
         </div>
 
         <DialogFooter className="border-t-0 bg-transparent">
-          <Button className="h-11 w-full rounded-full" onClick={confirmar} disabled={salvando}>
+          <Button className="h-11 w-full rounded-full" onClick={confirmar} disabled={salvando || buscandoCep}>
             {salvando ? "Salvando..." : "Continuar"}
           </Button>
         </DialogFooter>
