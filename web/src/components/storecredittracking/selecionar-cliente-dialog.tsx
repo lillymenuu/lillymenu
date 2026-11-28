@@ -51,7 +51,7 @@ export function SelecionarClienteDialog({
 
   async function buscar(termo: string) {
     try {
-      const res = await fetch(`/api/storecredittracking/busca?busca=${encodeURIComponent(termo)}`);
+      const res = await fetch(`/api/storecredittracking/busca?recentes=1&busca=${encodeURIComponent(termo)}`);
       const data = await res.json();
       setResultados(data.ok ? data.clientes : []);
       setMostrarResultados(true);
@@ -64,12 +64,8 @@ export function SelecionarClienteDialog({
   function handleBuscaChange(v: string) {
     setBusca(v);
     if (buscaTimer.current) clearTimeout(buscaTimer.current);
-    if (v.trim() === "") {
-      setMostrarResultados(false);
-      setResultados(null);
-      return;
-    }
-    buscaTimer.current = setTimeout(() => buscar(v), 300);
+    /* Campo vazio volta a mostrar os 5 ultimos clientes que pediram. */
+    buscaTimer.current = setTimeout(() => buscar(v), v.trim() === "" ? 0 : 300);
   }
 
   async function adicionarCliente() {
@@ -122,7 +118,9 @@ export function SelecionarClienteDialog({
                 placeholder="Busque por número ou nome"
                 value={busca}
                 onChange={(e) => handleBuscaChange(e.target.value)}
-                onFocus={() => resultados !== null && busca.trim() !== "" && setMostrarResultados(true)}
+                onFocus={() => {
+                  if (!mostrarResultados) buscar(busca);
+                }}
                 className="h-10 w-full rounded-full border-0 bg-muted/60 pr-8 pl-4 text-sm"
               />
               <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
