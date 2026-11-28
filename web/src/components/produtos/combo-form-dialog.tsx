@@ -1074,9 +1074,11 @@ function ComboFormCorpo({
       </div>
       <div className="mt-6 space-y-3">
         {linhasResumo.map((l) => (
-          <div
+          <button
+            type="button"
             key={l.titulo}
-            className="flex items-center gap-3.5 rounded-2xl border p-4"
+            onClick={() => editarParte(l.tela)}
+            className="group flex w-full cursor-pointer items-center gap-3.5 rounded-2xl border p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-primary/30 focus-visible:outline-none"
           >
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <l.icone size={17} />
@@ -1087,15 +1089,10 @@ function ComboFormCorpo({
                 {l.texto}
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 rounded-full px-3.5"
-              onClick={() => editarParte(l.tela)}
-            >
+            <span className="shrink-0 rounded-full border bg-background px-3.5 py-1.5 text-[13px] font-medium transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
               Editar
-            </Button>
-          </div>
+            </span>
+          </button>
         ))}
       </div>
     </>
