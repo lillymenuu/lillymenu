@@ -103,8 +103,8 @@ export function PosClienteSection({
         </PosInfoCard>
       ) : (
         <div className="flex items-end gap-2">
-          <div ref={comboRef} className="relative min-w-0 flex-1 space-y-1">
-            <Label className="text-xs font-normal text-muted-foreground">Busque pelo cliente</Label>
+          <div ref={comboRef} className="relative min-w-0 flex-1">
+            <Label className="mb-1 text-xs font-normal text-muted-foreground">Busque pelo cliente</Label>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <input

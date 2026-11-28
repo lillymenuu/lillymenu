@@ -119,8 +119,8 @@ export function PosClienteDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="relative space-y-1">
-            <Label htmlFor="pos-busca-cliente" className={labelClasse}>
+          <div className="relative">
+            <Label htmlFor="pos-busca-cliente" className={cn(labelClasse, "mb-1")}>
               Busque pelo cliente
             </Label>
             <div className="relative">

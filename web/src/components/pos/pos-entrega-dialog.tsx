@@ -219,8 +219,8 @@ export function PosEntregaDialog({
         </DialogHeader>
 
         <div className="scrollbar-hidden min-h-0 flex-1 space-y-3 overflow-y-auto px-1">
-          <div className="relative space-y-1">
-            <Label className={labelClasse}>Busque pelo cliente</Label>
+          <div className="relative">
+            <Label className={cn(labelClasse, "mb-1")}>Busque pelo cliente</Label>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
