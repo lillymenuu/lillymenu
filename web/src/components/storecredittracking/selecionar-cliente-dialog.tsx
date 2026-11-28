@@ -130,7 +130,7 @@ export function SelecionarClienteDialog({
           </div>
           {mostrarResultados && (
             /* Lista flutuante (por cima do formulario), para nao esticar o modal */
-            <div className="scrollbar-thin absolute inset-x-0 top-full z-20 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border bg-popover py-1 shadow-lg">
+            <div className="scrollbar-hidden absolute inset-x-0 top-full z-20 mt-1.5 max-h-[min(18rem,40vh)] overflow-y-auto rounded-xl bg-popover p-1.5 shadow-lg ring-1 ring-foreground/10 animate-in fade-in-0 slide-in-from-top-1 duration-150">
               {resultados?.length === 0 && (
                 <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum cliente encontrado.</div>
               )}
@@ -143,7 +143,7 @@ export function SelecionarClienteDialog({
                     onOpenChange(false);
                     onSelecionado(c.id);
                   }}
-                  className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/40"
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
                 >
                   {c.nome} <span className="text-muted-foreground">{c.telefone}</span>
                 </button>

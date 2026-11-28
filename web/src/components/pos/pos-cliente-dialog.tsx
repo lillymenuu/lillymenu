@@ -140,14 +140,14 @@ export function PosClienteDialog({
               />
             </div>
             {mostrarResultados && (
-              <div className="absolute z-10 mt-1 max-h-44 w-full overflow-y-auto rounded-lg border bg-popover shadow-md">
+              <div className="scrollbar-hidden absolute z-20 mt-1.5 max-h-[min(18rem,40vh)] w-full overflow-y-auto rounded-xl bg-popover p-1.5 shadow-lg ring-1 ring-foreground/10 animate-in fade-in-0 slide-in-from-top-1 duration-150">
                 {resultados?.length === 0 && <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum cliente encontrado.</div>}
                 {resultados?.map((c) => (
                   <button
                     key={c.id}
                     type="button"
                     onClick={() => selecionarResultado(c)}
-                    className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/40"
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
                     {c.nome} <span className="text-muted-foreground">{c.telefone}</span>
                   </button>
